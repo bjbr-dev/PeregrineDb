@@ -1,0 +1,12 @@
+# Project build artifacts
+Dapper.MicroCRUD/bin/
+Dapper.MicroCRUD/obj/
+Dapper.MicroCRUD.Tests/bin/
+Dapper.MicroCRUD.Tests/obj/
+
+# Standard VS folders
+**/packages/*
+!**/packages/build/
+
+.vs/
+**/*.user
