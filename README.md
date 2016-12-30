@@ -5,6 +5,8 @@ Overview
 
 Dapper.MicroCRUD is a small and fast Dapper.Net extension library to perform CRUD statement with POCO models.
 
+[![Build status](https://ci.appveyor.com/api/projects/status/1jwpeo49kmmlv9jr/branch/master?svg=true)](https://ci.appveyor.com/project/berkeleybross/dapper-microcrud/branch/master)
+
 Project aims
 ------------
 

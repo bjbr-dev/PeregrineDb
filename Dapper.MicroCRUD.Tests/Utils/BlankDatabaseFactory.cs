@@ -15,9 +15,13 @@ namespace Dapper.MicroCRUD.Tests.Utils
     {
         public static IDbConnection CreateSqlServer2012Database()
         {
-            var connectionStringBuilder =
-                new SqlConnectionStringBuilder(@"Server=localhost; Integrated Security=true; Pooling=false");
-            connectionStringBuilder.InitialCatalog = MakeRandomDatabaseName();
+            var serverConnectionString = IsInAppVeyor()
+                ? @"Server=(local)\SQL2012SP1;Database=master;User ID=sa;Password=Password12!"
+                : @"Server=localhost; Integrated Security=true; Pooling=false";
+            var connectionStringBuilder = new SqlConnectionStringBuilder(serverConnectionString)
+                {
+                    InitialCatalog = MakeRandomDatabaseName()
+                };
 
             var connectionString = connectionStringBuilder.ToString();
 
@@ -41,12 +45,14 @@ namespace Dapper.MicroCRUD.Tests.Utils
 
         public static IDbConnection CreatePostgreSqlDatabase()
         {
-            var connectionStringBuilder =
-                new NpgsqlConnectionStringBuilder("Server=localhost;Port=5432;User Id=postgres;Password=postgres123; Pooling=false;")
-                    {
-                        Database = MakeRandomDatabaseName(),
-                        PersistSecurityInfo = true
-                    };
+            var serverConnectionString = IsInAppVeyor()
+                ? "Server=localhost;Port=5432;User Id=postgres;Password=Password12!; Pooling=false;"
+                : "Server=localhost;Port=5432;User Id=postgres;Password=postgres123; Pooling=false;";
+            var connectionStringBuilder = new NpgsqlConnectionStringBuilder(serverConnectionString)
+                {
+                    Database = MakeRandomDatabaseName(),
+                    PersistSecurityInfo = true
+                };
 
             var connectionString = connectionStringBuilder.ToString();
 
@@ -86,6 +92,12 @@ namespace Dapper.MicroCRUD.Tests.Utils
         private static string MakeRandomDatabaseName()
         {
             return "microcrudtests_" + Guid.NewGuid().ToString("N");
+        }
+
+        private static bool IsInAppVeyor()
+        {
+            var result = Environment.GetEnvironmentVariable("APPVEYOR");
+            return string.Equals(result, "True", StringComparison.OrdinalIgnoreCase);
         }
     }
 }
