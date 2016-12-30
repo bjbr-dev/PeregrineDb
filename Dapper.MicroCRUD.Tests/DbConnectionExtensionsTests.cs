@@ -70,17 +70,6 @@ namespace Dapper.MicroCRUD.Tests
             this.connection = null;
         }
 
-        [SetUp]
-        public void SetUp()
-        {
-            MicroCRUDConfig.CurrentDialect = this.dialect;
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-        }
-
         private class Find
             : DbConnectionExtensionsTests
         {
@@ -96,7 +85,7 @@ namespace Dapper.MicroCRUD.Tests
                 this.connection.Execute("INSERT INTO NoKey (Name, Age) VALUES ('Some Name', 1)");
 
                 // Act
-                Assert.Throws<ArgumentException>(() => this.connection.Find<NoKey>("Some Name"));
+                Assert.Throws<ArgumentException>(() => this.connection.Find<NoKey>("Some Name", dialect: this.dialect));
             }
 
             [Test]
@@ -106,39 +95,39 @@ namespace Dapper.MicroCRUD.Tests
                 this.connection.Execute("INSERT INTO CompositeKeys (Key1, Key2) VALUES (1, 1)");
 
                 // Act
-                Assert.Throws<ArgumentException>(() => this.connection.Find<CompositeKeys>(5));
+                Assert.Throws<ArgumentException>(() => this.connection.Find<CompositeKeys>(5, dialect: this.dialect));
             }
 
             [Test]
             public void Finds_entity_by_Int32_primary_key()
             {
                 // Arrange
-                var id = this.connection.Insert<int>(new KeyInt32 { Name = "Some Name" });
+                var id = this.connection.Insert<int>(new KeyInt32 { Name = "Some Name" }, dialect: this.dialect);
 
                 // Act
-                var entity = this.connection.Find<KeyInt32>(id);
+                var entity = this.connection.Find<KeyInt32>(id, dialect: this.dialect);
 
                 // Assert
                 Assert.That(entity.Name, Is.EqualTo("Some Name"));
 
                 // Cleanup
-                this.connection.Delete<KeyInt32>(id);
+                this.connection.Delete<KeyInt32>(id, dialect: this.dialect);
             }
 
             [Test]
             public void Finds_entity_by_Int64_primary_key()
             {
                 // Arrange
-                var id = this.connection.Insert<long>(new KeyInt64 { Name = "Some Name" });
+                var id = this.connection.Insert<long>(new KeyInt64 { Name = "Some Name" }, dialect: this.dialect);
 
                 // Act
-                var user = this.connection.Find<KeyInt64>(id);
+                var user = this.connection.Find<KeyInt64>(id, dialect: this.dialect);
 
                 // Assert
                 Assert.That(user.Name, Is.EqualTo("Some Name"));
 
                 // Cleanup
-                this.connection.Delete<KeyInt64>(id);
+                this.connection.Delete<KeyInt64>(id, dialect: this.dialect);
             }
 
             [Test]
@@ -148,7 +137,7 @@ namespace Dapper.MicroCRUD.Tests
                 this.connection.Execute("INSERT INTO KeyString (Name, Age) VALUES ('Some Name', 42)");
 
                 // Act
-                var entity = this.connection.Find<KeyString>("Some Name");
+                var entity = this.connection.Find<KeyString>("Some Name", dialect: this.dialect);
 
                 // Assert
                 Assert.That(entity.Age, Is.EqualTo(42));
@@ -161,16 +150,16 @@ namespace Dapper.MicroCRUD.Tests
             public void Finds_entities_in_alternate_schema()
             {
                 // Arrange
-                var id = this.connection.Insert<int>(new SchemaOther { Name = "Some Name" });
+                var id = this.connection.Insert<int>(new SchemaOther { Name = "Some Name" }, dialect: this.dialect);
 
                 // Act
-                var entity = this.connection.Find<SchemaOther>(id);
+                var entity = this.connection.Find<SchemaOther>(id, dialect: this.dialect);
 
                 // Assert
                 Assert.That(entity.Name, Is.EqualTo("Some Name"));
 
                 // Cleanup
-                this.connection.Delete<SchemaOther>(id);
+                this.connection.Delete<SchemaOther>(id, dialect: this.dialect);
             }
         }
 
@@ -186,15 +175,16 @@ namespace Dapper.MicroCRUD.Tests
             public void Filters_result_by_conditions()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 });
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 });
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 });
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 });
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
 
                 // Act
                 var users = this.connection.GetRange<User>(
-                    "WHERE Name LIKE @Search + '%' and Age = @Age",
-                    new { Search = "Some Name", Age = 10 });
+                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
+                    new { Search = "Some Name", Age = 10 },
+                    dialect: this.dialect);
 
                 // Assert
                 Assert.That(users.Count(), Is.EqualTo(3));
@@ -207,13 +197,13 @@ namespace Dapper.MicroCRUD.Tests
             public void Returns_everything_when_conditions_is_null()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 });
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 });
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 });
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 });
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
 
                 // Act
-                var users = this.connection.GetRange<User>(null);
+                var users = this.connection.GetRange<User>(null, dialect: this.dialect);
 
                 // Assert
                 Assert.That(users.Count(), Is.EqualTo(4));
@@ -235,13 +225,13 @@ namespace Dapper.MicroCRUD.Tests
             public void Gets_all()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 });
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 });
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 });
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 });
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
 
                 // Act
-                var users = this.connection.GetAll<User>();
+                var users = this.connection.GetAll<User>(dialect: this.dialect);
 
                 // Assert
                 Assert.That(users.Count(), Is.EqualTo(4));
@@ -263,66 +253,67 @@ namespace Dapper.MicroCRUD.Tests
             public void Throws_exception_when_entity_has_no_key()
             {
                 // Act
-                Assert.Throws<ArgumentException>(() => this.connection.Insert<int>(new NoKey()));
+                Assert.Throws<ArgumentException>(() => this.connection.Insert<int>(new NoKey(), dialect: this.dialect));
             }
 
             [Test]
             public void Throws_exception_when_entity_has_composite_keys()
             {
                 // Act
-                Assert.Throws<ArgumentException>(() => this.connection.Insert<int>(new CompositeKeys()));
+                Assert.Throws<ArgumentException>(
+                    () => this.connection.Insert<int>(new CompositeKeys(), dialect: this.dialect));
             }
 
             [Test]
             public void Inserts_entity_with_int32_primary_key()
             {
                 // Act
-                var id = this.connection.Insert<int>(new KeyInt32 { Name = "Some Name" });
+                var id = this.connection.Insert<int>(new KeyInt32 { Name = "Some Name" }, dialect: this.dialect);
 
                 // Assert
                 Assert.That(id, Is.GreaterThan(0));
 
                 // Cleanup
-                this.connection.Delete<KeyInt32>(id);
+                this.connection.Delete<KeyInt32>(id, dialect: this.dialect);
             }
 
             [Test]
             public void Inserts_entity_with_int64_primary_key()
             {
                 // Act
-                var id = this.connection.Insert<int>(new KeyInt64 { Name = "Some Name" });
+                var id = this.connection.Insert<int>(new KeyInt64 { Name = "Some Name" }, dialect: this.dialect);
 
                 // Assert
                 Assert.That(id, Is.GreaterThan(0));
 
                 // Cleanup
-                this.connection.Delete<KeyInt64>(id);
+                this.connection.Delete<KeyInt64>(id, dialect: this.dialect);
             }
 
             [Test]
             public void Uses_key_attribute_to_determine_key()
             {
                 // Act
-                var id = this.connection.Insert<int>(new KeyAlias { Name = "Some Name" });
+                var id = this.connection.Insert<int>(new KeyAlias { Name = "Some Name" }, dialect: this.dialect);
 
                 // Assert
                 Assert.That(id, Is.GreaterThan(0));
 
                 // Cleanup
-                this.connection.Delete<KeyAlias>(id);
+                this.connection.Delete<KeyAlias>(id, dialect: this.dialect);
             }
 
             [Test]
             public void Inserts_into_other_schemas()
             {
                 // Act
-                var id = this.connection.Insert<int>(new SchemaOther { Name = "Some name" });
+                var id = this.connection.Insert<int>(new SchemaOther { Name = "Some name" }, dialect: this.dialect);
 
                 // Assert
                 Assert.That(id, Is.GreaterThan(0));
 
                 // Cleanup
-                this.connection.Delete<SchemaOther>(id);
+                this.connection.Delete<SchemaOther>(id, dialect: this.dialect);
             }
         }
 
@@ -338,19 +329,19 @@ namespace Dapper.MicroCRUD.Tests
             public void Updates_the_entity()
             {
                 // Arrange
-                var id = this.connection.Insert<int>(new User { Name = "Some name", Age = 10 });
+                var id = this.connection.Insert<int>(new User { Name = "Some name", Age = 10 }, dialect: this.dialect);
 
                 // Act
-                var entity = this.connection.Find<User>(id);
+                var entity = this.connection.Find<User>(id, dialect: this.dialect);
                 entity.Name = "Other name";
-                this.connection.Update(entity);
+                this.connection.Update(entity, dialect: this.dialect);
 
                 // Assert
-                var updatedEntity = this.connection.Find<User>(id);
+                var updatedEntity = this.connection.Find<User>(id, dialect: this.dialect);
                 Assert.That(updatedEntity.Name, Is.EqualTo("Other name"));
 
                 // Cleanup
-                this.connection.Delete<User>(id);
+                this.connection.Delete<User>(id, dialect: this.dialect);
             }
         }
 
@@ -366,13 +357,13 @@ namespace Dapper.MicroCRUD.Tests
             public void Deletes_the_entity_with_the_specified_id()
             {
                 // Arrange
-                var id = this.connection.Insert<int>(new User { Name = "Some name", Age = 10 });
+                var id = this.connection.Insert<int>(new User { Name = "Some name", Age = 10 }, dialect: this.dialect);
 
                 // Act
-                this.connection.Delete<User>(id);
+                this.connection.Delete<User>(id, dialect: this.dialect);
 
                 // Assert
-                Assert.That(this.connection.Find<User>(id), Is.Null);
+                Assert.That(this.connection.Find<User>(id, dialect: this.dialect), Is.Null);
             }
 
             [Test]
@@ -382,7 +373,7 @@ namespace Dapper.MicroCRUD.Tests
                 this.connection.Execute("INSERT INTO KeyString (Name, Age) VALUES ('Some name', 10)");
 
                 // Act
-                var result = this.connection.Delete<KeyString>("Some name");
+                var result = this.connection.Delete<KeyString>("Some name", dialect: this.dialect);
 
                 // Assert
                 Assert.That(result, Is.EqualTo(1));
@@ -401,14 +392,14 @@ namespace Dapper.MicroCRUD.Tests
             public void TestDeleteByObject()
             {
                 // Arrange
-                var id = this.connection.Insert<int>(new User { Name = "Some name", Age = 10 });
+                var id = this.connection.Insert<int>(new User { Name = "Some name", Age = 10 }, dialect: this.dialect);
 
                 // Act
-                var entity = this.connection.Find<User>(id);
-                this.connection.Delete(entity);
+                var entity = this.connection.Find<User>(id, dialect: this.dialect);
+                this.connection.Delete(entity, dialect: this.dialect);
 
                 // Assert
-                Assert.That(this.connection.Find<User>(id), Is.Null);
+                Assert.That(this.connection.Find<User>(id, dialect: this.dialect), Is.Null);
             }
         }
     }

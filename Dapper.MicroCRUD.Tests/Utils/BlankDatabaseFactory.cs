@@ -42,7 +42,7 @@ namespace Dapper.MicroCRUD.Tests.Utils
         public static IDbConnection CreatePostgreSqlDatabase()
         {
             var connectionStringBuilder =
-                new NpgsqlConnectionStringBuilder("Server=localhost;Port=5432;User Id=postgres;Password=postgres123;")
+                new NpgsqlConnectionStringBuilder("Server=localhost;Port=5432;User Id=postgres;Password=postgres123; Pooling=false;")
                     {
                         Database = MakeRandomDatabaseName(),
                         PersistSecurityInfo = true
@@ -85,7 +85,7 @@ namespace Dapper.MicroCRUD.Tests.Utils
 
         private static string MakeRandomDatabaseName()
         {
-            return "MicroCRUD" + Guid.NewGuid().ToString("N");
+            return "microcrudtests_" + Guid.NewGuid().ToString("N");
         }
     }
 }
