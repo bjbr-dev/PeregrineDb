@@ -22,6 +22,7 @@
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DocumentationFile>bin\Debug\Dapper.MicroCRUD.XML</DocumentationFile>
+    <CodeAnalysisRuleSet>Dapper.MicroCRUD.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -32,6 +33,7 @@
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DocumentationFile>bin\Release\Dapper.MicroCRUD.XML</DocumentationFile>
+    <CodeAnalysisRuleSet>Dapper.MicroCRUD.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Dapper, Version=1.50.2.0, Culture=neutral, processorArchitecture=MSIL">
@@ -39,6 +41,11 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable, Version=1.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.1.3.0\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -49,10 +56,24 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DbConnectionExtensions.cs" />
+    <Compile Include="Entities\DefaultColumnNameResolver.cs" />
+    <Compile Include="Entities\DefaultTableNameResolver.cs" />
+    <Compile Include="Dialect.cs" />
+    <Compile Include="Entities\ColumnSchema.cs" />
+    <Compile Include="Entities\TableSchema.cs" />
+    <Compile Include="Entities\IColumnNameResolver.cs" />
+    <Compile Include="Entities\ITableNameResolver.cs" />
+    <Compile Include="MicroCRUDConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SqlFactory.cs" />
+    <Compile Include="Entities\TableSchemaFactory.cs" />
+    <Compile Include="Utils\TypeExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <None Include="Dapper.MicroCRUD.ruleset" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
     <AdditionalFiles Include="stylecop.json" />
   </ItemGroup>
   <ItemGroup>
