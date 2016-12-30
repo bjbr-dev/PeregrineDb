@@ -20,7 +20,8 @@ namespace Dapper.MicroCRUD.Tests.Utils
                 : @"Server=localhost; Integrated Security=true; Pooling=false";
             var connectionStringBuilder = new SqlConnectionStringBuilder(serverConnectionString)
                 {
-                    InitialCatalog = MakeRandomDatabaseName()
+                    InitialCatalog = MakeRandomDatabaseName(),
+                    PersistSecurityInfo = true
                 };
 
             var connectionString = connectionStringBuilder.ToString();
