@@ -16,7 +16,7 @@ namespace Dapper.MicroCRUD.Tests.Utils
         public static IDbConnection CreateSqlServer2012Database()
         {
             var serverConnectionString = IsInAppVeyor()
-                ? @"Server=(local)\SQL2012SP1;Database=master;User ID=sa;Password=Password12!"
+                ? @"Server=(local)\SQL2012SP1;Database=master;User ID=sa;Password=Password12!; Pooling=false"
                 : @"Server=localhost; Integrated Security=true; Pooling=false";
             var connectionStringBuilder = new SqlConnectionStringBuilder(serverConnectionString)
                 {
