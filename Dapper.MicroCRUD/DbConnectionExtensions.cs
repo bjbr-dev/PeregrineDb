@@ -82,11 +82,9 @@ namespace Dapper
             dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
             var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
 
-            var primaryKey = tableSchema.GetSinglePrimaryKey("Find<TEntity>");
-
-            var sql = SqlFactory.MakeFindStatement(tableSchema, primaryKey, dialect);
+            var sql = SqlFactory.MakeFindStatement(tableSchema);
             var parameters = new DynamicParameters();
-            parameters.Add("@id", id);
+            parameters.Add("@Id", id);
 
             return connection.Query<TEntity>(sql, parameters, transaction, commandTimeout: commandTimeout)
                              .FirstOrDefault();
@@ -123,7 +121,7 @@ namespace Dapper
         {
             dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
             var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
-            var sql = SqlFactory.MakeGetRangeStatement(tableSchema, conditions, dialect);
+            var sql = SqlFactory.MakeGetRangeStatement(tableSchema, conditions);
 
             return connection.Query<TEntity>(sql, parameters, transaction, commandTimeout: commandTimeout);
         }
@@ -139,7 +137,7 @@ namespace Dapper
         {
             dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
             var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
-            var sql = SqlFactory.MakeGetRangeStatement(tableSchema, null, dialect);
+            var sql = SqlFactory.MakeGetRangeStatement(tableSchema, null);
 
             return connection.Query<TEntity>(sql, transaction: transaction, commandTimeout: commandTimeout);
         }
@@ -204,7 +202,7 @@ namespace Dapper
         {
             dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
             var tableSchema = TableSchemaFactory.GetTableSchema(entity.GetType(), dialect);
-            tableSchema.GetSinglePrimaryKey("Insert");
+            tableSchema.GetSinglePrimaryKey();
 
             var keyType = typeof(TPrimaryKey).GetUnderlyingType();
             if (keyType != typeof(int) && keyType != typeof(long))
@@ -247,9 +245,8 @@ namespace Dapper
         {
             dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
             var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
-            var primaryKey = tableSchema.GetSinglePrimaryKey("Insert");
 
-            var sql = SqlFactory.MakeUpdateStatement(tableSchema, primaryKey);
+            var sql = SqlFactory.MakeUpdateStatement(tableSchema);
             return connection.Execute(sql, entity, transaction, commandTimeout);
         }
 
@@ -283,9 +280,8 @@ namespace Dapper
         {
             dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
             var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
-            var primaryKey = tableSchema.GetSinglePrimaryKey("Delete<TEntity>");
 
-            var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(tableSchema, primaryKey);
+            var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(tableSchema);
 
             return connection.Execute(sql, entity, transaction, commandTimeout);
         }
@@ -319,12 +315,11 @@ namespace Dapper
         {
             dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
             var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
-            var primaryKey = tableSchema.GetSinglePrimaryKey("Delete<TEntity>");
 
-            var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(tableSchema, primaryKey);
+            var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(tableSchema);
 
             var parameters = new DynamicParameters();
-            parameters.Add("@" + tableSchema.GetSinglePrimaryKey("Delete<TEntity>").PropertyName, id);
+            parameters.Add("@" + tableSchema.GetSinglePrimaryKey().ParameterName, id);
 
             return connection.Execute(sql, parameters, transaction, commandTimeout);
         }

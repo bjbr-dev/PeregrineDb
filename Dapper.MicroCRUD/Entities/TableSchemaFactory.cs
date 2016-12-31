@@ -63,6 +63,7 @@ namespace Dapper.MicroCRUD.Entities
 
                 return new ColumnSchema(
                     columnNameResolver.ResolveColumnName(p, dialect),
+                    dialect.EscapeMostReservedCharacters(p.Name),
                     p.Name,
                     isPrimaryKey,
                     isPrimaryKey && p.GetCustomAttribute<RequiredAttribute>() == null);

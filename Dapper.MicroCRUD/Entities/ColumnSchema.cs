@@ -11,10 +11,16 @@ namespace Dapper.MicroCRUD.Entities
         /// <summary>
         /// Initializes a new instance of the <see cref="ColumnSchema"/> class.
         /// </summary>
-        public ColumnSchema(string columnName, string propertyName, bool isPrimaryKey, bool isGeneratedByDatabase)
+        public ColumnSchema(
+            string columnName,
+            string selectName,
+            string parameterName,
+            bool isPrimaryKey,
+            bool isGeneratedByDatabase)
         {
             this.ColumnName = columnName;
-            this.PropertyName = propertyName;
+            this.SelectName = selectName;
+            this.ParameterName = parameterName;
             this.IsPrimaryKey = isPrimaryKey;
             this.IsGeneratedByDatabase = isGeneratedByDatabase;
         }
@@ -25,9 +31,15 @@ namespace Dapper.MicroCRUD.Entities
         public string ColumnName { get; }
 
         /// <summary>
-        /// Gets the name of the original entity property.
+        /// Gets the name of the column when being returned to Dapper so that it can be bound.
+        /// This will usually be the same as <see cref="ColumnName"/>, unless the property has the [Column] attribute applied.
         /// </summary>
-        public string PropertyName { get; }
+        public string SelectName { get; }
+
+        /// <summary>
+        /// Gets the name of the column when used as a parameter. (Will be prefixed with an @ to signify it's a parameter).
+        /// </summary>
+        public string ParameterName { get; }
 
         /// <summary>
         /// Gets a value indicating whether this column is the primary key of its table.

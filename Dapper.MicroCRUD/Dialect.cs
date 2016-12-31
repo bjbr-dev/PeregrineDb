@@ -27,7 +27,7 @@ namespace Dapper.MicroCRUD
         /// Gets the Dialect for Microsoft SQL Server 2012
         /// </summary>
         public static Dialect SqlServer2012 { get; } =
-            new Dialect(nameof(SqlServer2012), "SELECT CAST(SCOPE_IDENTITY()  AS BIGINT) AS [id]", "[{0}]");
+            new Dialect(nameof(SqlServer2012), "SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]", "[{0}]");
 
         /// <summary>
         /// Gets the dialect for PostgreSQL.

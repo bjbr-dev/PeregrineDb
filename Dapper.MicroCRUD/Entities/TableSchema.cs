@@ -3,7 +3,6 @@
 // </copyright>
 namespace Dapper.MicroCRUD.Entities
 {
-    using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Linq;
@@ -43,17 +42,14 @@ namespace Dapper.MicroCRUD.Entities
         /// Gets the column which is the Primary Key of this table.
         /// Throws an exception if there is no key, or if there are multiple columns.
         /// </summary>
-        /// <exception cref="ArgumentException">
-        /// This table doesn't have a primary key, or there are multiple keys.
-        /// Nb: should be an <see cref="InvalidOperationException"/> but this is a conveniance method for validation and it's more important that the end user sees an appropriate exception.
-        /// </exception>
-        public ColumnSchema GetSinglePrimaryKey(string callerName)
+        /// <exception cref="InvalidPrimaryKeyException">This table doesn't have a primary key, or there are multiple keys.</exception>
+        public ColumnSchema GetSinglePrimaryKey()
         {
-            var result = this.GetPrimaryKeys(callerName);
+            var result = this.GetPrimaryKeys();
 
             if (result.Count > 1)
             {
-                throw new ArgumentException(callerName + " only supports an entity with a single [Key] or Id property");
+                throw new InvalidPrimaryKeyException("This method only supports an entity with a single [Key] or Id property");
             }
 
             return result[0];
@@ -63,16 +59,13 @@ namespace Dapper.MicroCRUD.Entities
         /// Gets the columns which form the Primary Key of this table.
         /// Throws an exception if there is no key.
         /// </summary>
-        /// <exception cref="ArgumentException">
-        /// This table doesn't have a primary key.
-        /// Nb: should be an <see cref="InvalidOperationException"/> but this is a conveniance method for validation and it's more important that the end user sees an appropriate exception.
-        /// </exception>
-        public IReadOnlyList<ColumnSchema> GetPrimaryKeys(string callerName)
+        /// <exception cref="InvalidPrimaryKeyException">This table doesn't have a primary key.</exception>
+        public IReadOnlyList<ColumnSchema> GetPrimaryKeys()
         {
             var result = this.PrimaryKeyColumns;
             if (result.Count == 0)
             {
-                throw new ArgumentException(callerName + " only supports an entity with a [Key] or Id property");
+                throw new InvalidPrimaryKeyException("This method only supports an entity with a [Key] or Id property");
             }
 
             return result;

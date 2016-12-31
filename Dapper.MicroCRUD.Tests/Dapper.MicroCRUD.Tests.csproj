@@ -59,6 +59,10 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable, Version=1.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.1.3.0\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -70,6 +74,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ExampleEntities\CompositeKeys.cs" />
+    <Compile Include="ExampleEntities\ExampleSchemaFactory.cs" />
     <Compile Include="ExampleEntities\KeyAlias.cs" />
     <Compile Include="ExampleEntities\User.cs" />
     <Compile Include="ExampleEntities\SchemaOther.cs" />
@@ -80,7 +85,8 @@
     <Compile Include="DbConnectionExtensionsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ExampleEntities\PropertyEnum.cs" />
-    <Compile Include="ExampleEntities\NoAutoIdentity.cs" />
+    <Compile Include="ExampleEntities\KeyNotGenerated.cs" />
+    <Compile Include="SqlFactoryTests.cs" />
     <Compile Include="Utils\BlankDatabaseFactory.cs" />
   </ItemGroup>
   <ItemGroup>

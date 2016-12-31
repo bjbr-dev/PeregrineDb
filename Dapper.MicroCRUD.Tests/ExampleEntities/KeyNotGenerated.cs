@@ -1,11 +1,11 @@
-// <copyright file="NoAutoIdentity.cs" company="Berkeleybross">
+// <copyright file="KeyNotGenerated.cs" company="Berkeleybross">
 //   Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 namespace Dapper.MicroCRUD.Tests.ExampleEntities
 {
     using System.ComponentModel.DataAnnotations;
 
-    public class NoAutoIdentity
+    public class KeyNotGenerated
     {
         [Key]
         [Required]

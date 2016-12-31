@@ -85,7 +85,8 @@ namespace Dapper.MicroCRUD.Tests
                 this.connection.Execute("INSERT INTO NoKey (Name, Age) VALUES ('Some Name', 1)");
 
                 // Act
-                Assert.Throws<ArgumentException>(() => this.connection.Find<NoKey>("Some Name", dialect: this.dialect));
+                Assert.Throws<InvalidPrimaryKeyException>(
+                    () => this.connection.Find<NoKey>("Some Name", dialect: this.dialect));
             }
 
             [Test]
@@ -95,7 +96,8 @@ namespace Dapper.MicroCRUD.Tests
                 this.connection.Execute("INSERT INTO CompositeKeys (Key1, Key2) VALUES (1, 1)");
 
                 // Act
-                Assert.Throws<ArgumentException>(() => this.connection.Find<CompositeKeys>(5, dialect: this.dialect));
+                Assert.Throws<InvalidPrimaryKeyException>(
+                    () => this.connection.Find<CompositeKeys>(5, dialect: this.dialect));
             }
 
             [Test]
@@ -253,14 +255,15 @@ namespace Dapper.MicroCRUD.Tests
             public void Throws_exception_when_entity_has_no_key()
             {
                 // Act
-                Assert.Throws<ArgumentException>(() => this.connection.Insert<int>(new NoKey(), dialect: this.dialect));
+                Assert.Throws<InvalidPrimaryKeyException>(
+                    () => this.connection.Insert<int>(new NoKey(), dialect: this.dialect));
             }
 
             [Test]
             public void Throws_exception_when_entity_has_composite_keys()
             {
                 // Act
-                Assert.Throws<ArgumentException>(
+                Assert.Throws<InvalidPrimaryKeyException>(
                     () => this.connection.Insert<int>(new CompositeKeys(), dialect: this.dialect));
             }
 

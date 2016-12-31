@@ -3,6 +3,7 @@
 // </copyright>
 namespace Dapper.MicroCRUD
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
@@ -11,18 +12,16 @@ namespace Dapper.MicroCRUD
     /// <summary>
     /// Helper methods to generate SQL statements
     /// </summary>
-    internal static class SqlFactory
+    public static class SqlFactory
     {
         /// <summary>
         /// Generates a SQL Select statement which counts how many rows match the <paramref name="conditions"/>.
         /// </summary>
         public static string MakeCountStatement(TableSchema tableSchema, string conditions)
         {
-            var sql = new StringBuilder();
-            sql.AppendLine("SELECT COUNT(*)");
-            sql.Append("FROM ").AppendLine(tableSchema.Name);
-            sql.AppendLine(conditions);
-
+            var sql = new StringBuilder("SELECT COUNT(*)");
+            sql.AppendClause("FROM ").Append(tableSchema.Name);
+            sql.AppendClause(conditions);
             return sql.ToString();
         }
 
@@ -30,27 +29,24 @@ namespace Dapper.MicroCRUD
         /// Generates a SQL statement to select a single row from a table.
         /// Requires a single parameter called @Id
         /// </summary>
-        public static string MakeFindStatement(TableSchema tableSchema, ColumnSchema primaryKey, Dialect dialect)
+        public static string MakeFindStatement(TableSchema tableSchema)
         {
-            var sql = new StringBuilder();
-            sql.Append("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns, dialect).AppendLine();
-            sql.Append("FROM ").AppendLine(tableSchema.Name);
-            sql.Append("WHERE ").Append(primaryKey.ColumnName).AppendLine(" = @Id");
+            var primaryKey = tableSchema.GetSinglePrimaryKey();
+
+            var sql = new StringBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
+            sql.AppendClause("FROM ").Append(tableSchema.Name);
+            sql.AppendClause("WHERE ").Append(primaryKey.ColumnName).Append(" = @Id");
             return sql.ToString();
         }
 
         /// <summary>
         /// Generates a SQL statement to select multiple rows.
         /// </summary>
-        public static string MakeGetRangeStatement(TableSchema tableSchema, string conditions, Dialect dialect)
+        public static string MakeGetRangeStatement(TableSchema tableSchema, string conditions)
         {
-            var sql = new StringBuilder();
-            sql.Append("SELECT ")
-               .AppendSelectPropertiesClause(tableSchema.Columns, dialect)
-               .AppendLine();
-            sql.Append("FROM ").AppendLine(tableSchema.Name);
-            sql.Append(conditions);
-
+            var sql = new StringBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
+            sql.AppendClause("FROM ").Append(tableSchema.Name);
+            sql.AppendClause(conditions);
             return sql.ToString();
         }
 
@@ -59,12 +55,10 @@ namespace Dapper.MicroCRUD
         /// </summary>
         public static string MakeInsertStatement(TableSchema tableSchema)
         {
-            var sql = new StringBuilder();
-
-            sql.Append("INSERT INTO ").Append(tableSchema.Name);
-            sql.Append(" (").AppendInsertParametersClause(tableSchema.Columns).AppendLine(")");
-            sql.Append("VALUES (").AppendInsertValuesClause(tableSchema.Columns).AppendLine(");");
-
+            var sql = new StringBuilder("INSERT INTO ")
+                .Append(tableSchema.Name)
+                .Append(" (").AppendInsertParametersClause(tableSchema.Columns).Append(")");
+            sql.AppendClause("VALUES (").AppendInsertValuesClause(tableSchema.Columns).Append(");");
             return sql.ToString();
         }
 
@@ -73,37 +67,31 @@ namespace Dapper.MicroCRUD
         /// </summary>
         public static string MakeInsertReturningIdentityStatement(TableSchema tableSchema, Dialect dialect)
         {
-            var sql = new StringBuilder();
+            return MakeInsertStatement(tableSchema) + Environment.NewLine + dialect.GetIdentitySql;
+        }
 
-            sql.Append("INSERT INTO ").Append(tableSchema.Name);
-            sql.Append(" (").AppendInsertParametersClause(tableSchema.Columns).AppendLine(")");
-            sql.Append("VALUES (").AppendInsertValuesClause(tableSchema.Columns).AppendLine(");");
+        /// <summary>
+        /// Generates a SQL Update statement which chooses which row to update by its PrimaryKey.
+        /// </summary>
+        public static string MakeUpdateStatement(TableSchema tableSchema)
+        {
+            var primaryKey = tableSchema.GetSinglePrimaryKey();
 
-            sql.Append(dialect.GetIdentitySql);
-
+            var sql = new StringBuilder("UPDATE ").Append(tableSchema.Name);
+            sql.AppendClause("SET ").AppendUpdateSetClause(tableSchema.Columns);
+            sql.AppendClause("WHERE ").Append(primaryKey.ColumnName).Append(" = @").Append(primaryKey.ParameterName);
             return sql.ToString();
         }
 
         /// <summary>
-        /// Generates a SQL Update statement which chooses which row to update by the <paramref name="primaryKey"/>.
+        /// Generates a SQL Delete statement which chooses which row to delete its PrimaryKey.
         /// </summary>
-        public static string MakeUpdateStatement(TableSchema tableSchema, ColumnSchema primaryKey)
+        public static string MakeDeleteByPrimaryKeyStatement(TableSchema tableSchema)
         {
-            var sql = new StringBuilder();
-            sql.Append("UPDATE ").AppendLine(tableSchema.Name);
-            sql.Append("SET ").AppendUpdateSetClause(tableSchema.Columns).AppendLine();
-            sql.Append("WHERE ").Append(primaryKey.ColumnName).Append(" = @").Append(primaryKey.PropertyName);
-            return sql.ToString();
-        }
+            var primaryKey = tableSchema.GetSinglePrimaryKey();
 
-        /// <summary>
-        /// Generates a SQL Delete statement which chooses which row to delete by the <paramref name="primaryKey"/>.
-        /// </summary>
-        public static string MakeDeleteByPrimaryKeyStatement(TableSchema tableSchema, ColumnSchema primaryKey)
-        {
-            var sql = new StringBuilder();
-            sql.Append("DELETE FROM ").AppendLine(tableSchema.Name);
-            sql.Append("WHERE ").Append(primaryKey.ColumnName).Append(" = @").Append(primaryKey.PropertyName);
+            var sql = new StringBuilder("DELETE FROM ").Append(tableSchema.Name);
+            sql.AppendClause("WHERE ").Append(primaryKey.ColumnName).Append(" = @").Append(primaryKey.ParameterName);
             return sql.ToString();
         }
 
@@ -112,31 +100,28 @@ namespace Dapper.MicroCRUD
         /// </summary>
         public static string MakeDeleteRangeStatement(TableSchema tableSchema, string conditions)
         {
-            var sql = new StringBuilder();
-            sql.AppendFormat("DELETE FROM ").AppendLine(tableSchema.Name);
-            sql.Append(conditions);
-
+            var sql = new StringBuilder("DELETE FROM ").Append(tableSchema.Name);
+            sql.AppendClause(conditions);
             return sql.ToString();
         }
 
         private static StringBuilder AppendSelectPropertiesClause(
             this StringBuilder sql,
-            IEnumerable<ColumnSchema> properties,
-            Dialect dialect)
+            IEnumerable<ColumnSchema> properties)
         {
             var isFirst = true;
             foreach (var property in properties)
             {
                 if (!isFirst)
                 {
-                    sql.Append(",");
+                    sql.Append(", ");
                 }
 
                 sql.Append(property.ColumnName);
 
-                if (property.ColumnName != property.PropertyName)
+                if (property.ColumnName != property.SelectName)
                 {
-                    sql.Append(" AS " + dialect.EscapeMostReservedCharacters(property.PropertyName));
+                    sql.Append(" AS " + property.SelectName);
                 }
 
                 isFirst = false;
@@ -155,7 +140,7 @@ namespace Dapper.MicroCRUD
                     sql.Append(", ");
                 }
 
-                sql.Append(property.ColumnName).Append(" = @").Append(property.PropertyName);
+                sql.Append(property.ColumnName).Append(" = @").Append(property.ParameterName);
                 isFirst = false;
             }
 
@@ -174,7 +159,7 @@ namespace Dapper.MicroCRUD
                     sql.Append(", ");
                 }
 
-                sql.Append("@").Append(property.PropertyName);
+                sql.Append("@").Append(property.ParameterName);
                 isFirst = false;
             }
 
@@ -198,6 +183,13 @@ namespace Dapper.MicroCRUD
             }
 
             return sql;
+        }
+
+        private static StringBuilder AppendClause(this StringBuilder sql, string clause)
+        {
+            return string.IsNullOrEmpty(clause)
+                ? sql
+                : sql.AppendLine().Append(clause);
         }
     }
 }
