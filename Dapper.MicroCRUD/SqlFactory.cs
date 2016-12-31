@@ -133,7 +133,7 @@ namespace Dapper.MicroCRUD
         private static StringBuilder AppendUpdateSetClause(this StringBuilder sql, IEnumerable<ColumnSchema> properties)
         {
             var isFirst = true;
-            foreach (var property in properties.Where(p => !p.IsPrimaryKey))
+            foreach (var property in properties.Where(p => p.Usage.IncludeInUpdateStatements))
             {
                 if (!isFirst)
                 {
@@ -152,7 +152,7 @@ namespace Dapper.MicroCRUD
             IEnumerable<ColumnSchema> properties)
         {
             var isFirst = true;
-            foreach (var property in properties.Where(p => !p.IsGeneratedByDatabase))
+            foreach (var property in properties.Where(p => p.Usage.IncludeInInsertStatements))
             {
                 if (!isFirst)
                 {
@@ -171,7 +171,7 @@ namespace Dapper.MicroCRUD
             IEnumerable<ColumnSchema> properties)
         {
             var isFirst = true;
-            foreach (var property in properties.Where(p => !p.IsGeneratedByDatabase))
+            foreach (var property in properties.Where(p => p.Usage.IncludeInInsertStatements))
             {
                 if (!isFirst)
                 {

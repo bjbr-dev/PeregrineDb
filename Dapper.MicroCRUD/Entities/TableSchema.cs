@@ -31,7 +31,7 @@ namespace Dapper.MicroCRUD.Entities
         /// <summary>
         /// Gets the columns which form the Primary Key of this table.
         /// </summary>
-        public IReadOnlyList<ColumnSchema> PrimaryKeyColumns => this.Columns.Where(c => c.IsPrimaryKey).ToList();
+        public IReadOnlyList<ColumnSchema> PrimaryKeyColumns => this.Columns.Where(c => c.Usage.IsPrimaryKey).ToList();
 
         /// <summary>
         /// Gets the columns in the table.

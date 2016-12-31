@@ -60,6 +60,7 @@
     <Compile Include="Entities\DefaultTableNameResolver.cs" />
     <Compile Include="Dialect.cs" />
     <Compile Include="Entities\ColumnSchema.cs" />
+    <Compile Include="Entities\ColumnUsage.cs" />
     <Compile Include="Entities\TableSchema.cs" />
     <Compile Include="Entities\IColumnNameResolver.cs" />
     <Compile Include="Entities\ITableNameResolver.cs" />

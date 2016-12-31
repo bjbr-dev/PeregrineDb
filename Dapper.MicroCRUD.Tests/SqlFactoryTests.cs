@@ -237,6 +237,38 @@ VALUES (@Id, @Name);";
 
                 Assert.That(sql, Is.EqualTo(expected));
             }
+
+            [Test]
+            public void Does_not_include_computed_columns()
+            {
+                // Arrange
+                var schema = ExampleSchemaFactory.PropertyComputed;
+
+                // Act
+                var sql = SqlFactory.MakeInsertStatement(schema);
+
+                // Assert
+                var expected = @"INSERT INTO [PropertyComputed] ([Name])
+VALUES (@Name);";
+
+                Assert.That(sql, Is.EqualTo(expected));
+            }
+
+            [Test]
+            public void Does_not_include_generated_columns()
+            {
+                // Arrange
+                var schema = ExampleSchemaFactory.PropertyGenerated;
+
+                // Act
+                var sql = SqlFactory.MakeInsertStatement(schema);
+
+                // Assert
+                var expected = @"INSERT INTO [PropertyGenerated] ([Name])
+VALUES (@Name);";
+
+                Assert.That(sql, Is.EqualTo(expected));
+            }
         }
 
         private class MakeInsertReturningIdentityStatement
@@ -271,6 +303,40 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
                 // Assert
                 var expected = @"INSERT INTO [KeyNotGenerated] ([Id], [Name])
 VALUES (@Id, @Name);
+SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
+
+                Assert.That(sql, Is.EqualTo(expected));
+            }
+
+            [Test]
+            public void Does_not_include_computed_columns()
+            {
+                // Arrange
+                var schema = ExampleSchemaFactory.PropertyComputed;
+
+                // Act
+                var sql = SqlFactory.MakeInsertReturningIdentityStatement(schema, Dialect.SqlServer2012);
+
+                // Assert
+                var expected = @"INSERT INTO [PropertyComputed] ([Name])
+VALUES (@Name);
+SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
+
+                Assert.That(sql, Is.EqualTo(expected));
+            }
+
+            [Test]
+            public void Does_not_include_generated_columns()
+            {
+                // Arrange
+                var schema = ExampleSchemaFactory.PropertyGenerated;
+
+                // Act
+                var sql = SqlFactory.MakeInsertReturningIdentityStatement(schema, Dialect.SqlServer2012);
+
+                // Assert
+                var expected = @"INSERT INTO [PropertyGenerated] ([Name])
+VALUES (@Name);
 SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
 
                 Assert.That(sql, Is.EqualTo(expected));
@@ -361,6 +427,40 @@ WHERE [Key] = @Id";
                 var expected = @"UPDATE [KeyNotDefault]
 SET [Name] = @Name
 WHERE [Key] = @Key";
+
+                Assert.That(sql, Is.EqualTo(expected));
+            }
+
+            [Test]
+            public void Does_not_include_computed_columns()
+            {
+                // Arrange
+                var schema = ExampleSchemaFactory.PropertyComputed;
+
+                // Act
+                var sql = SqlFactory.MakeUpdateStatement(schema);
+
+                // Assert
+                var expected = @"UPDATE [PropertyComputed]
+SET [Name] = @Name
+WHERE [Id] = @Id";
+
+                Assert.That(sql, Is.EqualTo(expected));
+            }
+
+            [Test]
+            public void Includes_generated_columns()
+            {
+                // Arrange
+                var schema = ExampleSchemaFactory.PropertyGenerated;
+
+                // Act
+                var sql = SqlFactory.MakeUpdateStatement(schema);
+
+                // Assert
+                var expected = @"UPDATE [PropertyGenerated]
+SET [Name] = @Name, [Created] = @Created
+WHERE [Id] = @Id";
 
                 Assert.That(sql, Is.EqualTo(expected));
             }

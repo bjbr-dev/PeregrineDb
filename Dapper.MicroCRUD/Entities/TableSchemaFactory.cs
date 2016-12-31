@@ -7,6 +7,7 @@ namespace Dapper.MicroCRUD.Entities
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.ComponentModel.DataAnnotations;
+    using System.ComponentModel.DataAnnotations.Schema;
     using System.Linq;
     using System.Reflection;
     using Dapper.MicroCRUD.Utils;
@@ -55,21 +56,66 @@ namespace Dapper.MicroCRUD.Entities
 
             var explicitKeyDefined = properties.Any(p => p.GetCustomAttribute<KeyAttribute>() != null);
 
-            var columns = properties.Select(p =>
-            {
-                var isPrimaryKey = explicitKeyDefined
-                    ? p.GetCustomAttribute<KeyAttribute>() != null
-                    : string.Equals(p.Name, "Id", StringComparison.OrdinalIgnoreCase);
-
-                return new ColumnSchema(
-                    columnNameResolver.ResolveColumnName(p, dialect),
-                    dialect.EscapeMostReservedCharacters(p.Name),
-                    p.Name,
-                    isPrimaryKey,
-                    isPrimaryKey && p.GetCustomAttribute<RequiredAttribute>() == null);
-            });
+            var columns = properties.Select(p => new ColumnSchema(
+                columnNameResolver.ResolveColumnName(p, dialect),
+                dialect.EscapeMostReservedCharacters(p.Name),
+                p.Name,
+                GetColumnUsage(explicitKeyDefined, p)));
 
             return new TableSchema(tableName, columns.ToImmutableList());
+        }
+
+        private static ColumnUsage GetColumnUsage(bool explicitKeyDefined, PropertyInfo property)
+        {
+            var isPrimaryKey = explicitKeyDefined
+                ? property.GetCustomAttribute<KeyAttribute>() != null
+                : string.Equals(property.Name, "Id", StringComparison.OrdinalIgnoreCase);
+
+            var generatedAttribute = property.GetCustomAttribute<DatabaseGeneratedAttribute>();
+            return isPrimaryKey
+                ? GetPrimaryKeyUsage(generatedAttribute)
+                : GetColumnUsage(generatedAttribute);
+        }
+
+        private static ColumnUsage GetColumnUsage(DatabaseGeneratedAttribute generatedAttribute)
+        {
+            if (generatedAttribute == null)
+            {
+                return ColumnUsage.Column;
+            }
+
+            switch (generatedAttribute.DatabaseGeneratedOption)
+            {
+                case DatabaseGeneratedOption.None:
+                    return ColumnUsage.Column;
+                case DatabaseGeneratedOption.Identity:
+                    return ColumnUsage.GeneratedColumn;
+                case DatabaseGeneratedOption.Computed:
+                    return ColumnUsage.ComputedColumn;
+                default:
+                    throw new ArgumentOutOfRangeException(
+                        "Unknown DatabaseGeneratedOption: " + generatedAttribute.DatabaseGeneratedOption);
+            }
+        }
+
+        private static ColumnUsage GetPrimaryKeyUsage(DatabaseGeneratedAttribute generatedAttribute)
+        {
+            if (generatedAttribute == null)
+            {
+                return ColumnUsage.PrimaryKey;
+            }
+
+            switch (generatedAttribute.DatabaseGeneratedOption)
+            {
+                case DatabaseGeneratedOption.None:
+                    return ColumnUsage.NotGeneratedPrimaryKey;
+                case DatabaseGeneratedOption.Identity:
+                case DatabaseGeneratedOption.Computed:
+                    return ColumnUsage.PrimaryKey;
+                default:
+                    throw new ArgumentOutOfRangeException(
+                        "Unknown DatabaseGeneratedOption: " + generatedAttribute.DatabaseGeneratedOption);
+            }
         }
     }
 }
