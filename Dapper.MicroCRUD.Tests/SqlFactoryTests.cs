@@ -10,6 +10,8 @@ namespace Dapper.MicroCRUD.Tests
     [TestFixture]
     public class SqlFactoryTests
     {
+        private readonly Dialect dialect = Dialect.SqlServer2012;
+
         private class MakeCountStatement
             : SqlFactoryTests
         {
@@ -17,7 +19,7 @@ namespace Dapper.MicroCRUD.Tests
             public void Selects_from_given_table()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.User;
+                var schema = this.dialect.User();
 
                 // Act
                 var sql = SqlFactory.MakeCountStatement(schema, null);
@@ -33,7 +35,7 @@ FROM [Users]";
             public void Adds_conditions()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.User;
+                var schema = this.dialect.User();
 
                 // Act
                 var sql = SqlFactory.MakeCountStatement(schema, "WHERE Foo IS NOT NULL");
@@ -54,7 +56,7 @@ WHERE Foo IS NOT NULL";
             public void Selects_from_given_table()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.User;
+                var schema = this.dialect.User();
 
                 // Act
                 var sql = SqlFactory.MakeFindStatement(schema);
@@ -71,7 +73,7 @@ WHERE [Id] = @Id";
             public void Uses_non_default_primary_key_name()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.KeyNotDefault;
+                var schema = this.dialect.KeyNotDefault();
 
                 // Act
                 var sql = SqlFactory.MakeFindStatement(schema);
@@ -88,7 +90,7 @@ WHERE [Key] = @Id";
             public void Adds_alias_when_primary_key_is_aliased()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.KeyAlias;
+                var schema = this.dialect.KeyAlias();
 
                 // Act
                 var sql = SqlFactory.MakeFindStatement(schema);
@@ -105,7 +107,7 @@ WHERE [Key] = @Id";
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.PropertyAlias;
+                var schema = this.dialect.PropertyAlias();
 
                 // Act
                 var sql = SqlFactory.MakeFindStatement(schema);
@@ -126,7 +128,7 @@ WHERE [Id] = @Id";
             public void Selects_from_given_table()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.User;
+                var schema = this.dialect.User();
 
                 // Act
                 var sql = SqlFactory.MakeGetRangeStatement(schema, null);
@@ -142,7 +144,7 @@ FROM [Users]";
             public void Adds_conditions_clause()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.User;
+                var schema = this.dialect.User();
 
                 // Act
                 var sql = SqlFactory.MakeGetRangeStatement(schema, "WHERE Age > @Age");
@@ -159,7 +161,7 @@ WHERE Age > @Age";
             public void Uses_non_default_primary_key_name()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.KeyNotDefault;
+                var schema = this.dialect.KeyNotDefault();
 
                 // Act
                 var sql = SqlFactory.MakeGetRangeStatement(schema, null);
@@ -175,7 +177,7 @@ FROM [KeyNotDefault]";
             public void Adds_alias_when_primary_key_is_aliased()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.KeyAlias;
+                var schema = this.dialect.KeyAlias();
 
                 // Act
                 var sql = SqlFactory.MakeGetRangeStatement(schema, null);
@@ -191,7 +193,7 @@ FROM [KeyAlias]";
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.PropertyAlias;
+                var schema = this.dialect.PropertyAlias();
 
                 // Act
                 var sql = SqlFactory.MakeGetRangeStatement(schema, null);
@@ -211,7 +213,7 @@ FROM [PropertyAlias]";
             public void Inserts_into_given_table()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.User;
+                var schema = this.dialect.User();
 
                 // Act
                 var sql = SqlFactory.MakeInsertStatement(schema);
@@ -227,7 +229,7 @@ VALUES (@Name, @Age);";
             public void Adds_primary_key_if_its_not_generated_by_database()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.KeyNotGenerated;
+                var schema = this.dialect.KeyNotGenerated();
 
                 // Act
                 var sql = SqlFactory.MakeInsertStatement(schema);
@@ -243,7 +245,7 @@ VALUES (@Id, @Name);";
             public void Does_not_include_computed_columns()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.PropertyComputed;
+                var schema = this.dialect.PropertyComputed();
 
                 // Act
                 var sql = SqlFactory.MakeInsertStatement(schema);
@@ -259,7 +261,7 @@ VALUES (@Name);";
             public void Does_not_include_generated_columns()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.PropertyGenerated;
+                var schema = this.dialect.PropertyGenerated();
 
                 // Act
                 var sql = SqlFactory.MakeInsertStatement(schema);
@@ -279,7 +281,7 @@ VALUES (@Name);";
             public void Inserts_into_given_table()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.User;
+                var schema = this.dialect.User();
 
                 // Act
                 var sql = SqlFactory.MakeInsertReturningIdentityStatement(schema, Dialect.SqlServer2012);
@@ -296,7 +298,7 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
             public void Adds_primary_key_if_its_not_generated_by_database()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.KeyNotGenerated;
+                var schema = this.dialect.KeyNotGenerated();
 
                 // Act
                 var sql = SqlFactory.MakeInsertReturningIdentityStatement(schema, Dialect.SqlServer2012);
@@ -313,7 +315,7 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
             public void Does_not_include_computed_columns()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.PropertyComputed;
+                var schema = this.dialect.PropertyComputed();
 
                 // Act
                 var sql = SqlFactory.MakeInsertReturningIdentityStatement(schema, Dialect.SqlServer2012);
@@ -330,7 +332,7 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
             public void Does_not_include_generated_columns()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.PropertyGenerated;
+                var schema = this.dialect.PropertyGenerated();
 
                 // Act
                 var sql = SqlFactory.MakeInsertReturningIdentityStatement(schema, Dialect.SqlServer2012);
@@ -351,7 +353,7 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
             public void Updates_given_table()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.User;
+                var schema = this.dialect.User();
 
                 // Act
                 var sql = SqlFactory.MakeUpdateStatement(schema);
@@ -368,7 +370,7 @@ WHERE [Id] = @Id";
             public void Does_not_update_primary_key_even_if_its_not_auto_generated()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.KeyNotGenerated;
+                var schema = this.dialect.KeyNotGenerated();
 
                 // Act
                 var sql = SqlFactory.MakeUpdateStatement(schema);
@@ -385,7 +387,7 @@ WHERE [Id] = @Id";
             public void Uses_aliased_property_names()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.PropertyAlias;
+                var schema = this.dialect.PropertyAlias();
 
                 // Act
                 var sql = SqlFactory.MakeUpdateStatement(schema);
@@ -402,7 +404,7 @@ WHERE [Id] = @Id";
             public void Uses_aliased_key_name()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.KeyAlias;
+                var schema = this.dialect.KeyAlias();
 
                 // Act
                 var sql = SqlFactory.MakeUpdateStatement(schema);
@@ -419,7 +421,7 @@ WHERE [Key] = @Id";
             public void Uses_non_default_key_name()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.KeyNotDefault;
+                var schema = this.dialect.KeyNotDefault();
 
                 // Act
                 var sql = SqlFactory.MakeUpdateStatement(schema);
@@ -436,7 +438,7 @@ WHERE [Key] = @Key";
             public void Does_not_include_computed_columns()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.PropertyComputed;
+                var schema = this.dialect.PropertyComputed();
 
                 // Act
                 var sql = SqlFactory.MakeUpdateStatement(schema);
@@ -453,7 +455,7 @@ WHERE [Id] = @Id";
             public void Includes_generated_columns()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.PropertyGenerated;
+                var schema = this.dialect.PropertyGenerated();
 
                 // Act
                 var sql = SqlFactory.MakeUpdateStatement(schema);
@@ -474,7 +476,7 @@ WHERE [Id] = @Id";
             public void Deletes_from_given_table()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.User;
+                var schema = this.dialect.User();
 
                 // Act
                 var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(schema);
@@ -490,7 +492,7 @@ WHERE [Id] = @Id";
             public void Uses_primary_key_even_if_its_not_auto_generated()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.KeyNotGenerated;
+                var schema = this.dialect.KeyNotGenerated();
 
                 // Act
                 var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(schema);
@@ -506,7 +508,7 @@ WHERE [Id] = @Id";
             public void Uses_aliased_key_name()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.KeyAlias;
+                var schema = this.dialect.KeyAlias();
 
                 // Act
                 var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(schema);
@@ -522,7 +524,7 @@ WHERE [Key] = @Id";
             public void Uses_non_default_key_name()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.KeyNotDefault;
+                var schema = this.dialect.KeyNotDefault();
 
                 // Act
                 var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(schema);
@@ -542,7 +544,7 @@ WHERE [Key] = @Key";
             public void Deletes_from_given_table()
             {
                 // Arrange
-                var schema = ExampleSchemaFactory.User;
+                var schema = this.dialect.User();
 
                 // Act
                 var sql = SqlFactory.MakeDeleteRangeStatement(schema, "WHERE [Age] > 10");

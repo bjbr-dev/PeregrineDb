@@ -64,6 +64,7 @@
     <Compile Include="Entities\TableSchema.cs" />
     <Compile Include="Entities\IColumnNameResolver.cs" />
     <Compile Include="Entities\ITableNameResolver.cs" />
+    <Compile Include="Entities\TableSchemaCache.cs" />
     <Compile Include="InvalidPrimaryKeyException.cs" />
     <Compile Include="MicroCRUDConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

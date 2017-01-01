@@ -90,6 +90,14 @@ CREATE TABLE PropertyAllPossibleTypes
 	ByteArrayProperty bytea NOT NULL
 );
 
+CREATE TABLE SimpleBenchmarkEntities
+(
+	Id SERIAL NOT NULL PRIMARY KEY,
+	FirstName NVARCHAR(50) NOT NULL,
+	LastName NVARCHAR(50) NOT NULL,
+	DateOfBirth timestamp NOT NULL
+);
+
 CREATE TABLE Users
 (
 	Id SERIAL NOT NULL PRIMARY KEY,

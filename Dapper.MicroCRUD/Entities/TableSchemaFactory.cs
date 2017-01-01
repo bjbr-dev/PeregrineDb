@@ -42,12 +42,9 @@ namespace Dapper.MicroCRUD.Entities
         /// <summary>
         /// Create the table schema for an entity
         /// </summary>
-        public static TableSchema GetTableSchema(Type entityType, Dialect dialect)
+        public static TableSchema GetTableSchema(Type entityType, MicroCRUDConfig config)
         {
-            var columnNameResolver = MicroCRUDConfig.ColumnNameResolver;
-            var tableNameResolver = MicroCRUDConfig.TableNameResolver;
-
-            var tableName = tableNameResolver.ResolveTableName(entityType, dialect);
+            var tableName = config.TableNameResolver.ResolveTableName(entityType, config.Dialect);
             var properties = entityType.GetProperties().Where(p =>
             {
                 var propertyType = p.PropertyType.GetUnderlyingType();
@@ -56,13 +53,13 @@ namespace Dapper.MicroCRUD.Entities
 
             var explicitKeyDefined = properties.Any(p => p.GetCustomAttribute<KeyAttribute>() != null);
 
-            var columns = properties.Select(p => new ColumnSchema(
-                columnNameResolver.ResolveColumnName(p, dialect),
-                dialect.EscapeMostReservedCharacters(p.Name),
-                p.Name,
-                GetColumnUsage(explicitKeyDefined, p)));
+            var columns = properties.Select(
+                p => config.Dialect.MakeColumnSchema(
+                    p.Name,
+                    config.ColumnNameResolver.ResolveColumnName(p),
+                    GetColumnUsage(explicitKeyDefined, p)));
 
-            return new TableSchema(tableName, columns.ToImmutableList());
+            return new TableSchema(tableName, columns.ToImmutableArray());
         }
 
         private static ColumnUsage GetColumnUsage(bool explicitKeyDefined, PropertyInfo property)
@@ -70,6 +67,13 @@ namespace Dapper.MicroCRUD.Entities
             var isPrimaryKey = explicitKeyDefined
                 ? property.GetCustomAttribute<KeyAttribute>() != null
                 : string.Equals(property.Name, "Id", StringComparison.OrdinalIgnoreCase);
+
+            if (!property.CanWrite)
+            {
+                return isPrimaryKey
+                    ? ColumnUsage.ComputedPrimaryKey
+                    : ColumnUsage.ComputedColumn;
+            }
 
             var generatedAttribute = property.GetCustomAttribute<DatabaseGeneratedAttribute>();
             return isPrimaryKey
@@ -102,7 +106,7 @@ namespace Dapper.MicroCRUD.Entities
         {
             if (generatedAttribute == null)
             {
-                return ColumnUsage.PrimaryKey;
+                return ColumnUsage.ComputedPrimaryKey;
             }
 
             switch (generatedAttribute.DatabaseGeneratedOption)
@@ -111,7 +115,7 @@ namespace Dapper.MicroCRUD.Entities
                     return ColumnUsage.NotGeneratedPrimaryKey;
                 case DatabaseGeneratedOption.Identity:
                 case DatabaseGeneratedOption.Computed:
-                    return ColumnUsage.PrimaryKey;
+                    return ColumnUsage.ComputedPrimaryKey;
                 default:
                     throw new ArgumentOutOfRangeException(
                         "Unknown DatabaseGeneratedOption: " + generatedAttribute.DatabaseGeneratedOption);

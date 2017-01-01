@@ -3,117 +3,95 @@
 // </copyright>
 namespace Dapper.MicroCRUD.Tests.ExampleEntities
 {
-    using System.Collections.Immutable;
     using Dapper.MicroCRUD.Entities;
 
     internal static class ExampleSchemaFactory
     {
-        public static TableSchema KeyAlias
+        public static TableSchema KeyAlias(this Dialect dialect)
         {
-            get
-            {
-                var primaryKey = new ColumnSchema("[Key]", "[Id]", "Id", ColumnUsage.PrimaryKey);
-                var columns = new[]
-                    {
-                        primaryKey,
-                        new ColumnSchema("[Name]", "[Name]", "Name", ColumnUsage.Column)
-                    };
+            var primaryKey = dialect.MakeColumnSchema("Id", "Key", ColumnUsage.ComputedPrimaryKey);
+            var columns = new[]
+                {
+                    primaryKey,
+                    dialect.MakeColumnSchema("Name", ColumnUsage.Column)
+                };
 
-                return new TableSchema("[KeyAlias]", columns.ToImmutableList());
-            }
+            return dialect.MakeTableSchema("KeyAlias", columns);
         }
 
-        public static TableSchema KeyNotDefault
+        public static TableSchema KeyNotDefault(this Dialect dialect)
         {
-            get
-            {
-                var primaryKey = new ColumnSchema("[Key]", "[Key]", "Key", ColumnUsage.PrimaryKey);
-                var columns = new[]
-                    {
-                        primaryKey,
-                        new ColumnSchema("[Name]", "[Name]", "Name", ColumnUsage.Column)
-                    };
+            var primaryKey = dialect.MakeColumnSchema("Key", ColumnUsage.ComputedPrimaryKey);
+            var columns = new[]
+                {
+                    primaryKey,
+                    dialect.MakeColumnSchema("Name", ColumnUsage.Column)
+                };
 
-                return new TableSchema("[KeyNotDefault]", columns.ToImmutableList());
-            }
+            return dialect.MakeTableSchema("KeyNotDefault", columns);
         }
 
-        public static TableSchema KeyNotGenerated
+        public static TableSchema KeyNotGenerated(this Dialect dialect)
         {
-            get
-            {
-                var primaryKey = new ColumnSchema("[Id]", "[Id]", "Id", ColumnUsage.NotGeneratedPrimaryKey);
-                var columns = new[]
-                    {
-                        primaryKey,
-                        new ColumnSchema("[Name]", "[Name]", "Name", ColumnUsage.Column)
-                    };
+            var primaryKey = dialect.MakeColumnSchema("Id", ColumnUsage.NotGeneratedPrimaryKey);
+            var columns = new[]
+                {
+                    primaryKey,
+                    dialect.MakeColumnSchema("Name", ColumnUsage.Column)
+                };
 
-                return new TableSchema("[KeyNotGenerated]", columns.ToImmutableList());
-            }
+            return dialect.MakeTableSchema("KeyNotGenerated", columns);
         }
 
-        public static TableSchema PropertyAlias
+        public static TableSchema PropertyAlias(this Dialect dialect)
         {
-            get
-            {
-                var primaryKey = new ColumnSchema("[Id]", "[Id]", "Id", ColumnUsage.PrimaryKey);
-                var columns = new[]
-                    {
-                        primaryKey,
-                        new ColumnSchema("[YearsOld]", "[Age]", "Age", ColumnUsage.Column)
-                    };
+            var primaryKey = dialect.MakeColumnSchema("Id", ColumnUsage.ComputedPrimaryKey);
+            var columns = new[]
+                {
+                    primaryKey,
+                    dialect.MakeColumnSchema("Age", "YearsOld", ColumnUsage.Column)
+                };
 
-                return new TableSchema("[PropertyAlias]", columns.ToImmutableList());
-            }
+            return dialect.MakeTableSchema("PropertyAlias", columns);
         }
 
-        public static TableSchema PropertyComputed
+        public static TableSchema PropertyComputed(this Dialect dialect)
         {
-            get
-            {
-                var primaryKey = new ColumnSchema("[Id]", "[Id]", "Id", ColumnUsage.PrimaryKey);
-                var columns = new[]
-                    {
-                        primaryKey,
-                        new ColumnSchema("[Name]", "[Name]", "Name", ColumnUsage.Column),
-                        new ColumnSchema("[LastUpdated]", "[LastUpdated]", "LastUpdated", ColumnUsage.ComputedColumn)
-                    };
+            var primaryKey = dialect.MakeColumnSchema("Id", ColumnUsage.ComputedPrimaryKey);
+            var columns = new[]
+                {
+                    primaryKey,
+                    dialect.MakeColumnSchema("Name", ColumnUsage.Column),
+                    dialect.MakeColumnSchema("LastUpdated", ColumnUsage.ComputedColumn)
+                };
 
-                return new TableSchema("[PropertyComputed]", columns.ToImmutableList());
-            }
+            return dialect.MakeTableSchema("PropertyComputed", columns);
         }
 
-        public static TableSchema PropertyGenerated
+        public static TableSchema PropertyGenerated(this Dialect dialect)
         {
-            get
-            {
-                var primaryKey = new ColumnSchema("[Id]", "[Id]", "Id", ColumnUsage.PrimaryKey);
-                var columns = new[]
-                    {
-                        primaryKey,
-                        new ColumnSchema("[Name]", "[Name]", "Name", ColumnUsage.Column),
-                        new ColumnSchema("[Created]", "[Created]", "Created", ColumnUsage.GeneratedColumn)
-                    };
+            var primaryKey = dialect.MakeColumnSchema("Id", ColumnUsage.ComputedPrimaryKey);
+            var columns = new[]
+                {
+                    primaryKey,
+                    dialect.MakeColumnSchema("Name", ColumnUsage.Column),
+                    dialect.MakeColumnSchema("Created", ColumnUsage.GeneratedColumn)
+                };
 
-                return new TableSchema("[PropertyGenerated]", columns.ToImmutableList());
-            }
+            return dialect.MakeTableSchema("PropertyGenerated", columns);
         }
 
-        public static TableSchema User
+        public static TableSchema User(this Dialect dialect)
         {
-            get
-            {
-                var primaryKey = new ColumnSchema("[Id]", "[Id]", "Id", ColumnUsage.PrimaryKey);
-                var columns = new[]
-                    {
-                        primaryKey,
-                        new ColumnSchema("[Name]", "[Name]", "Name", ColumnUsage.Column),
-                        new ColumnSchema("[Age]", "[Age]", "Age", ColumnUsage.Column)
-                    };
+            var primaryKey = dialect.MakeColumnSchema("Id", ColumnUsage.ComputedPrimaryKey);
+            var columns = new[]
+                {
+                    primaryKey,
+                    dialect.MakeColumnSchema("Name", ColumnUsage.Column),
+                    dialect.MakeColumnSchema("Age", ColumnUsage.Column)
+                };
 
-                return new TableSchema("[Users]", columns.ToImmutableList());
-            }
+            return dialect.MakeTableSchema("Users", columns);
         }
     }
 }

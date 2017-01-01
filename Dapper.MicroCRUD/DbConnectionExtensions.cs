@@ -47,8 +47,7 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
+            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
             var sql = SqlFactory.MakeCountStatement(tableSchema, conditions);
             return connection.ExecuteScalar<int>(sql, parameters, transaction, commandTimeout);
         }
@@ -79,8 +78,7 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
+            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
 
             var sql = SqlFactory.MakeFindStatement(tableSchema);
             var parameters = new DynamicParameters();
@@ -119,10 +117,8 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
+            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
             var sql = SqlFactory.MakeGetRangeStatement(tableSchema, conditions);
-
             return connection.Query<TEntity>(sql, parameters, transaction, commandTimeout: commandTimeout);
         }
 
@@ -135,10 +131,8 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
+            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
             var sql = SqlFactory.MakeGetRangeStatement(tableSchema, null);
-
             return connection.Query<TEntity>(sql, transaction: transaction, commandTimeout: commandTimeout);
         }
 
@@ -166,9 +160,7 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-            var tableSchema = TableSchemaFactory.GetTableSchema(entity.GetType(), dialect);
-
+            var tableSchema = TableSchemaCache.GetTableSchema(dialect, entity.GetType());
             var sql = SqlFactory.MakeInsertStatement(tableSchema);
             connection.Execute(sql, entity, transaction, commandTimeout);
         }
@@ -200,8 +192,8 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-            var tableSchema = TableSchemaFactory.GetTableSchema(entity.GetType(), dialect);
+            var config = MicroCRUDConfig.GetConfig(dialect);
+            var tableSchema = TableSchemaCache.GetTableSchema(entity.GetType(), config);
             tableSchema.GetSinglePrimaryKey();
 
             var keyType = typeof(TPrimaryKey).GetUnderlyingType();
@@ -211,7 +203,7 @@ namespace Dapper
                     "Insert<TPrimaryKey>() can only be used for Int32 and Int64 primary keys. Use Insert() for other types of primary keys.");
             }
 
-            var sql = SqlFactory.MakeInsertReturningIdentityStatement(tableSchema, dialect);
+            var sql = SqlFactory.MakeInsertReturningIdentityStatement(tableSchema, config.Dialect);
             return connection.Query<TPrimaryKey>(sql, entity, transaction, commandTimeout: commandTimeout).Single();
         }
 
@@ -244,9 +236,7 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
-
+            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
             var sql = SqlFactory.MakeUpdateStatement(tableSchema);
             return connection.Execute(sql, entity, transaction, commandTimeout);
         }
@@ -279,11 +269,8 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
-
+            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
             var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(tableSchema);
-
             return connection.Execute(sql, entity, transaction, commandTimeout);
         }
 
@@ -314,11 +301,9 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
+            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
 
             var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(tableSchema);
-
             var parameters = new DynamicParameters();
             parameters.Add("@" + tableSchema.GetSinglePrimaryKey().ParameterName, id);
 
@@ -360,8 +345,7 @@ namespace Dapper
                     "DeleteRange<T> requires a WHERE clause, use DeleteAll<TEntity> to delete everything.");
             }
 
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
+            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
             var sql = SqlFactory.MakeDeleteRangeStatement(tableSchema, conditions);
             return connection.Execute(sql, parameters, transaction, commandTimeout);
         }
@@ -392,8 +376,7 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
+            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
             var sql = SqlFactory.MakeDeleteRangeStatement(tableSchema, null);
             return connection.Execute(sql, transaction: transaction, commandTimeout: commandTimeout);
         }

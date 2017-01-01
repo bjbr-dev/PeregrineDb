@@ -10,3 +10,4 @@ Dapper.MicroCRUD.Tests/obj/
 
 .vs/
 **/*.user
+_NCrunch_*

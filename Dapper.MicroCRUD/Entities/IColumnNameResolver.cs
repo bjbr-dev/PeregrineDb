@@ -13,6 +13,6 @@ namespace Dapper.MicroCRUD.Entities
         /// <summary>
         /// Gets the database column name for the given entity property.
         /// </summary>
-        string ResolveColumnName(PropertyInfo propertyInfo, Dialect dialect);
+        string ResolveColumnName(PropertyInfo propertyInfo);
     }
 }

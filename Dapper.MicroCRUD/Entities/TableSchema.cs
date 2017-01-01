@@ -15,12 +15,11 @@ namespace Dapper.MicroCRUD.Entities
         /// <summary>
         /// Initializes a new instance of the <see cref="TableSchema"/> class.
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="columns"></param>
-        public TableSchema(string name, ImmutableList<ColumnSchema> columns)
+        public TableSchema(string name, IReadOnlyList<ColumnSchema> columns)
         {
             this.Name = name;
             this.Columns = columns;
+            this.PrimaryKeyColumns = columns.Where(c => c.Usage.IsPrimaryKey).ToImmutableArray();
         }
 
         /// <summary>
@@ -31,12 +30,12 @@ namespace Dapper.MicroCRUD.Entities
         /// <summary>
         /// Gets the columns which form the Primary Key of this table.
         /// </summary>
-        public IReadOnlyList<ColumnSchema> PrimaryKeyColumns => this.Columns.Where(c => c.Usage.IsPrimaryKey).ToList();
+        public IReadOnlyList<ColumnSchema> PrimaryKeyColumns { get; }
 
         /// <summary>
         /// Gets the columns in the table.
         /// </summary>
-        public ImmutableList<ColumnSchema> Columns { get; }
+        public IReadOnlyList<ColumnSchema> Columns { get; }
 
         /// <summary>
         /// Gets the column which is the Primary Key of this table.
@@ -49,7 +48,8 @@ namespace Dapper.MicroCRUD.Entities
 
             if (result.Count > 1)
             {
-                throw new InvalidPrimaryKeyException("This method only supports an entity with a single [Key] or Id property");
+                throw new InvalidPrimaryKeyException(
+                    "This method only supports an entity with a single [Key] or Id property");
             }
 
             return result[0];

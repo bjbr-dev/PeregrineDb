@@ -94,6 +94,14 @@ CREATE TABLE PropertyAllPossibleTypes
 	ByteArrayProperty varbinary(MAX) NOT NULL
 );
 
+CREATE TABLE SimpleBenchmarkEntities
+(
+	Id INT NOT NULL IDENTITY PRIMARY KEY,
+	FirstName NVARCHAR(50) NOT NULL,
+	LastName NVARCHAR(50) NOT NULL,
+	DateOfBirth DATETIME2(7) NOT NULL
+);
+
 CREATE TABLE Users
 (
 	Id INT NOT NULL IDENTITY PRIMARY KEY,
