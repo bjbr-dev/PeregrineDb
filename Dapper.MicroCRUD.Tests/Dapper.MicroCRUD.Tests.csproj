@@ -76,6 +76,7 @@
     <Compile Include="ExampleEntities\CompositeKeys.cs" />
     <Compile Include="ExampleEntities\ExampleSchemaFactory.cs" />
     <Compile Include="ExampleEntities\KeyAlias.cs" />
+    <Compile Include="ExampleEntities\KeyGuid.cs" />
     <Compile Include="ExampleEntities\PropertyAllPossibleTypes.cs" />
     <Compile Include="ExampleEntities\PropertyComputed.cs" />
     <Compile Include="ExampleEntities\PropertyGenerated.cs" />

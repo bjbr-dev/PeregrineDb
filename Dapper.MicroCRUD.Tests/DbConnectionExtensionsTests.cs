@@ -201,7 +201,7 @@ namespace Dapper.MicroCRUD.Tests
             public void Finds_entity_by_string_primary_key()
             {
                 // Arrange
-                this.connection.Execute("INSERT INTO KeyString (Name, Age) VALUES ('Some Name', 42)");
+                this.connection.Insert(new KeyString { Name = "Some Name", Age = 42 }, dialect: this.dialect);
 
                 // Act
                 var entity = this.connection.Find<KeyString>("Some Name", dialect: this.dialect);
@@ -210,7 +210,24 @@ namespace Dapper.MicroCRUD.Tests
                 Assert.That(entity.Age, Is.EqualTo(42));
 
                 // Cleanup
-                this.connection.Execute("DELETE FROM KeyString");
+                this.connection.Delete(entity, dialect: this.dialect);
+            }
+
+            [Test]
+            public void Finds_entity_by_guid_primary_key()
+            {
+                // Arrange
+                var id = Guid.NewGuid();
+                this.connection.Insert(new KeyGuid { Id = id, Name = "Some Name" }, dialect: this.dialect);
+
+                // Act
+                var entity = this.connection.Find<KeyGuid>(id, dialect: this.dialect);
+
+                // Assert
+                Assert.That(entity.Name, Is.EqualTo("Some Name"));
+
+                // Cleanup
+                this.connection.Delete(entity, dialect: this.dialect);
             }
 
             [Test]
@@ -424,6 +441,28 @@ namespace Dapper.MicroCRUD.Tests
             }
 
             [Test]
+            public void Throws_exception_for_string_keys()
+            {
+                // Arrange
+                var entity = new KeyString { Name = "Some Name", Age = 10 };
+
+                // Act / Assert
+                Assert.Throws<InvalidPrimaryKeyException>(
+                    () => this.connection.Insert<string>(entity, dialect: this.dialect));
+            }
+
+            [Test]
+            public void Throws_exception_for_guid_keys()
+            {
+                // Arrange
+                var entity = new KeyGuid { Id = Guid.NewGuid(), Name = "Some Name" };
+
+                // Act / Assert
+                Assert.Throws<InvalidPrimaryKeyException>(
+                    () => this.connection.Insert<Guid>(entity, dialect: this.dialect));
+            }
+
+            [Test]
             public void Inserts_entity_with_int32_primary_key()
             {
                 // Act
@@ -529,10 +568,24 @@ namespace Dapper.MicroCRUD.Tests
             public void Deletes_entity_with_string_key()
             {
                 // Arrange
-                this.connection.Execute("INSERT INTO KeyString (Name, Age) VALUES ('Some name', 10)");
+                this.connection.Insert(new KeyString { Name = "Some Name", Age = 10 }, dialect: this.dialect);
 
                 // Act
-                var result = this.connection.Delete<KeyString>("Some name", dialect: this.dialect);
+                var result = this.connection.Delete<KeyString>("Some Name", dialect: this.dialect);
+
+                // Assert
+                Assert.That(result, Is.EqualTo(1));
+            }
+
+            [Test]
+            public void Deletes_entity_with_guid_key()
+            {
+                // Arrange
+                var id = Guid.NewGuid();
+                this.connection.Insert(new KeyGuid { Id = id, Name = "Some Name" }, dialect: this.dialect);
+
+                // Act
+                var result = this.connection.Delete<KeyGuid>(id, dialect: this.dialect);
 
                 // Assert
                 Assert.That(result, Is.EqualTo(1));
@@ -548,7 +601,7 @@ namespace Dapper.MicroCRUD.Tests
             }
 
             [Test]
-            public void TestDeleteByObject()
+            public void Deletes_entity_with_matching_key()
             {
                 // Arrange
                 var id = this.connection.Insert<int>(new User { Name = "Some name", Age = 10 }, dialect: this.dialect);

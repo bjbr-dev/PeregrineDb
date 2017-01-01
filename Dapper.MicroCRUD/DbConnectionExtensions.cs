@@ -207,7 +207,8 @@ namespace Dapper
             var keyType = typeof(TPrimaryKey).GetUnderlyingType();
             if (keyType != typeof(int) && keyType != typeof(long))
             {
-                throw new NotSupportedException("Entities can only have an Int32 or Int64 Key.");
+                throw new InvalidPrimaryKeyException(
+                    "Insert<TPrimaryKey>() can only be used for Int32 and Int64 primary keys. Use Insert() for other types of primary keys.");
             }
 
             var sql = SqlFactory.MakeInsertReturningIdentityStatement(tableSchema, dialect);
