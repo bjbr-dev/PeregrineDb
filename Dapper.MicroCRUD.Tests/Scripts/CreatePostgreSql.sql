@@ -51,8 +51,37 @@ CREATE TABLE NoKey
 
 CREATE TABLE PropertyEnum
 (
-	Id INT NOT NULL PRIMARY KEY,
+	Id SERIAL NOT NULL PRIMARY KEY,
 	FavoriteColor INT NULL
+);
+
+CREATE TABLE PropertyAllPossibleTypes
+(
+	Id SERIAL NOT NULL PRIMARY KEY,
+	Int16Property smallint NOT NULL,
+	NullableInt16Property smallint NULL,
+	Int32Property int NOT NULL,
+	NullableInt32Property int NULL,
+	Int64Property bigint NOT NULL,
+	NullableInt64Property bigint NULL,
+	SingleProperty real NOT NULL,
+	NullableSingleProperty real NULL,
+	DoubleProperty double precision NOT NULL,
+	NullableDoubleProperty double precision NULL,
+	DecimalProperty numeric NOT NULL,
+	NullableDecimalProperty numeric NULL,
+	BoolProperty bool NOT NULL,
+	NullableBoolProperty bool NULL,
+	StringProperty TEXT NOT NULL,
+	CharProperty TEXT NOT NULL,
+	NullableCharProperty TEXT NULL,
+	GuidProperty uuid NOT NULL,
+	NullableGuidProperty uuid NULL,
+	DateTimeProperty timestamp NOT NULL,
+	NullableDateTimeProperty timestamp NULL,
+	DateTimeOffsetProperty timestamp with time zone NOT NULL,
+	NullableDateTimeOffsetProperty timestamp with time zone NULL,
+	ByteArrayProperty bytea NOT NULL
 );
 
 CREATE TABLE Users

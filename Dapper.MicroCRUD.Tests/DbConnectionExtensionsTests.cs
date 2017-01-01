@@ -70,6 +70,71 @@ namespace Dapper.MicroCRUD.Tests
             this.connection = null;
         }
 
+        private class Count
+            : DbConnectionExtensionsTests
+        {
+            public Count(Dialect dialect)
+                : base(dialect)
+            {
+            }
+
+            [Test]
+            public void Counts_entities()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var result = this.connection.Count<User>(dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(4, result);
+
+                // Cleanup
+                this.connection.Execute("DELETE FROM Users");
+            }
+
+            [Test]
+            public void Counts_entities_matching_conditions()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var result = this.connection.Count<User>("WHERE Age < @Age", new { Age = 11 }, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(3, result);
+
+                // Cleanup
+                this.connection.Execute("DELETE FROM Users");
+            }
+
+            [Test]
+            public void Counts_entities_in_alternate_schema()
+            {
+                this.connection.Insert<int>(new SchemaOther { Name = "Some Name" }, dialect: this.dialect);
+                this.connection.Insert<int>(new SchemaOther { Name = "Some Name" }, dialect: this.dialect);
+                this.connection.Insert<int>(new SchemaOther { Name = "Some Name" }, dialect: this.dialect);
+                this.connection.Insert<int>(new SchemaOther { Name = "Some Name" }, dialect: this.dialect);
+
+                // Act
+                var result = this.connection.Count<SchemaOther>(dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(4, result);
+
+                // Cleanup
+                this.connection.Execute("DELETE FROM Other.SchemaOther");
+            }
+        }
+
         private class Find
             : DbConnectionExtensionsTests
         {
@@ -162,6 +227,97 @@ namespace Dapper.MicroCRUD.Tests
 
                 // Cleanup
                 this.connection.Delete<SchemaOther>(id, dialect: this.dialect);
+            }
+
+            [Test]
+            public void Finds_entities_with_enum_property()
+            {
+                // Arrange
+                var id = this.connection.Insert<int>(
+                    new PropertyEnum { FavoriteColor = PropertyEnum.Color.Green },
+                    dialect: this.dialect);
+
+                // Act
+                var entity = this.connection.Find<PropertyEnum>(id, dialect: this.dialect);
+
+                // Assert
+                Assert.That(entity.FavoriteColor, Is.EqualTo(PropertyEnum.Color.Green));
+
+                // Cleanup
+                this.connection.Delete<PropertyEnum>(id, dialect: this.dialect);
+            }
+
+            [Test]
+            public void Finds_entities_with_all_possible_types()
+            {
+                // Arrange
+                var id = this.connection.Insert<int>(
+                    new PropertyAllPossibleTypes
+                        {
+                            Int16Property = -16,
+                            NullableInt16Property = -16,
+                            Int32Property = -32,
+                            NullableInt32Property = -32,
+                            Int64Property = -64,
+                            NullableInt64Property = -64,
+                            SingleProperty = 1,
+                            NullableSingleProperty = 1,
+                            DoubleProperty = 2,
+                            NullableDoubleProperty = 2,
+                            DecimalProperty = 10,
+                            NullableDecimalProperty = 10,
+                            BoolProperty = true,
+                            NullableBoolProperty = true,
+                            StringProperty = "Foo",
+                            CharProperty = 'F',
+                            NullableCharProperty = 'N',
+                            GuidProperty = new Guid("da8326a1-c703-4a79-9fb2-2909b0f40367"),
+                            NullableGuidProperty = new Guid("706e6bcf-4a6d-4d19-91e9-935852140c4d"),
+                            DateTimeProperty = new DateTime(2016, 12, 31),
+                            NullableDateTimeProperty = new DateTime(2016, 12, 31),
+                            DateTimeOffsetProperty =
+                                new DateTimeOffset(new DateTime(2016, 12, 31), new TimeSpan(0, 1, 0, 0)),
+                            NullableDateTimeOffsetProperty =
+                                new DateTimeOffset(new DateTime(2016, 12, 31), new TimeSpan(0, 1, 0, 0)),
+                            ByteArrayProperty = new byte[] { 1, 2, 3 }
+                        },
+                    dialect: this.dialect);
+
+                // Act
+                var entity = this.connection.Find<PropertyAllPossibleTypes>(id, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(-16, entity.Int16Property);
+                Assert.AreEqual(-16, entity.NullableInt16Property);
+                Assert.AreEqual(-32, entity.Int32Property);
+                Assert.AreEqual(-32, entity.NullableInt32Property);
+                Assert.AreEqual(-64, entity.Int64Property);
+                Assert.AreEqual(-64, entity.NullableInt64Property);
+                Assert.AreEqual(1, entity.SingleProperty);
+                Assert.AreEqual(1, entity.NullableSingleProperty);
+                Assert.AreEqual(2, entity.DoubleProperty);
+                Assert.AreEqual(2, entity.NullableDoubleProperty);
+                Assert.AreEqual(10, entity.DecimalProperty);
+                Assert.AreEqual(10, entity.NullableDecimalProperty);
+                Assert.AreEqual(true, entity.BoolProperty);
+                Assert.AreEqual(true, entity.NullableBoolProperty);
+                Assert.AreEqual("Foo", entity.StringProperty);
+                Assert.AreEqual('F', entity.CharProperty);
+                Assert.AreEqual('N', entity.NullableCharProperty);
+                Assert.AreEqual(new Guid("da8326a1-c703-4a79-9fb2-2909b0f40367"), entity.GuidProperty);
+                Assert.AreEqual(new Guid("706e6bcf-4a6d-4d19-91e9-935852140c4d"), entity.NullableGuidProperty);
+                Assert.AreEqual(new DateTime(2016, 12, 31), entity.DateTimeProperty);
+                Assert.AreEqual(new DateTime(2016, 12, 31), entity.NullableDateTimeProperty);
+                Assert.AreEqual(
+                    new DateTimeOffset(new DateTime(2016, 12, 31), new TimeSpan(0, 1, 0, 0)),
+                    entity.DateTimeOffsetProperty);
+                Assert.AreEqual(
+                    new DateTimeOffset(new DateTime(2016, 12, 31), new TimeSpan(0, 1, 0, 0)),
+                    entity.NullableDateTimeOffsetProperty);
+                Assert.AreEqual(new byte[] { 1, 2, 3 }, entity.ByteArrayProperty);
+
+                // Cleanup
+                this.connection.Delete<PropertyAllPossibleTypes>(id, dialect: this.dialect);
             }
         }
 
