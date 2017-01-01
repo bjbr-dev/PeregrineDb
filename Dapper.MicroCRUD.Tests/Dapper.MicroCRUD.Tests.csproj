@@ -91,6 +91,7 @@
     <Compile Include="ExampleEntities\PropertyEnum.cs" />
     <Compile Include="ExampleEntities\KeyNotGenerated.cs" />
     <Compile Include="SqlFactoryTests.cs" />
+    <Compile Include="Utils\BlankDatabase.cs" />
     <Compile Include="Utils\BlankDatabaseFactory.cs" />
   </ItemGroup>
   <ItemGroup>

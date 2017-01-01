@@ -4,24 +4,52 @@
 namespace Dapper.MicroCRUD.Tests.Utils
 {
     using System;
-    using System.Data;
+    using System.Collections.Generic;
     using System.Data.SqlClient;
     using System.Reflection;
     using DbUp;
     using DbUp.Builder;
     using Npgsql;
 
-    public class BlankDatabaseFactory
+    internal class BlankDatabaseFactory
     {
-        public static IDbConnection CreateSqlServer2012Database()
+        public static IEnumerable<string> PossibleDialects
+            => new[]
+                {
+                    nameof(Dialect.SqlServer2012),
+                    nameof(Dialect.PostgreSql)
+                };
+
+        public static BlankDatabase MakeDatabase(string dialect)
+        {
+            var database = MakeDatabaseAux(dialect);
+            database.Connection.Open();
+            return database;
+        }
+
+        private static BlankDatabase MakeDatabaseAux(string dialect)
+        {
+            switch (dialect)
+            {
+                case nameof(Dialect.SqlServer2012):
+                    return CreateSqlServer2012Database();
+                case nameof(Dialect.PostgreSql):
+                    return CreatePostgreSqlDatabase();
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+
+        private static BlankDatabase CreateSqlServer2012Database()
         {
             var serverConnectionString = IsInAppVeyor()
                 ? @"Server=(local)\SQL2012SP1;Database=master;User ID=sa;Password=Password12!; Pooling=false"
                 : @"Server=localhost; Integrated Security=true; Pooling=false";
+
+            var databaseName = MakeRandomDatabaseName();
             var connectionStringBuilder = new SqlConnectionStringBuilder(serverConnectionString)
                 {
-                    InitialCatalog = MakeRandomDatabaseName(),
-                    PersistSecurityInfo = true
+                    InitialCatalog = databaseName
                 };
 
             var connectionString = connectionStringBuilder.ToString();
@@ -29,30 +57,28 @@ namespace Dapper.MicroCRUD.Tests.Utils
             EnsureDatabase.For.SqlDatabase(connectionString);
             CreateDatabase(DeployChanges.To.SqlDatabase(connectionString), "CreateSqlServer2012.sql");
 
-            return new SqlConnection(connectionString);
+            return new BlankDatabase(
+                Dialect.SqlServer2012,
+                new SqlConnection(connectionString),
+                () =>
+                {
+                    using (var connection = new SqlConnection(serverConnectionString))
+                    {
+                        connection.Execute("USE MASTER; DROP DATABASE " + databaseName);
+                    }
+                });
         }
 
-        public static void DropSqlServer2012Database(string connectionString)
-        {
-            var builder = new SqlConnectionStringBuilder(connectionString);
-            var currentDatabase = builder.InitialCatalog;
-            builder.InitialCatalog = string.Empty;
-
-            using (var connection = new SqlConnection(builder.ToString()))
-            {
-                connection.Execute("USE MASTER; DROP DATABASE " + currentDatabase);
-            }
-        }
-
-        public static IDbConnection CreatePostgreSqlDatabase()
+        private static BlankDatabase CreatePostgreSqlDatabase()
         {
             var serverConnectionString = IsInAppVeyor()
                 ? "Server=localhost;Port=5432;User Id=postgres;Password=Password12!; Pooling=false;"
                 : "Server=localhost;Port=5432;User Id=postgres;Password=postgres123; Pooling=false;";
+
+            var databaseName = MakeRandomDatabaseName();
             var connectionStringBuilder = new NpgsqlConnectionStringBuilder(serverConnectionString)
                 {
-                    Database = MakeRandomDatabaseName(),
-                    PersistSecurityInfo = true
+                    Database = databaseName
                 };
 
             var connectionString = connectionStringBuilder.ToString();
@@ -60,19 +86,16 @@ namespace Dapper.MicroCRUD.Tests.Utils
             EnsureDatabase.For.PostgresqlDatabase(connectionString);
             CreateDatabase(DeployChanges.To.PostgresqlDatabase(connectionString), "CreatePostgreSql.sql");
 
-            return new NpgsqlConnection(connectionString);
-        }
-
-        public static void DropPostgresDatabase(string connectionString)
-        {
-            var builder = new NpgsqlConnectionStringBuilder(connectionString);
-            var currentDatabase = builder.Database;
-            builder.Database = null;
-
-            using (var connection = new NpgsqlConnection(builder.ToString()))
-            {
-                connection.Execute("DROP DATABASE " + currentDatabase);
-            }
+            return new BlankDatabase(
+                Dialect.PostgreSql,
+                new NpgsqlConnection(connectionString),
+                () =>
+                {
+                    using (var connection = new NpgsqlConnection(serverConnectionString))
+                    {
+                        connection.Execute("DROP DATABASE " + databaseName);
+                    }
+                });
         }
 
         private static void CreateDatabase(UpgradeEngineBuilder builder, string name)

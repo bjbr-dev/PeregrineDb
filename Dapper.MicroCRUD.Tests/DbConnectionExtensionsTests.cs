@@ -4,7 +4,6 @@
 namespace Dapper.MicroCRUD.Tests
 {
     using System;
-    using System.Collections.Generic;
     using System.Data;
     using System.Linq;
     using Dapper.MicroCRUD.Tests.ExampleEntities;
@@ -12,69 +11,39 @@ namespace Dapper.MicroCRUD.Tests
     using NUnit.Framework;
 
     [Parallelizable(ParallelScope.None)]
-    [TestFixtureSource(nameof(TestDialects))]
-    [TestFixture]
+    [TestFixtureSource(typeof(BlankDatabaseFactory), nameof(BlankDatabaseFactory.PossibleDialects))]
     public class DbConnectionExtensionsTests
     {
-        private readonly Dialect dialect;
+        private readonly string dialectName;
+
         private IDbConnection connection;
+        private Dialect dialect;
+        private BlankDatabase database;
 
-        public DbConnectionExtensionsTests(Dialect dialect)
+        public DbConnectionExtensionsTests(string dialectName)
         {
-            this.dialect = dialect;
+            this.dialectName = dialectName;
         }
-
-        public static IEnumerable<Dialect> TestDialects => new[] { Dialect.SqlServer2012, Dialect.PostgreSql };
 
         [OneTimeSetUp]
         public void OneTimeSetup()
         {
-            switch (this.dialect.Name)
-            {
-                case nameof(Dialect.SqlServer2012):
-                    this.connection = BlankDatabaseFactory.CreateSqlServer2012Database();
-                    break;
-                case nameof(Dialect.PostgreSql):
-                    this.connection = BlankDatabaseFactory.CreatePostgreSqlDatabase();
-                    break;
-                default:
-                    throw new InvalidOperationException();
-            }
-
-            this.connection.Open();
+            this.database = BlankDatabaseFactory.MakeDatabase(this.dialectName);
+            this.connection = this.database.Connection;
+            this.dialect = this.database.Dialect;
         }
 
         [OneTimeTearDown]
         public void OneTimeTearDown()
         {
-            if (this.connection == null)
-            {
-                return;
-            }
-
-            var connectionString = this.connection.ConnectionString;
-            this.connection.Dispose();
-
-            switch (this.dialect.Name)
-            {
-                case nameof(Dialect.SqlServer2012):
-                    BlankDatabaseFactory.DropSqlServer2012Database(connectionString);
-                    break;
-                case nameof(Dialect.PostgreSql):
-                    BlankDatabaseFactory.DropPostgresDatabase(connectionString);
-                    break;
-                default:
-                    throw new InvalidOperationException();
-            }
-
-            this.connection = null;
+            this.database?.Dispose();
         }
 
         private class Count
             : DbConnectionExtensionsTests
         {
-            public Count(Dialect dialect)
-                : base(dialect)
+            public Count(string dialectName)
+                : base(dialectName)
             {
             }
 
@@ -138,8 +107,8 @@ namespace Dapper.MicroCRUD.Tests
         private class Find
             : DbConnectionExtensionsTests
         {
-            public Find(Dialect dialect)
-                : base(dialect)
+            public Find(string dialectName)
+                : base(dialectName)
             {
             }
 
@@ -341,8 +310,8 @@ namespace Dapper.MicroCRUD.Tests
         private class GetRange
             : DbConnectionExtensionsTests
         {
-            public GetRange(Dialect dialect)
-                : base(dialect)
+            public GetRange(string dialectName)
+                : base(dialectName)
             {
             }
 
@@ -391,8 +360,8 @@ namespace Dapper.MicroCRUD.Tests
         private class GetAll
             : DbConnectionExtensionsTests
         {
-            public GetAll(Dialect dialect)
-                : base(dialect)
+            public GetAll(string dialectName)
+                : base(dialectName)
             {
             }
 
@@ -419,8 +388,8 @@ namespace Dapper.MicroCRUD.Tests
         private class InsertAndReturnKey
             : DbConnectionExtensionsTests
         {
-            public InsertAndReturnKey(Dialect dialect)
-                : base(dialect)
+            public InsertAndReturnKey(string dialectName)
+                : base(dialectName)
             {
             }
 
@@ -518,8 +487,8 @@ namespace Dapper.MicroCRUD.Tests
         private class Update
             : DbConnectionExtensionsTests
         {
-            public Update(Dialect dialect)
-                : base(dialect)
+            public Update(string dialectName)
+                : base(dialectName)
             {
             }
 
@@ -546,8 +515,8 @@ namespace Dapper.MicroCRUD.Tests
         private class DeleteId
             : DbConnectionExtensionsTests
         {
-            public DeleteId(Dialect dialect)
-                : base(dialect)
+            public DeleteId(string dialectName)
+                : base(dialectName)
             {
             }
 
@@ -595,8 +564,8 @@ namespace Dapper.MicroCRUD.Tests
         private class DeleteEntity
             : DbConnectionExtensionsTests
         {
-            public DeleteEntity(Dialect dialect)
-                : base(dialect)
+            public DeleteEntity(string dialectName)
+                : base(dialectName)
             {
             }
 
