@@ -97,6 +97,7 @@
     <Compile Include="SqlFactoryTests.cs" />
     <Compile Include="Utils\BlankDatabase.cs" />
     <Compile Include="Utils\BlankDatabaseFactory.cs" />
+    <Compile Include="Utils\SqlStringComparer.cs" />
   </ItemGroup>
   <ItemGroup>
     <AdditionalFiles Include="..\Dapper.MicroCRUD\stylecop.json">

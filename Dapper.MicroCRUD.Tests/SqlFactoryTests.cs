@@ -4,6 +4,7 @@
 namespace Dapper.MicroCRUD.Tests
 {
     using Dapper.MicroCRUD.Tests.ExampleEntities;
+    using Dapper.MicroCRUD.Tests.Utils;
     using NUnit.Framework;
 
     [TestFixture]
@@ -25,7 +26,7 @@ namespace Dapper.MicroCRUD.Tests
                 var expected = @"SELECT COUNT(*)
 FROM [Users]";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -42,7 +43,7 @@ FROM [Users]";
 FROM [Users]
 WHERE Foo IS NOT NULL";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
         }
 
@@ -63,7 +64,7 @@ WHERE Foo IS NOT NULL";
 FROM [Users]
 WHERE [Id] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -80,7 +81,7 @@ WHERE [Id] = @Id";
 FROM [KeyNotDefault]
 WHERE [Key] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -97,7 +98,7 @@ WHERE [Key] = @Id";
 FROM [KeyAlias]
 WHERE [Key] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -114,7 +115,7 @@ WHERE [Key] = @Id";
 FROM [PropertyAlias]
 WHERE [Id] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
         }
 
@@ -134,7 +135,7 @@ WHERE [Id] = @Id";
                 var expected = @"SELECT [Id], [Name], [Age]
 FROM [Users]";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -151,7 +152,7 @@ FROM [Users]";
 FROM [Users]
 WHERE Age > @Age";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -167,7 +168,7 @@ WHERE Age > @Age";
                 var expected = @"SELECT [Key], [Name]
 FROM [KeyNotDefault]";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -183,7 +184,7 @@ FROM [KeyNotDefault]";
                 var expected = @"SELECT [Key] AS [Id], [Name]
 FROM [KeyAlias]";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -199,7 +200,7 @@ FROM [KeyAlias]";
                 var expected = @"SELECT [Id], [YearsOld] AS [Age]
 FROM [PropertyAlias]";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
         }
 
@@ -219,7 +220,7 @@ FROM [PropertyAlias]";
                 var expected = @"INSERT INTO [Users] ([Name], [Age])
 VALUES (@Name, @Age);";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -235,7 +236,7 @@ VALUES (@Name, @Age);";
                 var expected = @"INSERT INTO [KeyNotGenerated] ([Id], [Name])
 VALUES (@Id, @Name);";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -251,7 +252,7 @@ VALUES (@Id, @Name);";
                 var expected = @"INSERT INTO [PropertyComputed] ([Name])
 VALUES (@Name);";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -267,7 +268,7 @@ VALUES (@Name);";
                 var expected = @"INSERT INTO [PropertyGenerated] ([Name])
 VALUES (@Name);";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
         }
 
@@ -288,7 +289,7 @@ VALUES (@Name);";
 VALUES (@Name, @Age);
 SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -305,7 +306,7 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
 VALUES (@Id, @Name);
 SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -322,7 +323,7 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
 VALUES (@Name);
 SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -339,7 +340,7 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
 VALUES (@Name);
 SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
         }
 
@@ -360,7 +361,7 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
 SET [Name] = @Name, [Age] = @Age
 WHERE [Id] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -377,7 +378,7 @@ WHERE [Id] = @Id";
 SET [Name] = @Name
 WHERE [Id] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -394,7 +395,7 @@ WHERE [Id] = @Id";
 SET [YearsOld] = @Age
 WHERE [Id] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -411,7 +412,7 @@ WHERE [Id] = @Id";
 SET [Name] = @Name
 WHERE [Key] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -428,7 +429,7 @@ WHERE [Key] = @Id";
 SET [Name] = @Name
 WHERE [Key] = @Key";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -445,7 +446,7 @@ WHERE [Key] = @Key";
 SET [Name] = @Name
 WHERE [Id] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -462,7 +463,7 @@ WHERE [Id] = @Id";
 SET [Name] = @Name, [Created] = @Created
 WHERE [Id] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
         }
 
@@ -482,7 +483,7 @@ WHERE [Id] = @Id";
                 var expected = @"DELETE FROM [Users]
 WHERE [Id] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -498,7 +499,7 @@ WHERE [Id] = @Id";
                 var expected = @"DELETE FROM [KeyNotGenerated]
 WHERE [Id] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -514,7 +515,7 @@ WHERE [Id] = @Id";
                 var expected = @"DELETE FROM [KeyAlias]
 WHERE [Key] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
 
             [Test]
@@ -530,7 +531,7 @@ WHERE [Key] = @Id";
                 var expected = @"DELETE FROM [KeyNotDefault]
 WHERE [Key] = @Key";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
         }
 
@@ -550,7 +551,7 @@ WHERE [Key] = @Key";
                 var expected = @"DELETE FROM [Users]
 WHERE [Age] > 10";
 
-                Assert.That(sql, Is.EqualTo(expected));
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
         }
     }
