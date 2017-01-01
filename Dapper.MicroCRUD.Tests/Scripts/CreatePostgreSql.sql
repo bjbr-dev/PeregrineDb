@@ -93,8 +93,8 @@ CREATE TABLE PropertyAllPossibleTypes
 CREATE TABLE SimpleBenchmarkEntities
 (
 	Id SERIAL NOT NULL PRIMARY KEY,
-	FirstName NVARCHAR(50) NOT NULL,
-	LastName NVARCHAR(50) NOT NULL,
+	FirstName TEXT NOT NULL,
+	LastName TEXT NOT NULL,
 	DateOfBirth timestamp NOT NULL
 );
 

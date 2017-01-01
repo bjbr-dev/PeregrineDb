@@ -56,7 +56,22 @@ namespace Dapper.MicroCRUD
         }
 
         /// <summary>
-        /// Gets the default configuration object
+        /// Gets the dialect
+        /// </summary>
+        internal Dialect Dialect { get; }
+
+        /// <summary>
+        /// Gets the table name resolver
+        /// </summary>
+        internal ITableNameResolver TableNameResolver { get; }
+
+        /// <summary>
+        /// Gets the column name resolvers
+        /// </summary>
+        internal IColumnNameResolver ColumnNameResolver { get; }
+
+        /// <summary>
+        /// Gets or sets the default configuration object
         /// </summary>
         private static MicroCRUDConfig Default
         {
@@ -76,21 +91,6 @@ namespace Dapper.MicroCRUD
                 }
             }
         }
-
-        /// <summary>
-        /// Gets the dialect
-        /// </summary>
-        internal Dialect Dialect { get; }
-
-        /// <summary>
-        /// Gets the table name resolver
-        /// </summary>
-        internal ITableNameResolver TableNameResolver { get; }
-
-        /// <summary>
-        /// Gets the column name resolvers
-        /// </summary>
-        internal IColumnNameResolver ColumnNameResolver { get; }
 
         /// <summary>
         /// Gets the <see cref="TableSchemaFactory"/> for the specified dialect (Null means use default)
