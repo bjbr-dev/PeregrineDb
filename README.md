@@ -31,3 +31,4 @@ Dapper.MicroCRUD provides the following extensions to the IDbConnection:
 - Delete<TEntity>(entity): Deletes the entity by using it's primary key.
 - Delete<TEntity>(id): Deletes the entity with the given id.
 - DeleteRange<TEntity>(conditions): Deletes the entities which match the given conditions.
+- DeleteAll<TEntity>(conditions): Deletes all entities in the TEntity table.

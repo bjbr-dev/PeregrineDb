@@ -271,7 +271,7 @@ namespace Dapper
         /// ]]>
         /// </code>
         /// </example>
-        /// <returns>The number of affected records.</returns>
+        /// <returns>The number of deleted entities.</returns>
         public static int Delete<TEntity>(
             this IDbConnection connection,
             TEntity entity,
@@ -306,7 +306,7 @@ namespace Dapper
         /// ]]>
         /// </code>
         /// </example>
-        /// <returns>The number of affected records.</returns>
+        /// <returns>The number of deleted entities.</returns>
         public static int Delete<TEntity>(
             this IDbConnection connection,
             object id,
@@ -326,7 +326,8 @@ namespace Dapper
         }
 
         /// <summary>
-        /// Deletes all the entities in the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
+        /// <para>Deletes all the entities in the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.</para>
+        /// <para>Note: <paramref name="conditions"/> must contain a WHERE clause. Use <see cref="DeleteAll{TEntity}"/> if you want to delete all entities.</para>
         /// </summary>
         /// <example>
         /// <code>
@@ -340,12 +341,11 @@ namespace Dapper
         ///     public string Name { get; set; }
         /// }
         /// ...
-        /// var entity = this.connection.Find<User>(5);
-        /// this.connection.Delete(entity);
+        /// this.connection.DeleteRange("WHERE Name LIKE '%Foo%'");
         /// ]]>
         /// </code>
         /// </example>
-        /// <returns>The number of affected records.</returns>
+        /// <returns>The number of deleted entities.</returns>
         public static int DeleteRange<TEntity>(
             this IDbConnection connection,
             string conditions,
@@ -356,13 +356,46 @@ namespace Dapper
         {
             if (conditions == null || conditions.IndexOf("WHERE ", StringComparison.OrdinalIgnoreCase) < 0)
             {
-                throw new ArgumentException("DeleteRange<T> requires a WHERE clause");
+                throw new ArgumentException(
+                    "DeleteRange<T> requires a WHERE clause, use DeleteAll<TEntity> to delete everything.");
             }
 
             dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
             var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeDeleteRangeStatement(tableSchema, conditions);
             return connection.Execute(sql, parameters, transaction, commandTimeout);
+        }
+
+        /// <summary>
+        /// Deletes all the entities in the <typeparamref name="TEntity"/> table.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// [Table("Users")]
+        /// public class UserEntity
+        /// {
+        ///     [Key]
+        ///     public int Id { get; set; }
+        ///
+        ///     public string Name { get; set; }
+        /// }
+        /// ...
+        /// this.connection.DeleteAll();
+        /// ]]>
+        /// </code>
+        /// </example>
+        /// <returns>The number of deleted entities.</returns>
+        public static int DeleteAll<TEntity>(
+            this IDbConnection connection,
+            IDbTransaction transaction = null,
+            Dialect dialect = null,
+            int? commandTimeout = null)
+        {
+            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
+            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
+            var sql = SqlFactory.MakeDeleteRangeStatement(tableSchema, null);
+            return connection.Execute(sql, transaction: transaction, commandTimeout: commandTimeout);
         }
     }
 }

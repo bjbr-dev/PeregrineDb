@@ -65,7 +65,7 @@ namespace Dapper.MicroCRUD.Tests
                 Assert.AreEqual(4, result);
 
                 // Cleanup
-                this.connection.Execute("DELETE FROM Users");
+                this.connection.DeleteAll<User>(dialect: this.dialect);
             }
 
             [Test]
@@ -84,7 +84,7 @@ namespace Dapper.MicroCRUD.Tests
                 Assert.AreEqual(3, result);
 
                 // Cleanup
-                this.connection.Execute("DELETE FROM Users");
+                this.connection.DeleteAll<User>(dialect: this.dialect);
             }
 
             [Test]
@@ -102,7 +102,7 @@ namespace Dapper.MicroCRUD.Tests
                 Assert.AreEqual(4, result);
 
                 // Cleanup
-                this.connection.Execute("DELETE FROM Other.SchemaOther");
+                this.connection.DeleteAll<SchemaOther>(dialect: this.dialect);
             }
         }
 
@@ -118,7 +118,7 @@ namespace Dapper.MicroCRUD.Tests
             public void Throws_exception_when_entity_has_no_key()
             {
                 // Arrange
-                this.connection.Execute("INSERT INTO NoKey (Name, Age) VALUES ('Some Name', 1)");
+                this.connection.Insert(new NoKey { Name = "Some Name", Age = 1 }, dialect: this.dialect);
 
                 // Act
                 Assert.Throws<InvalidPrimaryKeyException>(
@@ -336,7 +336,7 @@ namespace Dapper.MicroCRUD.Tests
                 Assert.That(users.Count(), Is.EqualTo(3));
 
                 // Cleanup
-                this.connection.Execute("DELETE FROM Users");
+                this.connection.DeleteAll<User>(dialect: this.dialect);
             }
 
             [Test]
@@ -355,7 +355,7 @@ namespace Dapper.MicroCRUD.Tests
                 Assert.That(users.Count(), Is.EqualTo(4));
 
                 // Cleanup
-                this.connection.Execute("DELETE FROM Users");
+                this.connection.DeleteAll<User>(dialect: this.dialect);
             }
         }
 
@@ -383,7 +383,7 @@ namespace Dapper.MicroCRUD.Tests
                 Assert.That(users.Count(), Is.EqualTo(4));
 
                 // Cleanup
-                this.connection.Execute("DELETE FROM Users");
+                this.connection.DeleteAll<User>(dialect: this.dialect);
             }
         }
 
