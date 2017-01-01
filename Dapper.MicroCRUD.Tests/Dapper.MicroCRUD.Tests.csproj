@@ -50,6 +50,10 @@
       <HintPath>..\packages\dbup-postgresql.3.3.5\lib\net40\DbUp.Postgresql.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="NCrunch.Framework, Version=3.2.0.3, Culture=neutral, PublicKeyToken=01d101bf6f3e0aea, processorArchitecture=MSIL">
+      <HintPath>..\packages\NCrunch.Framework.3.2.0.3\lib\portable-windows8+net45\NCrunch.Framework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Npgsql, Version=3.1.9.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
       <HintPath>..\packages\Npgsql.3.1.9\lib\net451\Npgsql.dll</HintPath>
       <Private>True</Private>
@@ -100,7 +104,9 @@
     </AdditionalFiles>
     <None Include="app.config" />
     <None Include="Dapper.MicroCRUD.Tests.ruleset" />
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\Newtonsoft.Json.dll" />

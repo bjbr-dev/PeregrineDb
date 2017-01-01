@@ -8,8 +8,10 @@ namespace Dapper.MicroCRUD.Tests
     using System.Linq;
     using Dapper.MicroCRUD.Tests.ExampleEntities;
     using Dapper.MicroCRUD.Tests.Utils;
+    using NCrunch.Framework;
     using NUnit.Framework;
 
+    [ExclusivelyUses("Database")]
     [Parallelizable(ParallelScope.None)]
     [TestFixtureSource(typeof(BlankDatabaseFactory), nameof(BlankDatabaseFactory.PossibleDialects))]
     public class DbConnectionExtensionsTests
