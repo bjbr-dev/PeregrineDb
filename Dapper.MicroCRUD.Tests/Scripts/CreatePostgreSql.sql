@@ -8,8 +8,8 @@ CREATE TABLE Other.SchemaOther
 
 CREATE TABLE CompositeKeys
 (
-	Key1 INT NOT NULL,
-	Key2 INT NOT NULL,
+	Key1 INT,
+	Key2 INT,
 	PRIMARY KEY (Key1, Key2)
 );
 

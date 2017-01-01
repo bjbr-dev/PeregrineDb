@@ -387,6 +387,147 @@ namespace Dapper.MicroCRUD.Tests
             }
         }
 
+        private class Insert
+            : DbConnectionExtensionsTests
+        {
+            public Insert(string dialectName)
+                : base(dialectName)
+            {
+            }
+
+            [Test]
+            public void Inserts_entity_with_int32_key()
+            {
+                // Arrange
+                var entity = new KeyInt32 { Name = "Some Name" };
+
+                // Act
+                this.connection.Insert(entity, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(1, this.connection.Count<KeyInt32>(dialect: this.dialect));
+
+                // Cleanup
+                this.connection.DeleteAll<KeyInt32>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Inserts_entity_with_int64_key()
+            {
+                // Arrange
+                var entity = new KeyInt64 { Name = "Some Name" };
+
+                // Act
+                this.connection.Insert(entity, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(1, this.connection.Count<KeyInt64>(dialect: this.dialect));
+
+                // Cleanup
+                this.connection.DeleteAll<KeyInt64>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Inserts_entities_with_composite_keys()
+            {
+                // Arrange
+                var entity = new CompositeKeys { Key1 = 2, Key2 = 3 };
+
+                // Act
+                this.connection.Insert(entity, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(1, this.connection.Count<CompositeKeys>(dialect: this.dialect));
+
+                // Cleanup
+                this.connection.DeleteAll<CompositeKeys>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Does_not_allow_part_of_composite_key_to_be_null()
+            {
+                // Arrange
+                var entity = new CompositeKeys { Key1 = null, Key2 = 5 };
+
+                // Act
+                Assert.That(() => this.connection.Insert(entity, dialect: this.dialect), Throws.Exception);
+            }
+
+            [Test]
+            public void Inserts_entities_with_string_key()
+            {
+                // Arrange
+                var entity = new KeyString { Name = "Some Name", Age = 10 };
+
+                // Act
+                this.connection.Insert(entity, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(1, this.connection.Count<KeyString>(dialect: this.dialect));
+
+                // Cleanup
+                this.connection.DeleteAll<KeyString>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Does_not_allow_string_key_to_be_null()
+            {
+                // Arrange
+                var entity = new KeyString { Name = null, Age = 10 };
+
+                // Act
+                Assert.That(() => this.connection.Insert(entity, dialect: this.dialect), Throws.Exception);
+            }
+
+            [Test]
+            public void Inserts_entities_with_guid_key()
+            {
+                // Arrange
+                var entity = new KeyGuid { Id = Guid.NewGuid(), Name = "Some Name" };
+
+                // Act
+                this.connection.Insert(entity, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(1, this.connection.Count<KeyGuid>(dialect: this.dialect));
+
+                // Cleanup
+                this.connection.DeleteAll<KeyGuid>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Uses_key_attribute_to_determine_key()
+            {
+                // Arrange
+                var entity = new KeyAlias { Name = "Some Name" };
+
+                // Act
+                this.connection.Insert(entity, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(1, this.connection.Count<KeyAlias>(dialect: this.dialect));
+
+                // Cleanup
+                this.connection.DeleteAll<KeyAlias>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Inserts_into_other_schemas()
+            {
+                // Arrange
+                var entity = new SchemaOther { Name = "Some name" };
+
+                // Act
+                this.connection.Insert(entity, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(1, this.connection.Count<SchemaOther>(dialect: this.dialect));
+
+                // Cleanup
+                this.connection.DeleteAll<SchemaOther>(dialect: this.dialect);
+            }
+        }
+
         private class InsertAndReturnKey
             : DbConnectionExtensionsTests
         {
@@ -583,6 +724,82 @@ namespace Dapper.MicroCRUD.Tests
 
                 // Assert
                 Assert.That(this.connection.Find<User>(id, dialect: this.dialect), Is.Null);
+            }
+        }
+
+        private class DeleteRange
+            : DbConnectionExtensionsTests
+        {
+            public DeleteRange(string dialectName)
+                : base(dialectName)
+            {
+            }
+
+            [TestCase(null)]
+            [TestCase("")]
+            [TestCase(" ")]
+            [TestCase("HAVING Age = 10")]
+            [TestCase("WHERE")]
+            public void Throws_exception_if_conditions_does_not_contain_where_clause(string conditions)
+            {
+                // Act / Assert
+                Assert.Throws<ArgumentException>(
+                    () => this.connection.DeleteRange<User>(conditions, dialect: this.dialect));
+            }
+
+            [TestCase("Where Age = 10")]
+            [TestCase("where Age = 10")]
+            [TestCase("WHERE Age = 10")]
+            public void Allows_any_capitalization_of_where_clause(string conditions)
+            {
+                // Act / Assert
+                Assert.DoesNotThrow(() => this.connection.DeleteRange<User>(conditions, dialect: this.dialect));
+            }
+
+            [Test]
+            public void Deletes_all_matching_entities()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var result = this.connection.DeleteRange<User>(
+                    "WHERE Age = @Age",
+                    new { Age = 10 },
+                    dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(3, result);
+                Assert.AreEqual(1, this.connection.Count<User>(dialect: this.dialect));
+            }
+        }
+
+        private class DeleteAll
+            : DbConnectionExtensionsTests
+        {
+            public DeleteAll(string dialectName)
+                : base(dialectName)
+            {
+            }
+
+            [Test]
+            public void Deletes_all_entities()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var result = this.connection.DeleteAll<User>(dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(4, result);
+                Assert.AreEqual(0, this.connection.Count<User>(dialect: this.dialect));
             }
         }
     }
