@@ -205,17 +205,15 @@ namespace Dapper
 
             var config = MicroCRUDConfig.GetConfig(dialect);
             var tableSchema = TableSchemaCache.GetTableSchema(entity.GetType(), config);
-            tableSchema.GetSinglePrimaryKey();
 
-            var keyType = typeof(TPrimaryKey).GetUnderlyingType();
-            if (keyType != typeof(int) && keyType != typeof(long))
+            if (!tableSchema.CanGeneratePrimaryKey(typeof(TPrimaryKey)))
             {
                 throw new InvalidPrimaryKeyException(
                     "Insert<TPrimaryKey>() can only be used for Int32 and Int64 primary keys. Use Insert() for other types of primary keys.");
             }
 
             var sql = SqlFactory.MakeInsertReturningIdentityStatement(tableSchema, config.Dialect);
-            return connection.Query<TPrimaryKey>(sql, entity, transaction, commandTimeout: commandTimeout).Single();
+            return connection.ExecuteScalar<TPrimaryKey>(sql, entity, transaction, commandTimeout);
         }
 
         /// <summary>
@@ -308,10 +306,8 @@ namespace Dapper
 
             var config = MicroCRUDConfig.GetConfig(dialect);
             var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), config);
-            tableSchema.GetSinglePrimaryKey();
 
-            var keyType = typeof(TPrimaryKey).GetUnderlyingType();
-            if (keyType != typeof(int) && keyType != typeof(long))
+            if (!tableSchema.CanGeneratePrimaryKey(typeof(TPrimaryKey)))
             {
                 throw new InvalidPrimaryKeyException(
                     "InsertRange<TEntity, TPrimaryKey>() can only be used for Int32 and Int64 primary keys. Use InsertRange<TEntity>() for other types of primary keys.");
@@ -320,9 +316,7 @@ namespace Dapper
             var sql = SqlFactory.MakeInsertReturningIdentityStatement(tableSchema, config.Dialect);
             foreach (var entity in entities)
             {
-                var id = connection.Query<TPrimaryKey>(sql, entity, transaction, commandTimeout: commandTimeout)
-                                   .Single();
-
+                var id = connection.ExecuteScalar<TPrimaryKey>(sql, entity, transaction, commandTimeout);
                 setPrimaryKey(entity, id);
             }
         }

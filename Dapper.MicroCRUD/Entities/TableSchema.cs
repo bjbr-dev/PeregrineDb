@@ -3,9 +3,11 @@
 // </copyright>
 namespace Dapper.MicroCRUD.Entities
 {
+    using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Linq;
+    using Dapper.MicroCRUD.Utils;
 
     /// <summary>
     /// Represents a table in the database, as derived from the definition of an entity.
@@ -38,21 +40,17 @@ namespace Dapper.MicroCRUD.Entities
         public IReadOnlyList<ColumnSchema> Columns { get; }
 
         /// <summary>
-        /// Gets the column which is the Primary Key of this table.
-        /// Throws an exception if there is no key, or if there are multiple columns.
+        /// Gets whether this table can generate a primary key with the specified type.
         /// </summary>
-        /// <exception cref="InvalidPrimaryKeyException">This table doesn't have a primary key, or there are multiple keys.</exception>
-        public ColumnSchema GetSinglePrimaryKey()
+        public bool CanGeneratePrimaryKey(Type type)
         {
-            var result = this.GetPrimaryKeys();
-
-            if (result.Count > 1)
+            if (this.PrimaryKeyColumns.Count != 1)
             {
-                throw new InvalidPrimaryKeyException(
-                    "This method only supports an entity with a single [Key] or Id property");
+                return false;
             }
 
-            return result[0];
+            var keyType = type.GetUnderlyingType();
+            return keyType == typeof(int) || keyType == typeof(long);
         }
 
         /// <summary>
