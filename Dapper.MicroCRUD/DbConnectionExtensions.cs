@@ -18,7 +18,7 @@ namespace Dapper
     public static class DbConnectionExtensions
     {
         /// <summary>
-        /// Counts all the entities in the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
+        /// Counts how many entities in the <typeparamref name="TEntity"/> table match the <paramref name="conditions"/>.
         /// </summary>
         /// <example>
         /// <code>
@@ -34,8 +34,7 @@ namespace Dapper
         ///     public int Age { get; set; }
         /// }
         /// ...
-        /// var entity = this.connection.Find<User>(5);
-        /// this.connection.Count<User>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// this.connection.Count<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -67,7 +66,7 @@ namespace Dapper
         ///     public string Name { get; set; }
         /// }
         /// ...
-        /// var entity = this.connection.Find<User>(12);
+        /// var entity = this.connection.Find<UserEntity>(12);
         /// ]]>
         /// </code>
         /// </example>
@@ -105,7 +104,7 @@ namespace Dapper
         ///     public int Age { get; set; }
         /// }
         /// ...
-        /// var users = this.connection.GetRange<User>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// var users = this.connection.GetRange<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -324,7 +323,7 @@ namespace Dapper
         ///     public string Name { get; set; }
         /// }
         /// ...
-        /// var entity = this.connection.Find<User>(5);
+        /// var entity = this.connection.Find<UserEntity>(5);
         /// entity.Name = "Little bobby tables";
         /// this.connection.Update(entity);
         /// ]]>
@@ -358,7 +357,7 @@ namespace Dapper
         ///     public string Name { get; set; }
         /// }
         /// ...
-        /// var entity = this.connection.Find<User>(5);
+        /// var entity = this.connection.Find<UserEntity>(5);
         /// this.connection.Delete(entity);
         /// ]]>
         /// </code>
@@ -428,7 +427,7 @@ namespace Dapper
         ///     public string Name { get; set; }
         /// }
         /// ...
-        /// this.connection.DeleteRange("WHERE Name LIKE '%Foo%'");
+        /// this.connection.DeleteRange<UserEntity>("WHERE Name LIKE '%Foo%'");
         /// ]]>
         /// </code>
         /// </example>
@@ -467,7 +466,7 @@ namespace Dapper
         ///     public string Name { get; set; }
         /// }
         /// ...
-        /// this.connection.DeleteAll();
+        /// this.connection.DeleteAll<UserEntity>();
         /// ]]>
         /// </code>
         /// </example>
