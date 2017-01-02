@@ -1,5 +1,6 @@
 ## Find(id)
 Find an entity by it's id, or null.
+
 :warning: Composite keys are not currently supported.
 
 ### Examples

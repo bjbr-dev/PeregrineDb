@@ -2,7 +2,7 @@
 Deletes the entity by using it's primary key.
 
 ## Delete<TEntity>(id)
-Deletes the entity by using it's primary key.
+Deletes the entity who's primary key matches the given id.
 
 ### Examples
 Given the POCO class:
@@ -26,4 +26,4 @@ or delete it directly by its id:
 this.connection.Delete<User>(5);
 ```
 
-:note: If you need to delete a lot of entities in one go, it's faster to call [DeleteRange<TEntity>](DeleteRange.md)
+:memo: If you need to delete a lot of entities in one go, it's faster to call [DeleteRange<TEntity>](DeleteRange.md)

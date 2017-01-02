@@ -1,10 +1,12 @@
 ## DeleteRange<TEntity>(conditions)
 Deletes the entities in the table which match the given conditions.
+
 :warning: For safety, the conditions parameter must contain a "WHERE" clause. If you don't want a "WHERE" clause, then you must use `DeleteAll<TEntity>`
 
 ## DeleteAll<TEntity>(conditions)
 Deletes all entities in the table.
-:note: This performs a SQL Delete statement not a TRUNCATE statement
+
+:memo: This performs a SQL Delete statement not a TRUNCATE statement
 
 ### Examples
 Given the POCO class:

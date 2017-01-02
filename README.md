@@ -22,7 +22,7 @@ Currently, the following DBMS are supported. More will be added (e.g. SQLite) wh
 #### CRUD Helpers
 Dapper.MicroCRUD provides the following extensions to the IDbConnection:
 
-- [Count<TEntity>([conditions])](documentation/Count{TEntity}.md): Counts how many entities in the TEntity table match the conditions.
+- [Count<TEntity>([conditions])](documentation/Count.md): Counts how many entities in the TEntity table match the conditions.
 - [Find(id)](documentation/Find.md): Find an entity by it's id, or null.
 - [GetRange<TEntity>(conditions)](documentation/GetRange.md): Gets all the entities in the TEntity table which match the conditions.
 - [GetAll<TEntity>()](documentation/GetRange.md): Gets all the entities in the TEntity table.
