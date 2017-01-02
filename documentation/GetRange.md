@@ -1,7 +1,7 @@
-## GetRange<TEntity>(conditions)
+## GetRange&lt;TEntity&gt;(conditions)
 Gets all the entities in the table which match the conditions.
 
-## GetAll<TEntity>(conditions)
+## GetAll&lt;TEntity&gt;(conditions)
 Gets all the entities in the table.
 
 ### Examples

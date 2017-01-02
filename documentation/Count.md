@@ -1,4 +1,4 @@
-## Count<TEntity>([conditions])
+## Count&lt;TEntity&gt;([conditions])
 Counts how many entities in the table match the conditions.
 
 ### Examples

@@ -1,7 +1,7 @@
-## Delete<TEntity>(entity)
+## Delete&lt;TEntity&gt;(entity)
 Deletes the entity by using it's primary key.
 
-## Delete<TEntity>(id)
+## Delete&lt;TEntity&gt;(id)
 Deletes the entity who's primary key matches the given id.
 
 ### Examples
@@ -26,4 +26,4 @@ or delete it directly by its id:
 this.connection.Delete<User>(5);
 ```
 
-:memo: If you need to delete a lot of entities in one go, it's faster to call [DeleteRange<TEntity>](DeleteRange.md)
+:memo: If you need to delete a lot of entities in one go, it's faster to call [DeleteRange&lt;TEntity&gt;](DeleteRange.md)

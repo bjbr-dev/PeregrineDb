@@ -1,4 +1,4 @@
-## Update<TEntity>(entity)
+## Update&lt;TEntity&gt;(entity)
 Updates the entity by using it's primary key.
 
 ### Examples

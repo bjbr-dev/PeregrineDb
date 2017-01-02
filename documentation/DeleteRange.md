@@ -1,9 +1,9 @@
-## DeleteRange<TEntity>(conditions)
+## DeleteRange&lt;TEntity&gt;(conditions)
 Deletes the entities in the table which match the given conditions.
 
-:warning: For safety, the conditions parameter must contain a "WHERE" clause. If you don't want a "WHERE" clause, then you must use `DeleteAll<TEntity>`
+:warning: For safety, the conditions parameter must contain a "WHERE" clause. If you don't want a "WHERE" clause, then you must use `DeleteAll&lt;TEntity&gt;`
 
-## DeleteAll<TEntity>(conditions)
+## DeleteAll&lt;TEntity&gt;(conditions)
 Deletes all entities in the table.
 
 :memo: This performs a SQL Delete statement not a TRUNCATE statement
