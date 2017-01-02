@@ -208,6 +208,108 @@ namespace Dapper
         }
 
         /// <summary>
+        /// <para>Efficiently inserts multiple <paramref name="entities"/> into the database.</para>
+        /// <para>For performance, it's recommended to always perform this action inside of a transaction.</para>
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// [Table("Users")]
+        /// public class UserEntity
+        /// {
+        ///     public string Name { get; set; }
+        /// }
+        /// ...
+        /// var entities = new []
+        ///     {
+        ///         new User { Name = "Little bobby tables" },
+        ///         new User { Name = "Jimmy" };
+        ///     };
+        ///
+        /// using (var transaction = this.connection.BeginTransaction())
+        /// {
+        ///     this.connection.InsertRange(entities, transaction);
+        ///
+        ///     transaction.Commit();
+        /// }
+        /// ]]>
+        /// </code>
+        /// </example>
+        public static void InsertRange<TEntity>(
+            this IDbConnection connection,
+            IEnumerable<TEntity> entities,
+            IDbTransaction transaction = null,
+            Dialect dialect = null,
+            int? commandTimeout = null)
+        {
+            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
+            var sql = SqlFactory.MakeInsertStatement(tableSchema);
+            connection.Execute(sql, entities, transaction, commandTimeout);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Efficiently inserts multiple <paramref name="entities"/> into the database,
+        /// and for each one calls <paramref name="setPrimaryKey"/> allowing the primary key to be recorded.
+        /// </para>
+        /// <para>For performance, it's recommended to always perform this action inside of a transaction.</para>
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// [Table("Users")]
+        /// public class UserEntity
+        /// {
+        ///     public int Id { get; set; }
+        ///
+        ///     public string Name { get; set; }
+        /// }
+        /// ...
+        /// var entities = new []
+        ///     {
+        ///         new User { Name = "Little bobby tables" },
+        ///         new User { Name = "Jimmy" };
+        ///     };
+        ///
+        /// using (var transaction = this.connection.BeginTransaction())
+        /// {
+        ///     this.connection.InsertRange<User, int>(entities, (e, k) => { e.Id = k; }, transaction);
+        ///
+        ///     transaction.Commit();
+        /// }
+        /// ]]>
+        /// </code>
+        /// </example>
+        public static void InsertRange<TEntity, TPrimaryKey>(
+            this IDbConnection connection,
+            IEnumerable<TEntity> entities,
+            Action<TEntity, TPrimaryKey> setPrimaryKey,
+            IDbTransaction transaction = null,
+            Dialect dialect = null,
+            int? commandTimeout = null)
+        {
+            var config = MicroCRUDConfig.GetConfig(dialect);
+            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), config);
+            tableSchema.GetSinglePrimaryKey();
+
+            var keyType = typeof(TPrimaryKey).GetUnderlyingType();
+            if (keyType != typeof(int) && keyType != typeof(long))
+            {
+                throw new InvalidPrimaryKeyException(
+                    "InsertRange<TEntity, TPrimaryKey>() can only be used for Int32 and Int64 primary keys. Use InsertRange<TEntity>() for other types of primary keys.");
+            }
+
+            var sql = SqlFactory.MakeInsertReturningIdentityStatement(tableSchema, config.Dialect);
+            foreach (var entity in entities)
+            {
+                var id = connection.Query<TPrimaryKey>(sql, entity, transaction, commandTimeout: commandTimeout)
+                                   .Single();
+
+                setPrimaryKey(entity, id);
+            }
+        }
+
+        /// <summary>
         /// Updates the <paramref name="entity"/> in the database.
         /// </summary>
         /// <example>

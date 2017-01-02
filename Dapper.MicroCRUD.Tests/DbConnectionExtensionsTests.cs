@@ -627,6 +627,308 @@ namespace Dapper.MicroCRUD.Tests
             }
         }
 
+        private class InsertRange
+            : DbConnectionExtensionsTests
+        {
+            public InsertRange(string dialectName)
+                : base(dialectName)
+            {
+            }
+
+            [Test]
+            public void Inserts_entity_with_int32_key()
+            {
+                // Arrange
+                var entities = new[]
+                    {
+                        new KeyInt32 { Name = "Some Name" },
+                        new KeyInt32 { Name = "Some Name2" }
+                    };
+
+                // Act
+                this.connection.InsertRange(entities, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(2, this.connection.Count<KeyInt32>(dialect: this.dialect));
+
+                // Cleanup
+                this.connection.DeleteAll<KeyInt32>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Inserts_entity_with_int64_key()
+            {
+                // Arrange
+                var entities = new[]
+                    {
+                        new KeyInt64 { Name = "Some Name" },
+                        new KeyInt64 { Name = "Some Name2" }
+                    };
+
+                // Act
+                this.connection.InsertRange(entities, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(2, this.connection.Count<KeyInt64>(dialect: this.dialect));
+
+                // Cleanup
+                this.connection.DeleteAll<KeyInt64>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Inserts_entities_with_composite_keys()
+            {
+                // Arrange
+                var entities = new[]
+                    {
+                        new CompositeKeys { Key1 = 2, Key2 = 3 },
+                        new CompositeKeys { Key1 = 3, Key2 = 3 }
+                    };
+
+                // Act
+                this.connection.InsertRange(entities, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(2, this.connection.Count<CompositeKeys>(dialect: this.dialect));
+
+                // Cleanup
+                this.connection.DeleteAll<CompositeKeys>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Inserts_entities_with_string_key()
+            {
+                // Arrange
+                var entities = new[]
+                    {
+                        new KeyString { Name = "Some Name", Age = 10 },
+                        new KeyString { Name = "Some Name2", Age = 11 }
+                    };
+
+                // Act
+                this.connection.InsertRange(entities, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(2, this.connection.Count<KeyString>(dialect: this.dialect));
+
+                // Cleanup
+                this.connection.DeleteAll<KeyString>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Inserts_entities_with_guid_key()
+            {
+                // Arrange
+                var entities = new[]
+                    {
+                        new KeyGuid { Id = Guid.NewGuid(), Name = "Some Name" },
+                        new KeyGuid { Id = Guid.NewGuid(), Name = "Some Name2" }
+                    };
+
+                // Act
+                this.connection.InsertRange(entities, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(2, this.connection.Count<KeyGuid>(dialect: this.dialect));
+
+                // Cleanup
+                this.connection.DeleteAll<KeyGuid>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Uses_key_attribute_to_determine_key()
+            {
+                // Arrange
+                var entities = new[]
+                    {
+                        new KeyAlias { Name = "Some Name" },
+                        new KeyAlias { Name = "Some Name2" }
+                    };
+
+                // Act
+                this.connection.InsertRange(entities, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(2, this.connection.Count<KeyAlias>(dialect: this.dialect));
+
+                // Cleanup
+                this.connection.DeleteAll<KeyAlias>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Inserts_into_other_schemas()
+            {
+                // Arrange
+                var entities = new[]
+                    {
+                        new SchemaOther { Name = "Some Name" },
+                        new SchemaOther { Name = "Some Name2" }
+                    };
+
+                // Act
+                this.connection.InsertRange(entities, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(2, this.connection.Count<SchemaOther>(dialect: this.dialect));
+
+                // Cleanup
+                this.connection.DeleteAll<SchemaOther>(dialect: this.dialect);
+            }
+        }
+
+        private class InsertRangeAndSetKey
+            : DbConnectionExtensionsTests
+        {
+            public InsertRangeAndSetKey(string dialectName)
+                : base(dialectName)
+            {
+            }
+
+            [Test]
+            public void Throws_exception_when_entity_has_no_key()
+            {
+                // Arrange
+                var entities = new[]
+                    {
+                        new NoKey()
+                    };
+
+                // Act / Assert
+                Assert.Throws<InvalidPrimaryKeyException>(
+                    () => this.connection.InsertRange<NoKey, int>(entities, (e, k) => { }, dialect: this.dialect));
+            }
+
+            [Test]
+            public void Throws_exception_when_entity_has_composite_keys()
+            {
+                // Arrange
+                var entities = new[]
+                    {
+                        new CompositeKeys()
+                    };
+
+                // Act / Assert
+                Assert.Throws<InvalidPrimaryKeyException>(
+                    () => this.connection.InsertRange<CompositeKeys, int>(entities, (e, k) => { }, dialect: this.dialect));
+            }
+
+            [Test]
+            public void Throws_exception_for_string_keys()
+            {
+                // Arrange
+                var entities = new[]
+                    {
+                        new KeyString { Name = "Some Name", Age = 10 }
+                    };
+
+            // Act / Assert
+            Assert.Throws<InvalidPrimaryKeyException>(
+                    () => this.connection.InsertRange<KeyString, string>(entities, (e, k) => { }, dialect: this.dialect));
+            }
+
+            [Test]
+            public void Throws_exception_for_guid_keys()
+            {
+                // Arrange
+                var entities = new[]
+                    {
+                        new KeyGuid { Id = Guid.NewGuid(), Name = "Some Name" }
+                    };
+
+                // Act / Assert
+                Assert.Throws<InvalidPrimaryKeyException>(
+                        () => this.connection.InsertRange<KeyGuid, Guid>(entities, (e, k) => { }, dialect: this.dialect));
+            }
+
+            [Test]
+            public void Inserts_entity_with_int32_primary_key()
+            {
+                // Arrange
+                var entities = new[]
+                    {
+                        new KeyInt32 { Name = "Some Name" },
+                        new KeyInt32 { Name = "Some Name2" },
+                        new KeyInt32 { Name = "Some Name3" }
+                    };
+
+                // Act
+                this.connection.InsertRange<KeyInt32, int>(entities, (e, k) => { e.Id = k; }, dialect: this.dialect);
+
+                // Assert
+                Assert.That(entities[0].Id, Is.GreaterThan(0));
+                Assert.That(entities[1].Id, Is.GreaterThan(entities[0].Id));
+                Assert.That(entities[2].Id, Is.GreaterThan(entities[1].Id));
+
+                // Cleanup
+                this.connection.DeleteAll<KeyInt32>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Inserts_entity_with_int64_primary_key()
+            {
+                // Arrange
+                var entities = new[]
+                    {
+                        new KeyInt64 { Name = "Some Name" },
+                        new KeyInt64 { Name = "Some Name2" },
+                        new KeyInt64 { Name = "Some Name3" }
+                    };
+
+                // Act
+                this.connection.InsertRange<KeyInt64, long>(entities, (e, k) => { e.Id = k; }, dialect: this.dialect);
+
+                // Assert
+                Assert.That(entities[0].Id, Is.GreaterThan(0));
+                Assert.That(entities[1].Id, Is.GreaterThan(entities[0].Id));
+                Assert.That(entities[2].Id, Is.GreaterThan(entities[1].Id));
+
+                // Cleanup
+                this.connection.DeleteAll<KeyInt64>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Uses_key_attribute_to_determine_key()
+            {
+                // Arrange
+                var entities = new[]
+                    {
+                        new KeyAlias { Name = "Some Name" }
+                    };
+
+                // Act
+                this.connection.InsertRange<KeyAlias, int>(entities, (e, k) => { e.Key = k; }, dialect: this.dialect);
+
+                // Assert
+                Assert.That(entities[0].Key, Is.GreaterThan(0));
+
+                // Cleanup
+                this.connection.DeleteAll<KeyAlias>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Inserts_into_other_schemas()
+            {
+                // Arrange
+                var entities = new[]
+                    {
+                        new SchemaOther { Name = "Some Name" },
+                        new SchemaOther { Name = "Some Name2" },
+                        new SchemaOther { Name = "Some Name3" }
+                    };
+
+                // Act
+                this.connection.InsertRange<SchemaOther, int>(entities, (e, k) => { e.Id = k; }, dialect: this.dialect);
+
+                // Assert
+                Assert.That(entities[0].Id, Is.GreaterThan(0));
+                Assert.That(entities[1].Id, Is.GreaterThan(entities[0].Id));
+                Assert.That(entities[2].Id, Is.GreaterThan(entities[1].Id));
+
+                // Cleanup
+                this.connection.DeleteAll<SchemaOther>(dialect: this.dialect);
+            }
+        }
+
         private class Update
             : DbConnectionExtensionsTests
         {

@@ -11,7 +11,7 @@ Project aims
 ------------
 
 1. Provide fast and lightweight CRUD extensions for Dapper
-2. Should be able to run against multiple different databases simultaneously
+2. Should be able to run against multiple different databases in the same project
 3. Thread safety should be guarenteed
 
 I was using the fantastic Dapper.SimpleCRUD library and found it incredibly easy to use. However, two things drove me to write this library - I have a project which uses SqlServer and Postgres databases side-by-side, and unfortunately Dapper.SimpleCRUD does not support this. Second, I found it was missing a few crucial optimizations which was doubling the time taken to easily insert many rows.
@@ -27,6 +27,8 @@ Dapper.MicroCRUD provides the following extensions to the IDbConnection:
 - GetAll<TEntity>(): Gets all the entities in the TEntity table.
 - Insert(entity): Inserts an entity into the TEntity table without retrieving it's identity.
 - Insert<TPrimaryKey>(entity): Inserts an entity into the TEntity table and returns it's generated identity.
+- InsertRange<TEntity>(entities): Efficiently inserts multiple entities without retrieving identities.
+- InsertRange<TEntity, TPrimaryKey>(entities, Action): Efficiently inserts multiple entities, and for each one calls an action allowing its identity to be recorded.
 - Update<TEntity>(entity): Updates the entity by using it's primary key.
 - Delete<TEntity>(entity): Deletes the entity by using it's primary key.
 - Delete<TEntity>(id): Deletes the entity with the given id.
