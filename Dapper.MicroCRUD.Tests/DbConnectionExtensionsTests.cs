@@ -126,17 +126,6 @@ namespace Dapper.MicroCRUD.Tests
             }
 
             [Test]
-            public void Throws_exception_when_entity_has_composite_keys()
-            {
-                // Arrange
-                this.connection.Execute("INSERT INTO CompositeKeys (Key1, Key2) VALUES (1, 1)");
-
-                // Act
-                Assert.Throws<InvalidPrimaryKeyException>(
-                    () => this.connection.Find<CompositeKeys>(5, dialect: this.dialect));
-            }
-
-            [Test]
             public void Finds_entity_by_Int32_primary_key()
             {
                 // Arrange
@@ -199,6 +188,17 @@ namespace Dapper.MicroCRUD.Tests
 
                 // Cleanup
                 this.connection.Delete(entity, dialect: this.dialect);
+            }
+
+            [Test]
+            public void Throws_exception_when_entity_has_composite_keys()
+            {
+                // Arrange
+                this.connection.Insert(new CompositeKeys { Key1 = 1, Key2 = 1 }, dialect: this.dialect);
+
+                // Act
+                Assert.Throws<InvalidPrimaryKeyException>(
+                    () => this.connection.Find<CompositeKeys>(5, dialect: this.dialect));
             }
 
             [Test]

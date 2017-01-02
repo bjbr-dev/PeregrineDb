@@ -46,7 +46,7 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
+            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeCountStatement(tableSchema, conditions);
             return connection.ExecuteScalar<int>(sql, parameters, transaction, commandTimeout);
         }
@@ -77,7 +77,7 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
+            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
 
             var sql = SqlFactory.MakeFindStatement(tableSchema);
             var parameters = new DynamicParameters();
@@ -116,7 +116,7 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
+            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeGetRangeStatement(tableSchema, conditions);
             return connection.Query<TEntity>(sql, parameters, transaction, commandTimeout: commandTimeout);
         }
@@ -130,7 +130,7 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
+            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeGetRangeStatement(tableSchema, null);
             return connection.Query<TEntity>(sql, transaction: transaction, commandTimeout: commandTimeout);
         }
@@ -159,7 +159,7 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            var tableSchema = TableSchemaCache.GetTableSchema(dialect, entity.GetType());
+            var tableSchema = TableSchemaCache.GetTableSchema(entity.GetType(), dialect);
             var sql = SqlFactory.MakeInsertStatement(tableSchema);
             connection.Execute(sql, entity, transaction, commandTimeout);
         }
@@ -241,7 +241,7 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
+            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeInsertStatement(tableSchema);
             connection.Execute(sql, entities, transaction, commandTimeout);
         }
@@ -337,7 +337,7 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
+            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeUpdateStatement(tableSchema);
             return connection.Execute(sql, entity, transaction, commandTimeout);
         }
@@ -370,7 +370,7 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
+            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(tableSchema);
             return connection.Execute(sql, entity, transaction, commandTimeout);
         }
@@ -402,7 +402,7 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
+            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
 
             var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(tableSchema);
             var parameters = new DynamicParameters();
@@ -446,7 +446,7 @@ namespace Dapper
                     "DeleteRange<T> requires a WHERE clause, use DeleteAll<TEntity> to delete everything.");
             }
 
-            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
+            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeDeleteRangeStatement(tableSchema, conditions);
             return connection.Execute(sql, parameters, transaction, commandTimeout);
         }
@@ -477,7 +477,7 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
-            var tableSchema = TableSchemaCache.GetTableSchema(dialect, typeof(TEntity));
+            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeDeleteRangeStatement(tableSchema, null);
             return connection.Execute(sql, transaction: transaction, commandTimeout: commandTimeout);
         }

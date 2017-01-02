@@ -17,7 +17,7 @@ namespace Dapper.MicroCRUD.Entities
         /// <summary>
         /// Gets the <see cref="TableSchema"/> for the specified entityType and dialect.
         /// </summary>
-        internal static TableSchema GetTableSchema(Dialect dialect, Type entityType)
+        internal static TableSchema GetTableSchema(Type entityType, Dialect dialect)
         {
             return GetTableSchema(entityType, MicroCRUDConfig.GetConfig(dialect));
         }
