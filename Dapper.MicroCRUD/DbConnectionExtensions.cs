@@ -46,6 +46,8 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
+            Ensure.NotNull(connection, nameof(connection));
+
             var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeCountStatement(tableSchema, conditions);
             return connection.ExecuteScalar<int>(sql, parameters, transaction, commandTimeout);
@@ -77,6 +79,9 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
+            Ensure.NotNull(connection, nameof(connection));
+            Ensure.NotNull(id, nameof(id));
+
             var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeFindStatement(tableSchema);
             var parameters = GetPrimaryKeyParameters(tableSchema, id);
@@ -113,6 +118,8 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
+            Ensure.NotNull(connection, nameof(connection));
+
             var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeGetRangeStatement(tableSchema, conditions);
             return connection.Query<TEntity>(sql, parameters, transaction, commandTimeout: commandTimeout);
@@ -127,6 +134,8 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
+            Ensure.NotNull(connection, nameof(connection));
+
             var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeGetRangeStatement(tableSchema, null);
             return connection.Query<TEntity>(sql, transaction: transaction, commandTimeout: commandTimeout);
@@ -156,6 +165,9 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
+            Ensure.NotNull(connection, nameof(connection));
+            Ensure.NotNull(entity, nameof(entity));
+
             var tableSchema = TableSchemaCache.GetTableSchema(entity.GetType(), dialect);
             var sql = SqlFactory.MakeInsertStatement(tableSchema);
             connection.Execute(sql, entity, transaction, commandTimeout);
@@ -188,6 +200,9 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
+            Ensure.NotNull(connection, nameof(connection));
+            Ensure.NotNull(entity, nameof(entity));
+
             var config = MicroCRUDConfig.GetConfig(dialect);
             var tableSchema = TableSchemaCache.GetTableSchema(entity.GetType(), config);
             tableSchema.GetSinglePrimaryKey();
@@ -238,6 +253,9 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
+            Ensure.NotNull(connection, nameof(connection));
+            Ensure.NotNull(entities, nameof(entities));
+
             var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeInsertStatement(tableSchema);
             connection.Execute(sql, entities, transaction, commandTimeout);
@@ -284,6 +302,10 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
+            Ensure.NotNull(connection, nameof(connection));
+            Ensure.NotNull(entities, nameof(entities));
+            Ensure.NotNull(setPrimaryKey, nameof(setPrimaryKey));
+
             var config = MicroCRUDConfig.GetConfig(dialect);
             var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), config);
             tableSchema.GetSinglePrimaryKey();
@@ -334,9 +356,15 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
+            Ensure.NotNull(connection, nameof(connection));
+
+            // Shouldnt update a null entity, but entities *could* be a struct. Box into object (since Execute does that anyway) and ensure thats not null...
+            var param = (object)entity;
+            Ensure.NotNull(param, nameof(entity));
+
             var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeUpdateStatement(tableSchema);
-            return connection.Execute(sql, entity, transaction, commandTimeout);
+            return connection.Execute(sql, param, transaction, commandTimeout);
         }
 
         /// <summary>
@@ -367,9 +395,15 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
+            Ensure.NotNull(connection, nameof(connection));
+
+            // Shouldnt delete a null entity, but entities *could* be a struct. Box into object (since Execute does that anyway) and ensure thats not null...
+            var param = (object)entity;
+            Ensure.NotNull(param, nameof(entity));
+
             var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(tableSchema);
-            return connection.Execute(sql, entity, transaction, commandTimeout);
+            return connection.Execute(sql, param, transaction, commandTimeout);
         }
 
         /// <summary>
@@ -399,6 +433,9 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
+            Ensure.NotNull(connection, nameof(connection));
+            Ensure.NotNull(id, nameof(id));
+
             var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(tableSchema);
             var parameters = GetPrimaryKeyParameters(tableSchema, id);
@@ -434,10 +471,11 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
+            Ensure.NotNull(connection, nameof(connection));
             if (conditions == null || conditions.IndexOf("WHERE ", StringComparison.OrdinalIgnoreCase) < 0)
             {
                 throw new ArgumentException(
-                    "DeleteRange<T> requires a WHERE clause, use DeleteAll<TEntity> to delete everything.");
+                    "DeleteRange<TEntity> requires a WHERE clause, use DeleteAll<TEntity> to delete everything.");
             }
 
             var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
@@ -471,6 +509,8 @@ namespace Dapper
             Dialect dialect = null,
             int? commandTimeout = null)
         {
+            Ensure.NotNull(connection, nameof(connection));
+
             var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeDeleteRangeStatement(tableSchema, null);
             return connection.Execute(sql, transaction: transaction, commandTimeout: commandTimeout);

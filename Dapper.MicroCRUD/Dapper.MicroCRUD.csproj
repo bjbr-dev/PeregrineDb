@@ -70,6 +70,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SqlFactory.cs" />
     <Compile Include="Entities\TableSchemaFactory.cs" />
+    <Compile Include="Utils\Ensure.cs" />
     <Compile Include="Utils\TypeExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
