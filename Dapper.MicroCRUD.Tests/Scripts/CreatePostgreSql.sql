@@ -55,12 +55,6 @@ CREATE TABLE NoKey
 	Age INT NOT NULL
 );
 
-CREATE TABLE PropertyEnum
-(
-	Id SERIAL NOT NULL PRIMARY KEY,
-	FavoriteColor INT NULL
-);
-
 CREATE TABLE PropertyAllPossibleTypes
 (
 	Id SERIAL NOT NULL PRIMARY KEY,
@@ -88,6 +82,19 @@ CREATE TABLE PropertyAllPossibleTypes
 	DateTimeOffsetProperty timestamp with time zone NOT NULL,
 	NullableDateTimeOffsetProperty timestamp with time zone NULL,
 	ByteArrayProperty bytea NOT NULL
+);
+
+CREATE TABLE PropertyEnum
+(
+	Id SERIAL NOT NULL PRIMARY KEY,
+	FavoriteColor INT NULL
+);
+
+CREATE TABLE PropertyNotMapped
+(
+	Id SERIAL NOT NULL PRIMARY KEY,
+	FirstName TEXT NOT NULL,
+	LastName TEXT NOT NULL
 );
 
 CREATE TABLE SimpleBenchmarkEntities

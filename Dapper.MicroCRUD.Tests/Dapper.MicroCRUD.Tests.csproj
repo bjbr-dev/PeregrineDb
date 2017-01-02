@@ -86,7 +86,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DbConnectionExtensionsPerformanceTests.cs" />
-    <Compile Include="Entities\SchemaFactoryTests.cs" />
+    <Compile Include="Entities\TableSchemaFactoryTests.cs" />
     <Compile Include="ExampleEntities\CompositeKeys.cs" />
     <Compile Include="ExampleEntities\ExampleSchemaFactory.cs" />
     <Compile Include="ExampleEntities\KeyAlias.cs" />
@@ -94,6 +94,7 @@
     <Compile Include="ExampleEntities\PropertyAllPossibleTypes.cs" />
     <Compile Include="ExampleEntities\PropertyComputed.cs" />
     <Compile Include="ExampleEntities\PropertyGenerated.cs" />
+    <Compile Include="ExampleEntities\PropertyNotMapped.cs" />
     <Compile Include="ExampleEntities\SimpleBenchmarkEntity.cs" />
     <Compile Include="ExampleEntities\User.cs" />
     <Compile Include="ExampleEntities\SchemaOther.cs" />

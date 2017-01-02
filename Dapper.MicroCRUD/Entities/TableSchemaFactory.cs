@@ -45,11 +45,14 @@ namespace Dapper.MicroCRUD.Entities
         public static TableSchema GetTableSchema(Type entityType, MicroCRUDConfig config)
         {
             var tableName = config.TableNameResolver.ResolveTableName(entityType, config.Dialect);
-            var properties = entityType.GetProperties().Where(p =>
-            {
-                var propertyType = p.PropertyType.GetUnderlyingType();
-                return propertyType.IsEnum || PossiblePropertyTypes.Contains(propertyType);
-            }).ToList();
+            var properties = entityType.GetProperties()
+                                       .Where(p =>
+                                       {
+                                           var propertyType = p.PropertyType.GetUnderlyingType();
+                                           return propertyType.IsEnum || PossiblePropertyTypes.Contains(propertyType);
+                                       })
+                                       .Where(p => p.GetCustomAttribute(typeof(NotMappedAttribute)) == null)
+                                       .ToList();
 
             var explicitKeyDefined = properties.Any(p => p.GetCustomAttribute<KeyAttribute>() != null);
 

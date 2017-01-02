@@ -1,4 +1,4 @@
-﻿// <copyright file="SchemaFactoryTests.cs" company="Berkeleybross">
+﻿// <copyright file="TableSchemaFactoryTests.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 namespace Dapper.MicroCRUD.Tests.Entities
@@ -17,7 +17,7 @@ namespace Dapper.MicroCRUD.Tests.Entities
     [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
     [SuppressMessage("ReSharper", "UnusedMember.Local")]
     [SuppressMessage("ReSharper", "UnassignedGetOnlyAutoProperty")]
-    public class SchemaFactoryTests
+    public class TableSchemaFactoryTests
     {
         private Dialect dialect;
         private MicroCRUDConfig config;
@@ -34,7 +34,7 @@ namespace Dapper.MicroCRUD.Tests.Entities
         }
 
         private class GetTableSchema
-            : SchemaFactoryTests
+            : TableSchemaFactoryTests
         {
             private TableSchema PerformAct(Type entityType)
             {
@@ -188,6 +188,16 @@ namespace Dapper.MicroCRUD.Tests.Entities
                     Assert.IsEmpty(result.Columns);
                 }
 
+                [Test]
+                public void Ignores_unmapped_properties()
+                {
+                    // Act
+                    var result = this.PerformAct(typeof(NotMapped));
+
+                    // Assert
+                    Assert.IsEmpty(result.Columns);
+                }
+
                 private class ReadOnlyProperty
                 {
                     public DateTime LastUpdated { get; }
@@ -217,6 +227,12 @@ namespace Dapper.MicroCRUD.Tests.Entities
                     {
                         throw new NotImplementedException();
                     }
+                }
+
+                private class NotMapped
+                {
+                    [NotMapped]
+                    public string Value { get; set; }
                 }
             }
 
@@ -311,6 +327,26 @@ namespace Dapper.MicroCRUD.Tests.Entities
                     Assert.IsFalse(column.Usage.IncludeInUpdateStatements);
                 }
 
+                [Test]
+                public void Ignores_methods()
+                {
+                    // Act
+                    var result = this.PerformAct(typeof(MethodKey));
+
+                    // Assert
+                    Assert.IsEmpty(result.Columns);
+                }
+
+                [Test]
+                public void Ignores_unmapped_properties()
+                {
+                    // Act
+                    var result = this.PerformAct(typeof(NotMappedKey));
+
+                    // Assert
+                    Assert.IsEmpty(result.Columns);
+                }
+
                 private class ReadOnlyKey
                 {
                     public int Id { get; }
@@ -359,6 +395,20 @@ namespace Dapper.MicroCRUD.Tests.Entities
                 private class KeyIdentity
                 {
                     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+                    public int Id { get; set; }
+                }
+
+                private class MethodKey
+                {
+                    public int Id()
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+
+                private class NotMappedKey
+                {
+                    [NotMapped]
                     public int Id { get; set; }
                 }
             }

@@ -59,12 +59,6 @@ CREATE TABLE NoKey
 	Age INT NOT NULL
 );
 
-CREATE TABLE PropertyEnum
-(
-	Id INT NOT NULL IDENTITY PRIMARY KEY,
-	FavoriteColor INT NULL
-);
-
 CREATE TABLE PropertyAllPossibleTypes
 (
 	Id INT NOT NULL IDENTITY PRIMARY KEY,
@@ -92,6 +86,19 @@ CREATE TABLE PropertyAllPossibleTypes
 	DateTimeOffsetProperty DATETIMEOFFSET NOT NULL,
 	NullableDateTimeOffsetProperty DATETIMEOFFSET NULL,
 	ByteArrayProperty varbinary(MAX) NOT NULL
+);
+
+CREATE TABLE PropertyEnum
+(
+	Id INT NOT NULL IDENTITY PRIMARY KEY,
+	FavoriteColor INT NULL
+);
+
+CREATE TABLE PropertyNotMapped
+(
+	Id INT NOT NULL IDENTITY PRIMARY KEY,
+	FirstName NVARCHAR(MAX) NOT NULL,
+	LastName NVARCHAR(MAX) NOT NULL
 );
 
 CREATE TABLE SimpleBenchmarkEntities

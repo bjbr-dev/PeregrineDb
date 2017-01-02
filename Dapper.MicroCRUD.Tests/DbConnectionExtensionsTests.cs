@@ -307,6 +307,27 @@ namespace Dapper.MicroCRUD.Tests
                 // Cleanup
                 this.connection.Delete<PropertyAllPossibleTypes>(id, dialect: this.dialect);
             }
+
+            [Test]
+            public void Ignores_columns_which_are_not_mapped()
+            {
+                // Arrange
+                var id = this.connection.Insert<int>(
+                    new PropertyNotMapped { Firstname = "Bobby", LastName = "DropTables", Age = 10 },
+                    dialect: this.dialect);
+
+                // Act
+                var entity = this.connection.Find<PropertyNotMapped>(id, dialect: this.dialect);
+
+                // Assert
+                Assert.That(entity.Firstname, Is.EqualTo("Bobby"));
+                Assert.That(entity.LastName, Is.EqualTo("DropTables"));
+                Assert.That(entity.FullName, Is.EqualTo("Bobby DropTables"));
+                Assert.That(entity.Age, Is.EqualTo(0));
+
+                // Cleanup
+                this.connection.DeleteAll<PropertyNotMapped>(dialect: this.dialect);
+            }
         }
 
         private class GetRange
@@ -525,6 +546,22 @@ namespace Dapper.MicroCRUD.Tests
 
                 // Cleanup
                 this.connection.DeleteAll<SchemaOther>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Ignores_columns_which_are_not_mapped()
+            {
+                // Arrange
+                var entity = new PropertyNotMapped { Firstname = "Bobby", LastName = "DropTables", Age = 10 };
+
+                // Act
+                this.connection.Insert(entity, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(1, this.connection.Count<PropertyNotMapped>(dialect: this.dialect));
+
+                // Cleanup
+                this.connection.DeleteAll<PropertyNotMapped>(dialect: this.dialect);
             }
         }
 
@@ -954,6 +991,25 @@ namespace Dapper.MicroCRUD.Tests
 
                 // Cleanup
                 this.connection.Delete<User>(id, dialect: this.dialect);
+            }
+
+            [Test]
+            public void Ignores_columns_which_are_not_mapped()
+            {
+                // Arrange
+                var entity = new PropertyNotMapped { Firstname = "Bobby", LastName = "DropTables", Age = 10 };
+                entity.Id = this.connection.Insert<int>(entity, dialect: this.dialect);
+
+                // Act
+                entity.LastName = "Other name";
+                this.connection.Update(entity, dialect: this.dialect);
+
+                // Assert
+                var updatedEntity = this.connection.Find<PropertyNotMapped>(entity.Id, dialect: this.dialect);
+                Assert.That(updatedEntity.LastName, Is.EqualTo("Other name"));
+
+                // Cleanup
+                this.connection.DeleteAll<PropertyNotMapped>(dialect: this.dialect);
             }
         }
 
