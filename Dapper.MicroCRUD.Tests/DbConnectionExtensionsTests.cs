@@ -191,14 +191,20 @@ namespace Dapper.MicroCRUD.Tests
             }
 
             [Test]
-            public void Throws_exception_when_entity_has_composite_keys()
+            public void Finds_entity_by_composite_key()
             {
                 // Arrange
-                this.connection.Insert(new CompositeKeys { Key1 = 1, Key2 = 1 }, dialect: this.dialect);
+                this.connection.Insert(new CompositeKeys { Key1 = 1, Key2 = 1, Name = "Some Name" }, dialect: this.dialect);
+                var id = new { Key1 = 1, Key2 = 1 };
 
                 // Act
-                Assert.Throws<InvalidPrimaryKeyException>(
-                    () => this.connection.Find<CompositeKeys>(5, dialect: this.dialect));
+                var entity = this.connection.Find<CompositeKeys>(id, dialect: this.dialect);
+
+                // Assert
+                Assert.That(entity.Name, Is.EqualTo("Some Name"));
+
+                // Cleanup
+                this.connection.DeleteAll<CompositeKeys>(dialect: this.dialect);
             }
 
             [Test]
@@ -452,7 +458,7 @@ namespace Dapper.MicroCRUD.Tests
             public void Inserts_entities_with_composite_keys()
             {
                 // Arrange
-                var entity = new CompositeKeys { Key1 = 2, Key2 = 3 };
+                var entity = new CompositeKeys { Key1 = 2, Key2 = 3, Name = "Some Name" };
 
                 // Act
                 this.connection.Insert(entity, dialect: this.dialect);
@@ -468,7 +474,7 @@ namespace Dapper.MicroCRUD.Tests
             public void Does_not_allow_part_of_composite_key_to_be_null()
             {
                 // Arrange
-                var entity = new CompositeKeys { Key1 = null, Key2 = 5 };
+                var entity = new CompositeKeys { Key1 = null, Key2 = 5, Name = "Some Name" };
 
                 // Act
                 Assert.That(() => this.connection.Insert(entity, dialect: this.dialect), Throws.Exception);
@@ -718,8 +724,8 @@ namespace Dapper.MicroCRUD.Tests
                 // Arrange
                 var entities = new[]
                     {
-                        new CompositeKeys { Key1 = 2, Key2 = 3 },
-                        new CompositeKeys { Key1 = 3, Key2 = 3 }
+                        new CompositeKeys { Key1 = 2, Key2 = 3, Name = "Some Name1" },
+                        new CompositeKeys { Key1 = 3, Key2 = 3, Name = "Some Name2" }
                     };
 
                 // Act
@@ -1011,6 +1017,27 @@ namespace Dapper.MicroCRUD.Tests
                 // Cleanup
                 this.connection.DeleteAll<PropertyNotMapped>(dialect: this.dialect);
             }
+
+            [Test]
+            public void Updates_entities_with_composite_keys()
+            {
+                // Arrange
+                var entity = new CompositeKeys { Key1 = 5, Key2 = 20, Name = "Some name" };
+                this.connection.Insert(entity, dialect: this.dialect);
+
+                // Act
+                entity.Name = "Other name";
+                this.connection.Update(entity, dialect: this.dialect);
+
+                // Assert
+                var id = new { Key1 = 5, Key2 = 20 };
+                var updatedEntity = this.connection.Find<CompositeKeys>(id, dialect: this.dialect);
+
+                Assert.That(updatedEntity.Name, Is.EqualTo("Other name"));
+
+                // Cleanup
+                this.connection.DeleteAll<CompositeKeys>(dialect: this.dialect);
+            }
         }
 
         private class DeleteId
@@ -1060,6 +1087,21 @@ namespace Dapper.MicroCRUD.Tests
                 // Assert
                 Assert.That(result, Is.EqualTo(1));
             }
+
+            [Test]
+            public void Deletes_entity_with_composite_keys()
+            {
+                // Arrange
+                var id = new { Key1 = 5, Key2 = 20 };
+                var entity = new CompositeKeys { Key1 = 5, Key2 = 20, Name = "Some Name" };
+                this.connection.Insert(entity, dialect: this.dialect);
+
+                // Act
+                var result = this.connection.Delete<CompositeKeys>(id, dialect: this.dialect);
+
+                // Assert
+                Assert.That(result, Is.EqualTo(1));
+            }
         }
 
         private class DeleteEntity
@@ -1082,6 +1124,22 @@ namespace Dapper.MicroCRUD.Tests
 
                 // Assert
                 Assert.That(this.connection.Find<User>(id, dialect: this.dialect), Is.Null);
+            }
+
+            [Test]
+            public void Deletes_entity_with_composite_keys()
+            {
+                // Arrange
+                var id = new { Key1 = 5, Key2 = 20 };
+                var entity = new CompositeKeys { Key1 = 5, Key2 = 20, Name = "Some Name" };
+                this.connection.Insert(entity, dialect: this.dialect);
+
+                // Act
+                var result = this.connection.Delete(entity, dialect: this.dialect);
+
+                // Assert
+                Assert.That(result, Is.EqualTo(1));
+                Assert.That(this.connection.Find<CompositeKeys>(id, dialect: this.dialect), Is.Null);
             }
         }
 

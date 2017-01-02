@@ -7,6 +7,18 @@ namespace Dapper.MicroCRUD.Tests.ExampleEntities
 
     internal static class ExampleSchemaFactory
     {
+        public static TableSchema CompositeKeys(this Dialect dialect)
+        {
+            var columns = new[]
+                {
+                    dialect.MakeColumnSchema("Key1", ColumnUsage.NotGeneratedPrimaryKey),
+                    dialect.MakeColumnSchema("Key2", ColumnUsage.NotGeneratedPrimaryKey),
+                    dialect.MakeColumnSchema("Name", ColumnUsage.Column)
+                };
+
+            return dialect.MakeTableSchema("CompositeKeys", columns);
+        }
+
         public static TableSchema KeyAlias(this Dialect dialect)
         {
             var primaryKey = dialect.MakeColumnSchema("Id", "Key", ColumnUsage.ComputedPrimaryKey);

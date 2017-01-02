@@ -14,6 +14,7 @@ CREATE TABLE CompositeKeys
 (
 	Key1 INT,
 	Key2 INT,
+	Name NVARCHAR(MAX) NOT NULL,
 	PRIMARY KEY (Key1, Key2)
 );
 

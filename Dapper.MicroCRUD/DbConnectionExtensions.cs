@@ -78,11 +78,8 @@ namespace Dapper
             int? commandTimeout = null)
         {
             var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
-
             var sql = SqlFactory.MakeFindStatement(tableSchema);
-            var parameters = new DynamicParameters();
-            parameters.Add("@Id", id);
-
+            var parameters = GetPrimaryKeyParameters(tableSchema, id);
             return connection.Query<TEntity>(sql, parameters, transaction, commandTimeout: commandTimeout)
                              .FirstOrDefault();
         }
@@ -403,11 +400,8 @@ namespace Dapper
             int? commandTimeout = null)
         {
             var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
-
             var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(tableSchema);
-            var parameters = new DynamicParameters();
-            parameters.Add("@" + tableSchema.GetSinglePrimaryKey().ParameterName, id);
-
+            var parameters = GetPrimaryKeyParameters(tableSchema, id);
             return connection.Execute(sql, parameters, transaction, commandTimeout);
         }
 
@@ -480,6 +474,19 @@ namespace Dapper
             var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeDeleteRangeStatement(tableSchema, null);
             return connection.Execute(sql, transaction: transaction, commandTimeout: commandTimeout);
+        }
+
+        private static object GetPrimaryKeyParameters(TableSchema tableSchema, object id)
+        {
+            var primaryKeys = tableSchema.GetPrimaryKeys();
+            if (primaryKeys.Count > 1)
+            {
+                return id;
+            }
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@" + primaryKeys.First().ParameterName, id);
+            return parameters;
         }
     }
 }

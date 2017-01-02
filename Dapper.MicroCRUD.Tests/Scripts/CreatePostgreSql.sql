@@ -10,6 +10,7 @@ CREATE TABLE CompositeKeys
 (
 	Key1 INT,
 	Key2 INT,
+	Name TEXT NOT NULL,
 	PRIMARY KEY (Key1, Key2)
 );
 

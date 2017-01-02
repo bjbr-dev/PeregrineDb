@@ -27,15 +27,12 @@ namespace Dapper.MicroCRUD
 
         /// <summary>
         /// Generates a SQL statement to select a single row from a table.
-        /// Requires a single parameter called @Id
         /// </summary>
         public static string MakeFindStatement(TableSchema tableSchema)
         {
-            var primaryKey = tableSchema.GetSinglePrimaryKey();
-
             var sql = new StringBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
-            sql.AppendClause("WHERE ").Append(primaryKey.ColumnName).Append(" = @Id");
+            sql.AppendWherePrimaryKeysClause(tableSchema);
             return sql.ToString();
         }
 
@@ -55,10 +52,12 @@ namespace Dapper.MicroCRUD
         /// </summary>
         public static string MakeInsertStatement(TableSchema tableSchema)
         {
+            var insertableColumns = tableSchema.Columns.Where(p => p.Usage.IncludeInInsertStatements);
+
             var sql = new StringBuilder("INSERT INTO ")
                 .Append(tableSchema.Name)
-                .Append(" (").AppendInsertParametersClause(tableSchema.Columns).Append(")");
-            sql.AppendClause("VALUES (").AppendInsertValuesClause(tableSchema.Columns).Append(");");
+                .Append(" (").AppendColumnNames(insertableColumns).Append(")");
+            sql.AppendClause("VALUES (").AppendParameterNames(insertableColumns).Append(");");
             return sql.ToString();
         }
 
@@ -75,11 +74,11 @@ namespace Dapper.MicroCRUD
         /// </summary>
         public static string MakeUpdateStatement(TableSchema tableSchema)
         {
-            var primaryKey = tableSchema.GetSinglePrimaryKey();
+            var columnsToSet = tableSchema.Columns.Where(p => p.Usage.IncludeInUpdateStatements);
 
             var sql = new StringBuilder("UPDATE ").Append(tableSchema.Name);
-            sql.AppendClause("SET ").AppendUpdateSetClause(tableSchema.Columns);
-            sql.AppendClause("WHERE ").Append(primaryKey.ColumnName).Append(" = @").Append(primaryKey.ParameterName);
+            sql.AppendClause("SET ").AppendColumnNamesEqualParameterNames(columnsToSet, ", ");
+            sql.AppendWherePrimaryKeysClause(tableSchema);
             return sql.ToString();
         }
 
@@ -88,10 +87,8 @@ namespace Dapper.MicroCRUD
         /// </summary>
         public static string MakeDeleteByPrimaryKeyStatement(TableSchema tableSchema)
         {
-            var primaryKey = tableSchema.GetSinglePrimaryKey();
-
             var sql = new StringBuilder("DELETE FROM ").Append(tableSchema.Name);
-            sql.AppendClause("WHERE ").Append(primaryKey.ColumnName).Append(" = @").Append(primaryKey.ParameterName);
+            sql.AppendWherePrimaryKeysClause(tableSchema);
             return sql.ToString();
         }
 
@@ -103,6 +100,11 @@ namespace Dapper.MicroCRUD
             var sql = new StringBuilder("DELETE FROM ").Append(tableSchema.Name);
             sql.AppendClause(conditions);
             return sql.ToString();
+        }
+
+        private static void AppendWherePrimaryKeysClause(this StringBuilder sql, TableSchema tableSchema)
+        {
+            sql.AppendClause("WHERE ").AppendColumnNamesEqualParameterNames(tableSchema.GetPrimaryKeys(), " AND ");
         }
 
         private static StringBuilder AppendSelectPropertiesClause(
@@ -130,14 +132,20 @@ namespace Dapper.MicroCRUD
             return sql;
         }
 
-        private static StringBuilder AppendUpdateSetClause(this StringBuilder sql, IEnumerable<ColumnSchema> properties)
+        /// <summary>
+        /// Appends a list of properties in the form of ColumnName = @ParameterName {Seperator} ColumnName = @ParameterName ...
+        /// </summary>
+        private static StringBuilder AppendColumnNamesEqualParameterNames(
+            this StringBuilder sql,
+            IEnumerable<ColumnSchema> properties,
+            string seperator)
         {
             var isFirst = true;
-            foreach (var property in properties.Where(p => p.Usage.IncludeInUpdateStatements))
+            foreach (var property in properties)
             {
                 if (!isFirst)
                 {
-                    sql.Append(", ");
+                    sql.Append(seperator);
                 }
 
                 sql.Append(property.ColumnName).Append(" = @").Append(property.ParameterName);
@@ -147,12 +155,15 @@ namespace Dapper.MicroCRUD
             return sql;
         }
 
-        private static StringBuilder AppendInsertValuesClause(
+        /// <summary>
+        /// Appends a list of properties in the form of @ParameterName, @ParameterName ...
+        /// </summary>
+        private static StringBuilder AppendParameterNames(
             this StringBuilder sql,
             IEnumerable<ColumnSchema> properties)
         {
             var isFirst = true;
-            foreach (var property in properties.Where(p => p.Usage.IncludeInInsertStatements))
+            foreach (var property in properties)
             {
                 if (!isFirst)
                 {
@@ -166,12 +177,15 @@ namespace Dapper.MicroCRUD
             return sql;
         }
 
-        private static StringBuilder AppendInsertParametersClause(
+        /// <summary>
+        /// Appends a list of properties in the form of ColumnName, ColumnName ...
+        /// </summary>
+        private static StringBuilder AppendColumnNames(
             this StringBuilder sql,
             IEnumerable<ColumnSchema> properties)
         {
             var isFirst = true;
-            foreach (var property in properties.Where(p => p.Usage.IncludeInInsertStatements))
+            foreach (var property in properties)
             {
                 if (!isFirst)
                 {

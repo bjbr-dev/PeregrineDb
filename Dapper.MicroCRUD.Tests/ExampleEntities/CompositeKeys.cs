@@ -15,5 +15,7 @@ namespace Dapper.MicroCRUD.Tests.ExampleEntities
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int Key2 { get; set; }
+
+        public string Name { get; set; }
     }
 }

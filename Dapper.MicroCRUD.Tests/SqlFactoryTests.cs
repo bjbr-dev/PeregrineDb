@@ -81,7 +81,24 @@ WHERE [Id] = @Id";
                 // Assert
                 var expected = @"SELECT [Key], [Name]
 FROM [KeyNotDefault]
-WHERE [Key] = @Id";
+WHERE [Key] = @Key";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Uses_each_key_in_composite_key()
+            {
+                // Arrange
+                var schema = this.dialect.CompositeKeys();
+
+                // Act
+                var sql = SqlFactory.MakeFindStatement(schema);
+
+                // Assert
+                var expected = @"SELECT [Key1], [Key2], [Name]
+FROM [CompositeKeys]
+WHERE [Key1] = @Key1 AND [Key2] = @Key2";
 
                 Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
@@ -367,6 +384,23 @@ WHERE [Id] = @Id";
             }
 
             [Test]
+            public void Uses_each_key_in_composite_key()
+            {
+                // Arrange
+                var schema = this.dialect.CompositeKeys();
+
+                // Act
+                var sql = SqlFactory.MakeUpdateStatement(schema);
+
+                // Assert
+                var expected = @"UPDATE [CompositeKeys]
+SET [Name] = @Name
+WHERE [Key1] = @Key1 AND [Key2] = @Key2";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
             public void Does_not_update_primary_key_even_if_its_not_auto_generated()
             {
                 // Arrange
@@ -484,6 +518,22 @@ WHERE [Id] = @Id";
                 // Assert
                 var expected = @"DELETE FROM [Users]
 WHERE [Id] = @Id";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Uses_each_key_in_composite_key()
+            {
+                // Arrange
+                var schema = this.dialect.CompositeKeys();
+
+                // Act
+                var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(schema);
+
+                // Assert
+                var expected = @"DELETE FROM [CompositeKeys]
+WHERE [Key1] = @Key1 AND [Key2] = @Key2";
 
                 Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
