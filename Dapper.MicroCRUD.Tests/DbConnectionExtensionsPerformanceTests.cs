@@ -51,7 +51,7 @@ namespace Dapper.MicroCRUD.Tests
             }
 
             [Test]
-            public void Takes_less_than_4_seconds_to_insert_30000_rows()
+            public void Takes_less_than_5_seconds_to_insert_30000_rows()
             {
                 // Arrange
                 var entities = Enumerable.Range(0, 30000).Select(i => new SimpleBenchmarkEntity
@@ -83,7 +83,7 @@ namespace Dapper.MicroCRUD.Tests
                         Assert.That(stopWatch.ElapsedMilliseconds, Is.LessThan(6000));
                         break;
                     default:
-                        Assert.That(stopWatch.ElapsedMilliseconds, Is.LessThan(4000));
+                        Assert.That(stopWatch.ElapsedMilliseconds, Is.LessThan(5000));
                         break;
                 }
 
@@ -101,7 +101,7 @@ namespace Dapper.MicroCRUD.Tests
             }
 
             [Test]
-            public void Takes_less_than_3_seconds_to_insert_30000_rows()
+            public void Takes_less_than_4_seconds_to_insert_30000_rows()
             {
                 // Arrange
                 var entities = Enumerable.Range(0, 30000).Select(i => new SimpleBenchmarkEntity
@@ -130,7 +130,7 @@ namespace Dapper.MicroCRUD.Tests
                         Assert.That(stopWatch.ElapsedMilliseconds, Is.LessThan(5000));
                         break;
                     default:
-                        Assert.That(stopWatch.ElapsedMilliseconds, Is.LessThan(3000));
+                        Assert.That(stopWatch.ElapsedMilliseconds, Is.LessThan(4000));
                         break;
                 }
 
