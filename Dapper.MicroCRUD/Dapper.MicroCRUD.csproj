@@ -56,15 +56,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DbConnectionExtensions.cs" />
-    <Compile Include="Entities\DefaultColumnNameResolver.cs" />
-    <Compile Include="Entities\DefaultTableNameResolver.cs" />
+    <Compile Include="Entities\PropertySchema.cs" />
     <Compile Include="Dialect.cs" />
     <Compile Include="Entities\ColumnSchema.cs" />
     <Compile Include="Entities\ColumnUsage.cs" />
     <Compile Include="Entities\TableSchema.cs" />
-    <Compile Include="Entities\IColumnNameResolver.cs" />
-    <Compile Include="Entities\ITableNameResolver.cs" />
-    <Compile Include="Entities\TableSchemaCache.cs" />
+    <Compile Include="Entities\TableSchemaCacheIdentity.cs" />
     <Compile Include="InvalidPrimaryKeyException.cs" />
     <Compile Include="MicroCRUDConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -9,7 +9,6 @@ namespace Dapper.MicroCRUD.Tests.Entities
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Dapper.MicroCRUD.Entities;
-    using Moq;
     using NUnit.Framework;
 
     [TestFixture]
@@ -20,17 +19,11 @@ namespace Dapper.MicroCRUD.Tests.Entities
     public class TableSchemaFactoryTests
     {
         private Dialect dialect;
-        private MicroCRUDConfig config;
 
         [SetUp]
         public void BaseSetUp()
         {
             this.dialect = new Dialect("TestDialect", "GET Identity();", "'{0}'", "LIMIT {0} OFFSET {1}");
-
-            this.config = new MicroCRUDConfig(
-                this.dialect,
-                new DefaultTableNameResolver(),
-                new DefaultColumnNameResolver());
         }
 
         private class GetTableSchema
@@ -38,65 +31,36 @@ namespace Dapper.MicroCRUD.Tests.Entities
         {
             private TableSchema PerformAct(Type entityType)
             {
-                return TableSchemaFactory.GetTableSchema(entityType, this.config);
+                return TableSchemaFactory.MakeTableSchema(entityType, this.dialect);
             }
 
             private class Naming
                 : GetTableSchema
             {
-                private Mock<ITableNameResolver> tableNameResolver;
-                private Mock<IColumnNameResolver> columnNameResolver;
-
-                [SetUp]
-                public void SetUp()
-                {
-                    this.tableNameResolver = new Mock<ITableNameResolver>();
-                    this.columnNameResolver = new Mock<IColumnNameResolver>();
-
-                    this.config = new MicroCRUDConfig(
-                        this.dialect,
-                        this.tableNameResolver.Object,
-                        this.columnNameResolver.Object);
-                }
-
                 [Test]
                 public void Uses_table_name_resolver_to_get_table_name()
                 {
-                    // Arrange
-                    this.tableNameResolver.Setup(r => r.ResolveTableName(typeof(SingleColumn), this.dialect))
-                        .Returns("Table Name");
-
                     // Act
                     var result = this.PerformAct(typeof(SingleColumn));
 
                     // Assert
-                    Assert.AreEqual("Table Name", result.Name);
+                    Assert.AreEqual("'SingleColumn'", result.Name);
                 }
 
                 [Test]
                 public void Uses_column_name_resolver_to_get_column_name()
                 {
-                    // Arrange
-                    var propertyInfo = typeof(SingleColumn).GetProperty(nameof(SingleColumn.Id));
-                    this.columnNameResolver.Setup(r => r.ResolveColumnName(propertyInfo))
-                        .Returns("Column Name");
-
                     // Act
                     var result = this.PerformAct(typeof(SingleColumn));
 
                     // Assert
                     var column = result.Columns.Single();
-                    Assert.AreEqual(this.dialect.EscapeMostReservedCharacters("Column Name"), column.ColumnName);
+                    Assert.AreEqual("'Id'", column.ColumnName);
                 }
 
                 [Test]
                 public void Uses_property_name_to_populate_select_name()
                 {
-                    // Arrange
-                    var propertyInfo = typeof(SingleColumn).GetProperty(nameof(SingleColumn.Id));
-                    this.columnNameResolver.Setup(r => r.ResolveColumnName(propertyInfo))
-                        .Returns("Column Name");
-
                     // Act
                     var result = this.PerformAct(typeof(SingleColumn));
 
@@ -108,11 +72,6 @@ namespace Dapper.MicroCRUD.Tests.Entities
                 [Test]
                 public void Uses_property_name_to_populate_parameter_name()
                 {
-                    // Arrange
-                    var propertyInfo = typeof(SingleColumn).GetProperty(nameof(SingleColumn.Id));
-                    this.columnNameResolver.Setup(r => r.ResolveColumnName(propertyInfo))
-                        .Returns("Column Name");
-
                     // Act
                     var result = this.PerformAct(typeof(SingleColumn));
 

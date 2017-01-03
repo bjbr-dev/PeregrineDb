@@ -7,6 +7,7 @@ namespace Dapper
     using System;
     using System.Collections.Generic;
     using System.Data;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Dapper.MicroCRUD;
     using Dapper.MicroCRUD.Entities;
@@ -48,7 +49,7 @@ namespace Dapper
         {
             Ensure.NotNull(connection, nameof(connection));
 
-            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
+            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeCountStatement(tableSchema, conditions);
             return connection.ExecuteScalar<int>(sql, parameters, transaction, commandTimeout);
         }
@@ -82,7 +83,7 @@ namespace Dapper
             Ensure.NotNull(connection, nameof(connection));
             Ensure.NotNull(id, nameof(id));
 
-            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
+            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeFindStatement(tableSchema);
             var parameters = GetPrimaryKeyParameters(tableSchema, id);
             return connection.Query<TEntity>(sql, parameters, transaction, commandTimeout: commandTimeout)
@@ -120,7 +121,7 @@ namespace Dapper
         {
             Ensure.NotNull(connection, nameof(connection));
 
-            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
+            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeGetRangeStatement(tableSchema, conditions);
             return connection.Query<TEntity>(sql, parameters, transaction, commandTimeout: commandTimeout);
         }
@@ -159,10 +160,10 @@ namespace Dapper
         {
             Ensure.NotNull(connection, nameof(connection));
 
-            var config = MicroCRUDConfig.GetConfig(dialect);
-            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), config);
+            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
+            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeGetPageStatement(
-                tableSchema, config.Dialect, pageNumber, itemsPerPage, conditions, orderBy);
+                tableSchema, dialect, pageNumber, itemsPerPage, conditions, orderBy);
 
             return connection.Query<TEntity>(sql, parameters, transaction, commandTimeout: commandTimeout);
         }
@@ -178,7 +179,7 @@ namespace Dapper
         {
             Ensure.NotNull(connection, nameof(connection));
 
-            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
+            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeGetRangeStatement(tableSchema, null);
             return connection.Query<TEntity>(sql, transaction: transaction, commandTimeout: commandTimeout);
         }
@@ -210,7 +211,7 @@ namespace Dapper
             Ensure.NotNull(connection, nameof(connection));
             Ensure.NotNull(entity, nameof(entity));
 
-            var tableSchema = TableSchemaCache.GetTableSchema(entity.GetType(), dialect);
+            var tableSchema = TableSchemaFactory.GetTableSchema(entity.GetType(), dialect);
             var sql = SqlFactory.MakeInsertStatement(tableSchema);
             connection.Execute(sql, entity, transaction, commandTimeout);
         }
@@ -245,8 +246,8 @@ namespace Dapper
             Ensure.NotNull(connection, nameof(connection));
             Ensure.NotNull(entity, nameof(entity));
 
-            var config = MicroCRUDConfig.GetConfig(dialect);
-            var tableSchema = TableSchemaCache.GetTableSchema(entity.GetType(), config);
+            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
+            var tableSchema = TableSchemaFactory.GetTableSchema(entity.GetType(), dialect);
 
             if (!tableSchema.CanGeneratePrimaryKey(typeof(TPrimaryKey)))
             {
@@ -254,7 +255,7 @@ namespace Dapper
                     "Insert<TPrimaryKey>() can only be used for Int32 and Int64 primary keys. Use Insert() for other types of primary keys.");
             }
 
-            var sql = SqlFactory.MakeInsertReturningIdentityStatement(tableSchema, config.Dialect);
+            var sql = SqlFactory.MakeInsertReturningIdentityStatement(tableSchema, dialect);
             return connection.ExecuteScalar<TPrimaryKey>(sql, entity, transaction, commandTimeout);
         }
 
@@ -296,7 +297,7 @@ namespace Dapper
             Ensure.NotNull(connection, nameof(connection));
             Ensure.NotNull(entities, nameof(entities));
 
-            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
+            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeInsertStatement(tableSchema);
             connection.Execute(sql, entities, transaction, commandTimeout);
         }
@@ -334,6 +335,7 @@ namespace Dapper
         /// ]]>
         /// </code>
         /// </example>
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration", Justification = "Ensure doesn't enumerate")]
         public static void InsertRange<TEntity, TPrimaryKey>(
             this IDbConnection connection,
             IEnumerable<TEntity> entities,
@@ -346,8 +348,8 @@ namespace Dapper
             Ensure.NotNull(entities, nameof(entities));
             Ensure.NotNull(setPrimaryKey, nameof(setPrimaryKey));
 
-            var config = MicroCRUDConfig.GetConfig(dialect);
-            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), config);
+            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
+            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
 
             if (!tableSchema.CanGeneratePrimaryKey(typeof(TPrimaryKey)))
             {
@@ -355,7 +357,7 @@ namespace Dapper
                     "InsertRange<TEntity, TPrimaryKey>() can only be used for Int32 and Int64 primary keys. Use InsertRange<TEntity>() for other types of primary keys.");
             }
 
-            var sql = SqlFactory.MakeInsertReturningIdentityStatement(tableSchema, config.Dialect);
+            var sql = SqlFactory.MakeInsertReturningIdentityStatement(tableSchema, dialect);
             foreach (var entity in entities)
             {
                 var id = connection.ExecuteScalar<TPrimaryKey>(sql, entity, transaction, commandTimeout);
@@ -398,7 +400,7 @@ namespace Dapper
             var param = (object)entity;
             Ensure.NotNull(param, nameof(entity));
 
-            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
+            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeUpdateStatement(tableSchema);
             return connection.Execute(sql, param, transaction, commandTimeout);
         }
@@ -444,7 +446,7 @@ namespace Dapper
             Ensure.NotNull(connection, nameof(connection));
             Ensure.NotNull(entities, nameof(entities));
 
-            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
+            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeUpdateStatement(tableSchema);
             return connection.Execute(sql, entities, transaction, commandTimeout);
         }
@@ -483,7 +485,7 @@ namespace Dapper
             var param = (object)entity;
             Ensure.NotNull(param, nameof(entity));
 
-            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
+            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(tableSchema);
             return connection.Execute(sql, param, transaction, commandTimeout);
         }
@@ -518,7 +520,7 @@ namespace Dapper
             Ensure.NotNull(connection, nameof(connection));
             Ensure.NotNull(id, nameof(id));
 
-            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
+            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(tableSchema);
             var parameters = GetPrimaryKeyParameters(tableSchema, id);
             return connection.Execute(sql, parameters, transaction, commandTimeout);
@@ -560,7 +562,7 @@ namespace Dapper
                     "DeleteRange<TEntity> requires a WHERE clause, use DeleteAll<TEntity> to delete everything.");
             }
 
-            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
+            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeDeleteRangeStatement(tableSchema, conditions);
             return connection.Execute(sql, parameters, transaction, commandTimeout);
         }
@@ -593,7 +595,7 @@ namespace Dapper
         {
             Ensure.NotNull(connection, nameof(connection));
 
-            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
+            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeDeleteRangeStatement(tableSchema, null);
             return connection.Execute(sql, transaction: transaction, commandTimeout: commandTimeout);
         }

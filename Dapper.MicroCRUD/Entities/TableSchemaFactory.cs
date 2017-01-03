@@ -4,6 +4,7 @@
 namespace Dapper.MicroCRUD.Entities
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.ComponentModel.DataAnnotations;
@@ -17,6 +18,9 @@ namespace Dapper.MicroCRUD.Entities
     /// </summary>
     internal static class TableSchemaFactory
     {
+        private static readonly ConcurrentDictionary<TableSchemaCacheIdentity, TableSchema> Schemas =
+            new ConcurrentDictionary<TableSchemaCacheIdentity, TableSchema>();
+
         private static readonly List<Type> PossiblePropertyTypes = new List<Type>
             {
                 typeof(byte),
@@ -40,45 +44,72 @@ namespace Dapper.MicroCRUD.Entities
             };
 
         /// <summary>
+        /// Gets the <see cref="TableSchema"/> for the specified entityType and dialect.
+        /// </summary>
+        public static TableSchema GetTableSchema(Type entityType, Dialect dialect)
+        {
+            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
+
+            var key = new TableSchemaCacheIdentity(entityType, dialect.Name);
+
+            TableSchema result;
+            if (Schemas.TryGetValue(key, out result))
+            {
+                return result;
+            }
+
+            var schema = MakeTableSchema(entityType, dialect);
+            Schemas[key] = schema;
+            return schema;
+        }
+
+        /// <summary>
         /// Create the table schema for an entity
         /// </summary>
-        public static TableSchema GetTableSchema(Type entityType, MicroCRUDConfig config)
+        internal static TableSchema MakeTableSchema(Type entityType, Dialect dialect)
         {
-            var tableName = config.TableNameResolver.ResolveTableName(entityType, config.Dialect);
+            var tableName = ResolveTableName(entityType, dialect);
             var properties = entityType.GetProperties()
                                        .Where(p =>
                                        {
                                            var propertyType = p.PropertyType.GetUnderlyingType();
                                            return propertyType.IsEnum || PossiblePropertyTypes.Contains(propertyType);
                                        })
-                                       .Where(p => p.GetCustomAttribute(typeof(NotMappedAttribute)) == null)
+                                       .Select(
+                                           p => new PropertySchema
+                                               {
+                                                   CustomAttributes = p.GetCustomAttributes(true),
+                                                   Name = p.Name,
+                                                   PropertyInfo = p
+                                               })
+                                       .Where(p => p.FindAttribute<NotMappedAttribute>() == null)
                                        .ToList();
 
-            var explicitKeyDefined = properties.Any(p => p.GetCustomAttribute<KeyAttribute>() != null);
+            var explicitKeyDefined = properties.Any(p => p.FindAttribute<KeyAttribute>() != null);
 
             var columns = properties.Select(
-                p => config.Dialect.MakeColumnSchema(
+                p => dialect.MakeColumnSchema(
                     p.Name,
-                    config.ColumnNameResolver.ResolveColumnName(p),
+                    ResolveColumnName(p),
                     GetColumnUsage(explicitKeyDefined, p)));
 
             return new TableSchema(tableName, columns.ToImmutableArray());
         }
 
-        private static ColumnUsage GetColumnUsage(bool explicitKeyDefined, PropertyInfo property)
+        private static ColumnUsage GetColumnUsage(bool explicitKeyDefined, PropertySchema property)
         {
             var isPrimaryKey = explicitKeyDefined
-                ? property.GetCustomAttribute<KeyAttribute>() != null
+                ? property.FindAttribute<KeyAttribute>() != null
                 : string.Equals(property.Name, "Id", StringComparison.OrdinalIgnoreCase);
 
-            if (!property.CanWrite)
+            if (!property.PropertyInfo.CanWrite)
             {
                 return isPrimaryKey
                     ? ColumnUsage.ComputedPrimaryKey
                     : ColumnUsage.ComputedColumn;
             }
 
-            var generatedAttribute = property.GetCustomAttribute<DatabaseGeneratedAttribute>();
+            var generatedAttribute = property.FindAttribute<DatabaseGeneratedAttribute>();
             return isPrimaryKey
                 ? GetPrimaryKeyUsage(generatedAttribute)
                 : GetColumnUsage(generatedAttribute);
@@ -123,6 +154,32 @@ namespace Dapper.MicroCRUD.Entities
                     throw new ArgumentOutOfRangeException(
                         "Unknown DatabaseGeneratedOption: " + generatedAttribute.DatabaseGeneratedOption);
             }
+        }
+
+        private static string ResolveTableName(Type type, Dialect dialect)
+        {
+            var tableAttribute = type.GetCustomAttribute<TableAttribute>(false);
+            if (tableAttribute == null)
+            {
+                return dialect.EscapeMostReservedCharacters(type.Name);
+            }
+
+            var tableName = dialect.EscapeMostReservedCharacters(tableAttribute.Name);
+            if (string.IsNullOrEmpty(tableAttribute.Schema))
+            {
+                return tableName;
+            }
+
+            var schemaName = dialect.EscapeMostReservedCharacters(tableAttribute.Schema);
+            return $"{schemaName}.{tableName}";
+        }
+
+        private static string ResolveColumnName(PropertySchema p)
+        {
+            var columnAttribute = p.CustomAttributes.OfType<ColumnAttribute>().FirstOrDefault();
+            return columnAttribute != null
+                ? columnAttribute.Name
+                : p.Name;
         }
     }
 }
