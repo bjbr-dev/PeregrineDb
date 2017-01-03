@@ -78,7 +78,7 @@ namespace Dapper.MicroCRUD.Entities
                                        .Select(
                                            p => new PropertySchema
                                                {
-                                                   CustomAttributes = p.GetCustomAttributes(true),
+                                                   CustomAttributes = p.GetCustomAttributes(false),
                                                    Name = p.Name,
                                                    PropertyInfo = p
                                                })

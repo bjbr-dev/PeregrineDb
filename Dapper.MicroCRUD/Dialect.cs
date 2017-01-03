@@ -39,7 +39,7 @@ namespace Dapper.MicroCRUD
         /// Gets the dialect for PostgreSQL.
         /// </summary>
         public static Dialect PostgreSql { get; } =
-            new Dialect(nameof(PostgreSql), "SELECT LASTVAL() AS id", "{0}", "LIMIT {1} OFFSET {0}");
+            new Dialect(nameof(PostgreSql), "SELECT LASTVAL() AS id", null, "LIMIT {1} OFFSET {0}");
 
         /// <summary>
         /// Gets the name of this Sql Dialect.
@@ -66,6 +66,11 @@ namespace Dapper.MicroCRUD
         /// </summary>
         public string EscapeMostReservedCharacters(string identifier)
         {
+            if (this.escapeIdentifierFormat == null)
+            {
+                return identifier;
+            }
+
             return string.Format(this.escapeIdentifierFormat, identifier);
         }
 

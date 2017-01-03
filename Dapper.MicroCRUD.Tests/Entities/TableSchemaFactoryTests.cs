@@ -225,7 +225,7 @@ namespace Dapper.MicroCRUD.Tests.Entities
                     var result = this.PerformAct(typeof(KeyComposite));
 
                     // Assert
-                    Assert.AreEqual(2, result.PrimaryKeyColumns.Count);
+                    Assert.AreEqual(2, result.PrimaryKeyColumns.Length);
                 }
 
                 [Test]

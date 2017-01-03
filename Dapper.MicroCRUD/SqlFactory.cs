@@ -4,8 +4,7 @@
 namespace Dapper.MicroCRUD
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
+    using System.Collections.Immutable;
     using System.Text;
     using Dapper.MicroCRUD.Entities;
 
@@ -86,12 +85,13 @@ namespace Dapper.MicroCRUD
         /// </summary>
         public static string MakeInsertStatement(TableSchema tableSchema)
         {
-            var insertableColumns = tableSchema.Columns.Where(p => p.Usage.IncludeInInsertStatements);
+            Func<ColumnSchema, bool> include = p => p.Usage.IncludeInInsertStatements;
+            var columns = tableSchema.Columns;
 
             var sql = new StringBuilder("INSERT INTO ")
                 .Append(tableSchema.Name)
-                .Append(" (").AppendColumnNames(insertableColumns).Append(")");
-            sql.AppendClause("VALUES (").AppendParameterNames(insertableColumns).Append(");");
+                .Append(" (").AppendColumnNames(columns, include).Append(")");
+            sql.AppendClause("VALUES (").AppendParameterNames(columns, include).Append(");");
             return sql.ToString();
         }
 
@@ -108,10 +108,10 @@ namespace Dapper.MicroCRUD
         /// </summary>
         public static string MakeUpdateStatement(TableSchema tableSchema)
         {
-            var columnsToSet = tableSchema.Columns.Where(p => p.Usage.IncludeInUpdateStatements);
+            Func<ColumnSchema, bool> include = p => p.Usage.IncludeInUpdateStatements;
 
             var sql = new StringBuilder("UPDATE ").Append(tableSchema.Name);
-            sql.AppendClause("SET ").AppendColumnNamesEqualParameterNames(columnsToSet, ", ");
+            sql.AppendClause("SET ").AppendColumnNamesEqualParameterNames(tableSchema.Columns, ", ", include);
             sql.AppendWherePrimaryKeysClause(tableSchema);
             return sql.ToString();
         }
@@ -138,16 +138,22 @@ namespace Dapper.MicroCRUD
 
         private static void AppendWherePrimaryKeysClause(this StringBuilder sql, TableSchema tableSchema)
         {
-            sql.AppendClause("WHERE ").AppendColumnNamesEqualParameterNames(tableSchema.GetPrimaryKeys(), " AND ");
+            sql.AppendClause("WHERE ")
+               .AppendColumnNamesEqualParameterNames(tableSchema.GetPrimaryKeys(), " AND ", p => true);
         }
 
         private static StringBuilder AppendSelectPropertiesClause(
             this StringBuilder sql,
-            IEnumerable<ColumnSchema> properties)
+            ImmutableArray<ColumnSchema> properties)
         {
             var isFirst = true;
-            foreach (var property in properties)
+
+            // ReSharper disable once ForCanBeConvertedToForeach
+            // PERF: This method can be called in a very tight loop so should be as fast as possible
+            for (var i = 0; i < properties.Length; i++)
             {
+                var property = properties[i];
+
                 if (!isFirst)
                 {
                     sql.Append(", ");
@@ -171,12 +177,22 @@ namespace Dapper.MicroCRUD
         /// </summary>
         private static StringBuilder AppendColumnNamesEqualParameterNames(
             this StringBuilder sql,
-            IEnumerable<ColumnSchema> properties,
-            string seperator)
+            ImmutableArray<ColumnSchema> properties,
+            string seperator,
+            Func<ColumnSchema, bool> include)
         {
             var isFirst = true;
-            foreach (var property in properties)
+
+            // ReSharper disable once ForCanBeConvertedToForeach
+            // PERF: This method can be called in a very tight loop so should be as fast as possible
+            for (var i = 0; i < properties.Length; i++)
             {
+                var property = properties[i];
+                if (!include(property))
+                {
+                    continue;
+                }
+
                 if (!isFirst)
                 {
                     sql.Append(seperator);
@@ -194,11 +210,21 @@ namespace Dapper.MicroCRUD
         /// </summary>
         private static StringBuilder AppendParameterNames(
             this StringBuilder sql,
-            IEnumerable<ColumnSchema> properties)
+            ImmutableArray<ColumnSchema> properties,
+            Func<ColumnSchema, bool> include)
         {
             var isFirst = true;
-            foreach (var property in properties)
+
+            // ReSharper disable once ForCanBeConvertedToForeach
+            // PERF: This method can be called in a very tight loop so should be as fast as possible
+            for (var i = 0; i < properties.Length; i++)
             {
+                var property = properties[i];
+                if (!include(property))
+                {
+                    continue;
+                }
+
                 if (!isFirst)
                 {
                     sql.Append(", ");
@@ -216,11 +242,22 @@ namespace Dapper.MicroCRUD
         /// </summary>
         private static StringBuilder AppendColumnNames(
             this StringBuilder sql,
-            IEnumerable<ColumnSchema> properties)
+            ImmutableArray<ColumnSchema> properties,
+            Func<ColumnSchema, bool> include)
         {
             var isFirst = true;
-            foreach (var property in properties)
+
+            // ReSharper disable once ForCanBeConvertedToForeach
+            // PERF: This method can be called in a very tight loop so should be as fast as possible
+            for (var i = 0; i < properties.Length; i++)
             {
+                var property = properties[i];
+
+                if (!include(property))
+                {
+                    continue;
+                }
+
                 if (!isFirst)
                 {
                     sql.Append(", ");

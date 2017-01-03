@@ -603,7 +603,7 @@ namespace Dapper
         private static object GetPrimaryKeyParameters(TableSchema tableSchema, object id)
         {
             var primaryKeys = tableSchema.GetPrimaryKeys();
-            if (primaryKeys.Count > 1)
+            if (primaryKeys.Length > 1)
             {
                 return id;
             }
