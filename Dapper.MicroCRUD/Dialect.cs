@@ -20,10 +20,12 @@ namespace Dapper.MicroCRUD
         /// <param name="name"></param>
         /// <param name="getIdentitySql"></param>
         /// <param name="escapeIdentifierFormat">the format string to use when wrapping a column name to escape reserved characters</param>
-        public Dialect(string name, string getIdentitySql, string escapeIdentifierFormat)
+        /// <param name="pagerFormat"></param>
+        public Dialect(string name, string getIdentitySql, string escapeIdentifierFormat, string pagerFormat)
         {
             this.GetIdentitySql = getIdentitySql;
             this.escapeIdentifierFormat = escapeIdentifierFormat;
+            this.PagerFormat = pagerFormat;
             this.Name = name;
         }
 
@@ -31,13 +33,13 @@ namespace Dapper.MicroCRUD
         /// Gets the Dialect for Microsoft SQL Server 2012
         /// </summary>
         public static Dialect SqlServer2012 { get; } =
-            new Dialect(nameof(SqlServer2012), "SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]", "[{0}]");
+            new Dialect(nameof(SqlServer2012), "SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]", "[{0}]", "OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY");
 
         /// <summary>
         /// Gets the dialect for PostgreSQL.
         /// </summary>
         public static Dialect PostgreSql { get; } =
-            new Dialect(nameof(PostgreSql), "SELECT LASTVAL() AS id", "{0}");
+            new Dialect(nameof(PostgreSql), "SELECT LASTVAL() AS id", "{0}", "LIMIT {1} OFFSET {0}");
 
         /// <summary>
         /// Gets the name of this Sql Dialect.
@@ -48,6 +50,15 @@ namespace Dapper.MicroCRUD
         /// Gets the SQL statement to use when getting the identity of the last inserted record.
         /// </summary>
         public string GetIdentitySql { get; }
+
+        /// <summary>
+        /// Gets the SQL statement to be used when getting a page of results.
+        /// This will be appended after an ORDER BY clause.
+        ///
+        /// {0} will be replaced with the number of rows to skip.
+        /// {1} will be replaced with the number of rows to take.
+        /// </summary>
+        public string PagerFormat { get; }
 
         /// <summary>
         /// Wraps the <paramref name="identifier"/> so that most reserved characters are escaped.

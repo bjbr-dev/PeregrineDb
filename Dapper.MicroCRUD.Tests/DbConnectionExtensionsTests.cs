@@ -386,6 +386,137 @@ namespace Dapper.MicroCRUD.Tests
             }
         }
 
+        private class GetPage
+            : DbConnectionExtensionsTests
+        {
+            public GetPage(string dialectName)
+                : base(dialectName)
+            {
+            }
+
+            [Test]
+            public void Filters_result_by_conditions()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var users = this.connection.GetPage<User>(
+                    1,
+                    10,
+                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
+                    "Age",
+                    new { Search = "Some Name", Age = 10 },
+                    dialect: this.dialect);
+
+                // Assert
+                Assert.That(users.Count(), Is.EqualTo(3));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Gets_first_page()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var users = this.connection.GetPage<User>(
+                    1,
+                    2,
+                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
+                    "Age DESC",
+                    new { Search = "Some Name", Age = 10 },
+                    dialect: this.dialect).ToList();
+
+                // Assert
+                Assert.That(users.Count, Is.EqualTo(2));
+                Assert.That(users[0].Name, Is.EqualTo("Some Name 1"));
+                Assert.That(users[1].Name, Is.EqualTo("Some Name 2"));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Gets_second_page()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var users = this.connection.GetPage<User>(
+                    2,
+                    2,
+                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
+                    "Age DESC",
+                    new { Search = "Some Name", Age = 10 },
+                    dialect: this.dialect).ToList();
+
+                // Assert
+                Assert.That(users.Count, Is.EqualTo(1));
+                Assert.That(users[0].Name, Is.EqualTo("Some Name 3"));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Returns_empty_set_past_last_page()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var users = this.connection.GetPage<User>(
+                    3,
+                    2,
+                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
+                    "Age DESC",
+                    new { Search = "Some Name", Age = 10 },
+                    dialect: this.dialect).ToList();
+
+                // Assert
+                Assert.That(users, Is.Empty);
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Returns_everything_when_conditions_is_null()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var users = this.connection.GetRange<User>(null, dialect: this.dialect);
+
+                // Assert
+                Assert.That(users.Count(), Is.EqualTo(4));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+        }
+
         private class GetAll
             : DbConnectionExtensionsTests
         {

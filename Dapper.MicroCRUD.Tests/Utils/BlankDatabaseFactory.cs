@@ -49,7 +49,8 @@ namespace Dapper.MicroCRUD.Tests.Utils
             var databaseName = MakeRandomDatabaseName();
             var connectionStringBuilder = new SqlConnectionStringBuilder(serverConnectionString)
                 {
-                    InitialCatalog = databaseName
+                    InitialCatalog = databaseName,
+                    MultipleActiveResultSets = false
                 };
 
             var connectionString = connectionStringBuilder.ToString();

@@ -48,6 +48,40 @@ namespace Dapper.MicroCRUD
         }
 
         /// <summary>
+        /// Generates a SQL statement to select a page of rows, in a specific order
+        /// </summary>
+        public static string MakeGetPageStatement(
+            TableSchema tableSchema,
+            Dialect dialect,
+            int pageNumber,
+            int itemsPerPage,
+            string conditions,
+            string orderBy)
+        {
+            if (pageNumber < 1)
+            {
+                throw new ArgumentException("PageNumber is 1-based so must be greater than 0", nameof(pageNumber));
+            }
+
+            if (itemsPerPage < 0)
+            {
+                throw new ArgumentException("ItemsPerPage must be greater than or equal to 0", nameof(itemsPerPage));
+            }
+
+            if (string.IsNullOrWhiteSpace(orderBy))
+            {
+                throw new ArgumentException("orderBy cannot be empty");
+            }
+
+            var sql = new StringBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
+            sql.AppendClause("FROM ").Append(tableSchema.Name);
+            sql.AppendClause(conditions);
+            sql.AppendClause("ORDER BY ").Append(orderBy);
+            sql.AppendLine().AppendFormat(dialect.PagerFormat, (pageNumber - 1) * itemsPerPage, itemsPerPage);
+            return sql.ToString();
+        }
+
+        /// <summary>
         /// Generates a SQL statement to insert a row and return the generated identity.
         /// </summary>
         public static string MakeInsertStatement(TableSchema tableSchema)

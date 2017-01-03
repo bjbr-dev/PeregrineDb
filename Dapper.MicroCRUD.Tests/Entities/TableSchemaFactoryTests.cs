@@ -25,7 +25,7 @@ namespace Dapper.MicroCRUD.Tests.Entities
         [SetUp]
         public void BaseSetUp()
         {
-            this.dialect = new Dialect("TestDialect", "GET Identity();", "'{0}'");
+            this.dialect = new Dialect("TestDialect", "GET Identity();", "'{0}'", "LIMIT {0} OFFSET {1}");
 
             this.config = new MicroCRUDConfig(
                 this.dialect,

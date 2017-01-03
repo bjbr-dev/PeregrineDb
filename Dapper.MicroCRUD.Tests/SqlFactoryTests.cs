@@ -3,6 +3,7 @@
 // </copyright>
 namespace Dapper.MicroCRUD.Tests
 {
+    using System;
     using Dapper.MicroCRUD.Tests.ExampleEntities;
     using Dapper.MicroCRUD.Tests.Utils;
     using NUnit.Framework;
@@ -218,6 +219,155 @@ FROM [KeyAlias]";
                 // Assert
                 var expected = @"SELECT [Id], [YearsOld] AS [Age]
 FROM [PropertyAlias]";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+        }
+
+        private class MakeGetPageStatement
+            : SqlFactoryTests
+        {
+            [TestCase(0)]
+            [TestCase(-1)]
+            public void Throws_exception_when_pageNumber_is_less_than_1(int pageNumber)
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act / Assert
+                Assert.Throws<ArgumentException>(
+                    () => SqlFactory.MakeGetPageStatement(schema, this.dialect, pageNumber, 10, null, "Name"));
+            }
+
+            [TestCase(-1)]
+            public void Throws_exception_when_itemsPerPage_is_less_than_0(int itemsPerPage)
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act / Assert
+                Assert.Throws<ArgumentException>(
+                    () => SqlFactory.MakeGetPageStatement(schema, this.dialect, 1, itemsPerPage, null, "Name"));
+            }
+
+            [TestCase(null)]
+            [TestCase("")]
+            [TestCase(" ")]
+            public void Throws_exception_when_order_by_is_empty(string orderBy)
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act / Assert
+                Assert.Throws<ArgumentException>(
+                    () => SqlFactory.MakeGetPageStatement(schema, this.dialect, 1, 10, null, orderBy));
+            }
+
+            [Test]
+            public void Selects_from_given_table()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = SqlFactory.MakeGetPageStatement(schema, this.dialect, 1, 10, null, "Name");
+
+                // Assert
+                var expected = @"SELECT [Id], [Name], [Age]
+FROM [Users]
+ORDER BY Name
+OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Adds_conditions_clause()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = SqlFactory.MakeGetPageStatement(schema, this.dialect, 1, 10, "WHERE Name LIKE 'Foo%'", "Name");
+
+                // Assert
+                var expected = @"SELECT [Id], [Name], [Age]
+FROM [Users]
+WHERE Name LIKE 'Foo%'
+ORDER BY Name
+OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Adds_alias_when_column_name_is_aliased()
+            {
+                // Arrange
+                var schema = this.dialect.PropertyAlias();
+
+                // Act
+                var sql = SqlFactory.MakeGetPageStatement(schema, this.dialect, 1, 10, null, "Name");
+
+                // Assert
+                var expected = @"SELECT [Id], [YearsOld] AS [Age]
+FROM [PropertyAlias]
+ORDER BY Name
+OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Selects_second_page()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = SqlFactory.MakeGetPageStatement(schema, this.dialect, 2, 10, null, "Name");
+
+                // Assert
+                var expected = @"SELECT [Id], [Name], [Age]
+FROM [Users]
+ORDER BY Name
+OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Selects_appropriate_number_of_rows()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = SqlFactory.MakeGetPageStatement(schema, this.dialect, 2, 5, null, "Name");
+
+                // Assert
+                var expected = @"SELECT [Id], [Name], [Age]
+FROM [Users]
+ORDER BY Name
+OFFSET 5 ROWS FETCH NEXT 5 ROWS ONLY";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Allows_itemsPerPage_to_be_zero()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = SqlFactory.MakeGetPageStatement(schema, this.dialect, 2, 0, null, "Name");
+
+                // Assert
+                var expected = @"SELECT [Id], [Name], [Age]
+FROM [Users]
+ORDER BY Name
+OFFSET 0 ROWS FETCH NEXT 0 ROWS ONLY";
 
                 Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }

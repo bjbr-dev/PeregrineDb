@@ -126,6 +126,48 @@ namespace Dapper
         }
 
         /// <summary>
+        /// Gets a collection of entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// [Table("Users")]
+        /// public class UserEntity
+        /// {
+        ///     [Key]
+        ///     public int Id { get; set; }
+        ///
+        ///     public string Name { get; set; }
+        ///
+        ///     public int Age { get; set; }
+        /// }
+        /// ...
+        /// var users = this.connection.GetPage<UserEntity>(3, 10, "WHERE Age > @MinAge", "Age DESC", new { MinAge = 18 });
+        /// ]]>
+        /// </code>
+        /// </example>
+        public static IEnumerable<TEntity> GetPage<TEntity>(
+            this IDbConnection connection,
+            int pageNumber,
+            int itemsPerPage,
+            string conditions,
+            string orderBy,
+            object parameters = null,
+            IDbTransaction transaction = null,
+            Dialect dialect = null,
+            int? commandTimeout = null)
+        {
+            Ensure.NotNull(connection, nameof(connection));
+
+            var config = MicroCRUDConfig.GetConfig(dialect);
+            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), config);
+            var sql = SqlFactory.MakeGetPageStatement(
+                tableSchema, config.Dialect, pageNumber, itemsPerPage, conditions, orderBy);
+
+            return connection.Query<TEntity>(sql, parameters, transaction, commandTimeout: commandTimeout);
+        }
+
+        /// <summary>
         /// Gets all the entities in the <typeparamref name="TEntity"/> table.
         /// </summary>
         public static IEnumerable<TEntity> GetAll<TEntity>(
