@@ -1040,6 +1040,84 @@ namespace Dapper.MicroCRUD.Tests
             }
         }
 
+        private class UpdateRange
+            : DbConnectionExtensionsTests
+        {
+            public UpdateRange(string dialectName)
+                : base(dialectName)
+            {
+            }
+
+            [Test]
+            public void Updates_the_entity()
+            {
+                // Arrange
+                this.connection.InsertRange(
+                    new[]
+                        {
+                            new User { Name = "Some name1", Age = 10 },
+                            new User { Name = "Some name2", Age = 10 },
+                            new User { Name = "Some name2", Age = 11 }
+                        },
+                    dialect: this.dialect);
+
+                // Act
+                var entities = this.connection.GetRange<User>("WHERE Age = 10", dialect: this.dialect).ToList();
+                foreach (var entity in entities)
+                {
+                    entity.Name = "Other name";
+                }
+
+                var numAffected = this.connection.UpdateRange(entities, dialect: this.dialect);
+
+                // Assert
+                Assert.That(numAffected, Is.EqualTo(2));
+
+                var updatedEntities = this.connection.GetRange<User>("WHERE Name = 'Other name'", dialect: this.dialect);
+                Assert.That(updatedEntities.Count(), Is.EqualTo(2));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Updates_entities_with_composite_keys()
+            {
+                // Arrange
+                this.connection.InsertRange(
+                    new[]
+                        {
+                            new CompositeKeys { Key1 = 5, Key2 = 20, Name = "Some name1" },
+                            new CompositeKeys { Key1 = 6, Key2 = 21, Name = "Some name2" },
+                            new CompositeKeys { Key1 = 7, Key2 = 22, Name = "Some other name" }
+                        },
+                    dialect: this.dialect);
+
+                // Act
+                var entities = this.connection.GetRange<CompositeKeys>(
+                    "WHERE Name Like 'Some name%'",
+                    dialect: this.dialect).ToList();
+
+                foreach (var entity in entities)
+                {
+                    entity.Name = "Other name";
+                }
+
+                var numAffected = this.connection.UpdateRange(entities, dialect: this.dialect);
+
+                // Assert
+                Assert.That(numAffected, Is.EqualTo(2));
+
+                var updatedEntities = this.connection.GetRange<CompositeKeys>(
+                    "WHERE Name = 'Other name'",
+                    dialect: this.dialect);
+                Assert.That(updatedEntities.Count(), Is.EqualTo(2));
+
+                // Cleanup
+                this.connection.DeleteAll<CompositeKeys>(dialect: this.dialect);
+            }
+        }
+
         private class DeleteId
             : DbConnectionExtensionsTests
         {

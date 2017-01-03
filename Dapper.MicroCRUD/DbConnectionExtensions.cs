@@ -362,6 +362,52 @@ namespace Dapper
         }
 
         /// <summary>
+        /// Efficiently updates multiple <paramref name="entities"/> in the database.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// [Table("Users")]
+        /// public class UserEntity
+        /// {
+        ///     [Key]
+        ///     public int Id { get; set; }
+        ///
+        ///     public string Name { get; set; }
+        /// }
+        /// ...
+        /// using (var transaction = this.connection.BeginTransaction())
+        /// {
+        ///     var entities = this.connection.GetRange<UserEntity>("WHERE @Age = 10");
+        ///
+        ///     foreach (var entity in entities)
+        ///     {
+        ///         entity.Name = "Little bobby tables";
+        ///     }
+        ///
+        ///     this.connection.UpdateRange(entities);
+        ///     transaction.Commit();
+        /// }
+        /// ]]>
+        /// </code>
+        /// </example>
+        /// <returns>The number of affected records.</returns>
+        public static int UpdateRange<TEntity>(
+            this IDbConnection connection,
+            IEnumerable<TEntity> entities,
+            IDbTransaction transaction = null,
+            Dialect dialect = null,
+            int? commandTimeout = null)
+        {
+            Ensure.NotNull(connection, nameof(connection));
+            Ensure.NotNull(entities, nameof(entities));
+
+            var tableSchema = TableSchemaCache.GetTableSchema(typeof(TEntity), dialect);
+            var sql = SqlFactory.MakeUpdateStatement(tableSchema);
+            return connection.Execute(sql, entities, transaction, commandTimeout);
+        }
+
+        /// <summary>
         /// Deletes the entity in the <typeparamref name="TEntity"/> table, identified by its primary key.
         /// </summary>
         /// <example>

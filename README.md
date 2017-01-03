@@ -22,19 +22,20 @@ Currently, the following DBMS are supported. More will be added (e.g. SQLite) wh
 #### CRUD Helpers
 Dapper.MicroCRUD provides the following extensions to the IDbConnection:
 
-- [Count<TEntity>([conditions])](documentation/Count.md): Counts how many entities in the TEntity table match the conditions.
+- [Count&lt;TEntity&gt;([conditions])](documentation/Count.md): Counts how many entities in the TEntity table match the conditions.
 - [Find(id)](documentation/Find.md): Find an entity by it's id, or null.
-- [GetRange<TEntity>(conditions)](documentation/GetRange.md): Gets all the entities in the TEntity table which match the conditions.
-- [GetAll<TEntity>()](documentation/GetRange.md): Gets all the entities in the TEntity table.
+- [GetRange&lt;TEntity&gt;(conditions)](documentation/GetRange.md): Gets all the entities in the TEntity table which match the conditions.
+- [GetAll&lt;TEntity&gt;()](documentation/GetRange.md): Gets all the entities in the TEntity table.
 - [Insert(entity)](documentation/Insert.md): Inserts an entity into the TEntity table.
-- [Insert<TPrimaryKey>(entity)](documentation/Insert.md): Inserts an entity into the TEntity table and returns it's generated identity.
-- [InsertRange<TEntity>(entities)](documentation/InsertRange.md): Efficiently inserts multiple entities.
-- [InsertRange<TEntity, TPrimaryKey>(entities, Action)](documentation/InsertRange.md): Efficiently inserts multiple entities, and for each one calls an action allowing its identity to be recorded.
-- [Update<TEntity>(entity)](documentation/Update.md): Updates the entity by using it's primary key.
-- [Delete<TEntity>(entity)](documentation/Delete.md): Deletes the entity by using it's primary key.
-- [Delete<TEntity>(id)](documentation/Delete.md): Deletes the entity with the given id.
-- [DeleteRange<TEntity>(conditions)](documentation/DeleteRange.md): Deletes the entities which match the given conditions.
-- [DeleteAll<TEntity>(conditions)](documentation/DeleteRange.md): Deletes all entities in the TEntity table.
+- [Insert&lt;TPrimaryKey&gt;(entity)](documentation/Insert.md): Inserts an entity into the TEntity table and returns it's generated identity.
+- [InsertRange&lt;TEntity&gt;(entities)](documentation/InsertRange.md): Efficiently inserts multiple entities.
+- [InsertRange&lt;TEntity, TPrimaryKey&gt;(entities, Action)](documentation/InsertRange.md): Efficiently inserts multiple entities, and for each one calls an action allowing its identity to be recorded.
+- [Update&lt;TEntity&gt;(entity)](documentation/Update.md): Updates the entity by using it's primary key.
+- [UpdateRange&lt;TEntity&gt;(entities)](documentation/Update.md): Efficiently updates multiple entities in the database.
+- [Delete&lt;TEntity&gt;(entity)](documentation/Delete.md): Deletes the entity by using it's primary key.
+- [Delete&lt;TEntity&gt;(id)](documentation/Delete.md): Deletes the entity with the given id.
+- [DeleteRange&lt;TEntity&gt;(conditions)](documentation/DeleteRange.md): Deletes the entities which match the given conditions.
+- [DeleteAll&lt;TEntity&gt;(conditions)](documentation/DeleteRange.md): Deletes all entities in the TEntity table.
 
 #### Configuration
 *Documentation in progress!*
