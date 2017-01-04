@@ -1,7 +1,7 @@
 ﻿// <copyright file="TableSchemaFactoryTests.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
-namespace Dapper.MicroCRUD.Tests.Entities
+namespace Dapper.MicroCRUD.Tests.Schema
 {
     using System;
     using System.ComponentModel.DataAnnotations;
@@ -9,6 +9,7 @@ namespace Dapper.MicroCRUD.Tests.Entities
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Dapper.MicroCRUD.Schema;
+    using Moq;
     using NUnit.Framework;
 
     [TestFixture]
@@ -29,9 +30,17 @@ namespace Dapper.MicroCRUD.Tests.Entities
         private class GetTableSchema
             : TableSchemaFactoryTests
         {
+            private TableSchemaFactory sut;
+
+            [SetUp]
+            public void GetTableSchemaSetUp()
+            {
+                this.sut = new TableSchemaFactory(new DefaultTableNameFactory(), new DefaultColumnNameFactory());
+            }
+
             private TableSchema PerformAct(Type entityType)
             {
-                return TableSchemaFactory.MakeTableSchema(entityType, this.dialect);
+                return this.sut.MakeTableSchema(entityType, this.dialect);
             }
 
             private class Naming
@@ -40,6 +49,12 @@ namespace Dapper.MicroCRUD.Tests.Entities
                 [Test]
                 public void Uses_table_name_resolver_to_get_table_name()
                 {
+                    // Arrange
+                    var tableNameFactory = new Mock<ITableNameFactory>();
+                    tableNameFactory.Setup(f => f.GetTableName(typeof(SingleColumn), this.dialect))
+                                    .Returns("'SingleColumn'");
+                    this.sut = this.sut.WithTableNameFactory(tableNameFactory.Object);
+
                     // Act
                     var result = this.PerformAct(typeof(SingleColumn));
 
@@ -50,6 +65,15 @@ namespace Dapper.MicroCRUD.Tests.Entities
                 [Test]
                 public void Uses_column_name_resolver_to_get_column_name()
                 {
+                    // Arrange
+                    var columnNameFactory = new Mock<IColumnNameFactory>();
+                    columnNameFactory.Setup(
+                                         f => f.GetColumnName(
+                                             It.Is<PropertySchema>(p => p.Name == "Id")))
+                                     .Returns("Id");
+
+                    this.sut = this.sut.WithColumnNameFactory(columnNameFactory.Object);
+
                     // Act
                     var result = this.PerformAct(typeof(SingleColumn));
 

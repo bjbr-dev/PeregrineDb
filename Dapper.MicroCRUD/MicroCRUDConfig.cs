@@ -3,6 +3,9 @@
 // </copyright>
 namespace Dapper.MicroCRUD
 {
+    using Dapper.MicroCRUD.Schema;
+    using Dapper.MicroCRUD.Utils;
+
     /// <summary>
     /// Defines the configuration for MicroCRUD.
     /// </summary>
@@ -17,6 +20,26 @@ namespace Dapper.MicroCRUD
         {
             get { return defaultDialect; }
             set { defaultDialect = value; }
+        }
+
+        /// <summary>
+        /// Sets the method used to get the column name from a property.
+        /// </summary>
+        public static void SetTableNameFactory(ITableNameFactory factory)
+        {
+            Ensure.NotNull(factory, nameof(factory));
+
+            TableSchemaFactory.SetCurrent(f => f.WithTableNameFactory(factory));
+        }
+
+        /// <summary>
+        /// Sets the method used to get the column name from a property.
+        /// </summary>
+        public static void SetColumnNameFactory(IColumnNameFactory factory)
+        {
+            Ensure.NotNull(factory, nameof(factory));
+
+            TableSchemaFactory.SetCurrent(f => f.WithColumnNameFactory(factory));
         }
     }
 }

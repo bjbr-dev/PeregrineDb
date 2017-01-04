@@ -52,6 +52,11 @@
   <ItemGroup>
     <Compile Include="AffectedRowCountException.cs" />
     <Compile Include="DbConnectionExtensions.cs" />
+    <Compile Include="Schema\DefaultColumnNameFactory.cs" />
+    <Compile Include="Schema\DefaultTableNameFactory.cs" />
+    <Compile Include="Schema\SuffixRemovingTableNameFactory.cs" />
+    <Compile Include="Schema\IColumnNameFactory.cs" />
+    <Compile Include="Schema\ITableNameFactory.cs" />
     <Compile Include="Schema\PropertySchema.cs" />
     <Compile Include="Dialect.cs" />
     <Compile Include="Schema\ColumnSchema.cs" />

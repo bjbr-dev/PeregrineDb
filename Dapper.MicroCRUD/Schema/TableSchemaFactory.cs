@@ -10,14 +10,14 @@ namespace Dapper.MicroCRUD.Schema
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Linq;
-    using System.Reflection;
     using Dapper.MicroCRUD.Utils;
 
     /// <summary>
     /// Methods to create an instance of a <see cref="TableSchema"/>.
     /// </summary>
-    internal static class TableSchemaFactory
+    internal class TableSchemaFactory
     {
+        private static readonly object LockObject = new object();
         private static readonly ConcurrentDictionary<TableSchemaCacheIdentity, TableSchema> Schemas =
             new ConcurrentDictionary<TableSchemaCacheIdentity, TableSchema>();
 
@@ -43,6 +43,57 @@ namespace Dapper.MicroCRUD.Schema
                 typeof(byte[])
             };
 
+        private static TableSchemaFactory current = new TableSchemaFactory(
+            new DefaultTableNameFactory(),
+            new DefaultColumnNameFactory());
+
+        private readonly ITableNameFactory tableNameFactory;
+        private readonly IColumnNameFactory columnNameFactory;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TableSchemaFactory"/> class.
+        /// </summary>
+        public TableSchemaFactory(
+            ITableNameFactory tableNameFactory,
+            IColumnNameFactory columnNameFactory)
+        {
+            this.tableNameFactory = tableNameFactory;
+            this.columnNameFactory = columnNameFactory;
+        }
+
+        /// <summary>
+        /// Gets the current table schema factory
+        /// </summary>
+        public static TableSchemaFactory Current
+        {
+            get
+            {
+                lock (LockObject)
+                {
+                    return current;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Updates the current factory by setting it to the result of the <paramref name="updater"/>.
+        /// </summary>
+        public static void SetCurrent(Func<TableSchemaFactory, TableSchemaFactory> updater)
+        {
+            lock (LockObject)
+            {
+                var result = updater(current);
+                if (result != null)
+                {
+                    current = result;
+                }
+                else
+                {
+                    throw new ArgumentException("Updater returned null");
+                }
+            }
+        }
+
         /// <summary>
         /// Gets the <see cref="TableSchema"/> for the specified entityType and dialect.
         /// </summary>
@@ -58,7 +109,7 @@ namespace Dapper.MicroCRUD.Schema
                 return result;
             }
 
-            var schema = MakeTableSchema(entityType, dialect);
+            var schema = Current.MakeTableSchema(entityType, dialect);
             Schemas[key] = schema;
             return schema;
         }
@@ -66,34 +117,40 @@ namespace Dapper.MicroCRUD.Schema
         /// <summary>
         /// Create the table schema for an entity
         /// </summary>
-        internal static TableSchema MakeTableSchema(Type entityType, Dialect dialect)
+        public TableSchema MakeTableSchema(Type entityType, Dialect dialect)
         {
-            var tableName = ResolveTableName(entityType, dialect);
+            var tableName = this.tableNameFactory.GetTableName(entityType, dialect);
             var properties = entityType.GetProperties()
                                        .Where(p =>
                                        {
                                            var propertyType = p.PropertyType.GetUnderlyingType();
                                            return propertyType.IsEnum || PossiblePropertyTypes.Contains(propertyType);
                                        })
-                                       .Select(
-                                           p => new PropertySchema
-                                               {
-                                                   CustomAttributes = p.GetCustomAttributes(false),
-                                                   Name = p.Name,
-                                                   PropertyInfo = p
-                                               })
+                                       .Select(PropertySchema.MakePropertySchema)
                                        .Where(p => p.FindAttribute<NotMappedAttribute>() == null)
                                        .ToList();
 
             var explicitKeyDefined = properties.Any(p => p.FindAttribute<KeyAttribute>() != null);
 
-            var columns = properties.Select(
-                p => dialect.MakeColumnSchema(
-                    p.Name,
-                    ResolveColumnName(p),
-                    GetColumnUsage(explicitKeyDefined, p)));
+            var columns = properties.Select(p => this.MakeColumnSchema(dialect, p, GetColumnUsage(explicitKeyDefined, p)));
 
             return new TableSchema(tableName, columns.ToImmutableArray());
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="TableSchemaFactory"/> which generates table names with the <paramref name="factory"/>.
+        /// </summary>
+        public TableSchemaFactory WithTableNameFactory(ITableNameFactory factory)
+        {
+            return new TableSchemaFactory(factory, this.columnNameFactory);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="TableSchemaFactory"/> which generates column names with the <paramref name="factory"/>.
+        /// </summary>
+        public TableSchemaFactory WithColumnNameFactory(IColumnNameFactory factory)
+        {
+            return new TableSchemaFactory(this.tableNameFactory, factory);
         }
 
         private static ColumnUsage GetColumnUsage(bool explicitKeyDefined, PropertySchema property)
@@ -156,30 +213,15 @@ namespace Dapper.MicroCRUD.Schema
             }
         }
 
-        private static string ResolveTableName(Type type, Dialect dialect)
+        private ColumnSchema MakeColumnSchema(Dialect dialect, PropertySchema property, ColumnUsage columnUsage)
         {
-            var tableAttribute = type.GetCustomAttribute<TableAttribute>(false);
-            if (tableAttribute == null)
-            {
-                return dialect.EscapeMostReservedCharacters(type.Name);
-            }
+            var propertyName = property.Name;
 
-            var tableName = dialect.EscapeMostReservedCharacters(tableAttribute.Name);
-            if (string.IsNullOrEmpty(tableAttribute.Schema))
-            {
-                return tableName;
-            }
-
-            var schemaName = dialect.EscapeMostReservedCharacters(tableAttribute.Schema);
-            return $"{schemaName}.{tableName}";
-        }
-
-        private static string ResolveColumnName(PropertySchema p)
-        {
-            var columnAttribute = p.CustomAttributes.OfType<ColumnAttribute>().FirstOrDefault();
-            return columnAttribute != null
-                ? columnAttribute.Name
-                : p.Name;
+            return new ColumnSchema(
+                dialect.EscapeMostReservedCharacters(this.columnNameFactory.GetColumnName(property)),
+                dialect.EscapeMostReservedCharacters(propertyName),
+                propertyName,
+                columnUsage);
         }
     }
 }

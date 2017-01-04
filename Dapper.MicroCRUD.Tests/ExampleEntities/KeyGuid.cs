@@ -6,6 +6,7 @@ namespace Dapper.MicroCRUD.Tests.ExampleEntities
     using System;
     using System.ComponentModel.DataAnnotations.Schema;
 
+    [Table(nameof(KeyGuid))]
     public class KeyGuid
     {
         [DatabaseGenerated(DatabaseGeneratedOption.None)]

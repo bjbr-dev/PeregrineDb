@@ -5,6 +5,7 @@ namespace Dapper.MicroCRUD.Tests.ExampleEntities
 {
     using System.ComponentModel.DataAnnotations.Schema;
 
+    [Table(nameof(PropertyNotMapped))]
     public class PropertyNotMapped
     {
         public int Id { get; set; }

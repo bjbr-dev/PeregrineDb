@@ -4,10 +4,12 @@
 namespace Dapper.MicroCRUD.Tests.ExampleEntities
 {
     using System;
+    using System.ComponentModel.DataAnnotations.Schema;
 
     /// <remarks>
     /// Except enum, which is a different class :/
     /// </remarks>
+    [Table(nameof(PropertyAllPossibleTypes))]
     public class PropertyAllPossibleTypes
     {
         public int Id { get; set; }

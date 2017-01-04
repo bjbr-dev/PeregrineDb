@@ -3,10 +3,6 @@
 // </copyright>
 namespace Dapper.MicroCRUD
 {
-    using System.Collections.Generic;
-    using System.Collections.Immutable;
-    using Dapper.MicroCRUD.Schema;
-
     /// <summary>
     /// Defines the SQL to generate when targeting specific vendor implementations.
     /// </summary>
@@ -78,37 +74,6 @@ namespace Dapper.MicroCRUD
         public override string ToString()
         {
             return "Dialect " + this.Name;
-        }
-
-        /// <summary>
-        /// Makes a table with the given name and columns
-        /// </summary>
-        public TableSchema MakeTableSchema(string name, IEnumerable<ColumnSchema> columns)
-        {
-            return new TableSchema(this.EscapeMostReservedCharacters(name), columns.ToImmutableArray());
-        }
-
-        /// <summary>
-        /// Makes a column with the given name
-        /// </summary>
-        public ColumnSchema MakeColumnSchema(string name, ColumnUsage usage)
-        {
-            return this.MakeColumnSchema(name, name, usage);
-        }
-
-        /// <summary>
-        /// Makes an aliased column with the given column name and property name
-        /// </summary>
-        public ColumnSchema MakeColumnSchema(
-            string propertyName,
-            string columnName,
-            ColumnUsage usage)
-        {
-            return new ColumnSchema(
-                this.EscapeMostReservedCharacters(columnName),
-                this.EscapeMostReservedCharacters(propertyName),
-                propertyName,
-                usage);
         }
     }
 }

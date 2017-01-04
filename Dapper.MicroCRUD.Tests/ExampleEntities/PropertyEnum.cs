@@ -3,6 +3,9 @@
 // </copyright>
 namespace Dapper.MicroCRUD.Tests.ExampleEntities
 {
+    using System.ComponentModel.DataAnnotations.Schema;
+
+    [Table(nameof(PropertyEnum))]
     public class PropertyEnum
     {
         public enum Color

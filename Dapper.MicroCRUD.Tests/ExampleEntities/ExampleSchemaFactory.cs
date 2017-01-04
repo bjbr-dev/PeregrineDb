@@ -4,6 +4,7 @@
 namespace Dapper.MicroCRUD.Tests.ExampleEntities
 {
     using Dapper.MicroCRUD.Schema;
+    using Dapper.MicroCRUD.Tests.Utils;
 
     internal static class ExampleSchemaFactory
     {

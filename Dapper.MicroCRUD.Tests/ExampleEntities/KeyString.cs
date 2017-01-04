@@ -6,6 +6,7 @@ namespace Dapper.MicroCRUD.Tests.ExampleEntities
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
 
+    [Table(nameof(KeyString))]
     public class KeyString
     {
         [Key]

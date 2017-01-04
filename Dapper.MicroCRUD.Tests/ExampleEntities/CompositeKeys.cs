@@ -6,6 +6,7 @@ namespace Dapper.MicroCRUD.Tests.ExampleEntities
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
 
+    [Table(nameof(CompositeKeys))]
     public class CompositeKeys
     {
         [Key]
