@@ -54,6 +54,7 @@
     <Compile Include="DbConnectionExtensions.cs" />
     <Compile Include="Schema\DefaultColumnNameFactory.cs" />
     <Compile Include="Schema\DefaultTableNameFactory.cs" />
+    <Compile Include="Schema\NonPluralizingTableNameFactory.cs" />
     <Compile Include="Schema\SuffixRemovingTableNameFactory.cs" />
     <Compile Include="Schema\IColumnNameFactory.cs" />
     <Compile Include="Schema\ITableNameFactory.cs" />
