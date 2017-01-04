@@ -8,7 +8,7 @@ namespace Dapper.MicroCRUD.Tests.Entities
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using Dapper.MicroCRUD.Entities;
+    using Dapper.MicroCRUD.Schema;
     using NUnit.Framework;
 
     [TestFixture]

@@ -1,7 +1,7 @@
 ﻿// <copyright file="TableSchema.cs" company="Berkeleybross">
 //   Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
-namespace Dapper.MicroCRUD.Entities
+namespace Dapper.MicroCRUD.Schema
 {
     using System;
     using System.Collections.Immutable;
@@ -66,6 +66,22 @@ namespace Dapper.MicroCRUD.Entities
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Gets the parameters to be used as the primary key for dapper.
+        /// </summary>
+        public object GetPrimaryKeyParameters(object id)
+        {
+            var primaryKeys = this.GetPrimaryKeys();
+            if (primaryKeys.Length > 1)
+            {
+                return id;
+            }
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@" + primaryKeys.First().ParameterName, id);
+            return parameters;
         }
     }
 }

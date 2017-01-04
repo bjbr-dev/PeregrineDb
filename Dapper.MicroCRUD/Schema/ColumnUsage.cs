@@ -1,7 +1,7 @@
 ﻿// <copyright file="ColumnUsage.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
-namespace Dapper.MicroCRUD.Entities
+namespace Dapper.MicroCRUD.Schema
 {
     /// <summary>
     /// Summarizes when a <see cref="ColumnSchema"/> should be included in various conditions.

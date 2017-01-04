@@ -1,7 +1,7 @@
 ﻿// <copyright file="InvalidPrimaryKeyException.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
-namespace Dapper.MicroCRUD
+namespace Dapper.MicroCRUD.Schema
 {
     using System;
     using System.Runtime.Serialization;

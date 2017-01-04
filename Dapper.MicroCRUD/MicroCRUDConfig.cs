@@ -8,9 +8,15 @@ namespace Dapper.MicroCRUD
     /// </summary>
     public static class MicroCRUDConfig
     {
+        private static volatile Dialect defaultDialect = Dialect.SqlServer2012;
+
         /// <summary>
         /// Gets or sets the default dialect
         /// </summary>
-        public static Dialect DefaultDialect { get; set; } = Dialect.SqlServer2012;
+        public static Dialect DefaultDialect
+        {
+            get { return defaultDialect; }
+            set { defaultDialect = value; }
+        }
     }
 }

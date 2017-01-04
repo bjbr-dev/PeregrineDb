@@ -24,6 +24,7 @@ Dapper.MicroCRUD provides the following extensions to the IDbConnection:
 
 - [Count&lt;TEntity&gt;([conditions])](documentation/Count.md): Counts how many entities in the TEntity table match the conditions.
 - [Find(id)](documentation/Find.md): Find an entity by it's id, or null.
+- [Get(id)](documentation/Find.md): Get an entity by it's id, or throw an exception.
 - [GetRange&lt;TEntity&gt;(conditions)](documentation/GetRange.md): Gets all the entities in the TEntity table which match the conditions.
 - [GetPage&lt;TEntity&gt;(...)](documentation/GetPage.md): Gets a page of entities which match the conditions.
 - [GetAll&lt;TEntity&gt;()](documentation/GetRange.md): Gets all the entities in the TEntity table.

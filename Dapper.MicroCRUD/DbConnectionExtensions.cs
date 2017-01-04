@@ -10,7 +10,7 @@ namespace Dapper
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Dapper.MicroCRUD;
-    using Dapper.MicroCRUD.Entities;
+    using Dapper.MicroCRUD.Schema;
     using Dapper.MicroCRUD.Utils;
 
     /// <summary>
@@ -85,9 +85,46 @@ namespace Dapper
 
             var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeFindStatement(tableSchema);
-            var parameters = GetPrimaryKeyParameters(tableSchema, id);
+            var parameters = tableSchema.GetPrimaryKeyParameters(id);
             return connection.Query<TEntity>(sql, parameters, transaction, commandTimeout: commandTimeout)
                              .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Gets a single entity from the <typeparamref name="TEntity"/> table by it's primary key, or throws an exception if not found
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// [Table("Users")]
+        /// public class UserEntity
+        /// {
+        ///     [Key]
+        ///     public int Id { get; set; }
+        ///
+        ///     public string Name { get; set; }
+        /// }
+        /// ...
+        /// var entity = this.connection.Get<UserEntity>(12);
+        /// ]]>
+        /// </code>
+        /// </example>
+        /// <exception cref="InvalidOperationException">The entity was not found.</exception>
+        public static TEntity Get<TEntity>(
+            this IDbConnection connection,
+            object id,
+            IDbTransaction transaction = null,
+            Dialect dialect = null,
+            int? commandTimeout = null)
+            where TEntity : class
+        {
+            var result = connection.Find<TEntity>(id, transaction, dialect, commandTimeout);
+            if (result != null)
+            {
+                return result;
+            }
+
+            throw new InvalidOperationException($"An entity with id {id} was not found");
         }
 
         /// <summary>
@@ -213,7 +250,7 @@ namespace Dapper
 
             var tableSchema = TableSchemaFactory.GetTableSchema(entity.GetType(), dialect);
             var sql = SqlFactory.MakeInsertStatement(tableSchema);
-            connection.Execute(sql, entity, transaction, commandTimeout);
+            connection.ExecuteCommand(sql, entity, transaction, commandTimeout).ExpectingAffectedRowCountToBe(1);
         }
 
         /// <summary>
@@ -287,7 +324,7 @@ namespace Dapper
         /// ]]>
         /// </code>
         /// </example>
-        public static void InsertRange<TEntity>(
+        public static SqlCommandResult InsertRange<TEntity>(
             this IDbConnection connection,
             IEnumerable<TEntity> entities,
             IDbTransaction transaction = null,
@@ -299,7 +336,7 @@ namespace Dapper
 
             var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeInsertStatement(tableSchema);
-            connection.Execute(sql, entities, transaction, commandTimeout);
+            return connection.ExecuteCommand(sql, entities, transaction, commandTimeout);
         }
 
         /// <summary>
@@ -386,8 +423,8 @@ namespace Dapper
         /// ]]>
         /// </code>
         /// </example>
-        /// <returns>The number of affected records.</returns>
-        public static int Update<TEntity>(
+        /// <exception cref="AffectedRowCountException">The update command didn't change any record, or changed multiple records.</exception>
+        public static void Update<TEntity>(
             this IDbConnection connection,
             TEntity entity,
             IDbTransaction transaction = null,
@@ -402,7 +439,7 @@ namespace Dapper
 
             var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeUpdateStatement(tableSchema);
-            return connection.Execute(sql, param, transaction, commandTimeout);
+            connection.ExecuteCommand(sql, param, transaction, commandTimeout).ExpectingAffectedRowCountToBe(1);
         }
 
         /// <summary>
@@ -436,7 +473,7 @@ namespace Dapper
         /// </code>
         /// </example>
         /// <returns>The number of affected records.</returns>
-        public static int UpdateRange<TEntity>(
+        public static SqlCommandResult UpdateRange<TEntity>(
             this IDbConnection connection,
             IEnumerable<TEntity> entities,
             IDbTransaction transaction = null,
@@ -448,7 +485,7 @@ namespace Dapper
 
             var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeUpdateStatement(tableSchema);
-            return connection.Execute(sql, entities, transaction, commandTimeout);
+            return connection.ExecuteCommand(sql, entities, transaction, commandTimeout);
         }
 
         /// <summary>
@@ -471,8 +508,8 @@ namespace Dapper
         /// ]]>
         /// </code>
         /// </example>
-        /// <returns>The number of deleted entities.</returns>
-        public static int Delete<TEntity>(
+        /// <exception cref="AffectedRowCountException">The delete command didn't delete anything, or deleted multiple records.</exception>
+        public static void Delete<TEntity>(
             this IDbConnection connection,
             TEntity entity,
             IDbTransaction transaction = null,
@@ -487,7 +524,7 @@ namespace Dapper
 
             var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(tableSchema);
-            return connection.Execute(sql, param, transaction, commandTimeout);
+            connection.ExecuteCommand(sql, param, transaction, commandTimeout).ExpectingAffectedRowCountToBe(1);
         }
 
         /// <summary>
@@ -509,8 +546,8 @@ namespace Dapper
         /// ]]>
         /// </code>
         /// </example>
-        /// <returns>The number of deleted entities.</returns>
-        public static int Delete<TEntity>(
+        /// <exception cref="AffectedRowCountException">The delete command didn't delete anything, or deleted multiple records.</exception>
+        public static void Delete<TEntity>(
             this IDbConnection connection,
             object id,
             IDbTransaction transaction = null,
@@ -522,8 +559,8 @@ namespace Dapper
 
             var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeDeleteByPrimaryKeyStatement(tableSchema);
-            var parameters = GetPrimaryKeyParameters(tableSchema, id);
-            return connection.Execute(sql, parameters, transaction, commandTimeout);
+            var parameters = tableSchema.GetPrimaryKeyParameters(id);
+            connection.ExecuteCommand(sql, parameters, transaction, commandTimeout).ExpectingAffectedRowCountToBe(1);
         }
 
         /// <summary>
@@ -547,7 +584,7 @@ namespace Dapper
         /// </code>
         /// </example>
         /// <returns>The number of deleted entities.</returns>
-        public static int DeleteRange<TEntity>(
+        public static SqlCommandResult DeleteRange<TEntity>(
             this IDbConnection connection,
             string conditions,
             object parameters = null,
@@ -564,7 +601,7 @@ namespace Dapper
 
             var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeDeleteRangeStatement(tableSchema, conditions);
-            return connection.Execute(sql, parameters, transaction, commandTimeout);
+            return connection.ExecuteCommand(sql, parameters, transaction, commandTimeout);
         }
 
         /// <summary>
@@ -587,7 +624,7 @@ namespace Dapper
         /// </code>
         /// </example>
         /// <returns>The number of deleted entities.</returns>
-        public static int DeleteAll<TEntity>(
+        public static SqlCommandResult DeleteAll<TEntity>(
             this IDbConnection connection,
             IDbTransaction transaction = null,
             Dialect dialect = null,
@@ -597,20 +634,18 @@ namespace Dapper
 
             var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = SqlFactory.MakeDeleteRangeStatement(tableSchema, null);
-            return connection.Execute(sql, transaction: transaction, commandTimeout: commandTimeout);
+            return connection.ExecuteCommand(sql, null, transaction, commandTimeout);
         }
 
-        private static object GetPrimaryKeyParameters(TableSchema tableSchema, object id)
+        private static SqlCommandResult ExecuteCommand(
+            this IDbConnection connection,
+            string sql,
+            object param,
+            IDbTransaction transaction,
+            int? commandTimeout)
         {
-            var primaryKeys = tableSchema.GetPrimaryKeys();
-            if (primaryKeys.Length > 1)
-            {
-                return id;
-            }
-
-            var parameters = new DynamicParameters();
-            parameters.Add("@" + primaryKeys.First().ParameterName, id);
-            return parameters;
+            var numRowsAffected = connection.Execute(sql, param, transaction, commandTimeout);
+            return new SqlCommandResult(numRowsAffected);
         }
     }
 }

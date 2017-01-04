@@ -6,6 +6,7 @@ namespace Dapper.MicroCRUD.Tests
     using System;
     using System.Data;
     using System.Linq;
+    using Dapper.MicroCRUD.Schema;
     using Dapper.MicroCRUD.Tests.ExampleEntities;
     using Dapper.MicroCRUD.Tests.Utils;
     using NCrunch.Framework;
@@ -39,6 +40,25 @@ namespace Dapper.MicroCRUD.Tests
         public void OneTimeTearDown()
         {
             this.database?.Dispose();
+        }
+
+        private class Misc
+            : DbConnectionExtensionsTests
+        {
+            public Misc(string dialectName)
+                : base(dialectName)
+            {
+            }
+
+            [Test]
+            public void Is_in_same_namespace_as_dapper()
+            {
+                // Assert
+                var dapperType = typeof(SqlMapper);
+                var sutType = typeof(DbConnectionExtensions);
+
+                Assert.That(sutType.Namespace, Is.EqualTo(dapperType.Namespace));
+            }
         }
 
         private class Count
@@ -123,6 +143,16 @@ namespace Dapper.MicroCRUD.Tests
                 // Act
                 Assert.Throws<InvalidPrimaryKeyException>(
                     () => this.connection.Find<NoKey>("Some Name", dialect: this.dialect));
+            }
+
+            [Test]
+            public void Returns_null_when_entity_is_not_found()
+            {
+                // Act
+                var entity = this.connection.Find<KeyInt32>(12, dialect: this.dialect);
+
+                // Assert
+                Assert.IsNull(entity);
             }
 
             [Test]
@@ -324,6 +354,153 @@ namespace Dapper.MicroCRUD.Tests
 
                 // Act
                 var entity = this.connection.Find<PropertyNotMapped>(id, dialect: this.dialect);
+
+                // Assert
+                Assert.That(entity.Firstname, Is.EqualTo("Bobby"));
+                Assert.That(entity.LastName, Is.EqualTo("DropTables"));
+                Assert.That(entity.FullName, Is.EqualTo("Bobby DropTables"));
+                Assert.That(entity.Age, Is.EqualTo(0));
+
+                // Cleanup
+                this.connection.DeleteAll<PropertyNotMapped>(dialect: this.dialect);
+            }
+        }
+
+        private class Get
+            : DbConnectionExtensionsTests
+        {
+            public Get(string dialectName)
+                : base(dialectName)
+            {
+            }
+
+            [Test]
+            public void Throws_exception_when_entity_has_no_key()
+            {
+                // Arrange
+                this.connection.Insert(new NoKey { Name = "Some Name", Age = 1 }, dialect: this.dialect);
+
+                // Act
+                Assert.Throws<InvalidPrimaryKeyException>(
+                    () => this.connection.Find<NoKey>("Some Name", dialect: this.dialect));
+            }
+
+            [Test]
+            public void Throws_exception_when_entity_is_not_found()
+            {
+                // Act
+                Assert.Throws<InvalidOperationException>(
+                    () => this.connection.Get<KeyInt32>(5, dialect: this.dialect));
+            }
+
+            [Test]
+            public void Finds_entity_by_Int32_primary_key()
+            {
+                // Arrange
+                var id = this.connection.Insert<int>(new KeyInt32 { Name = "Some Name" }, dialect: this.dialect);
+
+                // Act
+                var entity = this.connection.Get<KeyInt32>(id, dialect: this.dialect);
+
+                // Assert
+                Assert.That(entity.Name, Is.EqualTo("Some Name"));
+
+                // Cleanup
+                this.connection.Delete<KeyInt32>(id, dialect: this.dialect);
+            }
+
+            [Test]
+            public void Finds_entity_by_Int64_primary_key()
+            {
+                // Arrange
+                var id = this.connection.Insert<long>(new KeyInt64 { Name = "Some Name" }, dialect: this.dialect);
+
+                // Act
+                var user = this.connection.Get<KeyInt64>(id, dialect: this.dialect);
+
+                // Assert
+                Assert.That(user.Name, Is.EqualTo("Some Name"));
+
+                // Cleanup
+                this.connection.Delete<KeyInt64>(id, dialect: this.dialect);
+            }
+
+            [Test]
+            public void Finds_entity_by_string_primary_key()
+            {
+                // Arrange
+                this.connection.Insert(new KeyString { Name = "Some Name", Age = 42 }, dialect: this.dialect);
+
+                // Act
+                var entity = this.connection.Get<KeyString>("Some Name", dialect: this.dialect);
+
+                // Assert
+                Assert.That(entity.Age, Is.EqualTo(42));
+
+                // Cleanup
+                this.connection.Delete(entity, dialect: this.dialect);
+            }
+
+            [Test]
+            public void Finds_entity_by_guid_primary_key()
+            {
+                // Arrange
+                var id = Guid.NewGuid();
+                this.connection.Insert(new KeyGuid { Id = id, Name = "Some Name" }, dialect: this.dialect);
+
+                // Act
+                var entity = this.connection.Get<KeyGuid>(id, dialect: this.dialect);
+
+                // Assert
+                Assert.That(entity.Name, Is.EqualTo("Some Name"));
+
+                // Cleanup
+                this.connection.Delete(entity, dialect: this.dialect);
+            }
+
+            [Test]
+            public void Finds_entity_by_composite_key()
+            {
+                // Arrange
+                this.connection.Insert(new CompositeKeys { Key1 = 1, Key2 = 1, Name = "Some Name" }, dialect: this.dialect);
+                var id = new { Key1 = 1, Key2 = 1 };
+
+                // Act
+                var entity = this.connection.Get<CompositeKeys>(id, dialect: this.dialect);
+
+                // Assert
+                Assert.That(entity.Name, Is.EqualTo("Some Name"));
+
+                // Cleanup
+                this.connection.DeleteAll<CompositeKeys>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Finds_entities_in_alternate_schema()
+            {
+                // Arrange
+                var id = this.connection.Insert<int>(new SchemaOther { Name = "Some Name" }, dialect: this.dialect);
+
+                // Act
+                var entity = this.connection.Get<SchemaOther>(id, dialect: this.dialect);
+
+                // Assert
+                Assert.That(entity.Name, Is.EqualTo("Some Name"));
+
+                // Cleanup
+                this.connection.Delete<SchemaOther>(id, dialect: this.dialect);
+            }
+
+            [Test]
+            public void Ignores_columns_which_are_not_mapped()
+            {
+                // Arrange
+                var id = this.connection.Insert<int>(
+                    new PropertyNotMapped { Firstname = "Bobby", LastName = "DropTables", Age = 10 },
+                    dialect: this.dialect);
+
+                // Act
+                var entity = this.connection.Get<PropertyNotMapped>(id, dialect: this.dialect);
 
                 // Assert
                 Assert.That(entity.Firstname, Is.EqualTo("Bobby"));
@@ -1199,10 +1376,10 @@ namespace Dapper.MicroCRUD.Tests
                     entity.Name = "Other name";
                 }
 
-                var numAffected = this.connection.UpdateRange(entities, dialect: this.dialect);
+                var result = this.connection.UpdateRange(entities, dialect: this.dialect);
 
                 // Assert
-                Assert.That(numAffected, Is.EqualTo(2));
+                Assert.That(result.NumRowsAffected, Is.EqualTo(2));
 
                 var updatedEntities = this.connection.GetRange<User>("WHERE Name = 'Other name'", dialect: this.dialect);
                 Assert.That(updatedEntities.Count(), Is.EqualTo(2));
@@ -1234,10 +1411,10 @@ namespace Dapper.MicroCRUD.Tests
                     entity.Name = "Other name";
                 }
 
-                var numAffected = this.connection.UpdateRange(entities, dialect: this.dialect);
+                var result = this.connection.UpdateRange(entities, dialect: this.dialect);
 
                 // Assert
-                Assert.That(numAffected, Is.EqualTo(2));
+                Assert.That(result.NumRowsAffected, Is.EqualTo(2));
 
                 var updatedEntities = this.connection.GetRange<CompositeKeys>(
                     "WHERE Name = 'Other name'",
@@ -1277,10 +1454,7 @@ namespace Dapper.MicroCRUD.Tests
                 this.connection.Insert(new KeyString { Name = "Some Name", Age = 10 }, dialect: this.dialect);
 
                 // Act
-                var result = this.connection.Delete<KeyString>("Some Name", dialect: this.dialect);
-
-                // Assert
-                Assert.That(result, Is.EqualTo(1));
+                this.connection.Delete<KeyString>("Some Name", dialect: this.dialect);
             }
 
             [Test]
@@ -1291,10 +1465,7 @@ namespace Dapper.MicroCRUD.Tests
                 this.connection.Insert(new KeyGuid { Id = id, Name = "Some Name" }, dialect: this.dialect);
 
                 // Act
-                var result = this.connection.Delete<KeyGuid>(id, dialect: this.dialect);
-
-                // Assert
-                Assert.That(result, Is.EqualTo(1));
+                this.connection.Delete<KeyGuid>(id, dialect: this.dialect);
             }
 
             [Test]
@@ -1306,10 +1477,7 @@ namespace Dapper.MicroCRUD.Tests
                 this.connection.Insert(entity, dialect: this.dialect);
 
                 // Act
-                var result = this.connection.Delete<CompositeKeys>(id, dialect: this.dialect);
-
-                // Assert
-                Assert.That(result, Is.EqualTo(1));
+                this.connection.Delete<CompositeKeys>(id, dialect: this.dialect);
             }
         }
 
@@ -1344,10 +1512,9 @@ namespace Dapper.MicroCRUD.Tests
                 this.connection.Insert(entity, dialect: this.dialect);
 
                 // Act
-                var result = this.connection.Delete(entity, dialect: this.dialect);
+                this.connection.Delete(entity, dialect: this.dialect);
 
                 // Assert
-                Assert.That(result, Is.EqualTo(1));
                 Assert.That(this.connection.Find<CompositeKeys>(id, dialect: this.dialect), Is.Null);
             }
         }
@@ -1397,7 +1564,7 @@ namespace Dapper.MicroCRUD.Tests
                     dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(3, result);
+                Assert.AreEqual(3, result.NumRowsAffected);
                 Assert.AreEqual(1, this.connection.Count<User>(dialect: this.dialect));
             }
         }
@@ -1423,7 +1590,7 @@ namespace Dapper.MicroCRUD.Tests
                 var result = this.connection.DeleteAll<User>(dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(4, result);
+                Assert.AreEqual(4, result.NumRowsAffected);
                 Assert.AreEqual(0, this.connection.Count<User>(dialect: this.dialect));
             }
         }

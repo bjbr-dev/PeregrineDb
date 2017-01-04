@@ -5,7 +5,7 @@ namespace Dapper.MicroCRUD
 {
     using System.Collections.Generic;
     using System.Collections.Immutable;
-    using Dapper.MicroCRUD.Entities;
+    using Dapper.MicroCRUD.Schema;
 
     /// <summary>
     /// Defines the SQL to generate when targeting specific vendor implementations.

@@ -1,7 +1,7 @@
 ﻿// <copyright file="PropertySchema.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
-namespace Dapper.MicroCRUD.Entities
+namespace Dapper.MicroCRUD.Schema
 {
     using System;
     using System.Reflection;

@@ -1,7 +1,7 @@
 ﻿// <copyright file="ColumnSchema.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
-namespace Dapper.MicroCRUD.Entities
+namespace Dapper.MicroCRUD.Schema
 {
     /// <summary>
     /// Represents a column in a <see cref="TableSchema"/>.

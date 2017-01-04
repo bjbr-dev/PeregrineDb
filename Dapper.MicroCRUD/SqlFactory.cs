@@ -6,7 +6,7 @@ namespace Dapper.MicroCRUD
     using System;
     using System.Collections.Immutable;
     using System.Text;
-    using Dapper.MicroCRUD.Entities;
+    using Dapper.MicroCRUD.Schema;
 
     /// <summary>
     /// Helper methods to generate SQL statements

@@ -50,18 +50,20 @@
     <Reference Include="System.Data" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AffectedRowCountException.cs" />
     <Compile Include="DbConnectionExtensions.cs" />
-    <Compile Include="Entities\PropertySchema.cs" />
+    <Compile Include="Schema\PropertySchema.cs" />
     <Compile Include="Dialect.cs" />
-    <Compile Include="Entities\ColumnSchema.cs" />
-    <Compile Include="Entities\ColumnUsage.cs" />
-    <Compile Include="Entities\TableSchema.cs" />
-    <Compile Include="Entities\TableSchemaCacheIdentity.cs" />
-    <Compile Include="InvalidPrimaryKeyException.cs" />
+    <Compile Include="Schema\ColumnSchema.cs" />
+    <Compile Include="Schema\ColumnUsage.cs" />
+    <Compile Include="Schema\TableSchema.cs" />
+    <Compile Include="Schema\TableSchemaCacheIdentity.cs" />
+    <Compile Include="Schema\InvalidPrimaryKeyException.cs" />
     <Compile Include="MicroCRUDConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SqlCommandResult.cs" />
     <Compile Include="SqlFactory.cs" />
-    <Compile Include="Entities\TableSchemaFactory.cs" />
+    <Compile Include="Schema\TableSchemaFactory.cs" />
     <Compile Include="Utils\Ensure.cs" />
     <Compile Include="Utils\TypeExtensions.cs" />
   </ItemGroup>

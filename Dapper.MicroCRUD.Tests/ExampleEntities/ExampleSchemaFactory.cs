@@ -3,7 +3,7 @@
 // </copyright>
 namespace Dapper.MicroCRUD.Tests.ExampleEntities
 {
-    using Dapper.MicroCRUD.Entities;
+    using Dapper.MicroCRUD.Schema;
 
     internal static class ExampleSchemaFactory
     {
