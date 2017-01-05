@@ -19,7 +19,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "documentation", "documentat
 		documentation\Delete.md = documentation\Delete.md
 		documentation\Get.md = documentation\Get.md
 		documentation\Insert.md = documentation\Insert.md
-		documentation\InsertRange.md = documentation\InsertRange.md
 		documentation\Update.md = documentation\Update.md
 	EndProjectSection
 EndProject

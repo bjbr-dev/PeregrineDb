@@ -29,7 +29,7 @@ Dapper.MicroCRUD provides the following extensions to the IDbConnection (with As
 - [GetPage](documentation/Get.md#GetPage): Gets a page of entities which match the conditions.
 - [GetAll](documentation/Get.md#GetAll): Gets all the entities in the table.
 - [Insert](documentation/Insert.md): Inserts an entity into the table, with the ability to return the generated identity.
-- [InsertRang](documentation/InsertRange.md): Efficiently inserts multiple entities.
+- [InsertRange](documentation/Insert.md#InsertRange): Efficiently inserts multiple entities.
 - [Update](documentation/Update.md): Updates the entity by using it's primary key.
 - [UpdateRange](documentation/Update.md): Efficiently updates multiple entities in the database.
 - [Delete](documentation/Delete.md): Deletes an entity
