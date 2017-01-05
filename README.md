@@ -41,6 +41,17 @@ Dapper.MicroCRUD provides the following extensions to the IDbConnection (with As
 
 Don't forget, for practical examples of usage, you can also browse our extensive [unit tests suite](Dapper.MicroCRUD.Tests).
 
+## Comparison
+*NB: These may not be correct nor up-to-date. I made this comparison very quickly*
+
+| Library | Operations | Composite Keys | Async | .Net Core | Notes |
+|---|---|---|---|---|---|
+| [Dapper.Contrib](https://github.com/StackExchange/dapper-dot-net/tree/master/Dapper.Contrib) | Get<br>GetAll<br>Insert<br>Update<br>Delete(All)<br>| :heavy_check_mark: | :heavy_check_mark: | | Can use interfaces to track changes |
+| [Dapper.Extensions](https://github.com/tmsmith/Dapper-Extensions) | Get<br>Insert<br>Update<br>Delete<br>GetList<br>GetPage/GetSet<br>Count | :heavy_check_mark: | | | Can use simple lambdas and predicates<br>Generates GUID keys<br>Can be configured without attributes |
+| [Dapper.FastCRUD](https://github.com/MoonStorm/Dapper.FastCRUD/tree/master/Dapper.FastCrud.Tests) | Insert<br>Get<br>Find(Equivalent to GetRange)<br>(Bulk)Update<br>(Bulk)Delete<br>Count | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | Has a nice fluent syntax for complex WHERE operations<br>Can be configured without attributes |
+| [Dapper.MicroCRUD](https://github.com/berkeleybross/Dapper.MicroCRUD) | Count<br>Find/Get<br>GetRange/GetAll<br>GetPage<br>Insert(Range)<br>Update(Range)<br>Delete(Range/All) | :heavy_check_mark: | :heavy_check_mark: | | Can work across multiple DBMS in same project<br>Throws exceptions for inconsistencies (E.g. Update not affected anything) |
+| [Dapper.SimpleCRUD](https://github.com/ericdc1/Dapper.SimpleCRUD) | Get<br>GetList<br>GetListPaged<br>Insert<br>Update<br>Delete(List)<br>RecordCount | | :heavy_check_mark: | | Can create WHERE clauses from objects<br>Generates GUID keys |
+
 ## Installation
 *Documentation in progress!*
 
