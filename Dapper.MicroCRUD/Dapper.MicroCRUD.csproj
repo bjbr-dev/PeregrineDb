@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AffectedRowCountException.cs" />
+    <Compile Include="DbConnectionAsyncExtensions.cs" />
     <Compile Include="DbConnectionExtensions.cs" />
     <Compile Include="Schema\DefaultColumnNameFactory.cs" />
     <Compile Include="Schema\DefaultTableNameFactory.cs" />

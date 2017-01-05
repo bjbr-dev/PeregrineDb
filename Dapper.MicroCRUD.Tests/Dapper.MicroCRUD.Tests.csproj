@@ -82,6 +82,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DbConnectionAsyncExtensionsTests.cs" />
     <Compile Include="DbConnectionExtensionsPerformanceTests.cs" />
     <Compile Include="Schema\DefaultColumnNameFactoryTests.cs" />
     <Compile Include="Schema\SuffixRemovingTableNameFactoryTests.cs" />
