@@ -4,7 +4,6 @@
 namespace Dapper.MicroCRUD.Schema
 {
     using System.ComponentModel.DataAnnotations.Schema;
-    using System.Linq;
 
     /// <summary>
     /// Default implementation of a column name factory.
@@ -16,7 +15,7 @@ namespace Dapper.MicroCRUD.Schema
         /// <inheritdoc />
         public string GetColumnName(PropertySchema property)
         {
-            var columnAttribute = property.CustomAttributes.OfType<ColumnAttribute>().FirstOrDefault();
+            var columnAttribute = property.FindAttribute<ColumnAttribute>();
             return columnAttribute != null
                 ? columnAttribute.Name
                 : property.Name;

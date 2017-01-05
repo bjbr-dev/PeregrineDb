@@ -46,9 +46,13 @@ namespace Dapper.MicroCRUD.Schema
         public T FindAttribute<T>()
             where T : Attribute
         {
-            foreach (var attribute in this.CustomAttributes)
+            var attributes = this.CustomAttributes;
+
+            // ReSharper disable once ForCanBeConvertedToForeach
+            // PERF - Called several times in a tight loop
+            for (var i = 0; i < attributes.Length; i++)
             {
-                var result = attribute as T;
+                var result = attributes[i] as T;
                 if (result != null)
                 {
                     return result;
