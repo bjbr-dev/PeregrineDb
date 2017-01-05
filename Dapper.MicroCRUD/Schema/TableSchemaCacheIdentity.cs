@@ -36,11 +36,6 @@ namespace Dapper.MicroCRUD.Schema
                 return false;
             }
 
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
             return this.type == other.type && string.Equals(this.dialectName, other.dialectName);
         }
 
