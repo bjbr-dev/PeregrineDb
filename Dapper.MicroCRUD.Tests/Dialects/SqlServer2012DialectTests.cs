@@ -1,0 +1,767 @@
+﻿// <copyright file="SqlServer2012DialectTests.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+namespace Dapper.MicroCRUD.Tests.Dialects
+{
+    using System;
+    using Dapper.MicroCRUD.Dialects;
+    using Dapper.MicroCRUD.Tests.ExampleEntities;
+    using Dapper.MicroCRUD.Tests.Utils;
+    using NUnit.Framework;
+
+    [TestFixture]
+    public class SqlServer2012DialectTests
+    {
+        private IDialect dialect;
+
+        [SetUp]
+        public void BaseSetUp()
+        {
+            this.dialect = Dialect.SqlServer2012;
+        }
+
+        private class MakeCountStatement
+            : SqlServer2012DialectTests
+        {
+            [Test]
+            public void Selects_from_given_table()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = this.dialect.MakeCountStatement(schema, null);
+
+                // Assert
+                var expected = @"SELECT COUNT(*)
+FROM [Users]";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Adds_conditions()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = this.dialect.MakeCountStatement(schema, "WHERE Foo IS NOT NULL");
+
+                // Assert
+                var expected = @"SELECT COUNT(*)
+FROM [Users]
+WHERE Foo IS NOT NULL";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+        }
+
+        private class MakeFindStatement
+            : SqlServer2012DialectTests
+        {
+            [Test]
+            public void Selects_from_given_table()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = this.dialect.MakeFindStatement(schema);
+
+                // Assert
+                var expected = @"SELECT [Id], [Name], [Age]
+FROM [Users]
+WHERE [Id] = @Id";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Uses_non_default_primary_key_name()
+            {
+                // Arrange
+                var schema = this.dialect.KeyNotDefault();
+
+                // Act
+                var sql = this.dialect.MakeFindStatement(schema);
+
+                // Assert
+                var expected = @"SELECT [Key], [Name]
+FROM [KeyNotDefault]
+WHERE [Key] = @Key";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Uses_each_key_in_composite_key()
+            {
+                // Arrange
+                var schema = this.dialect.CompositeKeys();
+
+                // Act
+                var sql = this.dialect.MakeFindStatement(schema);
+
+                // Assert
+                var expected = @"SELECT [Key1], [Key2], [Name]
+FROM [CompositeKeys]
+WHERE [Key1] = @Key1 AND [Key2] = @Key2";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Adds_alias_when_primary_key_is_aliased()
+            {
+                // Arrange
+                var schema = this.dialect.KeyAlias();
+
+                // Act
+                var sql = this.dialect.MakeFindStatement(schema);
+
+                // Assert
+                var expected = @"SELECT [Key] AS [Id], [Name]
+FROM [KeyAlias]
+WHERE [Key] = @Id";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Adds_alias_when_column_name_is_aliased()
+            {
+                // Arrange
+                var schema = this.dialect.PropertyAlias();
+
+                // Act
+                var sql = this.dialect.MakeFindStatement(schema);
+
+                // Assert
+                var expected = @"SELECT [Id], [YearsOld] AS [Age]
+FROM [PropertyAlias]
+WHERE [Id] = @Id";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+        }
+
+        private class MakeGetRangeStatement
+            : SqlServer2012DialectTests
+        {
+            [Test]
+            public void Selects_from_given_table()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = this.dialect.MakeGetRangeStatement(schema, null);
+
+                // Assert
+                var expected = @"SELECT [Id], [Name], [Age]
+FROM [Users]";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Adds_conditions_clause()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = this.dialect.MakeGetRangeStatement(schema, "WHERE Age > @Age");
+
+                // Assert
+                var expected = @"SELECT [Id], [Name], [Age]
+FROM [Users]
+WHERE Age > @Age";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Uses_non_default_primary_key_name()
+            {
+                // Arrange
+                var schema = this.dialect.KeyNotDefault();
+
+                // Act
+                var sql = this.dialect.MakeGetRangeStatement(schema, null);
+
+                // Assert
+                var expected = @"SELECT [Key], [Name]
+FROM [KeyNotDefault]";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Adds_alias_when_primary_key_is_aliased()
+            {
+                // Arrange
+                var schema = this.dialect.KeyAlias();
+
+                // Act
+                var sql = this.dialect.MakeGetRangeStatement(schema, null);
+
+                // Assert
+                var expected = @"SELECT [Key] AS [Id], [Name]
+FROM [KeyAlias]";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Adds_alias_when_column_name_is_aliased()
+            {
+                // Arrange
+                var schema = this.dialect.PropertyAlias();
+
+                // Act
+                var sql = this.dialect.MakeGetRangeStatement(schema, null);
+
+                // Assert
+                var expected = @"SELECT [Id], [YearsOld] AS [Age]
+FROM [PropertyAlias]";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+        }
+
+        private class MakeGetPageStatement
+            : SqlServer2012DialectTests
+        {
+            [TestCase(0)]
+            [TestCase(-1)]
+            public void Throws_exception_when_pageNumber_is_less_than_1(int pageNumber)
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act / Assert
+                Assert.Throws<ArgumentException>(
+                    () => this.dialect.MakeGetPageStatement(schema, this.dialect, pageNumber, 10, null, "Name"));
+            }
+
+            [TestCase(-1)]
+            public void Throws_exception_when_itemsPerPage_is_less_than_0(int itemsPerPage)
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act / Assert
+                Assert.Throws<ArgumentException>(
+                    () => this.dialect.MakeGetPageStatement(schema, this.dialect, 1, itemsPerPage, null, "Name"));
+            }
+
+            [TestCase(null)]
+            [TestCase("")]
+            [TestCase(" ")]
+            public void Throws_exception_when_order_by_is_empty(string orderBy)
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act / Assert
+                Assert.Throws<ArgumentException>(
+                    () => this.dialect.MakeGetPageStatement(schema, this.dialect, 1, 10, null, orderBy));
+            }
+
+            [Test]
+            public void Selects_from_given_table()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = this.dialect.MakeGetPageStatement(schema, this.dialect, 1, 10, null, "Name");
+
+                // Assert
+                var expected = @"SELECT [Id], [Name], [Age]
+FROM [Users]
+ORDER BY Name
+OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Adds_conditions_clause()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = this.dialect.MakeGetPageStatement(schema, this.dialect, 1, 10, "WHERE Name LIKE 'Foo%'", "Name");
+
+                // Assert
+                var expected = @"SELECT [Id], [Name], [Age]
+FROM [Users]
+WHERE Name LIKE 'Foo%'
+ORDER BY Name
+OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Adds_alias_when_column_name_is_aliased()
+            {
+                // Arrange
+                var schema = this.dialect.PropertyAlias();
+
+                // Act
+                var sql = this.dialect.MakeGetPageStatement(schema, this.dialect, 1, 10, null, "Name");
+
+                // Assert
+                var expected = @"SELECT [Id], [YearsOld] AS [Age]
+FROM [PropertyAlias]
+ORDER BY Name
+OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Selects_second_page()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = this.dialect.MakeGetPageStatement(schema, this.dialect, 2, 10, null, "Name");
+
+                // Assert
+                var expected = @"SELECT [Id], [Name], [Age]
+FROM [Users]
+ORDER BY Name
+OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Selects_appropriate_number_of_rows()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = this.dialect.MakeGetPageStatement(schema, this.dialect, 2, 5, null, "Name");
+
+                // Assert
+                var expected = @"SELECT [Id], [Name], [Age]
+FROM [Users]
+ORDER BY Name
+OFFSET 5 ROWS FETCH NEXT 5 ROWS ONLY";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Allows_itemsPerPage_to_be_zero()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = this.dialect.MakeGetPageStatement(schema, this.dialect, 2, 0, null, "Name");
+
+                // Assert
+                var expected = @"SELECT [Id], [Name], [Age]
+FROM [Users]
+ORDER BY Name
+OFFSET 0 ROWS FETCH NEXT 0 ROWS ONLY";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+        }
+
+        private class MakeInsertStatement
+            : SqlServer2012DialectTests
+        {
+            [Test]
+            public void Inserts_into_given_table()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = this.dialect.MakeInsertStatement(schema);
+
+                // Assert
+                var expected = @"INSERT INTO [Users] ([Name], [Age])
+VALUES (@Name, @Age);";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Adds_primary_key_if_its_not_generated_by_database()
+            {
+                // Arrange
+                var schema = this.dialect.KeyNotGenerated();
+
+                // Act
+                var sql = this.dialect.MakeInsertStatement(schema);
+
+                // Assert
+                var expected = @"INSERT INTO [KeyNotGenerated] ([Id], [Name])
+VALUES (@Id, @Name);";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Does_not_include_computed_columns()
+            {
+                // Arrange
+                var schema = this.dialect.PropertyComputed();
+
+                // Act
+                var sql = this.dialect.MakeInsertStatement(schema);
+
+                // Assert
+                var expected = @"INSERT INTO [PropertyComputed] ([Name])
+VALUES (@Name);";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Does_not_include_generated_columns()
+            {
+                // Arrange
+                var schema = this.dialect.PropertyGenerated();
+
+                // Act
+                var sql = this.dialect.MakeInsertStatement(schema);
+
+                // Assert
+                var expected = @"INSERT INTO [PropertyGenerated] ([Name])
+VALUES (@Name);";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+        }
+
+        private class MakeInsertReturningIdentityStatement
+            : SqlServer2012DialectTests
+        {
+            [Test]
+            public void Inserts_into_given_table()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = this.dialect.MakeInsertReturningIdentityStatement(schema);
+
+                // Assert
+                var expected = @"INSERT INTO [Users] ([Name], [Age])
+VALUES (@Name, @Age);
+SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Adds_primary_key_if_its_not_generated_by_database()
+            {
+                // Arrange
+                var schema = this.dialect.KeyNotGenerated();
+
+                // Act
+                var sql = this.dialect.MakeInsertReturningIdentityStatement(schema);
+
+                // Assert
+                var expected = @"INSERT INTO [KeyNotGenerated] ([Id], [Name])
+VALUES (@Id, @Name);
+SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Does_not_include_computed_columns()
+            {
+                // Arrange
+                var schema = this.dialect.PropertyComputed();
+
+                // Act
+                var sql = this.dialect.MakeInsertReturningIdentityStatement(schema);
+
+                // Assert
+                var expected = @"INSERT INTO [PropertyComputed] ([Name])
+VALUES (@Name);
+SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Does_not_include_generated_columns()
+            {
+                // Arrange
+                var schema = this.dialect.PropertyGenerated();
+
+                // Act
+                var sql = this.dialect.MakeInsertReturningIdentityStatement(schema);
+
+                // Assert
+                var expected = @"INSERT INTO [PropertyGenerated] ([Name])
+VALUES (@Name);
+SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+        }
+
+        private class MakeUpdateStatement
+            : SqlServer2012DialectTests
+        {
+            [Test]
+            public void Updates_given_table()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = this.dialect.MakeUpdateStatement(schema);
+
+                // Assert
+                var expected = @"UPDATE [Users]
+SET [Name] = @Name, [Age] = @Age
+WHERE [Id] = @Id";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Uses_each_key_in_composite_key()
+            {
+                // Arrange
+                var schema = this.dialect.CompositeKeys();
+
+                // Act
+                var sql = this.dialect.MakeUpdateStatement(schema);
+
+                // Assert
+                var expected = @"UPDATE [CompositeKeys]
+SET [Name] = @Name
+WHERE [Key1] = @Key1 AND [Key2] = @Key2";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Does_not_update_primary_key_even_if_its_not_auto_generated()
+            {
+                // Arrange
+                var schema = this.dialect.KeyNotGenerated();
+
+                // Act
+                var sql = this.dialect.MakeUpdateStatement(schema);
+
+                // Assert
+                var expected = @"UPDATE [KeyNotGenerated]
+SET [Name] = @Name
+WHERE [Id] = @Id";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Uses_aliased_property_names()
+            {
+                // Arrange
+                var schema = this.dialect.PropertyAlias();
+
+                // Act
+                var sql = this.dialect.MakeUpdateStatement(schema);
+
+                // Assert
+                var expected = @"UPDATE [PropertyAlias]
+SET [YearsOld] = @Age
+WHERE [Id] = @Id";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Uses_aliased_key_name()
+            {
+                // Arrange
+                var schema = this.dialect.KeyAlias();
+
+                // Act
+                var sql = this.dialect.MakeUpdateStatement(schema);
+
+                // Assert
+                var expected = @"UPDATE [KeyAlias]
+SET [Name] = @Name
+WHERE [Key] = @Id";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Uses_non_default_key_name()
+            {
+                // Arrange
+                var schema = this.dialect.KeyNotDefault();
+
+                // Act
+                var sql = this.dialect.MakeUpdateStatement(schema);
+
+                // Assert
+                var expected = @"UPDATE [KeyNotDefault]
+SET [Name] = @Name
+WHERE [Key] = @Key";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Does_not_include_computed_columns()
+            {
+                // Arrange
+                var schema = this.dialect.PropertyComputed();
+
+                // Act
+                var sql = this.dialect.MakeUpdateStatement(schema);
+
+                // Assert
+                var expected = @"UPDATE [PropertyComputed]
+SET [Name] = @Name
+WHERE [Id] = @Id";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Includes_generated_columns()
+            {
+                // Arrange
+                var schema = this.dialect.PropertyGenerated();
+
+                // Act
+                var sql = this.dialect.MakeUpdateStatement(schema);
+
+                // Assert
+                var expected = @"UPDATE [PropertyGenerated]
+SET [Name] = @Name, [Created] = @Created
+WHERE [Id] = @Id";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+        }
+
+        private class MakeDeleteByPrimaryKeyStatement
+            : SqlServer2012DialectTests
+        {
+            [Test]
+            public void Deletes_from_given_table()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = this.dialect.MakeDeleteByPrimaryKeyStatement(schema);
+
+                // Assert
+                var expected = @"DELETE FROM [Users]
+WHERE [Id] = @Id";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Uses_each_key_in_composite_key()
+            {
+                // Arrange
+                var schema = this.dialect.CompositeKeys();
+
+                // Act
+                var sql = this.dialect.MakeDeleteByPrimaryKeyStatement(schema);
+
+                // Assert
+                var expected = @"DELETE FROM [CompositeKeys]
+WHERE [Key1] = @Key1 AND [Key2] = @Key2";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Uses_primary_key_even_if_its_not_auto_generated()
+            {
+                // Arrange
+                var schema = this.dialect.KeyNotGenerated();
+
+                // Act
+                var sql = this.dialect.MakeDeleteByPrimaryKeyStatement(schema);
+
+                // Assert
+                var expected = @"DELETE FROM [KeyNotGenerated]
+WHERE [Id] = @Id";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Uses_aliased_key_name()
+            {
+                // Arrange
+                var schema = this.dialect.KeyAlias();
+
+                // Act
+                var sql = this.dialect.MakeDeleteByPrimaryKeyStatement(schema);
+
+                // Assert
+                var expected = @"DELETE FROM [KeyAlias]
+WHERE [Key] = @Id";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Uses_non_default_key_name()
+            {
+                // Arrange
+                var schema = this.dialect.KeyNotDefault();
+
+                // Act
+                var sql = this.dialect.MakeDeleteByPrimaryKeyStatement(schema);
+
+                // Assert
+                var expected = @"DELETE FROM [KeyNotDefault]
+WHERE [Key] = @Key";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+        }
+
+        private class MakeDeleteRangeStatement
+            : SqlServer2012DialectTests
+        {
+            [Test]
+            public void Deletes_from_given_table()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = this.dialect.MakeDeleteRangeStatement(schema, "WHERE [Age] > 10");
+
+                // Assert
+                var expected = @"DELETE FROM [Users]
+WHERE [Age] > 10";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+        }
+    }
+}

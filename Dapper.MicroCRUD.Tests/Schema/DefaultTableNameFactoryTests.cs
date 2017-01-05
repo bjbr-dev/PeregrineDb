@@ -4,7 +4,9 @@
 namespace Dapper.MicroCRUD.Tests.Schema
 {
     using System.ComponentModel.DataAnnotations.Schema;
+    using Dapper.MicroCRUD.Dialects;
     using Dapper.MicroCRUD.Schema;
+    using Dapper.MicroCRUD.Tests.Utils;
     using NUnit.Framework;
 
     [TestFixture]
@@ -14,13 +16,13 @@ namespace Dapper.MicroCRUD.Tests.Schema
             : DefaultTableNameFactoryTests
         {
             private DefaultTableNameFactory sut;
-            private Dialect dialect;
+            private IDialect dialect;
 
             [SetUp]
             public void SetUp()
             {
                 this.sut = new DefaultTableNameFactory();
-                this.dialect = new Dialect("Test", "GET IDENTITY", "'{0}'", "SKIP {0} TAKE {1}");
+                this.dialect = new TestDialect();
             }
 
             [Test]

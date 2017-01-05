@@ -5,6 +5,7 @@ namespace Dapper.MicroCRUD.Tests.Utils
 {
     using System;
     using System.Data;
+    using Dapper.MicroCRUD.Dialects;
 
     internal class BlankDatabase
         : IDisposable
@@ -12,14 +13,14 @@ namespace Dapper.MicroCRUD.Tests.Utils
         private readonly Action dropDatabase;
         private bool disposed;
 
-        public BlankDatabase(Dialect dialect, IDbConnection connection, Action dropDatabase)
+        public BlankDatabase(IDialect dialect, IDbConnection connection, Action dropDatabase)
         {
             this.Connection = connection;
             this.dropDatabase = dropDatabase;
             this.Dialect = dialect;
         }
 
-        public Dialect Dialect { get; }
+        public IDialect Dialect { get; }
 
         public IDbConnection Connection { get; }
 

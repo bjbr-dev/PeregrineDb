@@ -4,6 +4,7 @@
 namespace Dapper.MicroCRUD.Schema
 {
     using System;
+    using Dapper.MicroCRUD.Dialects;
 
     /// <summary>
     /// Defines how to get the table name from a specific type.
@@ -13,8 +14,8 @@ namespace Dapper.MicroCRUD.Schema
         /// <summary>
         /// Gets the table name from the <paramref name="type"/>.
         /// The table name should be properly escaped for the given <paramref name="dialect"/>
-        /// (Probably by calling <see cref="Dialect.EscapeMostReservedCharacters"/>.
+        /// (Probably by calling <see cref="IDialect.MakeTableName(string, string)"/>.
         /// </summary>
-        string GetTableName(Type type, Dialect dialect);
+        string GetTableName(Type type, IDialect dialect);
     }
 }

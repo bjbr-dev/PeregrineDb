@@ -3,12 +3,13 @@
 // </copyright>
 namespace Dapper.MicroCRUD.Tests.ExampleEntities
 {
+    using Dapper.MicroCRUD.Dialects;
     using Dapper.MicroCRUD.Schema;
     using Dapper.MicroCRUD.Tests.Utils;
 
     internal static class ExampleSchemaFactory
     {
-        public static TableSchema CompositeKeys(this Dialect dialect)
+        public static TableSchema CompositeKeys(this IDialect dialect)
         {
             var columns = new[]
                 {
@@ -20,7 +21,7 @@ namespace Dapper.MicroCRUD.Tests.ExampleEntities
             return dialect.MakeTableSchema("CompositeKeys", columns);
         }
 
-        public static TableSchema KeyAlias(this Dialect dialect)
+        public static TableSchema KeyAlias(this IDialect dialect)
         {
             var primaryKey = dialect.MakeColumnSchema("Id", "Key", ColumnUsage.ComputedPrimaryKey);
             var columns = new[]
@@ -32,7 +33,7 @@ namespace Dapper.MicroCRUD.Tests.ExampleEntities
             return dialect.MakeTableSchema("KeyAlias", columns);
         }
 
-        public static TableSchema KeyNotDefault(this Dialect dialect)
+        public static TableSchema KeyNotDefault(this IDialect dialect)
         {
             var primaryKey = dialect.MakeColumnSchema("Key", ColumnUsage.ComputedPrimaryKey);
             var columns = new[]
@@ -44,7 +45,7 @@ namespace Dapper.MicroCRUD.Tests.ExampleEntities
             return dialect.MakeTableSchema("KeyNotDefault", columns);
         }
 
-        public static TableSchema KeyNotGenerated(this Dialect dialect)
+        public static TableSchema KeyNotGenerated(this IDialect dialect)
         {
             var primaryKey = dialect.MakeColumnSchema("Id", ColumnUsage.NotGeneratedPrimaryKey);
             var columns = new[]
@@ -56,7 +57,7 @@ namespace Dapper.MicroCRUD.Tests.ExampleEntities
             return dialect.MakeTableSchema("KeyNotGenerated", columns);
         }
 
-        public static TableSchema PropertyAlias(this Dialect dialect)
+        public static TableSchema PropertyAlias(this IDialect dialect)
         {
             var primaryKey = dialect.MakeColumnSchema("Id", ColumnUsage.ComputedPrimaryKey);
             var columns = new[]
@@ -68,7 +69,7 @@ namespace Dapper.MicroCRUD.Tests.ExampleEntities
             return dialect.MakeTableSchema("PropertyAlias", columns);
         }
 
-        public static TableSchema PropertyComputed(this Dialect dialect)
+        public static TableSchema PropertyComputed(this IDialect dialect)
         {
             var primaryKey = dialect.MakeColumnSchema("Id", ColumnUsage.ComputedPrimaryKey);
             var columns = new[]
@@ -81,7 +82,7 @@ namespace Dapper.MicroCRUD.Tests.ExampleEntities
             return dialect.MakeTableSchema("PropertyComputed", columns);
         }
 
-        public static TableSchema PropertyGenerated(this Dialect dialect)
+        public static TableSchema PropertyGenerated(this IDialect dialect)
         {
             var primaryKey = dialect.MakeColumnSchema("Id", ColumnUsage.ComputedPrimaryKey);
             var columns = new[]
@@ -94,7 +95,7 @@ namespace Dapper.MicroCRUD.Tests.ExampleEntities
             return dialect.MakeTableSchema("PropertyGenerated", columns);
         }
 
-        public static TableSchema User(this Dialect dialect)
+        public static TableSchema User(this IDialect dialect)
         {
             var primaryKey = dialect.MakeColumnSchema("Id", ColumnUsage.ComputedPrimaryKey);
             var columns = new[]

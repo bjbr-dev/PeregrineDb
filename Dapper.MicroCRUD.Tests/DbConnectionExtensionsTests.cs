@@ -6,6 +6,7 @@ namespace Dapper.MicroCRUD.Tests
     using System;
     using System.Data;
     using System.Linq;
+    using Dapper.MicroCRUD.Dialects;
     using Dapper.MicroCRUD.Schema;
     using Dapper.MicroCRUD.Tests.ExampleEntities;
     using Dapper.MicroCRUD.Tests.Utils;
@@ -20,7 +21,7 @@ namespace Dapper.MicroCRUD.Tests
         private readonly string dialectName;
 
         private IDbConnection connection;
-        private Dialect dialect;
+        private IDialect dialect;
         private BlankDatabase database;
 
         public DbConnectionExtensionsTests(string dialectName)

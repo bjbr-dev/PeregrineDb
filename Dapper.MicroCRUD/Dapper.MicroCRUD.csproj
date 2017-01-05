@@ -53,6 +53,11 @@
     <Compile Include="AffectedRowCountException.cs" />
     <Compile Include="DbConnectionAsyncExtensions.cs" />
     <Compile Include="DbConnectionExtensions.cs" />
+    <Compile Include="Dialects\BaseDialect.cs" />
+    <Compile Include="Dialects\IDialect.cs" />
+    <Compile Include="Dialects\PostgreSqlDialect.cs" />
+    <Compile Include="Dialects\SqlBuilderExtensions.cs" />
+    <Compile Include="Dialects\SqlServer2012Dialect.cs" />
     <Compile Include="Schema\DefaultColumnNameFactory.cs" />
     <Compile Include="Schema\DefaultTableNameFactory.cs" />
     <Compile Include="Schema\NonPluralizingTableNameFactory.cs" />
@@ -69,7 +74,6 @@
     <Compile Include="MicroCRUDConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SqlCommandResult.cs" />
-    <Compile Include="SqlFactory.cs" />
     <Compile Include="Schema\TableSchemaFactory.cs" />
     <Compile Include="Utils\Ensure.cs" />
     <Compile Include="Utils\TypeExtensions.cs" />

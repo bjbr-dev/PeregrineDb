@@ -84,6 +84,7 @@
   <ItemGroup>
     <Compile Include="DbConnectionAsyncExtensionsTests.cs" />
     <Compile Include="DbConnectionExtensionsPerformanceTests.cs" />
+    <Compile Include="Dialects\PostgreSqlDialectTests.cs" />
     <Compile Include="Schema\DefaultColumnNameFactoryTests.cs" />
     <Compile Include="Schema\SuffixRemovingTableNameFactoryTests.cs" />
     <Compile Include="Schema\DefaultTableNameFactoryTests.cs" />
@@ -107,11 +108,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ExampleEntities\PropertyEnum.cs" />
     <Compile Include="ExampleEntities\KeyNotGenerated.cs" />
-    <Compile Include="SqlFactoryTests.cs" />
+    <Compile Include="Dialects\SqlServer2012DialectTests.cs" />
     <Compile Include="Utils\BlankDatabase.cs" />
     <Compile Include="Utils\BlankDatabaseFactory.cs" />
     <Compile Include="Utils\DialectExtensions.cs" />
     <Compile Include="Utils\SqlStringComparer.cs" />
+    <Compile Include="Utils\TestDialect.cs" />
   </ItemGroup>
   <ItemGroup>
     <AdditionalFiles Include="..\Dapper.MicroCRUD\stylecop.json">

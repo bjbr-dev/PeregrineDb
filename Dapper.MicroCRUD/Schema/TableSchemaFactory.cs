@@ -11,6 +11,7 @@ namespace Dapper.MicroCRUD.Schema
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Linq;
     using System.Reflection;
+    using Dapper.MicroCRUD.Dialects;
     using Dapper.MicroCRUD.Utils;
 
     /// <summary>
@@ -98,10 +99,8 @@ namespace Dapper.MicroCRUD.Schema
         /// <summary>
         /// Gets the <see cref="TableSchema"/> for the specified entityType and dialect.
         /// </summary>
-        public static TableSchema GetTableSchema(Type entityType, Dialect dialect)
+        public static TableSchema GetTableSchema(Type entityType, IDialect dialect)
         {
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-
             var key = new TableSchemaCacheIdentity(entityType, dialect.Name);
 
             TableSchema result;
@@ -118,7 +117,7 @@ namespace Dapper.MicroCRUD.Schema
         /// <summary>
         /// Create the table schema for an entity
         /// </summary>
-        public TableSchema MakeTableSchema(Type entityType, Dialect dialect)
+        public TableSchema MakeTableSchema(Type entityType, IDialect dialect)
         {
             var tableName = this.tableNameFactory.GetTableName(entityType, dialect);
             var properties = entityType.GetProperties(BindingFlags.Instance | BindingFlags.Public)
@@ -221,13 +220,13 @@ namespace Dapper.MicroCRUD.Schema
             }
         }
 
-        private ColumnSchema MakeColumnSchema(Dialect dialect, PropertySchema property, ColumnUsage columnUsage)
+        private ColumnSchema MakeColumnSchema(IDialect dialect, PropertySchema property, ColumnUsage columnUsage)
         {
             var propertyName = property.Name;
 
             return new ColumnSchema(
-                dialect.EscapeMostReservedCharacters(this.columnNameFactory.GetColumnName(property)),
-                dialect.EscapeMostReservedCharacters(propertyName),
+                dialect.MakeColumnName(this.columnNameFactory.GetColumnName(property)),
+                dialect.MakeColumnName(propertyName),
                 propertyName,
                 columnUsage);
         }

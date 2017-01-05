@@ -6,6 +6,7 @@ namespace Dapper.MicroCRUD.Schema
     using System;
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Reflection;
+    using Dapper.MicroCRUD.Dialects;
 
     /// <summary>
     /// Default implementation of an <see cref="ITableNameFactory"/>.
@@ -15,12 +16,12 @@ namespace Dapper.MicroCRUD.Schema
         : ITableNameFactory
     {
         /// <inheritdoc/>
-        public string GetTableName(Type type, Dialect dialect)
+        public string GetTableName(Type type, IDialect dialect)
         {
             var tableAttribute = type.GetCustomAttribute<TableAttribute>(false);
             return tableAttribute != null
                 ? GetTableNameFromAttribute(dialect, tableAttribute)
-                : dialect.EscapeMostReservedCharacters(this.GetTableNameFromType(type));
+                : dialect.MakeTableName(this.GetTableNameFromType(type));
         }
 
         /// <summary>
@@ -32,16 +33,11 @@ namespace Dapper.MicroCRUD.Schema
             return type.Name + "s";
         }
 
-        private static string GetTableNameFromAttribute(Dialect dialect, TableAttribute tableAttribute)
+        private static string GetTableNameFromAttribute(IDialect dialect, TableAttribute tableAttribute)
         {
-            var tableName = dialect.EscapeMostReservedCharacters(tableAttribute.Name);
-            if (string.IsNullOrEmpty(tableAttribute.Schema))
-            {
-                return tableName;
-            }
-
-            var schemaName = dialect.EscapeMostReservedCharacters(tableAttribute.Schema);
-            return $"{schemaName}.{tableName}";
+            return string.IsNullOrEmpty(tableAttribute.Schema)
+                ? dialect.MakeTableName(tableAttribute.Name)
+                : dialect.MakeTableName(tableAttribute.Schema, tableAttribute.Name);
         }
     }
 }

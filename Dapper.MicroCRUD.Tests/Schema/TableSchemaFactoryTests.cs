@@ -8,7 +8,9 @@ namespace Dapper.MicroCRUD.Tests.Schema
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using Dapper.MicroCRUD.Dialects;
     using Dapper.MicroCRUD.Schema;
+    using Dapper.MicroCRUD.Tests.Utils;
     using Moq;
     using NUnit.Framework;
 
@@ -19,12 +21,12 @@ namespace Dapper.MicroCRUD.Tests.Schema
     [SuppressMessage("ReSharper", "UnassignedGetOnlyAutoProperty")]
     public class TableSchemaFactoryTests
     {
-        private Dialect dialect;
+        private IDialect dialect;
 
         [SetUp]
         public void BaseSetUp()
         {
-            this.dialect = new Dialect("TestDialect", "GET Identity();", "'{0}'", "LIMIT {0} OFFSET {1}");
+            this.dialect = new TestDialect();
         }
 
         private class GetTableSchema
@@ -90,7 +92,7 @@ namespace Dapper.MicroCRUD.Tests.Schema
 
                     // Assert
                     var column = result.Columns.Single();
-                    Assert.AreEqual(this.dialect.EscapeMostReservedCharacters("Id"), column.SelectName);
+                    Assert.AreEqual("'Id'", column.SelectName);
                 }
 
                 [Test]

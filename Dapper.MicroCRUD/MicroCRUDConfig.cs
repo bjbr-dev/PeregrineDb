@@ -3,6 +3,7 @@
 // </copyright>
 namespace Dapper.MicroCRUD
 {
+    using Dapper.MicroCRUD.Dialects;
     using Dapper.MicroCRUD.Schema;
     using Dapper.MicroCRUD.Utils;
 
@@ -11,12 +12,12 @@ namespace Dapper.MicroCRUD
     /// </summary>
     public static class MicroCRUDConfig
     {
-        private static volatile Dialect defaultDialect = Dialect.SqlServer2012;
+        private static volatile IDialect defaultDialect = Dialect.SqlServer2012;
 
         /// <summary>
         /// Gets or sets the default dialect
         /// </summary>
-        public static Dialect DefaultDialect
+        public static IDialect DefaultDialect
         {
             get { return defaultDialect; }
             set { defaultDialect = value; }
