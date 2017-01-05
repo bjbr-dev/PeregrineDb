@@ -104,7 +104,6 @@ namespace Dapper.MicroCRUD.Tests.Utils
             var result = builder.WithScriptsEmbeddedInAssembly(
                                     Assembly.GetExecutingAssembly(),
                                     s => s == "Dapper.MicroCRUD.Tests.Scripts." + name)
-                                .LogToConsole()
                                 .Build()
                                 .PerformUpgrade();
 
