@@ -330,6 +330,26 @@ namespace Dapper.MicroCRUD.Tests.Schema
                     Assert.IsEmpty(result.Columns);
                 }
 
+                [Test]
+                public void Ignores_static_properties()
+                {
+                    // Act
+                    var result = this.PerformAct(typeof(StaticProperty));
+
+                    // Assert
+                    Assert.IsEmpty(result.Columns);
+                }
+
+                [Test]
+                public void Ignores_indexers()
+                {
+                    // Act
+                    var result = this.PerformAct(typeof(Indexer));
+
+                    // Assert
+                    Assert.IsEmpty(result.Columns);
+                }
+
                 private class ReadOnlyKey
                 {
                     public int Id { get; }
@@ -393,6 +413,20 @@ namespace Dapper.MicroCRUD.Tests.Schema
                 {
                     [NotMapped]
                     public int Id { get; set; }
+                }
+
+                private class StaticProperty
+                {
+                    public static string Name { get; set; }
+                }
+
+                private class Indexer
+                {
+                    public string this[int i]
+                    {
+                        get { throw new NotImplementedException(); }
+                        set { throw new NotImplementedException(); }
+                    }
                 }
             }
         }

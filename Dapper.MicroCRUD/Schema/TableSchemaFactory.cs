@@ -10,6 +10,7 @@ namespace Dapper.MicroCRUD.Schema
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Linq;
+    using System.Reflection;
     using Dapper.MicroCRUD.Utils;
 
     /// <summary>
@@ -120,12 +121,8 @@ namespace Dapper.MicroCRUD.Schema
         public TableSchema MakeTableSchema(Type entityType, Dialect dialect)
         {
             var tableName = this.tableNameFactory.GetTableName(entityType, dialect);
-            var properties = entityType.GetProperties()
-                                       .Where(p =>
-                                       {
-                                           var propertyType = p.PropertyType.GetUnderlyingType();
-                                           return propertyType.IsEnum || PossiblePropertyTypes.Contains(propertyType);
-                                       })
+            var properties = entityType.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                                       .Where(CouldBeColumn)
                                        .Select(PropertySchema.MakePropertySchema)
                                        .Where(p => p.FindAttribute<NotMappedAttribute>() == null)
                                        .ToList();
@@ -151,6 +148,17 @@ namespace Dapper.MicroCRUD.Schema
         public TableSchemaFactory WithColumnNameFactory(IColumnNameFactory factory)
         {
             return new TableSchemaFactory(this.tableNameFactory, factory);
+        }
+
+        private static bool CouldBeColumn(PropertyInfo property)
+        {
+            if (property.GetIndexParameters().Length != 0)
+            {
+                return false;
+            }
+
+            var propertyType = property.PropertyType.GetUnderlyingType();
+            return propertyType.IsEnum || PossiblePropertyTypes.Contains(propertyType);
         }
 
         private static ColumnUsage GetColumnUsage(bool explicitKeyDefined, PropertySchema property)

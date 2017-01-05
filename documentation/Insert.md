@@ -108,15 +108,15 @@ this.connection.Insert(entity);
 <details>
 <summary>MS-SQL 2012 +</summary>
 ```SQL
-INSERT INTO [Users] ([FirstName], [LastName], [Name])
-VALUES (@FirstName, @LastName, @Name);
+INSERT INTO [Users] ([FirstName], [LastName], [Age])
+VALUES (@FirstName, @LastName, @Age);
 ```
 </details>
 <details>
 <summary>PostgreSQL</summary>
 ```SQL
-INSERT INTO Users (FirstName, LastName, Name)
-VALUES (@FirstName, @LastName, @Name);
+INSERT INTO Users (FirstName, LastName, Age)
+VALUES (@FirstName, @LastName, @Age);
 ```
 </details>
 
@@ -267,14 +267,14 @@ using (var transaction = this.connection.BeginTransaction())
 <details>
 <summary>MS-SQL 2012 +</summary>
 ```SQL
-INSERT INTO [Users] ([FirstName], [LastName], [Name])
-VALUES (@FirstName, @LastName, @Name);
+INSERT INTO [Users] ([FirstName], [LastName], [Age])
+VALUES (@FirstName, @LastName, @Age);
 ```
 </details>
 <details>
 <summary>PostgreSQL</summary>
 ```SQL
-INSERT INTO Users (FirstName, LastName, Name)
-VALUES (@FirstName, @LastName, @Name);
+INSERT INTO Users (FirstName, LastName, Age)
+VALUES (@FirstName, @LastName, @Age);
 ```
 </details>
