@@ -20,21 +20,21 @@ Currently, the following DBMS are supported. More will be added (e.g. SQLite) wh
 - PostgreSQL
 
 #### CRUD Helpers
-Dapper.MicroCRUD provides the following extensions to the IDbConnection:
+Dapper.MicroCRUD provides the following extensions to the IDbConnection (with Async equivalents):
 
 - [Count](documentation/Count.md): Counts how many entities in the table match the conditions.
 - [Find](documentation/Find.md): Find an entity by it's id, or null.
 - [Get](documentation/Find.md): Get an entity by it's id, or throw an exception.
-- [GetRange()](documentation/GetRange.md): Gets all the entities in the table which match the conditions.
-- [GetPage()](documentation/GetPage.md): Gets a page of entities which match the conditions.
-- [GetAll()](documentation/GetRange.md): Gets all the entities in the table.
-- [Insert()](documentation/Insert.md): Inserts an entity into the table, with the ability to return the generated identity.
-- [InsertRang()](documentation/InsertRange.md): Efficiently inserts multiple entities.
-- [Update()](documentation/Update.md): Updates the entity by using it's primary key.
-- [UpdateRange()](documentation/Update.md): Efficiently updates multiple entities in the database.
-- [Delete()](documentation/Delete.md): Deletes an entity
-- [DeleteRange()](documentation/Delete.md#DeleteRange): Deletes the entities which match the given conditions.
-- [DeleteAll()](documentation/Delete.md#DeleteRange): Deletes all entities in the table.
+- [GetRange](documentation/GetRange.md): Gets all the entities in the table which match the conditions.
+- [GetPage](documentation/GetPage.md): Gets a page of entities which match the conditions.
+- [GetAll](documentation/GetRange.md): Gets all the entities in the table.
+- [Insert](documentation/Insert.md): Inserts an entity into the table, with the ability to return the generated identity.
+- [InsertRang](documentation/InsertRange.md): Efficiently inserts multiple entities.
+- [Update](documentation/Update.md): Updates the entity by using it's primary key.
+- [UpdateRange](documentation/Update.md): Efficiently updates multiple entities in the database.
+- [Delete](documentation/Delete.md): Deletes an entity
+- [DeleteRange](documentation/Delete.md#DeleteRange): Deletes the entities which match the given conditions.
+- [DeleteAll](documentation/Delete.md#DeleteRange): Deletes all entities in the table.
 
 #### Configuration
 *Documentation in progress!*
