@@ -23,11 +23,11 @@ Currently, the following DBMS are supported. More will be added (e.g. SQLite) wh
 Dapper.MicroCRUD provides the following extensions to the IDbConnection (with Async equivalents):
 
 - [Count](documentation/Count.md): Counts how many entities in the table match the conditions.
-- [Find](documentation/Find.md): Find an entity by it's id, or null.
-- [Get](documentation/Find.md): Get an entity by it's id, or throw an exception.
-- [GetRange](documentation/GetRange.md): Gets all the entities in the table which match the conditions.
-- [GetPage](documentation/GetPage.md): Gets a page of entities which match the conditions.
-- [GetAll](documentation/GetRange.md): Gets all the entities in the table.
+- [Find](documentation/Get.md): Find an entity by it's id, or null.
+- [Get](documentation/Get.md): Get an entity by it's id, or throw an exception.
+- [GetRange](documentation/Get.md#GetRange): Gets all the entities in the table which match the conditions.
+- [GetPage](documentation/Get.md#GetPage): Gets a page of entities which match the conditions.
+- [GetAll](documentation/Get.md#GetAll): Gets all the entities in the table.
 - [Insert](documentation/Insert.md): Inserts an entity into the table, with the ability to return the generated identity.
 - [InsertRang](documentation/InsertRange.md): Efficiently inserts multiple entities.
 - [Update](documentation/Update.md): Updates the entity by using it's primary key.
