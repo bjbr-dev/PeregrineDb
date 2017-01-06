@@ -1,7 +1,7 @@
 # Getting an individual entity
 
 ```csharp
-public static TEntity Find<TEntity>(this IDbConnection connection, object id, IDbTransaction transaction = null, Dialect dialect = null, int? commandTimeout = null)
+public static TEntity Find<TEntity>(this IDbConnection connection, object id, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
 ```
 
 Find an entity by it's id, or null.
@@ -9,7 +9,7 @@ Find an entity by it's id, or null.
 :memo: Async version is available
 
 ```csharp
-public static TEntity Get<TEntity>(this IDbConnection connection, object id, IDbTransaction transaction = null, Dialect dialect = null, int? commandTimeout = null)
+public static TEntity Get<TEntity>(this IDbConnection connection, object id, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
 ```
 
 Get an entity by it's id, or throw an exception.
@@ -82,7 +82,7 @@ WHERE Id = 12
 # Getting multiple entities
 
 ```csharp
-public static IEnumerable<TEntity> GetRange<TEntity>(this IDbConnection connection, string conditions, object parameters = null, IDbTransaction transaction = null, Dialect dialect = null, int? commandTimeout = null)
+public static IEnumerable<TEntity> GetRange<TEntity>(this IDbConnection connection, string conditions, object parameters = null, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
 ```
 
 Gets all the entities in the table which match the conditions.
@@ -90,7 +90,7 @@ Gets all the entities in the table which match the conditions.
 :memo: Async version is available
 
 ```csharp
-public static IEnumerable<TEntity> GetAll<TEntity>(this IDbConnection connection, IDbTransaction transaction = null, Dialect dialect = null, int? commandTimeout = null)
+public static IEnumerable<TEntity> GetAll<TEntity>(this IDbConnection connection, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
 ```
 
 Gets all the entities in the table.
@@ -155,7 +155,7 @@ FROM Users
 # Getting a specific page of entities
 
 ```csharp
-public static IEnumerable<TEntity> GetPage<TEntity>(this IDbConnection connection, int pageNumber, int itemsPerPage, string conditions, string orderBy, object parameters = null, IDbTransaction transaction = null, Dialect dialect = null, int? commandTimeout = null)
+public static IEnumerable<TEntity> GetPage<TEntity>(this IDbConnection connection, int pageNumber, int itemsPerPage, string conditions, string orderBy, object parameters = null, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
 ```
 
 Gets a page of entities which match the conditions.

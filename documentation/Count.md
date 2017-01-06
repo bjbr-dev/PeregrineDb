@@ -1,7 +1,7 @@
 # Counting entities
 
 ```csharp
-public static int Count<TEntity>(this IDbConnection connection, string conditions = null, object parameters = null, IDbTransaction transaction = null, Dialect dialect = null, int? commandTimeout = null)
+public static int Count<TEntity>(this IDbConnection connection, string conditions = null, object parameters = null, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
 ```
 
 Counts how many entities in the table match the conditions.

@@ -1,7 +1,7 @@
 # Inserting an entity
 
 ```csharp
-public static void Insert(this IDbConnection connection, object entity, IDbTransaction transaction = null, Dialect dialect = null, int? commandTimeout = null)
+public static void Insert(this IDbConnection connection, object entity, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
 ```
 
 Inserts an entity into the table.
@@ -9,7 +9,7 @@ Inserts an entity into the table.
 :memo: You can insert any entity with this method, regardless of the type of primary key. However, you will not be able to retrieve the primary key so you should pre-generate it if necessary.
 
 ```csharp
-public static TPrimaryKey Insert<TPrimaryKey>(this IDbConnection connection, object entity, IDbTransaction transaction = null, Dialect dialect = null, int? commandTimeout = null)
+public static TPrimaryKey Insert<TPrimaryKey>(this IDbConnection connection, object entity, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
 ```
 
 Inserts an entity into the table and returns it's generated identity.
@@ -124,7 +124,7 @@ VALUES (@FirstName, @LastName, @Age);
 # Inserting multiple entities
 
 ```csharp
-public static SqlCommandResult InsertRange<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction transaction = null, Dialect dialect = null, int? commandTimeout = null)
+public static SqlCommandResult InsertRange<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
 ```
 
 Efficiently inserts multiple entities.
@@ -132,7 +132,7 @@ Efficiently inserts multiple entities.
 :memo: for performance, it is recommended to wrap all bulk actions in a transaction.
 
 ```csharp
-public static void InsertRange<TEntity, TPrimaryKey>(this IDbConnection connection, IEnumerable<TEntity> entities, Action<TEntity, TPrimaryKey> setPrimaryKey, IDbTransaction transaction = null, Dialect dialect = null, int? commandTimeout = null)
+public static void InsertRange<TEntity, TPrimaryKey>(this IDbConnection connection, IEnumerable<TEntity> entities, Action<TEntity, TPrimaryKey> setPrimaryKey, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
 ```
 
 Efficiently inserts multiple entities, and for each one calls an action allowing its identity to be recorded.

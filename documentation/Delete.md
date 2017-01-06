@@ -1,7 +1,7 @@
 # Deleting entities
 
 ```csharp
-public static void Delete<TEntity>(this IDbConnection connection, TEntity entity, IDbTransaction transaction = null, Dialect dialect = null, int? commandTimeout = null)
+public static void Delete<TEntity>(this IDbConnection connection, TEntity entity, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
 ```
 
 Deletes the given entity by using it's primary key.
@@ -11,7 +11,7 @@ Throws `AffectedRowCountException` if the delete command didn't delete anything,
 :memo: Async version is available
 
 ```csharp
-public static void Delete<TEntity>(this IDbConnection connection, object id, IDbTransaction transaction = null, Dialect dialect = null, int? commandTimeout = null)
+public static void Delete<TEntity>(this IDbConnection connection, object id, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
 ```
 
 Deletes the entity who's primary key matches the given id.
@@ -81,7 +81,7 @@ WHERE Id = @Id
 # Deleting many entities
 
 ```csharp
-public static SqlCommandResult DeleteRange<TEntity>(this IDbConnection connection, string conditions, object parameters = null, IDbTransaction transaction = null, Dialect dialect = null, int? commandTimeout = null)
+public static SqlCommandResult DeleteRange<TEntity>(this IDbConnection connection, string conditions, object parameters = null, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
 ```
 
 Deletes the entities in the table which match the given conditions.
@@ -91,7 +91,7 @@ Deletes the entities in the table which match the given conditions.
 :memo: Async version is available
 
 ```csharp
-public static void DeleteAll<TEntity>(this IDbConnection connection, IDbTransaction transaction = null, Dialect dialect = null, int? commandTimeout = null)
+public static void DeleteAll<TEntity>(this IDbConnection connection, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
 ```
 
 Deletes all entities in the table.

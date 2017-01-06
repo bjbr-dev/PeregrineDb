@@ -1,13 +1,13 @@
 # Updating entities
 
 ```csharp
-public static void Update<TEntity>(this IDbConnection connection, TEntity entity, IDbTransaction transaction = null, Dialect dialect = null, int? commandTimeout = null)
+public static void Update<TEntity>(this IDbConnection connection, TEntity entity, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
 ```
 
 Updates the entity by using it's primary key.
 
 ```csharp
-public static SqlCommandResult UpdateRange<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction transaction = null, Dialect dialect = null, int? commandTimeout = null)
+public static SqlCommandResult UpdateRange<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
 ```
 
 Efficiently updates multiple entities in the database.
