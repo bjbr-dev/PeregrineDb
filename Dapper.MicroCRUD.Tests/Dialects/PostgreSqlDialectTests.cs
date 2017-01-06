@@ -462,8 +462,8 @@ VALUES (@Name);";
 
                 // Assert
                 var expected = @"INSERT INTO Users (Name, Age)
-VALUES (@Name, @Age);
-SELECT LASTVAL() AS id";
+VALUES (@Name, @Age)
+RETURNING Id";
 
                 Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
@@ -479,8 +479,8 @@ SELECT LASTVAL() AS id";
 
                 // Assert
                 var expected = @"INSERT INTO KeyNotGenerated (Id, Name)
-VALUES (@Id, @Name);
-SELECT LASTVAL() AS id";
+VALUES (@Id, @Name)
+RETURNING Id";
 
                 Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
@@ -496,8 +496,8 @@ SELECT LASTVAL() AS id";
 
                 // Assert
                 var expected = @"INSERT INTO PropertyComputed (Name)
-VALUES (@Name);
-SELECT LASTVAL() AS id";
+VALUES (@Name)
+RETURNING Id";
 
                 Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
@@ -513,8 +513,8 @@ SELECT LASTVAL() AS id";
 
                 // Assert
                 var expected = @"INSERT INTO PropertyGenerated (Name)
-VALUES (@Name);
-SELECT LASTVAL() AS id";
+VALUES (@Name)
+RETURNING Id";
 
                 Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }

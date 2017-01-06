@@ -24,8 +24,15 @@ namespace Dapper.MicroCRUD.Dialects
         /// <inheritdoc />
         public override string MakeInsertReturningIdentityStatement(TableSchema tableSchema)
         {
-            var getIdentitySql = "SELECT LASTVAL() AS id";
-            return this.MakeInsertStatement(tableSchema) + Environment.NewLine + getIdentitySql;
+            Func<ColumnSchema, bool> include = p => p.Usage.IncludeInInsertStatements;
+            var columns = tableSchema.Columns;
+
+            var sql = new StringBuilder("INSERT INTO ")
+                .Append(tableSchema.Name)
+                .Append(" (").AppendColumnNames(columns, include).Append(")");
+            sql.AppendClause("VALUES (").AppendParameterNames(columns, include).Append(")");
+            sql.AppendClause("RETURNING ").AppendSelectPropertiesClause(tableSchema.PrimaryKeyColumns);
+            return sql.ToString();
         }
 
         /// <inheritdoc />

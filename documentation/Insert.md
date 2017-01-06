@@ -45,8 +45,8 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]
 <summary>PostgreSQL</summary>
 ```SQL
 INSERT INTO Users (Name)
-VALUES (@Name);
-SELECT LASTVAL() AS id
+VALUES (@Name)
+RETURNING Id
 ```
 </details>
 
@@ -179,8 +179,8 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]
 <summary>PostgreSQL</summary>
 ```SQL
 INSERT INTO Users (Name)
-VALUES (@Name);
-SELECT LASTVAL() AS id
+VALUES (@Name)
+RETURNING Id
 ```
 </details>
 
