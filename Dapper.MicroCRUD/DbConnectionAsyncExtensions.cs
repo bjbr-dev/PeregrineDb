@@ -13,7 +13,6 @@ namespace Dapper
     using System.Threading.Tasks;
     using Dapper.MicroCRUD;
     using Dapper.MicroCRUD.Dialects;
-    using Dapper.MicroCRUD.Schema;
     using Dapper.MicroCRUD.Utils;
 
     /// <summary>
@@ -52,11 +51,7 @@ namespace Dapper
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Ensure.NotNull(connection, nameof(connection));
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
-            var sql = dialect.MakeCountStatement(tableSchema, conditions);
-            var command = MakeCommandDefinition(sql, parameters, transaction, commandTimeout, cancellationToken);
+            var command = CommandFactory.MakeCountCommand<TEntity>(conditions, parameters, transaction, dialect, commandTimeout, cancellationToken);
             return connection.ExecuteScalarAsync<int>(command);
         }
 
@@ -88,14 +83,7 @@ namespace Dapper
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Ensure.NotNull(connection, nameof(connection));
-            Ensure.NotNull(id, nameof(id));
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
-            var sql = dialect.MakeFindStatement(tableSchema);
-            var parameters = tableSchema.GetPrimaryKeyParameters(id);
-
-            var command = MakeCommandDefinition(sql, parameters, transaction, commandTimeout, cancellationToken);
+            var command = CommandFactory.MakeFindCommand<TEntity>(id, transaction, dialect, commandTimeout, cancellationToken);
             var result = await connection.QueryAsync<TEntity>(command).ConfigureAwait(false);
             return result.FirstOrDefault();
         }
@@ -170,11 +158,7 @@ namespace Dapper
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Ensure.NotNull(connection, nameof(connection));
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
-            var sql = dialect.MakeGetRangeStatement(tableSchema, conditions);
-            var command = MakeCommandDefinition(sql, parameters, transaction, commandTimeout, cancellationToken);
+            var command = CommandFactory.MakeGetRangeCommand<TEntity>(conditions, parameters, transaction, dialect, commandTimeout, cancellationToken);
             return connection.QueryAsync<TEntity>(command);
         }
 
@@ -212,13 +196,17 @@ namespace Dapper
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Ensure.NotNull(connection, nameof(connection));
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
+            var command = CommandFactory.MakeGetPageCommand<TEntity>(
+                pageNumber,
+                itemsPerPage,
+                conditions,
+                orderBy,
+                parameters,
+                transaction,
+                dialect,
+                commandTimeout,
+                cancellationToken);
 
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
-            var sql = dialect.MakeGetPageStatement(
-                tableSchema, dialect, pageNumber, itemsPerPage, conditions, orderBy);
-
-            var command = MakeCommandDefinition(sql, parameters, transaction, commandTimeout, cancellationToken);
             return connection.QueryAsync<TEntity>(command);
         }
 
@@ -233,11 +221,7 @@ namespace Dapper
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Ensure.NotNull(connection, nameof(connection));
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
-            var sql = dialect.MakeGetRangeStatement(tableSchema, null);
-            var command = MakeCommandDefinition(sql, null, transaction, commandTimeout, cancellationToken);
+            var command = CommandFactory.MakeGetAllCommand<TEntity>(transaction, dialect, commandTimeout, cancellationToken);
             return connection.QueryAsync<TEntity>(command);
         }
 
@@ -267,12 +251,7 @@ namespace Dapper
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Ensure.NotNull(connection, nameof(connection));
-            Ensure.NotNull(entity, nameof(entity));
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-
-            var tableSchema = TableSchemaFactory.GetTableSchema(entity.GetType(), dialect);
-            var sql = dialect.MakeInsertStatement(tableSchema);
-            var command = MakeCommandDefinition(sql, entity, transaction, commandTimeout, cancellationToken);
+            var command = CommandFactory.MakeInsertCommand(entity, transaction, dialect, commandTimeout, cancellationToken);
             var result = await connection.ExecuteCommandAsync(command).ConfigureAwait(false);
             result.ExpectingAffectedRowCountToBe(1);
         }
@@ -306,19 +285,7 @@ namespace Dapper
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Ensure.NotNull(connection, nameof(connection));
-            Ensure.NotNull(entity, nameof(entity));
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-
-            var tableSchema = TableSchemaFactory.GetTableSchema(entity.GetType(), dialect);
-
-            if (!tableSchema.CanGeneratePrimaryKey(typeof(TPrimaryKey)))
-            {
-                throw new InvalidPrimaryKeyException(
-                    "Insert<TPrimaryKey>() can only be used for Int32 and Int64 primary keys. Use Insert() for other types of primary keys.");
-            }
-
-            var sql = dialect.MakeInsertReturningIdentityStatement(tableSchema);
-            var command = MakeCommandDefinition(sql, entity, transaction, commandTimeout, cancellationToken);
+            var command = CommandFactory.MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(entity, transaction, dialect, commandTimeout, cancellationToken);
             return connection.ExecuteScalarAsync<TPrimaryKey>(command);
         }
 
@@ -359,12 +326,7 @@ namespace Dapper
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Ensure.NotNull(connection, nameof(connection));
-            Ensure.NotNull(entities, nameof(entities));
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
-            var sql = dialect.MakeInsertStatement(tableSchema);
-            var command = MakeCommandDefinition(sql, entities, transaction, commandTimeout, cancellationToken);
+            var command = CommandFactory.MakeInsertRangeCommand(entities, transaction, dialect, commandTimeout, cancellationToken);
             return connection.ExecuteCommandAsync(command);
         }
 
@@ -412,22 +374,13 @@ namespace Dapper
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Ensure.NotNull(connection, nameof(connection));
-            Ensure.NotNull(entities, nameof(entities));
             Ensure.NotNull(setPrimaryKey, nameof(setPrimaryKey));
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
 
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
+            var sql = CommandFactory.MakeInsertRangeCommand<TEntity, TPrimaryKey>(entities, dialect);
 
-            if (!tableSchema.CanGeneratePrimaryKey(typeof(TPrimaryKey)))
-            {
-                throw new InvalidPrimaryKeyException(
-                    "InsertRange<TEntity, TPrimaryKey>() can only be used for Int32 and Int64 primary keys. Use InsertRange<TEntity>() for other types of primary keys.");
-            }
-
-            var sql = dialect.MakeInsertReturningIdentityStatement(tableSchema);
             foreach (var entity in entities)
             {
-                var command = MakeCommandDefinition(sql, entity, transaction, commandTimeout, cancellationToken);
+                var command = new CommandDefinition(sql, entity, transaction, commandTimeout, cancellationToken: cancellationToken);
                 var id = await connection.ExecuteScalarAsync<TPrimaryKey>(command).ConfigureAwait(false);
                 setPrimaryKey(entity, id);
             }
@@ -465,16 +418,8 @@ namespace Dapper
         {
             Ensure.NotNull(connection, nameof(connection));
 
-            // Shouldnt update a null entity, but entities *could* be a struct. Box into object (since Execute does that anyway) and ensure thats not null...
-            var param = (object)entity;
-            Ensure.NotNull(param, nameof(entity));
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
-            var sql = dialect.MakeUpdateStatement(tableSchema);
-            var command = MakeCommandDefinition(sql, param, transaction, commandTimeout, cancellationToken);
-            var result = await connection.ExecuteCommandAsync(command)
-                                         .ConfigureAwait(false);
+            var command = CommandFactory.MakeUpdateCommand<TEntity>(entity, transaction, dialect, commandTimeout, cancellationToken);
+            var result = await connection.ExecuteCommandAsync(command).ConfigureAwait(false);
             result.ExpectingAffectedRowCountToBe(1);
         }
 
@@ -518,12 +463,7 @@ namespace Dapper
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Ensure.NotNull(connection, nameof(connection));
-            Ensure.NotNull(entities, nameof(entities));
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
-            var sql = dialect.MakeUpdateStatement(tableSchema);
-            var command = MakeCommandDefinition(sql, entities, transaction, commandTimeout, cancellationToken);
+            var command = CommandFactory.MakeUpdateRangeCommand(entities, transaction, dialect, commandTimeout, cancellationToken);
             return connection.ExecuteCommandAsync(command);
         }
 
@@ -558,16 +498,8 @@ namespace Dapper
         {
             Ensure.NotNull(connection, nameof(connection));
 
-            // Shouldnt delete a null entity, but entities *could* be a struct. Box into object (since Execute does that anyway) and ensure thats not null...
-            var param = (object)entity;
-            Ensure.NotNull(param, nameof(entity));
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
-            var sql = dialect.MakeDeleteByPrimaryKeyStatement(tableSchema);
-            var command = MakeCommandDefinition(sql, param, transaction, commandTimeout, cancellationToken);
-            var result = await connection.ExecuteCommandAsync(command)
-                                         .ConfigureAwait(false);
+            var command = CommandFactory.MakeDeleteCommand<TEntity>(entity, transaction, dialect, commandTimeout, cancellationToken);
+            var result = await connection.ExecuteCommandAsync(command).ConfigureAwait(false);
             result.ExpectingAffectedRowCountToBe(1);
         }
 
@@ -600,15 +532,8 @@ namespace Dapper
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Ensure.NotNull(connection, nameof(connection));
-            Ensure.NotNull(id, nameof(id));
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
-            var sql = dialect.MakeDeleteByPrimaryKeyStatement(tableSchema);
-            var parameters = tableSchema.GetPrimaryKeyParameters(id);
-            var command = MakeCommandDefinition(sql, parameters, transaction, commandTimeout, cancellationToken);
-            var result = await connection.ExecuteCommandAsync(command)
-                                         .ConfigureAwait(false);
+            var command = CommandFactory.MakeDeleteByPrimaryKeyCommand<TEntity>(id, transaction, dialect, commandTimeout, cancellationToken);
+            var result = await connection.ExecuteCommandAsync(command).ConfigureAwait(false);
             result.ExpectingAffectedRowCountToBe(1);
         }
 
@@ -643,17 +568,7 @@ namespace Dapper
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Ensure.NotNull(connection, nameof(connection));
-            if (conditions == null || conditions.IndexOf("WHERE ", StringComparison.OrdinalIgnoreCase) < 0)
-            {
-                throw new ArgumentException(
-                    "DeleteRange<TEntity> requires a WHERE clause, use DeleteAll<TEntity> to delete everything.");
-            }
-
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
-            var sql = dialect.MakeDeleteRangeStatement(tableSchema, conditions);
-            var command = MakeCommandDefinition(sql, parameters, transaction, commandTimeout, cancellationToken);
+            var command = CommandFactory.MakeDeleteRangeCommand<TEntity>(conditions, parameters, transaction, dialect, commandTimeout, cancellationToken);
             return connection.ExecuteCommandAsync(command);
         }
 
@@ -685,11 +600,7 @@ namespace Dapper
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Ensure.NotNull(connection, nameof(connection));
-            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
-
-            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
-            var sql = dialect.MakeDeleteRangeStatement(tableSchema, null);
-            var command = MakeCommandDefinition(sql, null, transaction, commandTimeout, cancellationToken);
+            var command = CommandFactory.MakeDeleteAllCommand<TEntity>(transaction, dialect, commandTimeout, cancellationToken);
             return connection.ExecuteCommandAsync(command);
         }
 
@@ -699,17 +610,6 @@ namespace Dapper
         {
             var numRowsAffected = await connection.ExecuteAsync(command).ConfigureAwait(false);
             return new SqlCommandResult(numRowsAffected);
-        }
-
-        private static CommandDefinition MakeCommandDefinition(
-            string sql,
-            object param,
-            IDbTransaction transaction,
-            int? commandTimeout,
-            CancellationToken cancellationToken)
-        {
-            return new CommandDefinition(
-                sql, param, transaction, commandTimeout, cancellationToken: cancellationToken);
         }
     }
 }
