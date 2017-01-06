@@ -1398,14 +1398,13 @@ namespace Dapper.MicroCRUD.Tests
                     dialect: this.dialect);
 
                 // Act
-                var entities =
-                    (await this.connection.GetRangeAsync<User>("WHERE Age = 10", dialect: this.dialect)).ToList();
+                var entities = this.connection.GetRange<User>("WHERE Age = 10", dialect: this.dialect).ToList();
                 foreach (var entity in entities)
                 {
                     entity.Name = "Other name";
                 }
 
-                var result = this.connection.UpdateRange(entities, dialect: this.dialect);
+                var result = await this.connection.UpdateRangeAsync(entities, dialect: this.dialect);
 
                 // Assert
                 Assert.That(result.NumRowsAffected, Is.EqualTo(2));
@@ -1431,16 +1430,16 @@ namespace Dapper.MicroCRUD.Tests
                     dialect: this.dialect);
 
                 // Act
-                var entities = (await this.connection.GetRangeAsync<CompositeKeys>(
+                var entities = this.connection.GetRange<CompositeKeys>(
                     "WHERE Name Like 'Some name%'",
-                    dialect: this.dialect)).ToList();
+                    dialect: this.dialect).ToList();
 
                 foreach (var entity in entities)
                 {
                     entity.Name = "Other name";
                 }
 
-                var result = this.connection.UpdateRange(entities, dialect: this.dialect);
+                var result = await this.connection.UpdateRangeAsync(entities, dialect: this.dialect);
 
                 // Assert
                 Assert.That(result.NumRowsAffected, Is.EqualTo(2));

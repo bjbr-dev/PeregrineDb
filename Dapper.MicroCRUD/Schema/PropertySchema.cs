@@ -24,6 +24,7 @@ namespace Dapper.MicroCRUD.Schema
 
         /// <summary>
         /// Gets or sets the custom attributes on the property.
+        /// NB: To get an attribute efficiently, use the <see cref="FindAttribute{T}"/> method.
         /// </summary>
         public object[] CustomAttributes { get; set; }
 
