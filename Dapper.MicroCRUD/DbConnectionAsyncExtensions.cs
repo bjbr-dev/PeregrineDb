@@ -104,7 +104,7 @@ namespace Dapper
         ///     public string Name { get; set; }
         /// }
         /// ...
-        /// var entity = this.connection.Find<UserEntity>(12);
+        /// var entity = await this.connection.FindAsync<UserEntity>(12);
         /// ]]>
         /// </code>
         /// </example>
@@ -137,7 +137,7 @@ namespace Dapper
         ///     public string Name { get; set; }
         /// }
         /// ...
-        /// var entity = this.connection.Get<UserEntity>(12);
+        /// var entity = await this.connection.GetAsync<UserEntity>(12);
         /// ]]>
         /// </code>
         /// </example>
@@ -247,7 +247,7 @@ namespace Dapper
         ///     public int Age { get; set; }
         /// }
         /// ...
-        /// var users = this.connection.GetPage<UserEntity>(3, 10, "WHERE Age > @MinAge", "Age DESC", new { MinAge = 18 });
+        /// var users = await this.connection.GetPageAsync<UserEntity>(3, 10, "WHERE Age > @MinAge", "Age DESC", new { MinAge = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -306,7 +306,7 @@ namespace Dapper
         /// }
         /// ...
         /// var entity = new User { Name = "Little bobby tables" };
-        /// this.connection.Insert(entity);
+        /// await this.connection.InsertAsync(entity);
         /// ]]>
         /// </code>
         /// </example>
@@ -340,7 +340,7 @@ namespace Dapper
         /// }
         /// ...
         /// var entity = new User { Name = "Little bobby tables" };
-        /// entity.Id = this.connection.Insert<int>(entity);
+        /// entity.Id = await this.connection.InsertAsync<int>(entity);
         /// ]]>
         /// </code>
         /// </example>
@@ -378,7 +378,7 @@ namespace Dapper
         ///
         /// using (var transaction = this.connection.BeginTransaction())
         /// {
-        ///     this.connection.InsertRange(entities, transaction);
+        ///     await this.connection.InsertRangeAsync(entities, transaction);
         ///
         ///     transaction.Commit();
         /// }
@@ -424,7 +424,7 @@ namespace Dapper
         ///
         /// using (var transaction = this.connection.BeginTransaction())
         /// {
-        ///     this.connection.InsertRange<User, int>(entities, (e, k) => { e.Id = k; }, transaction);
+        ///     await this.connection.InsertRangeAsync<User, int>(entities, (e, k) => { e.Id = k; }, transaction);
         ///
         ///     transaction.Commit();
         /// }
@@ -471,7 +471,7 @@ namespace Dapper
         /// ...
         /// var entity = this.connection.Find<UserEntity>(5);
         /// entity.Name = "Little bobby tables";
-        /// this.connection.Update(entity);
+        /// await this.connection.UpdateAsync(entity);
         /// ]]>
         /// </code>
         /// </example>
@@ -515,7 +515,7 @@ namespace Dapper
         ///         entity.Name = "Little bobby tables";
         ///     }
         ///
-        ///     this.connection.UpdateRange(entities);
+        ///     await this.connection.UpdateRangeAsync(entities);
         ///     transaction.Commit();
         /// }
         /// ]]>
@@ -551,7 +551,7 @@ namespace Dapper
         /// }
         /// ...
         /// var entity = this.connection.Find<UserEntity>(5);
-        /// this.connection.Delete(entity);
+        /// await this.connection.DeleteAsync(entity);
         /// ]]>
         /// </code>
         /// </example>
@@ -586,7 +586,7 @@ namespace Dapper
         ///     public string Name { get; set; }
         /// }
         /// ...
-        /// this.connection.Delete(5);
+        /// await this.connection.DeleteAsync(5);
         /// ]]>
         /// </code>
         /// </example>
@@ -621,7 +621,7 @@ namespace Dapper
         ///     public string Name { get; set; }
         /// }
         /// ...
-        /// this.connection.DeleteRange<UserEntity>("WHERE Name LIKE '%Foo%'");
+        /// await this.connection.DeleteRangeAsync<UserEntity>("WHERE Name LIKE '%Foo%'");
         /// ]]>
         /// </code>
         /// </example>
@@ -688,7 +688,7 @@ namespace Dapper
         ///     public string Name { get; set; }
         /// }
         /// ...
-        /// this.connection.DeleteAll<UserEntity>();
+        /// await this.connection.DeleteAllAsync<UserEntity>();
         /// ]]>
         /// </code>
         /// </example>
