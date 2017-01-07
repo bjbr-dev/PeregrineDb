@@ -131,6 +131,60 @@ namespace Dapper.MicroCRUD.Tests
             }
         }
 
+        private class CountAsyncWhereObject
+            : DbConnectionAsyncExtensionsTests
+        {
+            public CountAsyncWhereObject(string dialectName)
+                : base(dialectName)
+            {
+            }
+
+            [Test]
+            public void Throws_exception_when_conditions_is_null()
+            {
+                // Act
+                Assert.ThrowsAsync<ArgumentNullException>(async () => await this.connection.CountAsync<User>((object)null, dialect: this.dialect));
+            }
+
+            [Test]
+            public async Task Counts_all_entities_when_conditions_is_empty()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var result = await this.connection.CountAsync<User>(new { }, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(4, result);
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Test]
+            public async Task Counts_entities_matching_conditions()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var result = await this.connection.CountAsync<User>(new { Age = 10 }, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(3, result);
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+        }
+
         private class FindAsync
             : DbConnectionAsyncExtensionsTests
         {

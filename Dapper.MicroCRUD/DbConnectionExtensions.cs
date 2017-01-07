@@ -53,6 +53,39 @@ namespace Dapper
         }
 
         /// <summary>
+        /// Counts how many entities in the <typeparamref name="TEntity"/> table match the <paramref name="conditions"/>.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// [Table("Users")]
+        /// public class UserEntity
+        /// {
+        ///     [Key]
+        ///     public int Id { get; set; }
+        ///
+        ///     public string Name { get; set; }
+        ///
+        ///     public int Age { get; set; }
+        /// }
+        /// ...
+        /// this.connection.Count<UserEntity>(new { Age = 18 });
+        /// ]]>
+        /// </code>
+        /// </example>
+        public static int Count<TEntity>(
+            this IDbConnection connection,
+            object conditions,
+            IDbTransaction transaction = null,
+            IDialect dialect = null,
+            int? commandTimeout = null)
+        {
+            Ensure.NotNull(connection, nameof(connection));
+            var command = CommandFactory.MakeCountCommand<TEntity>(conditions, transaction, dialect, commandTimeout);
+            return connection.ExecuteScalar<int>(command);
+        }
+
+        /// <summary>
         /// Finds a single entity from the <typeparamref name="TEntity"/> table by it's primary key, or the default value if not found.
         /// </summary>
         /// <example>

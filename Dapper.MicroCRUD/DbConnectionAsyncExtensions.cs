@@ -37,7 +37,7 @@ namespace Dapper
         ///     public int Age { get; set; }
         /// }
         /// ...
-        /// this.connection.Count<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// await this.connection.CountAsync<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -52,6 +52,40 @@ namespace Dapper
         {
             Ensure.NotNull(connection, nameof(connection));
             var command = CommandFactory.MakeCountCommand<TEntity>(conditions, parameters, transaction, dialect, commandTimeout, cancellationToken);
+            return connection.ExecuteScalarAsync<int>(command);
+        }
+
+        /// <summary>
+        /// Counts how many entities in the <typeparamref name="TEntity"/> table match the <paramref name="conditions"/>.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// [Table("Users")]
+        /// public class UserEntity
+        /// {
+        ///     [Key]
+        ///     public int Id { get; set; }
+        ///
+        ///     public string Name { get; set; }
+        ///
+        ///     public int Age { get; set; }
+        /// }
+        /// ...
+        /// await this.connection.CountAsync<UserEntity>(new { Age = 18 });
+        /// ]]>
+        /// </code>
+        /// </example>
+        public static Task<int> CountAsync<TEntity>(
+            this IDbConnection connection,
+            object conditions,
+            IDbTransaction transaction = null,
+            IDialect dialect = null,
+            int? commandTimeout = null,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            Ensure.NotNull(connection, nameof(connection));
+            var command = CommandFactory.MakeCountCommand<TEntity>(conditions, transaction, dialect, commandTimeout, cancellationToken);
             return connection.ExecuteScalarAsync<int>(command);
         }
 

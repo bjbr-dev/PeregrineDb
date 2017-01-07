@@ -14,7 +14,7 @@ namespace Dapper.MicroCRUD
     /// <summary>
     /// Creates <see cref="CommandDefinition"/>s to be executed.
     /// </summary>
-    public static class CommandFactory
+    internal static class CommandFactory
     {
         /// <summary>
         /// Creates a command which will count how many entities are in the table.
@@ -32,6 +32,26 @@ namespace Dapper.MicroCRUD
             var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect);
             var sql = dialect.MakeCountStatement(tableSchema, conditions);
             return MakeCommandDefinition(sql, parameters, transaction, commandTimeout, cancellationToken);
+        }
+
+        /// <summary>
+        /// Creates a command which will count how many entities are in the table.
+        /// </summary>
+        public static CommandDefinition MakeCountCommand<TEntity>(
+            object conditions,
+            IDbTransaction transaction,
+            IDialect dialect,
+            int? commandTimeout,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            Ensure.NotNull(conditions, nameof(conditions));
+            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
+
+            var entityType = typeof(TEntity);
+            var tableSchema = TableSchemaFactory.GetTableSchema(entityType, dialect);
+            var conditionsSchema = TableSchemaFactory.GetConditionsSchema(entityType, tableSchema, conditions.GetType(), dialect);
+            var sql = dialect.MakeCountStatement(tableSchema, dialect.MakeWhereClause(conditionsSchema, conditions));
+            return MakeCommandDefinition(sql, conditions, transaction, commandTimeout, cancellationToken);
         }
 
         /// <summary>
