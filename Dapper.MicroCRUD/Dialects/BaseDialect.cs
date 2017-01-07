@@ -4,6 +4,7 @@
 namespace Dapper.MicroCRUD.Dialects
 {
     using System;
+    using System.Collections.Immutable;
     using System.Text;
     using Dapper.MicroCRUD.Schema;
 
@@ -106,9 +107,36 @@ namespace Dapper.MicroCRUD.Dialects
         }
 
         /// <inheritdoc />
-        public override string ToString()
+        public string MakeWhereClause(ImmutableArray<ConditionColumnSchema> conditionsSchema, object conditions)
         {
-            return "Dialect " + this.Name;
+            if (conditionsSchema.IsEmpty)
+            {
+                return string.Empty;
+            }
+
+            var sql = new StringBuilder("WHERE ");
+            var isFirst = true;
+
+            foreach (var condition in conditionsSchema)
+            {
+                if (!isFirst)
+                {
+                    sql.Append(" AND ");
+                }
+
+                if (condition.IsNull(conditions))
+                {
+                    sql.Append(condition.Column.ColumnName).Append(" IS NULL");
+                }
+                else
+                {
+                    sql.Append(condition.Column.ColumnName).Append(" = @").Append(condition.Column.ParameterName);
+                }
+
+                isFirst = false;
+            }
+
+            return sql.ToString();
         }
 
         /// <inheritdoc />
@@ -122,5 +150,11 @@ namespace Dapper.MicroCRUD.Dialects
 
         /// <inheritdoc />
         public abstract string MakeTableName(string schema, string tableName);
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return "Dialect " + this.Name;
+        }
     }
 }

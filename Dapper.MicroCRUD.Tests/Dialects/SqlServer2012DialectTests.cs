@@ -4,7 +4,9 @@
 namespace Dapper.MicroCRUD.Tests.Dialects
 {
     using System;
+    using System.Collections.Immutable;
     using Dapper.MicroCRUD.Dialects;
+    using Dapper.MicroCRUD.Schema;
     using Dapper.MicroCRUD.Tests.ExampleEntities;
     using Dapper.MicroCRUD.Tests.Utils;
     using NUnit.Framework;
@@ -761,6 +763,79 @@ WHERE [Key] = @Key";
 WHERE [Age] > 10";
 
                 Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+        }
+
+        private class MakeWhereClause
+            : SqlServer2012DialectTests
+        {
+            [Test]
+            public void Returns_empty_string_for_empty_conditions_object()
+            {
+                // Arrange
+                var conditions = new { };
+                var schema = this.GetConditionsSchema<User>(conditions);
+
+                // Act
+                var sql = this.dialect.MakeWhereClause(schema, conditions);
+
+                // Assert
+                var expected = string.Empty;
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Includes_column_in_where_clause()
+            {
+                // Arrange
+                var conditions = new { Name = "Bobby" };
+                var schema = this.GetConditionsSchema<User>(conditions);
+
+                // Act
+                var sql = this.dialect.MakeWhereClause(schema, conditions);
+
+                // Assert
+                var expected = @"WHERE [Name] = @Name";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Includes_all_columns_in_where_clause()
+            {
+                // Arrange
+                var conditions = new { Name = "Bobby", Age = 5 };
+                var schema = this.GetConditionsSchema<User>(conditions);
+
+                // Act
+                var sql = this.dialect.MakeWhereClause(schema, conditions);
+
+                // Assert
+                var expected = @"WHERE [Name] = @Name AND [Age] = @Age";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            [Test]
+            public void Checks_for_null_when_condition_value_is_null()
+            {
+                // Arrange
+                var conditions = new { Name = (string)null };
+                var schema = this.GetConditionsSchema<User>(conditions);
+
+                // Act
+                var sql = this.dialect.MakeWhereClause(schema, conditions);
+
+                // Assert
+                var expected = @"WHERE [Name] IS NULL";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+            }
+
+            private ImmutableArray<ConditionColumnSchema> GetConditionsSchema<TEntity>(object value)
+            {
+                var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), this.dialect);
+                return TableSchemaFactory.GetConditionsSchema(typeof(TEntity), tableSchema, value.GetType(), this.dialect);
             }
         }
     }

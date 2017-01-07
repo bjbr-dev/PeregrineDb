@@ -90,6 +90,15 @@ Gets all the entities in the table which match the conditions.
 :memo: Async version is available
 
 ```csharp
+public static IEnumerable<TEntity> GetRange<TEntity>(this IDbConnection connection, object conditions, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
+```
+
+Gets all the entities in the table which match all the conditions. The conditions should be an anonymous object whose properties match those of TEntity. 
+All properties defined on the conditions will be combined with an AND clause. If the value of a property is *null* then the SQL generated will check for `IS NULL`.
+
+:memo: Async version is available
+
+```csharp
 public static IEnumerable<TEntity> GetAll<TEntity>(this IDbConnection connection, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
 ```
 
@@ -109,7 +118,7 @@ public class UserEntity
 }
 ```
 
-##### Get all the users over the age of 18:
+##### Get all the users over the age of 18
 ```csharp
 var users = this.connection.GetRange<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
 ```
@@ -128,6 +137,28 @@ WHERE Age > @MinAge
 SELECT Id, Name, Age
 FROM Users
 WHERE Age > @MinAge
+```
+</details>
+
+##### Get all the users without a known name who are 18 years old
+```csharp
+var users = this.connection.GetRange<UserEntity>(new { Name = (string)null, Age = 18 });
+```
+
+<details>
+<summary>MS-SQL 2012 +</summary>
+```SQL
+SELECT [Id], [Name], [Age]
+FROM [Users]
+WHERE [Name] IS NULL AND [Age] = @Age
+```
+</details>
+<details>
+<summary>PostgreSQL</summary>
+```SQL
+SELECT Id, Name, Age
+FROM Users
+WHERE NAME IS NULL AND Age = @Age
 ```
 </details>
 

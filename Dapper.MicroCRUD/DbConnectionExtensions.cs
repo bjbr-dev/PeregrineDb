@@ -171,6 +171,39 @@ namespace Dapper
         ///     public int Age { get; set; }
         /// }
         /// ...
+        /// var users = this.connection.GetRange<UserEntity>(new { Age = 18 });
+        /// ]]>
+        /// </code>
+        /// </example>
+        public static IEnumerable<TEntity> GetRange<TEntity>(
+            this IDbConnection connection,
+            object conditions,
+            IDbTransaction transaction = null,
+            IDialect dialect = null,
+            int? commandTimeout = null)
+        {
+            Ensure.NotNull(connection, nameof(connection));
+            var command = CommandFactory.MakeGetRangeCommand<TEntity>(conditions, transaction, dialect, commandTimeout);
+            return connection.Query<TEntity>(command);
+        }
+
+        /// <summary>
+        /// Gets a collection of entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// [Table("Users")]
+        /// public class UserEntity
+        /// {
+        ///     [Key]
+        ///     public int Id { get; set; }
+        ///
+        ///     public string Name { get; set; }
+        ///
+        ///     public int Age { get; set; }
+        /// }
+        /// ...
         /// var users = this.connection.GetPage<UserEntity>(3, 10, "WHERE Age > @MinAge", "Age DESC", new { MinAge = 18 });
         /// ]]>
         /// </code>

@@ -3,6 +3,7 @@
 // </copyright>
 namespace Dapper.MicroCRUD.Dialects
 {
+    using System.Collections.Immutable;
     using Dapper.MicroCRUD.Schema;
 
     /// <summary>
@@ -80,5 +81,10 @@ namespace Dapper.MicroCRUD.Dialects
         /// Escapes the table and schema names, and then combines them so they can be used in SQL
         /// </summary>
         string MakeTableName(string schema, string tableName);
+
+        /// <summary>
+        /// Generates a SQL WHERE clause which selects an entity where all the columns match the values in the conditions object.
+        /// </summary>
+        string MakeWhereClause(ImmutableArray<ConditionColumnSchema> conditionsSchema, object conditions);
     }
 }

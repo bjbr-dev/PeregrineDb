@@ -144,7 +144,7 @@ namespace Dapper
         ///     public int Age { get; set; }
         /// }
         /// ...
-        /// var users = this.connection.GetRange<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// var users = await this.connection.GetRangeAsync<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -159,6 +159,40 @@ namespace Dapper
         {
             Ensure.NotNull(connection, nameof(connection));
             var command = CommandFactory.MakeGetRangeCommand<TEntity>(conditions, parameters, transaction, dialect, commandTimeout, cancellationToken);
+            return connection.QueryAsync<TEntity>(command);
+        }
+
+        /// <summary>
+        /// Gets a collection of entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// [Table("Users")]
+        /// public class UserEntity
+        /// {
+        ///     [Key]
+        ///     public int Id { get; set; }
+        ///
+        ///     public string Name { get; set; }
+        ///
+        ///     public int Age { get; set; }
+        /// }
+        /// ...
+        /// var users = await this.connection.GetRangeAsync<UserEntity>(new { Age = 18 });
+        /// ]]>
+        /// </code>
+        /// </example>
+        public static Task<IEnumerable<TEntity>> GetRangeAsync<TEntity>(
+            this IDbConnection connection,
+            object conditions,
+            IDbTransaction transaction = null,
+            IDialect dialect = null,
+            int? commandTimeout = null,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            Ensure.NotNull(connection, nameof(connection));
+            var command = CommandFactory.MakeGetRangeCommand<TEntity>(conditions, transaction, dialect, commandTimeout, cancellationToken);
             return connection.QueryAsync<TEntity>(command);
         }
 

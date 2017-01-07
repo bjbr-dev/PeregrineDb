@@ -72,6 +72,26 @@ namespace Dapper.MicroCRUD
         }
 
         /// <summary>
+        /// Creates a command which will get all the entities matching the <paramref name="conditions"/>.
+        /// </summary>
+        public static CommandDefinition MakeGetRangeCommand<TEntity>(
+            object conditions,
+            IDbTransaction transaction,
+            IDialect dialect,
+            int? commandTimeout,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            Ensure.NotNull(conditions, nameof(conditions));
+            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
+
+            var entityType = typeof(TEntity);
+            var tableSchema = TableSchemaFactory.GetTableSchema(entityType, dialect);
+            var conditionsSchema = TableSchemaFactory.GetConditionsSchema(entityType, tableSchema, conditions.GetType(), dialect);
+            var sql = dialect.MakeGetRangeStatement(tableSchema, dialect.MakeWhereClause(conditionsSchema, conditions));
+            return MakeCommandDefinition(sql, conditions, transaction, commandTimeout, cancellationToken);
+        }
+
+        /// <summary>
         /// Creates a command which will get a page of entities matching the <paramref name="conditions"/>.
         /// </summary>
         public static CommandDefinition MakeGetPageCommand<TEntity>(

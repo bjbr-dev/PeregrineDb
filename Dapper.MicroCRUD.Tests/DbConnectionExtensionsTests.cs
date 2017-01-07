@@ -564,6 +564,114 @@ namespace Dapper.MicroCRUD.Tests
             }
         }
 
+        private class GetRangeWhereObject
+            : DbConnectionExtensionsTests
+        {
+            public GetRangeWhereObject(string dialectName)
+                : base(dialectName)
+            {
+            }
+
+            [Test]
+            public void Throws_exception_when_conditions_is_null()
+            {
+                // Act
+                Assert.Throws<ArgumentNullException>(() => this.connection.GetRange<User>((object)null, dialect: this.dialect));
+            }
+
+            [Test]
+            public void Returns_all_when_conditions_is_empty()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var users = this.connection.GetRange<User>(new { }, dialect: this.dialect);
+
+                // Assert
+                Assert.That(users.Count(), Is.EqualTo(4));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Filters_result_by_conditions()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var users = this.connection.GetRange<User>(new { Age = 10 }, dialect: this.dialect);
+
+                // Assert
+                Assert.That(users.Count(), Is.EqualTo(3));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void When_value_is_not_null_does_not_find_nulls()
+            {
+                // Arrange
+                this.connection.Insert(new PropertyNullable { Name = null }, dialect: this.dialect);
+                this.connection.Insert(new PropertyNullable { Name = "Some Name 3" }, dialect: this.dialect);
+                this.connection.Insert(new PropertyNullable { Name = null }, dialect: this.dialect);
+
+                // Act
+                var users = this.connection.GetRange<PropertyNullable>(new { Name = "Some Name 3" }, dialect: this.dialect);
+
+                // Assert
+                Assert.That(users.Count(), Is.EqualTo(1));
+
+                // Cleanup
+                this.connection.DeleteAll<PropertyNullable>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void When_value_is_null_finds_nulls()
+            {
+                // Arrange
+                this.connection.Insert(new PropertyNullable { Name = null }, dialect: this.dialect);
+                this.connection.Insert(new PropertyNullable { Name = "Some Name 3" }, dialect: this.dialect);
+                this.connection.Insert(new PropertyNullable { Name = null }, dialect: this.dialect);
+
+                // Act
+                var users = this.connection.GetRange<PropertyNullable>(new { Name = (string)null }, dialect: this.dialect);
+
+                // Assert
+                Assert.That(users.Count(), Is.EqualTo(2));
+
+                // Cleanup
+                this.connection.DeleteAll<PropertyNullable>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Filters_on_multiple_properties()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 12 }, dialect: this.dialect);
+
+                // Act
+                var users = this.connection.GetRange<User>(new { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+
+                // Assert
+                Assert.That(users.Count(), Is.EqualTo(1));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+        }
+
         private class GetPage
             : DbConnectionExtensionsTests
         {

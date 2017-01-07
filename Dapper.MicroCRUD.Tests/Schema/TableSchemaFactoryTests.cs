@@ -4,12 +4,14 @@
 namespace Dapper.MicroCRUD.Tests.Schema
 {
     using System;
+    using System.Collections.Immutable;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Dapper.MicroCRUD.Dialects;
     using Dapper.MicroCRUD.Schema;
+    using Dapper.MicroCRUD.Tests.ExampleEntities;
     using Dapper.MicroCRUD.Tests.Utils;
     using Moq;
     using NUnit.Framework;
@@ -21,32 +23,26 @@ namespace Dapper.MicroCRUD.Tests.Schema
     [SuppressMessage("ReSharper", "UnassignedGetOnlyAutoProperty")]
     public class TableSchemaFactoryTests
     {
+        private TableSchemaFactory sut;
         private IDialect dialect;
 
         [SetUp]
         public void BaseSetUp()
         {
             this.dialect = new TestDialect();
+            this.sut = new TableSchemaFactory(new DefaultTableNameFactory(), new DefaultColumnNameFactory());
         }
 
-        private class GetTableSchema
+        private class MakeTableSchema
             : TableSchemaFactoryTests
         {
-            private TableSchemaFactory sut;
-
-            [SetUp]
-            public void GetTableSchemaSetUp()
-            {
-                this.sut = new TableSchemaFactory(new DefaultTableNameFactory(), new DefaultColumnNameFactory());
-            }
-
             private TableSchema PerformAct(Type entityType)
             {
                 return this.sut.MakeTableSchema(entityType, this.dialect);
             }
 
             private class Naming
-                : GetTableSchema
+                : MakeTableSchema
             {
                 [Test]
                 public void Uses_table_name_resolver_to_get_table_name()
@@ -113,7 +109,7 @@ namespace Dapper.MicroCRUD.Tests.Schema
             }
 
             private class Columns
-                : GetTableSchema
+                : MakeTableSchema
             {
                 [Test]
                 public void Treats_readonly_properties_as_computed()
@@ -222,7 +218,7 @@ namespace Dapper.MicroCRUD.Tests.Schema
             }
 
             private class PrimaryKeys
-                : GetTableSchema
+                : MakeTableSchema
             {
                 [Test]
                 public void Marks_property_called_id_as_primary_key()
@@ -428,6 +424,106 @@ namespace Dapper.MicroCRUD.Tests.Schema
                     {
                         get { throw new NotImplementedException(); }
                         set { throw new NotImplementedException(); }
+                    }
+                }
+            }
+        }
+
+        private class MakeConditionsSchema
+            : TableSchemaFactoryTests
+        {
+            private ImmutableArray<ConditionColumnSchema> PerformAct<T>(T conditions, TableSchema schema)
+            {
+                return this.sut.MakeConditionsSchema(typeof(T), schema);
+            }
+
+            private TableSchema GetTableSchema<T>()
+            {
+                return this.sut.MakeTableSchema(typeof(T), this.dialect);
+            }
+
+            private class Naming
+                : MakeConditionsSchema
+            {
+                [Test]
+                public void Gets_column_by_property_name()
+                {
+                    // Arrange
+                    var tableSchema = this.GetTableSchema<PropertyAlias>();
+
+                    // Act
+                    var result = this.PerformAct(new { Age = 12 }, tableSchema);
+
+                    // Assert
+                    var column = result.Single().Column;
+                    Assert.AreEqual("'YearsOld'", column.ColumnName);
+                    Assert.AreEqual("Age", column.ParameterName);
+                }
+            }
+
+            private class Columns
+                : MakeConditionsSchema
+            {
+                [Test]
+                public void Ignores_methods()
+                {
+                    // Arrange
+                    var tableSchema = this.GetTableSchema<Method>();
+
+                    // Act
+                    var result = this.PerformAct(new Method(), tableSchema);
+
+                    // Assert
+                    Assert.IsEmpty(result);
+                }
+
+                [Test]
+                public void Ignores_unmapped_properties()
+                {
+                    // Arrange
+                    var tableSchema = this.GetTableSchema<NotMapped>();
+
+                    // Act
+                    var result = this.PerformAct(new NotMapped(), tableSchema);
+
+                    // Assert
+                    Assert.IsEmpty(result);
+                }
+
+                [Test]
+                public void Ignores_unreadable_properties()
+                {
+                    // Arrange
+                    var tableSchema = this.GetTableSchema<NotMapped>();
+
+                    // Act
+                    var result = this.PerformAct(new NotMapped(), tableSchema);
+
+                    // Assert
+                    Assert.IsEmpty(result);
+                }
+
+                private class Method
+                {
+                    public string Value(string value)
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+
+                private class NotMapped
+                {
+                    [NotMapped]
+                    public string Value { get; set; }
+                }
+
+                private class PropertyNotReadable
+                {
+                    private string name;
+
+                    public string Name
+                    {
+                        set { this.name = value; }
                     }
                 }
             }

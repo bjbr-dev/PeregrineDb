@@ -59,6 +59,7 @@
     <Compile Include="Dialects\PostgreSqlDialect.cs" />
     <Compile Include="Dialects\SqlBuilderExtensions.cs" />
     <Compile Include="Dialects\SqlServer2012Dialect.cs" />
+    <Compile Include="Schema\ConditionColumnSchema.cs" />
     <Compile Include="Schema\DefaultColumnNameFactory.cs" />
     <Compile Include="Schema\DefaultTableNameFactory.cs" />
     <Compile Include="Schema\NonPluralizingTableNameFactory.cs" />
@@ -70,6 +71,7 @@
     <Compile Include="Schema\ColumnSchema.cs" />
     <Compile Include="Schema\ColumnUsage.cs" />
     <Compile Include="Schema\TableSchema.cs" />
+    <Compile Include="Schema\ConditionsColumnCacheIdentity.cs" />
     <Compile Include="Schema\TableSchemaCacheIdentity.cs" />
     <Compile Include="Schema\InvalidPrimaryKeyException.cs" />
     <Compile Include="MicroCRUDConfig.cs" />

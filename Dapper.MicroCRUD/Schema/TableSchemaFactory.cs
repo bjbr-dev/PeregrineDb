@@ -23,6 +23,9 @@ namespace Dapper.MicroCRUD.Schema
         private static readonly ConcurrentDictionary<TableSchemaCacheIdentity, TableSchema> Schemas =
             new ConcurrentDictionary<TableSchemaCacheIdentity, TableSchema>();
 
+        private static readonly ConcurrentDictionary<ConditionsColumnCacheIdentity, ImmutableArray<ConditionColumnSchema>> ConditionColumns =
+            new ConcurrentDictionary<ConditionsColumnCacheIdentity, ImmutableArray<ConditionColumnSchema>>();
+
         private static readonly List<Type> PossiblePropertyTypes = new List<Type>
             {
                 typeof(byte),
@@ -115,6 +118,24 @@ namespace Dapper.MicroCRUD.Schema
         }
 
         /// <summary>
+        /// Gets the <see cref="ConditionColumnSchema"/>s for the specified conditionsType and dialect.
+        /// </summary>
+        public static ImmutableArray<ConditionColumnSchema> GetConditionsSchema(Type entityType, TableSchema tableSchema, Type conditionsType, IDialect dialect)
+        {
+            var key = new ConditionsColumnCacheIdentity(conditionsType, entityType, dialect.Name);
+
+            ImmutableArray<ConditionColumnSchema> result;
+            if (ConditionColumns.TryGetValue(key, out result))
+            {
+                return result;
+            }
+
+            var column = Current.MakeConditionsSchema(conditionsType, tableSchema);
+            ConditionColumns[key] = column;
+            return column;
+        }
+
+        /// <summary>
         /// Create the table schema for an entity
         /// </summary>
         public TableSchema MakeTableSchema(Type entityType, IDialect dialect)
@@ -131,6 +152,17 @@ namespace Dapper.MicroCRUD.Schema
             var columns = properties.Select(p => this.MakeColumnSchema(dialect, p, GetColumnUsage(explicitKeyDefined, p)));
 
             return new TableSchema(tableName, columns.ToImmutableArray());
+        }
+
+        /// <summary>
+        /// Creates the <see cref="ConditionColumnSchema"/> for the <paramref name="conditionsType"/>.
+        /// </summary>
+        public ImmutableArray<ConditionColumnSchema> MakeConditionsSchema(Type conditionsType, TableSchema tableSchema)
+        {
+            return conditionsType.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                                 .Where(p => CouldBeColumn(p) && p.GetCustomAttribute<NotMappedAttribute>() == null && p.CanRead)
+                                 .Select(p => MakeConditionSchema(tableSchema, p))
+                                 .ToImmutableArray();
         }
 
         /// <summary>
@@ -218,6 +250,13 @@ namespace Dapper.MicroCRUD.Schema
                     throw new ArgumentOutOfRangeException(
                         "Unknown DatabaseGeneratedOption: " + generatedAttribute.DatabaseGeneratedOption);
             }
+        }
+
+        private static ConditionColumnSchema MakeConditionSchema(TableSchema tableSchema, PropertyInfo property)
+        {
+            var propertyName = property.Name;
+            var column = tableSchema.Columns.Single(c => c.ParameterName == propertyName);
+            return new ConditionColumnSchema(column, property);
         }
 
         private ColumnSchema MakeColumnSchema(IDialect dialect, PropertySchema property, ColumnUsage columnUsage)

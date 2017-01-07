@@ -98,6 +98,12 @@ CREATE TABLE PropertyNotMapped
 	LastName TEXT NOT NULL
 );
 
+CREATE TABLE PropertyNullables
+(
+	Id SERIAL NOT NULL PRIMARY KEY,
+	Name TEXT NULL
+);
+
 CREATE TABLE SimpleBenchmarkEntities
 (
 	Id SERIAL NOT NULL PRIMARY KEY,
