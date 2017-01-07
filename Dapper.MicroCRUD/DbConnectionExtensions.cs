@@ -613,6 +613,39 @@ namespace Dapper
         }
 
         /// <summary>
+        /// <para>Deletes all the entities in the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.</para>
+        /// <para>Note: <paramref name="conditions"/> must contain a WHERE clause. Use <see cref="DeleteAll{TEntity}"/> if you want to delete all entities.</para>
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// [Table("Users")]
+        /// public class UserEntity
+        /// {
+        ///     [Key]
+        ///     public int Id { get; set; }
+        ///
+        ///     public string Name { get; set; }
+        /// }
+        /// ...
+        /// this.connection.DeleteRange<UserEntity>("WHERE Name LIKE '%Foo%'");
+        /// ]]>
+        /// </code>
+        /// </example>
+        /// <returns>The number of deleted entities.</returns>
+        public static SqlCommandResult DeleteRange<TEntity>(
+            this IDbConnection connection,
+            object conditions,
+            IDbTransaction transaction = null,
+            IDialect dialect = null,
+            int? commandTimeout = null)
+        {
+            Ensure.NotNull(connection, nameof(connection));
+            var command = CommandFactory.MakeDeleteRangeCommand<TEntity>(conditions, transaction, dialect, commandTimeout);
+            return connection.ExecuteCommand(command);
+        }
+
+        /// <summary>
         /// Deletes all the entities in the <typeparamref name="TEntity"/> table.
         /// </summary>
         /// <example>

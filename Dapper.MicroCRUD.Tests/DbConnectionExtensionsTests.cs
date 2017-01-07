@@ -1732,6 +1732,46 @@ namespace Dapper.MicroCRUD.Tests
             }
         }
 
+        private class DeleteRangeWhereObject
+            : DbConnectionExtensionsTests
+        {
+            public DeleteRangeWhereObject(string dialectName)
+                : base(dialectName)
+            {
+            }
+
+            [Test]
+            public void Throws_exception_if_conditions_is_null()
+            {
+                // Act / Assert
+                Assert.Throws<ArgumentNullException>(() => this.connection.DeleteRange<User>((object)null, dialect: this.dialect));
+            }
+
+            [Test]
+            public void Throws_exception_if_conditions_is_empty()
+            {
+                // Act / Assert
+                Assert.Throws<ArgumentException>(() => this.connection.DeleteRange<User>(new { }, dialect: this.dialect));
+            }
+
+            [Test]
+            public void Deletes_all_matching_entities()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var result = this.connection.DeleteRange<User>(new { Age = 10 }, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(3, result.NumRowsAffected);
+                Assert.AreEqual(1, this.connection.Count<User>(dialect: this.dialect));
+            }
+        }
+
         private class DeleteAll
             : DbConnectionExtensionsTests
         {

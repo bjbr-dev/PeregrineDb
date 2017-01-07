@@ -1760,6 +1760,46 @@ namespace Dapper.MicroCRUD.Tests
             }
         }
 
+        private class DeleteRangeAsyncWhereObject
+            : DbConnectionAsyncExtensionsTests
+        {
+            public DeleteRangeAsyncWhereObject(string dialectName)
+                : base(dialectName)
+            {
+            }
+
+            [Test]
+            public void Throws_exception_if_conditions_is_null()
+            {
+                // Act / Assert
+                Assert.ThrowsAsync<ArgumentNullException>(async () => await this.connection.DeleteRangeAsync<User>((object)null, dialect: this.dialect));
+            }
+
+            [Test]
+            public void Throws_exception_if_conditions_is_empty()
+            {
+                // Act / Assert
+                Assert.ThrowsAsync<ArgumentException>(async () => await this.connection.DeleteRangeAsync<User>(new { }, dialect: this.dialect));
+            }
+
+            [Test]
+            public async Task Deletes_all_matching_entities()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var result = await this.connection.DeleteRangeAsync<User>(new { Age = 10 }, dialect: this.dialect);
+
+                // Assert
+                Assert.AreEqual(3, result.NumRowsAffected);
+                Assert.AreEqual(1, this.connection.Count<User>(dialect: this.dialect));
+            }
+        }
+
         private class DeleteAllAsync
             : DbConnectionAsyncExtensionsTests
         {

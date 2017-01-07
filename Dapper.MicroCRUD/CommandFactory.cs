@@ -327,6 +327,32 @@ namespace Dapper.MicroCRUD
         }
 
         /// <summary>
+        /// Creates a command which will delete a range of entities, validating that the conditions has at least one property
+        /// </summary>
+        public static CommandDefinition MakeDeleteRangeCommand<TEntity>(
+            object conditions,
+            IDbTransaction transaction,
+            IDialect dialect,
+            int? commandTimeout,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            Ensure.NotNull(conditions, nameof(conditions));
+            dialect = dialect ?? MicroCRUDConfig.DefaultDialect;
+
+            var entityType = typeof(TEntity);
+            var tableSchema = TableSchemaFactory.GetTableSchema(entityType, dialect);
+            var conditionsSchema = TableSchemaFactory.GetConditionsSchema(entityType, tableSchema, conditions.GetType(), dialect);
+            if (conditionsSchema.IsEmpty)
+            {
+                throw new ArgumentException(
+                    "DeleteRange<TEntity> requires at least one condition, use DeleteAll<TEntity> to delete everything.");
+            }
+
+            var sql = dialect.MakeDeleteRangeStatement(tableSchema, dialect.MakeWhereClause(conditionsSchema, conditions));
+            return MakeCommandDefinition(sql, conditions, transaction, commandTimeout, cancellationToken);
+        }
+
+        /// <summary>
         /// Creates a command which will delete all entities
         /// </summary>
         public static CommandDefinition MakeDeleteAllCommand<TEntity>(

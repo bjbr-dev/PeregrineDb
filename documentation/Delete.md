@@ -91,6 +91,15 @@ Deletes the entities in the table which match the given conditions.
 :memo: Async version is available
 
 ```csharp
+public static SqlCommandResult DeleteRange<TEntity>(this IDbConnection connection, object conditions, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
+```
+
+Deletes the entities in the table which match the given conditions. The conditions should be an anonymous object whose properties match those of TEntity. 
+All properties defined on the conditions will be combined with an AND clause. If the value of a property is *null* then the SQL generated will check for `IS NULL`.
+
+:memo: Async version is available
+
+```csharp
 public static void DeleteAll<TEntity>(this IDbConnection connection, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
 ```
 
@@ -108,6 +117,7 @@ public class UserEntity
 {
     public int Id { get; set; }
     public string Name { get; set; }
+    public int Age { get; set; }
 }
 ```
 
@@ -131,6 +141,30 @@ WHERE Name LIKE '%Foo%'
 ```SQL
 DELETE FROM Users
 WHERE Name LIKE '%Foo%'
+```
+</details>
+
+
+#### Delete all users who are 18
+
+```csharp
+this.connection.DeleteRange<UserEntity>(new { Age = 18 });
+// or
+await this.connection.DeleteRangeAsync<UserEntity>(new { Age = 18 });
+```
+
+<details>
+<summary>MS-SQL 2012 +</summary>
+```SQL
+DELETE FROM [Users]
+WHERE [Age] = @Age
+```
+</details>
+<details>
+<summary>PostgreSQL</summary>
+```SQL
+DELETE FROM Users
+WHERE Age = @Age
 ```
 </details>
 

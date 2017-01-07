@@ -641,6 +641,39 @@ namespace Dapper
         }
 
         /// <summary>
+        /// <para>Deletes all the entities in the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.</para>
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// [Table("Users")]
+        /// public class UserEntity
+        /// {
+        ///     [Key]
+        ///     public int Id { get; set; }
+        ///
+        ///     public string Name { get; set; }
+        /// }
+        /// ...
+        /// await this.connection.DeleteRangeAsync<UserEntity>(new { Name = "Bobby" });
+        /// ]]>
+        /// </code>
+        /// </example>
+        /// <returns>The number of deleted entities.</returns>
+        public static Task<SqlCommandResult> DeleteRangeAsync<TEntity>(
+            this IDbConnection connection,
+            object conditions,
+            IDbTransaction transaction = null,
+            IDialect dialect = null,
+            int? commandTimeout = null,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            Ensure.NotNull(connection, nameof(connection));
+            var command = CommandFactory.MakeDeleteRangeCommand<TEntity>(conditions, transaction, dialect, commandTimeout, cancellationToken);
+            return connection.ExecuteCommandAsync(command);
+        }
+
+        /// <summary>
         /// Deletes all the entities in the <typeparamref name="TEntity"/> table.
         /// </summary>
         /// <example>
