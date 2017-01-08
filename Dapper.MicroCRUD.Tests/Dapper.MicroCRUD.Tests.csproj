@@ -87,6 +87,7 @@
     <Compile Include="Dialects\PostgreSqlDialectTests.cs" />
     <Compile Include="ExampleEntities\PropertyNullable.cs" />
     <Compile Include="ExampleEntities\PropertyAlias.cs" />
+    <Compile Include="MicroCRUDConfigTests.cs" />
     <Compile Include="Schema\DefaultColumnNameFactoryTests.cs" />
     <Compile Include="Schema\SuffixRemovingTableNameFactoryTests.cs" />
     <Compile Include="Schema\DefaultTableNameFactoryTests.cs" />

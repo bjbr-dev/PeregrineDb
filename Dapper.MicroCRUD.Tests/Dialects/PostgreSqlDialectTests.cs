@@ -834,8 +834,9 @@ WHERE Age > 10";
 
             private ImmutableArray<ConditionColumnSchema> GetConditionsSchema<TEntity>(object value)
             {
-                var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), this.dialect);
-                return TableSchemaFactory.GetConditionsSchema(typeof(TEntity), tableSchema, value.GetType(), this.dialect);
+                var config = new MicroCRUDConfig(this.dialect, new TableSchemaFactory(new DefaultTableNameFactory(), new DefaultColumnNameFactory()), true);
+                var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), config.Dialect, config.SchemaFactory);
+                return TableSchemaFactory.GetConditionsSchema(typeof(TEntity), tableSchema, value.GetType(), config.Dialect, config.SchemaFactory);
             }
         }
     }

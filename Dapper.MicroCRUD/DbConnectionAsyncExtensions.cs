@@ -316,12 +316,17 @@ namespace Dapper
             IDbTransaction transaction = null,
             IDialect dialect = null,
             int? commandTimeout = null,
+            bool? verifyAffectedRowCount = null,
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Ensure.NotNull(connection, nameof(connection));
-            var command = CommandFactory.MakeInsertCommand(entity, transaction, dialect, commandTimeout, cancellationToken);
+            var config = MicroCRUDConfig.Current;
+            var command = CommandFactory.MakeInsertCommand(entity, transaction, dialect, commandTimeout, config, cancellationToken);
             var result = await connection.ExecuteCommandAsync(command).ConfigureAwait(false);
-            result.ExpectingAffectedRowCountToBe(1);
+            if (config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
+            {
+                result.ExpectingAffectedRowCountToBe(1);
+            }
         }
 
         /// <summary>
@@ -482,13 +487,18 @@ namespace Dapper
             IDbTransaction transaction = null,
             IDialect dialect = null,
             int? commandTimeout = null,
+            bool? verifyAffectedRowCount = null,
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Ensure.NotNull(connection, nameof(connection));
 
-            var command = CommandFactory.MakeUpdateCommand<TEntity>(entity, transaction, dialect, commandTimeout, cancellationToken);
+            var config = MicroCRUDConfig.Current;
+            var command = CommandFactory.MakeUpdateCommand<TEntity>(entity, transaction, dialect, commandTimeout, config, cancellationToken);
             var result = await connection.ExecuteCommandAsync(command).ConfigureAwait(false);
-            result.ExpectingAffectedRowCountToBe(1);
+            if (config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
+            {
+                result.ExpectingAffectedRowCountToBe(1);
+            }
         }
 
         /// <summary>
@@ -562,13 +572,18 @@ namespace Dapper
             IDbTransaction transaction = null,
             IDialect dialect = null,
             int? commandTimeout = null,
+            bool? verifyAffectedRowCount = null,
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Ensure.NotNull(connection, nameof(connection));
 
-            var command = CommandFactory.MakeDeleteCommand<TEntity>(entity, transaction, dialect, commandTimeout, cancellationToken);
+            var config = MicroCRUDConfig.Current;
+            var command = CommandFactory.MakeDeleteCommand<TEntity>(entity, transaction, dialect, commandTimeout, config, cancellationToken);
             var result = await connection.ExecuteCommandAsync(command).ConfigureAwait(false);
-            result.ExpectingAffectedRowCountToBe(1);
+            if (config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
+            {
+                result.ExpectingAffectedRowCountToBe(1);
+            }
         }
 
         /// <summary>
@@ -597,12 +612,17 @@ namespace Dapper
             IDbTransaction transaction = null,
             IDialect dialect = null,
             int? commandTimeout = null,
+            bool? verifyAffectedRowCount = null,
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Ensure.NotNull(connection, nameof(connection));
-            var command = CommandFactory.MakeDeleteByPrimaryKeyCommand<TEntity>(id, transaction, dialect, commandTimeout, cancellationToken);
+            var config = MicroCRUDConfig.Current;
+            var command = CommandFactory.MakeDeleteByPrimaryKeyCommand<TEntity>(id, transaction, dialect, commandTimeout, config, cancellationToken);
             var result = await connection.ExecuteCommandAsync(command).ConfigureAwait(false);
-            result.ExpectingAffectedRowCountToBe(1);
+            if (config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
+            {
+                result.ExpectingAffectedRowCountToBe(1);
+            }
         }
 
         /// <summary>

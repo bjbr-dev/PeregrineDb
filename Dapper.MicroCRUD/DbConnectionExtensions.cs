@@ -301,11 +301,18 @@ namespace Dapper
             object entity,
             IDbTransaction transaction = null,
             IDialect dialect = null,
-            int? commandTimeout = null)
+            int? commandTimeout = null,
+            bool? verifyAffectedRowCount = null)
         {
             Ensure.NotNull(connection, nameof(connection));
-            var command = CommandFactory.MakeInsertCommand(entity, transaction, dialect, commandTimeout);
-            connection.ExecuteCommand(command).ExpectingAffectedRowCountToBe(1);
+            var config = MicroCRUDConfig.Current;
+            var command = CommandFactory.MakeInsertCommand(entity, transaction, dialect, commandTimeout, config);
+
+            var result = connection.ExecuteCommand(command);
+            if (config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
+            {
+                result.ExpectingAffectedRowCountToBe(1);
+            }
         }
 
         /// <summary>
@@ -426,6 +433,7 @@ namespace Dapper
             Ensure.NotNull(setPrimaryKey, nameof(setPrimaryKey));
 
             var sql = CommandFactory.MakeInsertRangeCommand<TEntity, TPrimaryKey>(entities, dialect);
+
             foreach (var entity in entities)
             {
                 var command = new CommandDefinition(sql, entity, transaction, commandTimeout);
@@ -461,12 +469,19 @@ namespace Dapper
             TEntity entity,
             IDbTransaction transaction = null,
             IDialect dialect = null,
-            int? commandTimeout = null)
+            int? commandTimeout = null,
+            bool? verifyAffectedRowCount = null)
         {
             Ensure.NotNull(connection, nameof(connection));
 
-            var command = CommandFactory.MakeUpdateCommand<TEntity>(entity, transaction, dialect, commandTimeout);
-            connection.ExecuteCommand(command).ExpectingAffectedRowCountToBe(1);
+            var config = MicroCRUDConfig.Current;
+            var command = CommandFactory.MakeUpdateCommand<TEntity>(entity, transaction, dialect, commandTimeout, config);
+            var result = connection.ExecuteCommand(command);
+
+            if (config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
+            {
+                result.ExpectingAffectedRowCountToBe(1);
+            }
         }
 
         /// <summary>
@@ -538,12 +553,19 @@ namespace Dapper
             TEntity entity,
             IDbTransaction transaction = null,
             IDialect dialect = null,
-            int? commandTimeout = null)
+            int? commandTimeout = null,
+            bool? verifyAffectedRowCount = null)
         {
             Ensure.NotNull(connection, nameof(connection));
 
-            var command = CommandFactory.MakeDeleteCommand<TEntity>(entity, transaction, dialect, commandTimeout);
-            connection.ExecuteCommand(command).ExpectingAffectedRowCountToBe(1);
+            var config = MicroCRUDConfig.Current;
+            var command = CommandFactory.MakeDeleteCommand<TEntity>(entity, transaction, dialect, commandTimeout, config);
+            var result = connection.ExecuteCommand(command);
+
+            if (config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
+            {
+                result.ExpectingAffectedRowCountToBe(1);
+            }
         }
 
         /// <summary>
@@ -571,11 +593,18 @@ namespace Dapper
             object id,
             IDbTransaction transaction = null,
             IDialect dialect = null,
-            int? commandTimeout = null)
+            int? commandTimeout = null,
+            bool? verifyAffectedRowCount = null)
         {
             Ensure.NotNull(connection, nameof(connection));
-            var command = CommandFactory.MakeDeleteByPrimaryKeyCommand<TEntity>(id, transaction, dialect, commandTimeout);
-            connection.ExecuteCommand(command).ExpectingAffectedRowCountToBe(1);
+            var config = MicroCRUDConfig.Current;
+            var command = CommandFactory.MakeDeleteByPrimaryKeyCommand<TEntity>(id, transaction, dialect, commandTimeout, config);
+            var result = connection.ExecuteCommand(command);
+
+            if (config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
+            {
+                result.ExpectingAffectedRowCountToBe(1);
+            }
         }
 
         /// <summary>

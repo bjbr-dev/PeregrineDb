@@ -19,7 +19,6 @@ namespace Dapper.MicroCRUD.Schema
     /// </summary>
     internal class TableSchemaFactory
     {
-        private static readonly object LockObject = new object();
         private static readonly ConcurrentDictionary<TableSchemaCacheIdentity, TableSchema> Schemas =
             new ConcurrentDictionary<TableSchemaCacheIdentity, TableSchema>();
 
@@ -48,10 +47,6 @@ namespace Dapper.MicroCRUD.Schema
                 typeof(byte[])
             };
 
-        private static TableSchemaFactory current = new TableSchemaFactory(
-            new DefaultTableNameFactory(),
-            new DefaultColumnNameFactory());
-
         private readonly ITableNameFactory tableNameFactory;
         private readonly IColumnNameFactory columnNameFactory;
 
@@ -62,47 +57,17 @@ namespace Dapper.MicroCRUD.Schema
             ITableNameFactory tableNameFactory,
             IColumnNameFactory columnNameFactory)
         {
+            Ensure.NotNull(tableNameFactory, nameof(tableNameFactory));
+            Ensure.NotNull(columnNameFactory, nameof(columnNameFactory));
+
             this.tableNameFactory = tableNameFactory;
             this.columnNameFactory = columnNameFactory;
         }
 
         /// <summary>
-        /// Gets the current table schema factory
-        /// </summary>
-        public static TableSchemaFactory Current
-        {
-            get
-            {
-                lock (LockObject)
-                {
-                    return current;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Updates the current factory by setting it to the result of the <paramref name="updater"/>.
-        /// </summary>
-        public static void SetCurrent(Func<TableSchemaFactory, TableSchemaFactory> updater)
-        {
-            lock (LockObject)
-            {
-                var result = updater(current);
-                if (result != null)
-                {
-                    current = result;
-                }
-                else
-                {
-                    throw new ArgumentException("Updater returned null");
-                }
-            }
-        }
-
-        /// <summary>
         /// Gets the <see cref="TableSchema"/> for the specified entityType and dialect.
         /// </summary>
-        public static TableSchema GetTableSchema(Type entityType, IDialect dialect)
+        public static TableSchema GetTableSchema(Type entityType, IDialect dialect, TableSchemaFactory schemaFactory)
         {
             var key = new TableSchemaCacheIdentity(entityType, dialect.Name);
 
@@ -112,7 +77,7 @@ namespace Dapper.MicroCRUD.Schema
                 return result;
             }
 
-            var schema = Current.MakeTableSchema(entityType, dialect);
+            var schema = schemaFactory.MakeTableSchema(entityType, dialect);
             Schemas[key] = schema;
             return schema;
         }
@@ -120,7 +85,12 @@ namespace Dapper.MicroCRUD.Schema
         /// <summary>
         /// Gets the <see cref="ConditionColumnSchema"/>s for the specified conditionsType and dialect.
         /// </summary>
-        public static ImmutableArray<ConditionColumnSchema> GetConditionsSchema(Type entityType, TableSchema tableSchema, Type conditionsType, IDialect dialect)
+        public static ImmutableArray<ConditionColumnSchema> GetConditionsSchema(
+            Type entityType,
+            TableSchema tableSchema,
+            Type conditionsType,
+            IDialect dialect,
+            TableSchemaFactory schemaFactory)
         {
             var key = new ConditionsColumnCacheIdentity(conditionsType, entityType, dialect.Name);
 
@@ -130,7 +100,7 @@ namespace Dapper.MicroCRUD.Schema
                 return result;
             }
 
-            var column = Current.MakeConditionsSchema(conditionsType, tableSchema);
+            var column = schemaFactory.MakeConditionsSchema(conditionsType, tableSchema);
             ConditionColumns[key] = column;
             return column;
         }
