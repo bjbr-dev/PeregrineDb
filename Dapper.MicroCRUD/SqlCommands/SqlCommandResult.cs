@@ -1,7 +1,7 @@
 ﻿// <copyright file="SqlCommandResult.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
-namespace Dapper.MicroCRUD
+namespace Dapper.MicroCRUD.SqlCommands
 {
     /// <summary>
     /// Represents the result of a SQL command.

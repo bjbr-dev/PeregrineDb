@@ -13,6 +13,7 @@ namespace Dapper
     using System.Threading.Tasks;
     using Dapper.MicroCRUD;
     using Dapper.MicroCRUD.Dialects;
+    using Dapper.MicroCRUD.SqlCommands;
     using Dapper.MicroCRUD.Utils;
 
     /// <summary>

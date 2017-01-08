@@ -1,7 +1,7 @@
 ﻿// <copyright file="AffectedRowCountException.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
-namespace Dapper.MicroCRUD
+namespace Dapper.MicroCRUD.SqlCommands
 {
     using System;
     using System.Runtime.Serialization;

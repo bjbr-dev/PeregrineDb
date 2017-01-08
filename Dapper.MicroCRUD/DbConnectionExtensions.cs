@@ -11,6 +11,7 @@ namespace Dapper
     using System.Linq;
     using Dapper.MicroCRUD;
     using Dapper.MicroCRUD.Dialects;
+    using Dapper.MicroCRUD.SqlCommands;
     using Dapper.MicroCRUD.Utils;
 
     /// <summary>
