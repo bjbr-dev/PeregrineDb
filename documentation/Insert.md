@@ -1,7 +1,7 @@
 # Inserting an entity
 
 ```csharp
-public static void Insert(this IDbConnection connection, object entity, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null)
+public static void Insert(this IDbConnection connection, object entity, IDbTransaction transaction = null, IDialect dialect = null, int? commandTimeout = null, bool? verifyAffectedRowCount = null)
 ```
 
 Inserts an entity into the table.
