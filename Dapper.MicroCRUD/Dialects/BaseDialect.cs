@@ -56,13 +56,7 @@ namespace Dapper.MicroCRUD.Dialects
         }
 
         /// <inheritdoc />
-        public abstract string MakeGetPageStatement(
-            TableSchema tableSchema,
-            IDialect dialect,
-            int pageNumber,
-            int itemsPerPage,
-            string conditions,
-            string orderBy);
+        public abstract string MakeGetPageStatement(TableSchema tableSchema, int pageNumber, int itemsPerPage, string conditions, string orderBy);
 
         /// <inheritdoc />
         public string MakeInsertStatement(TableSchema tableSchema)
@@ -138,6 +132,12 @@ namespace Dapper.MicroCRUD.Dialects
 
             return sql.ToString();
         }
+
+        /// <inheritdoc />
+        public abstract string MakeCreateTempTableStatement(TableSchema tableSchema);
+
+        /// <inheritdoc />
+        public abstract string MakeDropTempTableStatement(TableSchema tableSchema);
 
         /// <inheritdoc />
         public abstract string MakeInsertReturningIdentityStatement(TableSchema tableSchema);

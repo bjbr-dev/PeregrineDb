@@ -134,7 +134,7 @@ namespace Dapper.MicroCRUD.SqlCommands
             dialect = dialect ?? config.Dialect;
 
             var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect, config.SchemaFactory);
-            var sql = dialect.MakeGetPageStatement(tableSchema, dialect, pageNumber, itemsPerPage, conditions, orderBy);
+            var sql = dialect.MakeGetPageStatement(tableSchema, pageNumber, itemsPerPage, conditions, orderBy);
             return MakeCommandDefinition(sql, parameters, transaction, commandTimeout, cancellationToken);
         }
 
@@ -381,6 +381,44 @@ namespace Dapper.MicroCRUD.SqlCommands
             dialect = dialect ?? config.Dialect;
             var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect, config.SchemaFactory);
             var sql = dialect.MakeDeleteRangeStatement(tableSchema, null);
+            return MakeCommandDefinition(sql, null, transaction, commandTimeout, cancellationToken);
+        }
+
+        /// <summary>
+        /// Creates a command which will delete all entities
+        /// </summary>
+        public static CommandDefinition MakeCreateTempTableCommand<TEntity>(
+            IDbTransaction transaction,
+            IDialect dialect,
+            int? commandTimeout,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var config = MicroCRUDConfig.Current;
+            dialect = dialect ?? config.Dialect;
+            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect, config.SchemaFactory);
+            var sql = dialect.MakeCreateTempTableStatement(tableSchema);
+            return MakeCommandDefinition(sql, null, transaction, commandTimeout, cancellationToken);
+        }
+
+        /// <summary>
+        /// Creates a command which will delete all entities
+        /// </summary>
+        public static CommandDefinition MakeDropTempTableCommand<TEntity>(
+            string tableName,
+            IDbTransaction transaction,
+            IDialect dialect,
+            int? commandTimeout,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var config = MicroCRUDConfig.Current;
+            dialect = dialect ?? config.Dialect;
+            var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect, config.SchemaFactory);
+            if (tableSchema.Name != tableName)
+            {
+                throw new ArgumentException($"Attempting to drop table '{tableSchema.Name}', but said table name should be '{tableName}'");
+            }
+
+            var sql = dialect.MakeDropTempTableStatement(tableSchema);
             return MakeCommandDefinition(sql, null, transaction, commandTimeout, cancellationToken);
         }
 

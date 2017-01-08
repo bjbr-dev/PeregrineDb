@@ -15,12 +15,14 @@ namespace Dapper.MicroCRUD.Schema
             string columnName,
             string selectName,
             string parameterName,
-            ColumnUsage usage)
+            ColumnUsage usage,
+            DbTypeEx columnType)
         {
             this.ColumnName = columnName;
             this.SelectName = selectName;
             this.ParameterName = parameterName;
             this.Usage = usage;
+            this.ColumnType = columnType;
         }
 
         /// <summary>
@@ -43,5 +45,10 @@ namespace Dapper.MicroCRUD.Schema
         /// Gets how this property should be used in various places.
         /// </summary>
         public ColumnUsage Usage { get; }
+
+        /// <summary>
+        /// Gets the type of this column
+        /// </summary>
+        public DbTypeEx ColumnType { get; }
     }
 }

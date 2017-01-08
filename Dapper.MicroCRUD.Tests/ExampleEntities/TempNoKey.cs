@@ -1,17 +1,15 @@
-﻿// <copyright file="KeyAlias.cs" company="Berkeleybross">
+﻿// <copyright file="TempNoKey.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
-
 namespace Dapper.MicroCRUD.Tests.ExampleEntities
 {
     using System.ComponentModel.DataAnnotations.Schema;
 
-    [Table(nameof(KeyAlias))]
-    public class KeyAlias
+    [Table(nameof(TempNoKey))]
+    public class TempNoKey
     {
-        [Column("Key")]
-        public int Id { get; set; }
-
         public string Name { get; set; }
+
+        public int Age { get; set; }
     }
 }

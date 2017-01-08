@@ -319,14 +319,14 @@ namespace Dapper.MicroCRUD.Tests
             {
                 // Arrange
                 var id = this.connection.Insert<int>(
-                    new PropertyEnum { FavoriteColor = PropertyEnum.Color.Green },
+                    new PropertyEnum { FavoriteColor = Color.Green },
                     dialect: this.dialect);
 
                 // Act
                 var entity = await this.connection.FindAsync<PropertyEnum>(id, dialect: this.dialect);
 
                 // Assert
-                Assert.That(entity.FavoriteColor, Is.EqualTo(PropertyEnum.Color.Green));
+                Assert.That(entity.FavoriteColor, Is.EqualTo(Color.Green));
 
                 // Cleanup
                 this.connection.Delete<PropertyEnum>(id, dialect: this.dialect);
@@ -1431,11 +1431,11 @@ namespace Dapper.MicroCRUD.Tests
                 // Arrange
                 var entities = new[]
                     {
-                        new KeyAlias { Name = "Some Name" }
+                        new KeyExplicit { Name = "Some Name" }
                     };
 
                 // Act
-                Action<KeyAlias, int> setKey = (e, k) => { e.Key = k; };
+                Action<KeyExplicit, int> setKey = (e, k) => { e.Key = k; };
                 await this.connection.InsertRangeAsync(entities, setKey, dialect: this.dialect);
 
                 // Assert

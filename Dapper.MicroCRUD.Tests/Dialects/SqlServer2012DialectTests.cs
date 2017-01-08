@@ -5,10 +5,12 @@ namespace Dapper.MicroCRUD.Tests.Dialects
 {
     using System;
     using System.Collections.Immutable;
+    using System.Data;
     using Dapper.MicroCRUD.Dialects;
     using Dapper.MicroCRUD.Schema;
     using Dapper.MicroCRUD.Tests.ExampleEntities;
     using Dapper.MicroCRUD.Tests.Utils;
+    using Moq;
     using NUnit.Framework;
 
     [TestFixture]
@@ -83,14 +85,14 @@ WHERE [Id] = @Id";
             public void Uses_non_default_primary_key_name()
             {
                 // Arrange
-                var schema = this.dialect.KeyNotDefault();
+                var schema = this.dialect.KeyExplicit();
 
                 // Act
                 var sql = this.dialect.MakeFindStatement(schema);
 
                 // Assert
                 var expected = @"SELECT [Key], [Name]
-FROM [KeyNotDefault]
+FROM [KeyExplicit]
 WHERE [Key] = @Key";
 
                 Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
@@ -185,17 +187,17 @@ WHERE Age > @Age";
             }
 
             [Test]
-            public void Uses_non_default_primary_key_name()
+            public void Uses_explicit_primary_key_name()
             {
                 // Arrange
-                var schema = this.dialect.KeyNotDefault();
+                var schema = this.dialect.KeyExplicit();
 
                 // Act
                 var sql = this.dialect.MakeGetRangeStatement(schema, null);
 
                 // Assert
                 var expected = @"SELECT [Key], [Name]
-FROM [KeyNotDefault]";
+FROM [KeyExplicit]";
 
                 Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
@@ -245,7 +247,7 @@ FROM [PropertyAlias]";
 
                 // Act / Assert
                 Assert.Throws<ArgumentException>(
-                    () => this.dialect.MakeGetPageStatement(schema, this.dialect, pageNumber, 10, null, "Name"));
+                    () => this.dialect.MakeGetPageStatement(schema, pageNumber, 10, null, "Name"));
             }
 
             [TestCase(-1)]
@@ -256,7 +258,7 @@ FROM [PropertyAlias]";
 
                 // Act / Assert
                 Assert.Throws<ArgumentException>(
-                    () => this.dialect.MakeGetPageStatement(schema, this.dialect, 1, itemsPerPage, null, "Name"));
+                    () => this.dialect.MakeGetPageStatement(schema, 1, itemsPerPage, null, "Name"));
             }
 
             [TestCase(null)]
@@ -269,7 +271,7 @@ FROM [PropertyAlias]";
 
                 // Act / Assert
                 Assert.Throws<ArgumentException>(
-                    () => this.dialect.MakeGetPageStatement(schema, this.dialect, 1, 10, null, orderBy));
+                    () => this.dialect.MakeGetPageStatement(schema, 1, 10, null, orderBy));
             }
 
             [Test]
@@ -279,7 +281,7 @@ FROM [PropertyAlias]";
                 var schema = this.dialect.User();
 
                 // Act
-                var sql = this.dialect.MakeGetPageStatement(schema, this.dialect, 1, 10, null, "Name");
+                var sql = this.dialect.MakeGetPageStatement(schema, 1, 10, null, "Name");
 
                 // Assert
                 var expected = @"SELECT [Id], [Name], [Age]
@@ -297,7 +299,7 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
                 var schema = this.dialect.User();
 
                 // Act
-                var sql = this.dialect.MakeGetPageStatement(schema, this.dialect, 1, 10, "WHERE Name LIKE 'Foo%'", "Name");
+                var sql = this.dialect.MakeGetPageStatement(schema, 1, 10, "WHERE Name LIKE 'Foo%'", "Name");
 
                 // Assert
                 var expected = @"SELECT [Id], [Name], [Age]
@@ -316,7 +318,7 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
                 var schema = this.dialect.PropertyAlias();
 
                 // Act
-                var sql = this.dialect.MakeGetPageStatement(schema, this.dialect, 1, 10, null, "Name");
+                var sql = this.dialect.MakeGetPageStatement(schema, 1, 10, null, "Name");
 
                 // Assert
                 var expected = @"SELECT [Id], [YearsOld] AS [Age]
@@ -334,7 +336,7 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
                 var schema = this.dialect.User();
 
                 // Act
-                var sql = this.dialect.MakeGetPageStatement(schema, this.dialect, 2, 10, null, "Name");
+                var sql = this.dialect.MakeGetPageStatement(schema, 2, 10, null, "Name");
 
                 // Assert
                 var expected = @"SELECT [Id], [Name], [Age]
@@ -352,7 +354,7 @@ OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY";
                 var schema = this.dialect.User();
 
                 // Act
-                var sql = this.dialect.MakeGetPageStatement(schema, this.dialect, 2, 5, null, "Name");
+                var sql = this.dialect.MakeGetPageStatement(schema, 2, 5, null, "Name");
 
                 // Assert
                 var expected = @"SELECT [Id], [Name], [Age]
@@ -370,7 +372,7 @@ OFFSET 5 ROWS FETCH NEXT 5 ROWS ONLY";
                 var schema = this.dialect.User();
 
                 // Act
-                var sql = this.dialect.MakeGetPageStatement(schema, this.dialect, 2, 0, null, "Name");
+                var sql = this.dialect.MakeGetPageStatement(schema, 2, 0, null, "Name");
 
                 // Assert
                 var expected = @"SELECT [Id], [Name], [Age]
@@ -611,16 +613,16 @@ WHERE [Key] = @Id";
             }
 
             [Test]
-            public void Uses_non_default_key_name()
+            public void Uses_explicit_key_name()
             {
                 // Arrange
-                var schema = this.dialect.KeyNotDefault();
+                var schema = this.dialect.KeyExplicit();
 
                 // Act
                 var sql = this.dialect.MakeUpdateStatement(schema);
 
                 // Assert
-                var expected = @"UPDATE [KeyNotDefault]
+                var expected = @"UPDATE [KeyExplicit]
 SET [Name] = @Name
 WHERE [Key] = @Key";
 
@@ -730,16 +732,16 @@ WHERE [Key] = @Id";
             }
 
             [Test]
-            public void Uses_non_default_key_name()
+            public void Uses_explicit_key_name()
             {
                 // Arrange
-                var schema = this.dialect.KeyNotDefault();
+                var schema = this.dialect.KeyExplicit();
 
                 // Act
                 var sql = this.dialect.MakeDeleteByPrimaryKeyStatement(schema);
 
                 // Assert
-                var expected = @"DELETE FROM [KeyNotDefault]
+                var expected = @"DELETE FROM [KeyExplicit]
 WHERE [Key] = @Key";
 
                 Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
@@ -837,6 +839,91 @@ WHERE [Age] > 10";
                 var config = new MicroCRUDConfig(this.dialect, new TableSchemaFactory(new DefaultTableNameFactory(), new DefaultColumnNameFactory()), true);
                 var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), config.Dialect, config.SchemaFactory);
                 return TableSchemaFactory.GetConditionsSchema(typeof(TEntity), tableSchema, value.GetType(), config.Dialect, config.SchemaFactory);
+            }
+        }
+
+        private class MakeCreateTempTableStatement
+            : SqlServer2012DialectTests
+        {
+            private Mock<ITableNameFactory> tableNameFactory;
+
+            [SetUp]
+            public void SetUp()
+            {
+                MicroCRUDConfig.AddTypeMap(typeof(DateTime), DbType.DateTime2);
+                this.tableNameFactory = new Mock<ITableNameFactory>();
+
+                var defaultTableNameFactory = new DefaultTableNameFactory();
+                this.tableNameFactory.Setup(f => f.GetTableName(It.IsAny<Type>(), It.IsAny<IDialect>()))
+                    .Returns((Type type, IDialect d) => "[#" + defaultTableNameFactory.GetTableName(type, d).Substring(1));
+            }
+
+            [Test]
+            public void Throws_exception_when_tablename_doesnt_begin_with_a_hash()
+            {
+                // Arrange
+                this.tableNameFactory.Setup(f => f.GetTableName(It.IsAny<Type>(), It.IsAny<IDialect>()))
+                    .Returns((Type type, IDialect d) => "table");
+                var tableSchema = this.dialect.MakeSchema<User>(this.tableNameFactory.Object);
+
+                // Act
+                Assert.Throws<ArgumentException>(() => this.dialect.MakeCreateTempTableStatement(tableSchema));
+            }
+
+            [Test]
+            public void Throws_exception_if_there_are_no_columns()
+            {
+                // Arrange
+                var tableSchema = this.dialect.MakeSchema<NoColumns>(this.tableNameFactory.Object);
+
+                // Act
+                Assert.Throws<ArgumentException>(() => this.dialect.MakeCreateTempTableStatement(tableSchema));
+            }
+
+            [Test]
+            public void Creates_table_with_all_possible_types()
+            {
+                // Arrange
+                var tableSchema = this.dialect.MakeSchema<TempAllPossibleTypes>(this.tableNameFactory.Object);
+
+                // Act
+                var sql = this.dialect.MakeCreateTempTableStatement(tableSchema);
+
+                // Assert
+                var expected = @"CREATE TABLE [#TempAllPossibleTypes]
+(
+    [Id] INT NOT NULL,
+    [Int16Property] SMALLINT NOT NULL,
+    [NullableInt16Property] SMALLINT NULL,
+    [Int32Property] INT NOT NULL,
+    [NullableInt32Property] INT NULL,
+    [Int64Property] BIGINT NOT NULL,
+    [NullableInt64Property] BIGINT NULL,
+    [SingleProperty] REAL NOT NULL,
+    [NullableSingleProperty] REAL NULL,
+    [DoubleProperty] FLOAT NOT NULL,
+    [NullableDoubleProperty] FLOAT NULL,
+    [DecimalProperty] NUMERIC NOT NULL,
+    [NullableDecimalProperty] NUMERIC NULL,
+    [BoolProperty] BIT NOT NULL,
+    [NullableBoolProperty] BIT NULL,
+    [StringProperty] NVARCHAR(MAX) NOT NULL,
+    [NullableStringProperty] NVARCHAR(MAX) NULL,
+    [FixedLengthStringProperty] NVARCHAR(50) NULL,
+    [CharProperty] NCHAR(1) NOT NULL,
+    [NullableCharProperty] NCHAR(1) NULL,
+    [GuidProperty] UNIQUEIDENTIFIER NOT NULL,
+    [NullableGuidProperty] UNIQUEIDENTIFIER NULL,
+    [DateTimeProperty] DATETIME2(7) NOT NULL,
+    [NullableDateTimeProperty] DATETIME2(7) NULL,
+    [DateTimeOffsetProperty] DATETIMEOFFSET NOT NULL,
+    [NullableDateTimeOffsetProperty] DATETIMEOFFSET NULL,
+    [ByteArrayProperty] VARBINARY(MAX) NOT NULL,
+    [Color] INT NOT NULL,
+    [NullableColor] INT NULL
+);";
+
+                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }
         }
     }

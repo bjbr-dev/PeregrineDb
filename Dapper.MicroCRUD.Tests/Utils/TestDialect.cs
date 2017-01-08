@@ -30,13 +30,7 @@ namespace Dapper.MicroCRUD.Tests.Utils
         }
 
         /// <inheritdoc />
-        public override string MakeGetPageStatement(
-            TableSchema tableSchema,
-            IDialect dialect,
-            int pageNumber,
-            int itemsPerPage,
-            string conditions,
-            string orderBy)
+        public override string MakeGetPageStatement(TableSchema tableSchema, int pageNumber, int itemsPerPage, string conditions, string orderBy)
         {
             if (pageNumber < 1)
             {
@@ -61,6 +55,16 @@ namespace Dapper.MicroCRUD.Tests.Utils
             var skip = (pageNumber - 1) * itemsPerPage;
             sql.AppendLine().AppendFormat("SKIP {0} TAKE {1}", skip, itemsPerPage);
             return sql.ToString();
+        }
+
+        public override string MakeCreateTempTableStatement(TableSchema tableSchema)
+        {
+            return "CREATE TEMP TABLE " + tableSchema.Name;
+        }
+
+        public override string MakeDropTempTableStatement(TableSchema tableSchema)
+        {
+            return "DROP TABLE " + tableSchema.Name;
         }
 
         /// <inheritdoc />

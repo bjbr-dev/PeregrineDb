@@ -24,6 +24,12 @@ CREATE TABLE KeyAlias
 	Name NVARCHAR(MAX) NOT NULL
 );
 
+CREATE TABLE KeyExplicit
+(
+	[Key] INT NOT NULL IDENTITY PRIMARY KEY,
+	Name NVARCHAR(MAX) NOT NULL
+);
+
 CREATE TABLE KeyGuid
 (
 	Id uniqueidentifier NOT NULL PRIMARY KEY,
@@ -78,12 +84,12 @@ CREATE TABLE PropertyAllPossibleTypes
 	BoolProperty bit NOT NULL,
 	NullableBoolProperty bit NULL,
 	StringProperty NVARCHAR(MAX) NOT NULL,
-	CharProperty NVARCHAR(MAX) NOT NULL,
-	NullableCharProperty NVARCHAR(MAX) NULL,
+	CharProperty NCHAR(1) NOT NULL,
+	NullableCharProperty NCHAR(1) NULL,
 	GuidProperty uniqueidentifier NOT NULL,
 	NullableGuidProperty uniqueidentifier NULL,
-	DateTimeProperty datetime2 NOT NULL,
-	NullableDateTimeProperty datetime2 NULL,
+	DateTimeProperty datetime2(7) NOT NULL,
+	NullableDateTimeProperty datetime2(7) NULL,
 	DateTimeOffsetProperty DATETIMEOFFSET NOT NULL,
 	NullableDateTimeOffsetProperty DATETIMEOFFSET NULL,
 	ByteArrayProperty varbinary(MAX) NOT NULL

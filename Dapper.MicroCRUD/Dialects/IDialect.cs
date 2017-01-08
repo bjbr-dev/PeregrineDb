@@ -34,13 +34,7 @@ namespace Dapper.MicroCRUD.Dialects
         /// <summary>
         /// Generates a SQL statement to select a page of rows, in a specific order
         /// </summary>
-        string MakeGetPageStatement(
-            TableSchema tableSchema,
-            IDialect dialect,
-            int pageNumber,
-            int itemsPerPage,
-            string conditions,
-            string orderBy);
+        string MakeGetPageStatement(TableSchema tableSchema, int pageNumber, int itemsPerPage, string conditions, string orderBy);
 
         /// <summary>
         /// Generates a SQL statement to insert a row and return the generated identity.
@@ -68,6 +62,21 @@ namespace Dapper.MicroCRUD.Dialects
         string MakeDeleteRangeStatement(TableSchema tableSchema, string conditions);
 
         /// <summary>
+        /// Generates a SQL WHERE clause which selects an entity where all the columns match the values in the conditions object.
+        /// </summary>
+        string MakeWhereClause(ImmutableArray<ConditionColumnSchema> conditionsSchema, object conditions);
+
+        /// <summary>
+        /// Generates a SQL statement which creates a temporary table.
+        /// </summary>
+        string MakeCreateTempTableStatement(TableSchema tableSchema);
+
+        /// <summary>
+        /// Generates a SQL statement which drops a temporary table.
+        /// </summary>
+        string MakeDropTempTableStatement(TableSchema tableSchema);
+
+        /// <summary>
         /// Escapes the column name so it can be used in SQL
         /// </summary>
         string MakeColumnName(string name);
@@ -81,10 +90,5 @@ namespace Dapper.MicroCRUD.Dialects
         /// Escapes the table and schema names, and then combines them so they can be used in SQL
         /// </summary>
         string MakeTableName(string schema, string tableName);
-
-        /// <summary>
-        /// Generates a SQL WHERE clause which selects an entity where all the columns match the values in the conditions object.
-        /// </summary>
-        string MakeWhereClause(ImmutableArray<ConditionColumnSchema> conditionsSchema, object conditions);
     }
 }

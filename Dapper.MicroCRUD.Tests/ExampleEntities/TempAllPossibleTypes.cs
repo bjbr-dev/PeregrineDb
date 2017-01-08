@@ -1,4 +1,4 @@
-﻿// <copyright file="PropertyAllPossibleTypes.cs" company="Berkeleybross">
+﻿// <copyright file="TempAllPossibleTypes.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 namespace Dapper.MicroCRUD.Tests.ExampleEntities
@@ -10,8 +10,8 @@ namespace Dapper.MicroCRUD.Tests.ExampleEntities
     /// <remarks>
     /// Except enum, which is a different class :/
     /// </remarks>
-    [Table(nameof(PropertyAllPossibleTypes))]
-    public class PropertyAllPossibleTypes
+    [Table(nameof(TempAllPossibleTypes))]
+    public class TempAllPossibleTypes
     {
         public int Id { get; set; }
 
@@ -46,6 +46,11 @@ namespace Dapper.MicroCRUD.Tests.ExampleEntities
         [Required]
         public string StringProperty { get; set; }
 
+        public string NullableStringProperty { get; set; }
+
+        [MaxLength(50)]
+        public string FixedLengthStringProperty { get; set; }
+
         public char CharProperty { get; set; }
 
         public char? NullableCharProperty { get; set; }
@@ -64,5 +69,9 @@ namespace Dapper.MicroCRUD.Tests.ExampleEntities
 
         [Required]
         public byte[] ByteArrayProperty { get; set; }
+
+        public Color Color { get; set; }
+
+        public Color? NullableColor { get; set; }
     }
 }

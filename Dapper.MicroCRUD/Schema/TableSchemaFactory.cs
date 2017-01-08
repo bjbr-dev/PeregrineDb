@@ -9,6 +9,7 @@ namespace Dapper.MicroCRUD.Schema
     using System.Collections.Immutable;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
+    using System.Data;
     using System.Linq;
     using System.Reflection;
     using Dapper.MicroCRUD.Dialects;
@@ -24,28 +25,6 @@ namespace Dapper.MicroCRUD.Schema
 
         private static readonly ConcurrentDictionary<ConditionsColumnCacheIdentity, ImmutableArray<ConditionColumnSchema>> ConditionColumns =
             new ConcurrentDictionary<ConditionsColumnCacheIdentity, ImmutableArray<ConditionColumnSchema>>();
-
-        private static readonly List<Type> PossiblePropertyTypes = new List<Type>
-            {
-                typeof(byte),
-                typeof(sbyte),
-                typeof(short),
-                typeof(ushort),
-                typeof(int),
-                typeof(uint),
-                typeof(long),
-                typeof(ulong),
-                typeof(float),
-                typeof(double),
-                typeof(decimal),
-                typeof(bool),
-                typeof(string),
-                typeof(char),
-                typeof(Guid),
-                typeof(DateTime),
-                typeof(DateTimeOffset),
-                typeof(byte[])
-            };
 
         private readonly ITableNameFactory tableNameFactory;
         private readonly IColumnNameFactory columnNameFactory;
@@ -63,6 +42,50 @@ namespace Dapper.MicroCRUD.Schema
             this.tableNameFactory = tableNameFactory;
             this.columnNameFactory = columnNameFactory;
         }
+
+        /// <summary>
+        /// Gets or sets the types to convert to SQL types.
+        /// </summary>
+        internal static Dictionary<Type, DbType> TypeMapping { get; set; } = new Dictionary<Type, DbType>
+            {
+                [typeof(byte)] = DbType.Byte,
+                [typeof(sbyte)] = DbType.SByte,
+                [typeof(short)] = DbType.Int16,
+                [typeof(ushort)] = DbType.UInt16,
+                [typeof(int)] = DbType.Int32,
+                [typeof(uint)] = DbType.UInt32,
+                [typeof(long)] = DbType.Int64,
+                [typeof(ulong)] = DbType.UInt64,
+                [typeof(float)] = DbType.Single,
+                [typeof(double)] = DbType.Double,
+                [typeof(decimal)] = DbType.Decimal,
+                [typeof(bool)] = DbType.Boolean,
+                [typeof(string)] = DbType.String,
+                [typeof(char)] = DbType.StringFixedLength,
+                [typeof(Guid)] = DbType.Guid,
+                [typeof(DateTime)] = DbType.DateTime,
+                [typeof(DateTimeOffset)] = DbType.DateTimeOffset,
+                [typeof(TimeSpan)] = DbType.Time,
+                [typeof(byte[])] = DbType.Binary,
+                [typeof(byte?)] = DbType.Byte,
+                [typeof(sbyte?)] = DbType.SByte,
+                [typeof(short?)] = DbType.Int16,
+                [typeof(ushort?)] = DbType.UInt16,
+                [typeof(int?)] = DbType.Int32,
+                [typeof(uint?)] = DbType.UInt32,
+                [typeof(long?)] = DbType.Int64,
+                [typeof(ulong?)] = DbType.UInt64,
+                [typeof(float?)] = DbType.Single,
+                [typeof(double?)] = DbType.Double,
+                [typeof(decimal?)] = DbType.Decimal,
+                [typeof(bool?)] = DbType.Boolean,
+                [typeof(char?)] = DbType.StringFixedLength,
+                [typeof(Guid?)] = DbType.Guid,
+                [typeof(DateTime?)] = DbType.DateTime,
+                [typeof(DateTimeOffset?)] = DbType.DateTimeOffset,
+                [typeof(TimeSpan?)] = DbType.Time,
+                [typeof(object)] = DbType.Object
+            };
 
         /// <summary>
         /// Gets the <see cref="TableSchema"/> for the specified entityType and dialect.
@@ -159,7 +182,7 @@ namespace Dapper.MicroCRUD.Schema
             }
 
             var propertyType = property.PropertyType.GetUnderlyingType();
-            return propertyType.IsEnum || PossiblePropertyTypes.Contains(propertyType);
+            return propertyType.IsEnum || TypeMapping.ContainsKey(propertyType);
         }
 
         private static ColumnUsage GetColumnUsage(bool explicitKeyDefined, PropertySchema property)
@@ -237,7 +260,37 @@ namespace Dapper.MicroCRUD.Schema
                 dialect.MakeColumnName(this.columnNameFactory.GetColumnName(property)),
                 dialect.MakeColumnName(propertyName),
                 propertyName,
-                columnUsage);
+                columnUsage,
+                this.GetDbType(property));
+        }
+
+        private DbTypeEx GetDbType(PropertySchema property)
+        {
+            if (property.EffectiveType.IsEnum)
+            {
+                return new DbTypeEx(DbType.Int32, property.IsNullable, null);
+            }
+
+            DbType dbType;
+            if (TypeMapping.TryGetValue(property.EffectiveType, out dbType))
+            {
+                var allowNull = property.IsNullable || (!property.Type.IsValueType && property.FindAttribute<RequiredAttribute>() == null);
+
+                var maxLength = this.GetMaxLength(property);
+                return new DbTypeEx(dbType, allowNull, maxLength);
+            }
+
+            throw new NotSupportedException("Unknown property type: " + property.EffectiveType);
+        }
+
+        private int? GetMaxLength(PropertySchema property)
+        {
+            if (property.EffectiveType == typeof(char))
+            {
+                return 1;
+            }
+
+            return property.FindAttribute<MaxLengthAttribute>()?.Length;
         }
     }
 }

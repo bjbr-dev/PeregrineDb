@@ -1,16 +1,16 @@
-﻿// <copyright file="KeyAlias.cs" company="Berkeleybross">
+﻿// <copyright file="KeyExplicit.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
-
 namespace Dapper.MicroCRUD.Tests.ExampleEntities
 {
+    using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
 
-    [Table(nameof(KeyAlias))]
-    public class KeyAlias
+    [Table(nameof(KeyExplicit))]
+    public class KeyExplicit
     {
-        [Column("Key")]
-        public int Id { get; set; }
+        [Key]
+        public int Key { get; set; }
 
         public string Name { get; set; }
     }

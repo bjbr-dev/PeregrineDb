@@ -29,15 +29,36 @@ namespace Dapper.MicroCRUD.Schema
         public object[] CustomAttributes { get; set; }
 
         /// <summary>
+        /// Gets or sets the type of the property.
+        /// </summary>
+        public Type Type { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the type of the property is a Nullable&lt;T&gt;
+        /// </summary>
+        public bool IsNullable { get; set; }
+
+        /// <summary>
+        /// Gets or sets the effective type of the property -
+        /// </summary>
+        public Type EffectiveType { get; set; }
+
+        /// <summary>
         /// Creates a <see cref="PropertySchema"/> from the <paramref name="property"/>.
         /// </summary>
         public static PropertySchema MakePropertySchema(PropertyInfo property)
         {
+            var type = property.PropertyType;
+            var underlyingType = Nullable.GetUnderlyingType(type);
+
             return new PropertySchema
                 {
                     CustomAttributes = property.GetCustomAttributes(false),
                     Name = property.Name,
-                    PropertyInfo = property
+                    PropertyInfo = property,
+                    Type = type,
+                    EffectiveType = underlyingType ?? type,
+                    IsNullable = underlyingType != null
                 };
         }
 

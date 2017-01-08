@@ -4,6 +4,8 @@
 namespace Dapper.MicroCRUD
 {
     using System;
+    using System.Collections.Generic;
+    using System.Data;
     using Dapper.MicroCRUD.Dialects;
     using Dapper.MicroCRUD.Schema;
     using Dapper.MicroCRUD.Utils;
@@ -97,6 +99,21 @@ namespace Dapper.MicroCRUD
             Ensure.NotNull(factory, nameof(factory));
 
             SetCurrent(c => c.WithSchemaFactory(c.SchemaFactory.WithColumnNameFactory(factory)));
+        }
+
+        /// <summary>
+        /// Configure the specified type to be mapped to a given db-type
+        /// </summary>
+        public static void AddTypeMap(Type type, DbType dbType)
+        {
+            lock (LockObject)
+            {
+                var mapping = new Dictionary<Type, DbType>(TableSchemaFactory.TypeMapping)
+                    {
+                        [type] = dbType
+                    };
+                TableSchemaFactory.TypeMapping = mapping;
+            }
         }
 
         /// <summary>

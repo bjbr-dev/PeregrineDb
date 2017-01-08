@@ -84,9 +84,15 @@
   <ItemGroup>
     <Compile Include="DbConnectionAsyncExtensionsTests.cs" />
     <Compile Include="DbConnectionExtensionsPerformanceTests.cs" />
+    <Compile Include="DbConnectionTempTableExtensionsTests.cs" />
     <Compile Include="Dialects\PostgreSqlDialectTests.cs" />
+    <Compile Include="ExampleEntities\Color.cs" />
+    <Compile Include="ExampleEntities\KeyExplicit.cs" />
+    <Compile Include="ExampleEntities\NoColumns.cs" />
+    <Compile Include="ExampleEntities\TempAllPossibleTypes.cs" />
     <Compile Include="ExampleEntities\PropertyNullable.cs" />
     <Compile Include="ExampleEntities\PropertyAlias.cs" />
+    <Compile Include="ExampleEntities\TempNoKey.cs" />
     <Compile Include="MicroCRUDConfigTests.cs" />
     <Compile Include="Schema\DefaultColumnNameFactoryTests.cs" />
     <Compile Include="Schema\SuffixRemovingTableNameFactoryTests.cs" />
@@ -114,7 +120,6 @@
     <Compile Include="Dialects\SqlServer2012DialectTests.cs" />
     <Compile Include="Utils\BlankDatabase.cs" />
     <Compile Include="Utils\BlankDatabaseFactory.cs" />
-    <Compile Include="Utils\DialectExtensions.cs" />
     <Compile Include="Utils\SqlStringComparer.cs" />
     <Compile Include="Utils\TestDialect.cs" />
   </ItemGroup>
