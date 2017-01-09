@@ -21,7 +21,7 @@ namespace Dapper.MicroCRUD
         static MicroCRUDConfig()
         {
             var defaultSchemaFactory = new TableSchemaFactory(new DefaultTableNameFactory(), new DefaultColumnNameFactory());
-            current = new MicroCRUDConfig(MicroCRUD.Dialect.PostgreSql, defaultSchemaFactory, true);
+            current = new MicroCRUDConfig(MicroCRUD.Dialect.SqlServer2012, defaultSchemaFactory, true);
         }
 
         /// <summary>
