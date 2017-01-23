@@ -577,14 +577,14 @@ namespace Dapper
         /// ...
         /// using (var transaction = this.connection.BeginTransaction())
         /// {
-        ///     var entities = this.connection.GetRange<UserEntity>("WHERE @Age = 10");
+        ///     var entities = this.connection.GetRange<UserEntity>("WHERE @Age = 10", transaction);
         ///
         ///     foreach (var entity in entities)
         ///     {
         ///         entity.Name = "Little bobby tables";
         ///     }
         ///
-        ///     await this.connection.UpdateRangeAsync(entities);
+        ///     await this.connection.UpdateRangeAsync(entities, transaction);
         ///     transaction.Commit();
         /// }
         /// ]]>

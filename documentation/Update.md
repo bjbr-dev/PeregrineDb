@@ -55,14 +55,14 @@ WHERE Id = @Id
 ```csharp
 using (var transaction = this.connection.BeginTransaction())
 {
-    var entities = this.connection.GetRange<UserEntity>("WHERE @Age = 10");
+    var entities = this.connection.GetRange<UserEntity>("WHERE @Age = 10", transaction);
 
     foreach (var entity in entities)
     {
         entity.Name = "Little bobby tables";
     }
 
-    this.connection.UpdateRange(entities);
+    this.connection.UpdateRange(entities, transaction);
 
     transaction.Commit();
 }
