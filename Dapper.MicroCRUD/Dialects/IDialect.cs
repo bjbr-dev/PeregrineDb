@@ -5,6 +5,7 @@ namespace Dapper.MicroCRUD.Dialects
 {
     using System.Collections.Immutable;
     using Dapper.MicroCRUD.Schema;
+    using Pagination;
 
     /// <summary>
     /// Defines the SQL to generate when targeting specific vendor implementations.
@@ -34,7 +35,7 @@ namespace Dapper.MicroCRUD.Dialects
         /// <summary>
         /// Generates a SQL statement to select a page of rows, in a specific order
         /// </summary>
-        string MakeGetPageStatement(TableSchema tableSchema, int pageNumber, int itemsPerPage, string conditions, string orderBy);
+        string MakeGetPageStatement(TableSchema tableSchema, Page page, string conditions, string orderBy);
 
         /// <summary>
         /// Generates a SQL statement to insert a row and return the generated identity.

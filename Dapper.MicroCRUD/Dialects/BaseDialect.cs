@@ -7,6 +7,7 @@ namespace Dapper.MicroCRUD.Dialects
     using System.Collections.Immutable;
     using System.Text;
     using Dapper.MicroCRUD.Schema;
+    using Pagination;
 
     /// <summary>
     /// Simple implementation of a SQL dialect which performs most SQL generation.
@@ -56,7 +57,7 @@ namespace Dapper.MicroCRUD.Dialects
         }
 
         /// <inheritdoc />
-        public abstract string MakeGetPageStatement(TableSchema tableSchema, int pageNumber, int itemsPerPage, string conditions, string orderBy);
+        public abstract string MakeGetPageStatement(TableSchema tableSchema, Page page, string conditions, string orderBy);
 
         /// <inheritdoc />
         public string MakeInsertStatement(TableSchema tableSchema)

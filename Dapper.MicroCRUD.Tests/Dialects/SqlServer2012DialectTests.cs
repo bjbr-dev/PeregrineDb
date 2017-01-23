@@ -12,6 +12,7 @@ namespace Dapper.MicroCRUD.Tests.Dialects
     using Dapper.MicroCRUD.Tests.Utils;
     using Moq;
     using NUnit.Framework;
+    using Pagination;
 
     [TestFixture]
     public class SqlServer2012DialectTests
@@ -238,29 +239,6 @@ FROM [PropertyAlias]";
         private class MakeGetPageStatement
             : SqlServer2012DialectTests
         {
-            [TestCase(0)]
-            [TestCase(-1)]
-            public void Throws_exception_when_pageNumber_is_less_than_1(int pageNumber)
-            {
-                // Arrange
-                var schema = this.dialect.User();
-
-                // Act / Assert
-                Assert.Throws<ArgumentException>(
-                    () => this.dialect.MakeGetPageStatement(schema, pageNumber, 10, null, "Name"));
-            }
-
-            [TestCase(-1)]
-            public void Throws_exception_when_itemsPerPage_is_less_than_0(int itemsPerPage)
-            {
-                // Arrange
-                var schema = this.dialect.User();
-
-                // Act / Assert
-                Assert.Throws<ArgumentException>(
-                    () => this.dialect.MakeGetPageStatement(schema, 1, itemsPerPage, null, "Name"));
-            }
-
             [TestCase(null)]
             [TestCase("")]
             [TestCase(" ")]
@@ -271,7 +249,7 @@ FROM [PropertyAlias]";
 
                 // Act / Assert
                 Assert.Throws<ArgumentException>(
-                    () => this.dialect.MakeGetPageStatement(schema, 1, 10, null, orderBy));
+                    () => this.dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), null, orderBy));
             }
 
             [Test]
@@ -281,7 +259,7 @@ FROM [PropertyAlias]";
                 var schema = this.dialect.User();
 
                 // Act
-                var sql = this.dialect.MakeGetPageStatement(schema, 1, 10, null, "Name");
+                var sql = this.dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), null, "Name");
 
                 // Assert
                 var expected = @"SELECT [Id], [Name], [Age]
@@ -299,7 +277,7 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
                 var schema = this.dialect.User();
 
                 // Act
-                var sql = this.dialect.MakeGetPageStatement(schema, 1, 10, "WHERE Name LIKE 'Foo%'", "Name");
+                var sql = this.dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), "WHERE Name LIKE 'Foo%'", "Name");
 
                 // Assert
                 var expected = @"SELECT [Id], [Name], [Age]
@@ -318,7 +296,7 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
                 var schema = this.dialect.PropertyAlias();
 
                 // Act
-                var sql = this.dialect.MakeGetPageStatement(schema, 1, 10, null, "Name");
+                var sql = this.dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), null, "Name");
 
                 // Assert
                 var expected = @"SELECT [Id], [YearsOld] AS [Age]
@@ -336,7 +314,7 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
                 var schema = this.dialect.User();
 
                 // Act
-                var sql = this.dialect.MakeGetPageStatement(schema, 2, 10, null, "Name");
+                var sql = this.dialect.MakeGetPageStatement(schema, new Page(2, 10, true, 10, 19), null, "Name");
 
                 // Assert
                 var expected = @"SELECT [Id], [Name], [Age]
@@ -354,31 +332,13 @@ OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY";
                 var schema = this.dialect.User();
 
                 // Act
-                var sql = this.dialect.MakeGetPageStatement(schema, 2, 5, null, "Name");
+                var sql = this.dialect.MakeGetPageStatement(schema, new Page(2, 5, true, 5, 9), null, "Name");
 
                 // Assert
                 var expected = @"SELECT [Id], [Name], [Age]
 FROM [Users]
 ORDER BY Name
 OFFSET 5 ROWS FETCH NEXT 5 ROWS ONLY";
-
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
-            }
-
-            [Test]
-            public void Allows_itemsPerPage_to_be_zero()
-            {
-                // Arrange
-                var schema = this.dialect.User();
-
-                // Act
-                var sql = this.dialect.MakeGetPageStatement(schema, 2, 0, null, "Name");
-
-                // Assert
-                var expected = @"SELECT [Id], [Name], [Age]
-FROM [Users]
-ORDER BY Name
-OFFSET 0 ROWS FETCH NEXT 0 ROWS ONLY";
 
                 Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
             }

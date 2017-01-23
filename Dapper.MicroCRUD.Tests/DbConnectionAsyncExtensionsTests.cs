@@ -13,6 +13,7 @@ namespace Dapper.MicroCRUD.Tests
     using Dapper.MicroCRUD.Tests.Utils;
     using NCrunch.Framework;
     using NUnit.Framework;
+    using Pagination;
 
     [ExclusivelyUses("Database")]
     [Parallelizable(ParallelScope.None)]
@@ -626,137 +627,6 @@ namespace Dapper.MicroCRUD.Tests
             }
         }
 
-        private class GetPageAsync
-            : DbConnectionAsyncExtensionsTests
-        {
-            public GetPageAsync(string dialectName)
-                : base(dialectName)
-            {
-            }
-
-            [Test]
-            public async Task Filters_result_by_conditions()
-            {
-                // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
-
-                // Act
-                var users = await this.connection.GetPageAsync<User>(
-                    1,
-                    10,
-                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                    "Age",
-                    new { Search = "Some Name", Age = 10 },
-                    dialect: this.dialect);
-
-                // Assert
-                Assert.That(users.Count(), Is.EqualTo(3));
-
-                // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
-            }
-
-            [Test]
-            public async Task Gets_first_page()
-            {
-                // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
-
-                // Act
-                var users = (await this.connection.GetPageAsync<User>(
-                    1,
-                    2,
-                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                    "Age DESC",
-                    new { Search = "Some Name", Age = 10 },
-                    dialect: this.dialect)).ToList();
-
-                // Assert
-                Assert.That(users.Count, Is.EqualTo(2));
-                Assert.That(users[0].Name, Is.EqualTo("Some Name 1"));
-                Assert.That(users[1].Name, Is.EqualTo("Some Name 2"));
-
-                // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
-            }
-
-            [Test]
-            public async Task Gets_second_page()
-            {
-                // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
-
-                // Act
-                var users = (await this.connection.GetPageAsync<User>(
-                    2,
-                    2,
-                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                    "Age DESC",
-                    new { Search = "Some Name", Age = 10 },
-                    dialect: this.dialect)).ToList();
-
-                // Assert
-                Assert.That(users.Count, Is.EqualTo(1));
-                Assert.That(users[0].Name, Is.EqualTo("Some Name 3"));
-
-                // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
-            }
-
-            [Test]
-            public async Task Returns_empty_set_past_last_page()
-            {
-                // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
-
-                // Act
-                var users = (await this.connection.GetPageAsync<User>(
-                    3,
-                    2,
-                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                    "Age DESC",
-                    new { Search = "Some Name", Age = 10 },
-                    dialect: this.dialect)).ToList();
-
-                // Assert
-                Assert.That(users, Is.Empty);
-
-                // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
-            }
-
-            [Test]
-            public async Task Returns_everything_when_conditions_is_null()
-            {
-                // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
-
-                // Act
-                var users = await this.connection.GetRangeAsync<User>(null, dialect: this.dialect);
-
-                // Assert
-                Assert.That(users.Count(), Is.EqualTo(4));
-
-                // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
-            }
-        }
-
         private class GetRangeAsyncWhereObject
             : DbConnectionAsyncExtensionsTests
         {
@@ -859,6 +729,251 @@ namespace Dapper.MicroCRUD.Tests
 
                 // Assert
                 Assert.That(users.Count(), Is.EqualTo(1));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+        }
+
+        private class GetPageAsync
+            : DbConnectionAsyncExtensionsTests
+        {
+            public GetPageAsync(string dialectName)
+                : base(dialectName)
+            {
+            }
+
+            [Test]
+            public async Task Returns_empty_list_when_there_are_no_entities()
+            {
+                // Act
+                var pageBuilder = new PageIndexPageBuilder(1, 10);
+                var users = await this.connection.GetPageAsync<User>(pageBuilder, null, "Age", (object)null, dialect: this.dialect);
+
+                // Assert
+                Assert.That(users.Items.Count(), Is.EqualTo(0));
+            }
+
+            [Test]
+            public async Task Filters_result_by_conditions()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var users = await this.connection.GetPageAsync<User>(
+                    new PageIndexPageBuilder(1, 10),
+                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
+                    "Age",
+                    new { Search = "Some Name", Age = 10 },
+                    dialect: this.dialect);
+
+                // Assert
+                Assert.That(users.Items.Count(), Is.EqualTo(3));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Test]
+            public async Task Gets_first_page()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var users = (await this.connection.GetPageAsync<User>(
+                    new PageIndexPageBuilder(1, 2),
+                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
+                    "Age DESC",
+                    new { Search = "Some Name", Age = 10 },
+                    dialect: this.dialect)).Items;
+
+                // Assert
+                Assert.That(users.Count(), Is.EqualTo(2));
+                Assert.That(users[0].Name, Is.EqualTo("Some Name 1"));
+                Assert.That(users[1].Name, Is.EqualTo("Some Name 2"));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Test]
+            public async Task Gets_second_page()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var users = (await this.connection.GetPageAsync<User>(
+                    new PageIndexPageBuilder(2, 2),
+                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
+                    "Age DESC",
+                    new { Search = "Some Name", Age = 10 },
+                    dialect: this.dialect)).Items;
+
+                // Assert
+                Assert.That(users.Count(), Is.EqualTo(1));
+                Assert.That(users[0].Name, Is.EqualTo("Some Name 3"));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Test]
+            public async Task Returns_empty_set_past_last_page()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var users = (await this.connection.GetPageAsync<User>(
+                    new PageIndexPageBuilder(3, 2),
+                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
+                    "Age DESC",
+                    new { Search = "Some Name", Age = 10 },
+                    dialect: this.dialect)).Items;
+
+                // Assert
+                Assert.That(users, Is.Empty);
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Test]
+            public async Task Returns_page_from_everything_when_conditions_is_null()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var page = await this.connection.GetPageAsync<User>(new PageIndexPageBuilder(2, 2), null, "Age DESC", (object)null, dialect: this.dialect);
+                var users = page.Items;
+
+                // Assert
+                Assert.That(users.Count(), Is.EqualTo(2));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+        }
+
+        private class GetPageWhereObjectAsync
+            : DbConnectionAsyncExtensionsTests
+        {
+            public GetPageWhereObjectAsync(string dialectName)
+                : base(dialectName)
+            {
+            }
+
+            [Test]
+            public async Task Returns_empty_list_when_there_are_no_entities()
+            {
+                // Act
+                var pageBuilder = new PageIndexPageBuilder(1, 10);
+                var users = await this.connection.GetPageAsync<User>(pageBuilder, new { Age = 10 }, "Age", dialect: this.dialect);
+
+                // Assert
+                Assert.That(users.Items.Count(), Is.EqualTo(0));
+            }
+
+            [Test]
+            public async Task Filters_result_by_conditions()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var pageBuilder = new PageIndexPageBuilder(1, 10);
+                var users = await this.connection.GetPageAsync<User>(pageBuilder, new { Age = 10 }, "Age", dialect: this.dialect);
+
+                // Assert
+                Assert.That(users.Items.Count(), Is.EqualTo(3));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Test]
+            public async Task Gets_first_page()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var pageBuilder = new PageIndexPageBuilder(1, 2);
+                var page = await this.connection.GetPageAsync<User>(pageBuilder, new { Age = 10 }, "Age DESC", dialect: this.dialect);
+                var users = page.Items;
+
+                // Assert
+                Assert.That(users.Count(), Is.EqualTo(2));
+                Assert.That(users[0].Name, Is.EqualTo("Some Name 1"));
+                Assert.That(users[1].Name, Is.EqualTo("Some Name 2"));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Test]
+            public async Task Gets_second_page()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var pageBuilder = new PageIndexPageBuilder(2, 2);
+                var page = await this.connection.GetPageAsync<User>(pageBuilder, new { Age = 10 }, "Age DESC", dialect: this.dialect);
+                var users = page.Items;
+
+                // Assert
+                Assert.That(users.Count(), Is.EqualTo(1));
+                Assert.That(users[0].Name, Is.EqualTo("Some Name 3"));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Test]
+            public async Task Returns_empty_set_past_last_page()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var pageBuilder = new PageIndexPageBuilder(3, 2);
+                var page = await this.connection.GetPageAsync<User>(pageBuilder, new { Age = 10 }, "Age DESC", dialect: this.dialect);
+                var users = page.Items;
+
+                // Assert
+                Assert.That(users, Is.Empty);
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);

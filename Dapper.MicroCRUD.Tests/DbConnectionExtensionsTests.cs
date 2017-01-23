@@ -12,6 +12,7 @@ namespace Dapper.MicroCRUD.Tests
     using Dapper.MicroCRUD.Tests.Utils;
     using NCrunch.Framework;
     using NUnit.Framework;
+    using Pagination;
 
     [ExclusivelyUses("Database")]
     [Parallelizable(ParallelScope.None)]
@@ -735,6 +736,17 @@ namespace Dapper.MicroCRUD.Tests
             }
 
             [Test]
+            public void Returns_empty_list_when_there_are_no_entities()
+            {
+                // Act
+                var pageBuilder = new PageIndexPageBuilder(1, 10);
+                var users = this.connection.GetPage<User>(pageBuilder, null, "Age", (object)null, dialect: this.dialect);
+
+                // Assert
+                Assert.That(users.Items.Count(), Is.EqualTo(0));
+            }
+
+            [Test]
             public void Filters_result_by_conditions()
             {
                 // Arrange
@@ -745,15 +757,14 @@ namespace Dapper.MicroCRUD.Tests
 
                 // Act
                 var users = this.connection.GetPage<User>(
-                    1,
-                    10,
+                    new PageIndexPageBuilder(1, 10),
                     "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
                     "Age",
                     new { Search = "Some Name", Age = 10 },
                     dialect: this.dialect);
 
                 // Assert
-                Assert.That(users.Count(), Is.EqualTo(3));
+                Assert.That(users.Items.Count(), Is.EqualTo(3));
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
@@ -770,15 +781,14 @@ namespace Dapper.MicroCRUD.Tests
 
                 // Act
                 var users = this.connection.GetPage<User>(
-                    1,
-                    2,
+                    new PageIndexPageBuilder(1, 2),
                     "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
                     "Age DESC",
                     new { Search = "Some Name", Age = 10 },
-                    dialect: this.dialect).ToList();
+                    dialect: this.dialect).Items;
 
                 // Assert
-                Assert.That(users.Count, Is.EqualTo(2));
+                Assert.That(users.Count(), Is.EqualTo(2));
                 Assert.That(users[0].Name, Is.EqualTo("Some Name 1"));
                 Assert.That(users[1].Name, Is.EqualTo("Some Name 2"));
 
@@ -797,15 +807,14 @@ namespace Dapper.MicroCRUD.Tests
 
                 // Act
                 var users = this.connection.GetPage<User>(
-                    2,
-                    2,
+                    new PageIndexPageBuilder(2, 2),
                     "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
                     "Age DESC",
                     new { Search = "Some Name", Age = 10 },
-                    dialect: this.dialect).ToList();
+                    dialect: this.dialect).Items;
 
                 // Assert
-                Assert.That(users.Count, Is.EqualTo(1));
+                Assert.That(users.Count(), Is.EqualTo(1));
                 Assert.That(users[0].Name, Is.EqualTo("Some Name 3"));
 
                 // Cleanup
@@ -823,12 +832,11 @@ namespace Dapper.MicroCRUD.Tests
 
                 // Act
                 var users = this.connection.GetPage<User>(
-                    3,
-                    2,
+                    new PageIndexPageBuilder(3, 2),
                     "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
                     "Age DESC",
                     new { Search = "Some Name", Age = 10 },
-                    dialect: this.dialect).ToList();
+                    dialect: this.dialect).Items;
 
                 // Assert
                 Assert.That(users, Is.Empty);
@@ -838,7 +846,7 @@ namespace Dapper.MicroCRUD.Tests
             }
 
             [Test]
-            public void Returns_everything_when_conditions_is_null()
+            public void Returns_page_from_everything_when_conditions_is_null()
             {
                 // Arrange
                 this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
@@ -847,10 +855,116 @@ namespace Dapper.MicroCRUD.Tests
                 this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
 
                 // Act
-                var users = this.connection.GetRange<User>(null, dialect: this.dialect);
+                var users = this.connection.GetPage<User>(new PageIndexPageBuilder(2, 2), null, "Age DESC", (object)null, dialect: this.dialect).Items;
 
                 // Assert
-                Assert.That(users.Count(), Is.EqualTo(4));
+                Assert.That(users.Count(), Is.EqualTo(2));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+        }
+
+        private class GetPageWhereObject
+            : DbConnectionExtensionsTests
+        {
+            public GetPageWhereObject(string dialectName)
+                : base(dialectName)
+            {
+            }
+
+            [Test]
+            public void Returns_empty_list_when_there_are_no_entities()
+            {
+                // Act
+                var pageBuilder = new PageIndexPageBuilder(1, 10);
+                var users = this.connection.GetPage<User>(pageBuilder, new { Age = 10 }, "Age", dialect: this.dialect);
+
+                // Assert
+                Assert.That(users.Items.Count(), Is.EqualTo(0));
+            }
+
+            [Test]
+            public void Filters_result_by_conditions()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var pageBuilder = new PageIndexPageBuilder(1, 10);
+                var users = this.connection.GetPage<User>(pageBuilder, new { Age = 10 }, "Age", dialect: this.dialect);
+
+                // Assert
+                Assert.That(users.Items.Count(), Is.EqualTo(3));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Gets_first_page()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var pageBuilder = new PageIndexPageBuilder(1, 2);
+                var page = this.connection.GetPage<User>(pageBuilder, new { Age = 10 }, "Age", dialect: this.dialect);
+                var users = page.Items;
+
+                // Assert
+                Assert.That(users.Count(), Is.EqualTo(2));
+                Assert.That(users[0].Name, Is.EqualTo("Some Name 1"));
+                Assert.That(users[1].Name, Is.EqualTo("Some Name 2"));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Gets_second_page()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var pageBuilder = new PageIndexPageBuilder(2, 2);
+                var page = this.connection.GetPage<User>(pageBuilder, new { Age = 10 }, "Age", dialect: this.dialect);
+                var users = page.Items;
+
+                // Assert
+                Assert.That(users.Count(), Is.EqualTo(1));
+                Assert.That(users[0].Name, Is.EqualTo("Some Name 3"));
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Test]
+            public void Returns_empty_set_past_last_page()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var pageBuilder = new PageIndexPageBuilder(3, 2);
+                var page = this.connection.GetPage<User>(pageBuilder, new { Age = 10 }, "Age", dialect: this.dialect);
+                var users = page.Items;
+
+                // Assert
+                Assert.That(users, Is.Empty);
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);

@@ -10,6 +10,7 @@ namespace Dapper.MicroCRUD.SqlCommands
     using Dapper.MicroCRUD.Dialects;
     using Dapper.MicroCRUD.Schema;
     using Dapper.MicroCRUD.Utils;
+    using Pagination;
 
     /// <summary>
     /// Creates <see cref="CommandDefinition"/>s to be executed.
@@ -120,8 +121,7 @@ namespace Dapper.MicroCRUD.SqlCommands
         /// Creates a command which will get a page of entities matching the <paramref name="conditions"/>.
         /// </summary>
         public static CommandDefinition MakeGetPageCommand<TEntity>(
-            int pageNumber,
-            int itemsPerPage,
+            Page page,
             string conditions,
             string orderBy,
             object parameters,
@@ -134,8 +134,31 @@ namespace Dapper.MicroCRUD.SqlCommands
             dialect = dialect ?? config.Dialect;
 
             var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), dialect, config.SchemaFactory);
-            var sql = dialect.MakeGetPageStatement(tableSchema, pageNumber, itemsPerPage, conditions, orderBy);
+            var sql = dialect.MakeGetPageStatement(tableSchema, page, conditions, orderBy);
             return MakeCommandDefinition(sql, parameters, transaction, commandTimeout, cancellationToken);
+        }
+
+        /// <summary>
+        /// Creates a command which will get a page of entities matching the <paramref name="conditions"/>.
+        /// </summary>
+        public static CommandDefinition MakeGetPageCommand<TEntity>(
+            Page page,
+            object conditions,
+            string orderBy,
+            IDbTransaction transaction,
+            IDialect dialect,
+            int? commandTimeout,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            Ensure.NotNull(conditions, nameof(conditions));
+            var config = MicroCRUDConfig.Current;
+            dialect = dialect ?? config.Dialect;
+
+            var entityType = typeof(TEntity);
+            var tableSchema = TableSchemaFactory.GetTableSchema(entityType, dialect, config.SchemaFactory);
+            var conditionsSchema = TableSchemaFactory.GetConditionsSchema(entityType, tableSchema, conditions.GetType(), dialect, config.SchemaFactory);
+            var sql = dialect.MakeGetPageStatement(tableSchema, page, dialect.MakeWhereClause(conditionsSchema, conditions), orderBy);
+            return MakeCommandDefinition(sql, conditions, transaction, commandTimeout, cancellationToken);
         }
 
         /// <summary>

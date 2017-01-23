@@ -15,6 +15,7 @@ namespace Dapper
     using Dapper.MicroCRUD.Dialects;
     using Dapper.MicroCRUD.SqlCommands;
     using Dapper.MicroCRUD.Utils;
+    using Pagination;
 
     /// <summary>
     /// Async CRUD extensions to the <see cref="IDbConnection"/>.
@@ -248,14 +249,14 @@ namespace Dapper
         ///     public int Age { get; set; }
         /// }
         /// ...
-        /// var users = await this.connection.GetPageAsync<UserEntity>(3, 10, "WHERE Age > @MinAge", "Age DESC", new { MinAge = 18 });
+        /// var pageBuilder = new PageIndexPageBuilder(3, 10);
+        /// var users = await this.connection.GetPageAsync<UserEntity>(pageBuilder, "WHERE Age > @MinAge", "Age DESC", new { MinAge = 18 });
         /// ]]>
         /// </code>
         /// </example>
-        public static Task<IEnumerable<TEntity>> GetPageAsync<TEntity>(
+        public static async Task<PagedList<TEntity>> GetPageAsync<TEntity>(
             this IDbConnection connection,
-            int pageNumber,
-            int itemsPerPage,
+            IPageBuilder pageBuilder,
             string conditions,
             string orderBy,
             object parameters = null,
@@ -265,9 +266,18 @@ namespace Dapper
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Ensure.NotNull(connection, nameof(connection));
-            var command = CommandFactory.MakeGetPageCommand<TEntity>(
-                pageNumber,
-                itemsPerPage,
+
+            var totalNumberOfItems = await connection.CountAsync<TEntity>(conditions, parameters, transaction, dialect, commandTimeout, cancellationToken)
+                                                     .ConfigureAwait(false);
+
+            var page = pageBuilder.GetCurrentPage(totalNumberOfItems);
+            if (page.IsEmpty)
+            {
+                return PagedList<TEntity>.Empty(totalNumberOfItems, page);
+            }
+
+            var itemsCommand = CommandFactory.MakeGetPageCommand<TEntity>(
+                page,
                 conditions,
                 orderBy,
                 parameters,
@@ -276,7 +286,55 @@ namespace Dapper
                 commandTimeout,
                 cancellationToken);
 
-            return connection.QueryAsync<TEntity>(command);
+            var items = await connection.QueryAsync<TEntity>(itemsCommand).ConfigureAwait(false);
+            return PagedList<TEntity>.Create(totalNumberOfItems, page, items);
+        }
+
+        /// <summary>
+        /// Gets a collection of entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// [Table("Users")]
+        /// public class UserEntity
+        /// {
+        ///     [Key]
+        ///     public int Id { get; set; }
+        ///
+        ///     public string Name { get; set; }
+        ///
+        ///     public int Age { get; set; }
+        /// }
+        /// ...
+        /// var pageBuilder = new PageIndexPageBuilder(3, 10);
+        /// var users = await this.connection.GetPageAsync<UserEntity>(pageBuilder, new { Age = 10 }, "Age DESC");
+        /// ]]>
+        /// </code>
+        /// </example>
+        public static async Task<PagedList<TEntity>> GetPageAsync<TEntity>(
+            this IDbConnection connection,
+            IPageBuilder pageBuilder,
+            object conditions,
+            string orderBy,
+            IDbTransaction transaction = null,
+            IDialect dialect = null,
+            int? commandTimeout = null,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            Ensure.NotNull(connection, nameof(connection));
+
+            var totalNumberOfItems = await connection.CountAsync<TEntity>(conditions, transaction, dialect, commandTimeout, cancellationToken)
+                                                     .ConfigureAwait(false);
+            var page = pageBuilder.GetCurrentPage(totalNumberOfItems);
+            if (page.IsEmpty)
+            {
+                return PagedList<TEntity>.Empty(totalNumberOfItems, page);
+            }
+
+            var itemsCommand = CommandFactory.MakeGetPageCommand<TEntity>(page, conditions, orderBy, transaction, dialect, commandTimeout, cancellationToken);
+            var items = await connection.QueryAsync<TEntity>(itemsCommand).ConfigureAwait(false);
+            return PagedList<TEntity>.Create(totalNumberOfItems, page, items);
         }
 
         /// <summary>
