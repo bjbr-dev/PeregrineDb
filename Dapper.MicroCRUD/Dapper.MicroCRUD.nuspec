@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <licenseUrl>https://github.com/berkeleybross/Dapper.MicroCRUD/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/berkeleybross/Dapper.MicroCRUD</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+    <copyright>Copyright 2017</copyright>
+    <tags>Dapper micro-orm orm CRUD sql postgresql</tags>
+  </metadata>
+</package>

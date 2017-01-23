@@ -53,7 +53,7 @@ Don't forget, for practical examples of usage, you can also browse our extensive
 | [Dapper.SimpleCRUD](https://github.com/ericdc1/Dapper.SimpleCRUD) | Get<br>GetList<br>GetListPaged<br>Insert<br>Update<br>Delete(List)<br>RecordCount | | :heavy_check_mark: | | <ul><li>Can create WHERE clauses from objects</li><li>Generates GUID keys</li></ul> |
 
 ## Installation
-*Documentation in progress!*
+Simply add the nuget package [berkeleybross.pagination](https://www.nuget.org/packages/Dapper.MicroCRUD/) to your project.
 
 ## Licensing and Attribution
 See [License](LICENSE).

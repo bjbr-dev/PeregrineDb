@@ -11,6 +11,9 @@ before_build:
 - cmd: nuget restore
 build:
   verbosity: minimal
+  publish_nuget: true
+artifacts:
+  - path: 'Dapper.MicroCRUD\*.nupkg'
 services:
   - mssql2012sp1
   - postgresql
