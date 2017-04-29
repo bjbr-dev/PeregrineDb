@@ -4,7 +4,6 @@
 namespace Dapper.MicroCRUD.Tests.Utils
 {
     using System;
-    using System.Collections.Generic;
     using System.Data.SqlClient;
     using System.Reflection;
     using DbUp;
@@ -13,13 +12,6 @@ namespace Dapper.MicroCRUD.Tests.Utils
 
     internal class BlankDatabaseFactory
     {
-        public static IEnumerable<string> PossibleDialects
-            => new[]
-                {
-                    nameof(Dialect.SqlServer2012),
-                    nameof(Dialect.PostgreSql)
-                };
-
         public static BlankDatabase MakeDatabase(string dialect)
         {
             var database = MakeDatabaseAux(dialect);

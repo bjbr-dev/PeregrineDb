@@ -8,40 +8,22 @@ namespace Dapper.MicroCRUD.Tests
     using System.Linq;
     using Dapper.MicroCRUD.Dialects;
     using Dapper.MicroCRUD.Schema;
+    using Dapper.MicroCRUD.Tests.Dialects.Postgres;
+    using Dapper.MicroCRUD.Tests.Dialects.SqlServer;
     using Dapper.MicroCRUD.Tests.ExampleEntities;
-    using Dapper.MicroCRUD.Tests.Utils;
+    using FluentAssertions;
     using Moq;
-    using NCrunch.Framework;
-    using NUnit.Framework;
+    using Xunit;
 
-    [ExclusivelyUses("Database")]
-    [Parallelizable(ParallelScope.None)]
-    [TestFixtureSource(typeof(BlankDatabaseFactory), nameof(BlankDatabaseFactory.PossibleDialects))]
-    public class DbConnectionTempTableExtensionsTests
+    public abstract class DbConnectionTempTableExtensionsTests
     {
-        private readonly string dialectName;
+        private readonly IDbConnection connection;
+        private readonly IDialect dialect;
 
-        private IDbConnection connection;
-        private IDialect dialect;
-        private BlankDatabase database;
-
-        public DbConnectionTempTableExtensionsTests(string dialectName)
+        protected DbConnectionTempTableExtensionsTests(DatabaseFixture fixture)
         {
-            this.dialectName = dialectName;
-        }
-
-        [OneTimeSetUp]
-        public void OneTimeSetup()
-        {
-            this.database = BlankDatabaseFactory.MakeDatabase(this.dialectName);
-            this.connection = this.database.Connection;
-            this.dialect = this.database.Dialect;
-        }
-
-        [OneTimeTearDown]
-        public void OneTimeTearDown()
-        {
-            this.database?.Dispose();
+            this.dialect = fixture.DatabaseDialect;
+            this.connection = fixture.Database.Connection;
         }
 
         private static string GetTableName(DefaultTableNameFactory defaultFactory, Type type, IDialect dialect)
@@ -53,43 +35,32 @@ namespace Dapper.MicroCRUD.Tests
                 : tableName;
         }
 
-        private class CreateTempTableAndInsert
-            : DbConnectionTempTableExtensionsTests
+        public abstract class CreateTempTableAndInsert
+            : DbConnectionTempTableExtensionsTests, IDisposable
         {
-            private Mock<ITableNameFactory> tableNameFactory;
+            private readonly Mock<ITableNameFactory> tableNameFactory;
 
-            public CreateTempTableAndInsert(string dialectName)
-                : base(dialectName)
-            {
-            }
-
-            [SetUp]
-            public void SetUp()
+            public CreateTempTableAndInsert(DatabaseFixture fixture)
+                : base(fixture)
             {
                 var defaultFactory = new DefaultTableNameFactory();
 
                 this.tableNameFactory = new Mock<ITableNameFactory>();
                 this.tableNameFactory.Setup(f => f.GetTableName(It.IsAny<Type>(), It.IsAny<IDialect>()))
-                                .Returns((Type t, IDialect d) => GetTableName(defaultFactory, t, d));
+                    .Returns((Type t, IDialect d) => GetTableName(defaultFactory, t, d));
 
                 MicroCRUDConfig.SetTableNameFactory(this.tableNameFactory.Object);
             }
 
-            [TearDown]
-            public void TearDown()
+            public void Dispose()
             {
                 MicroCRUDConfig.SetTableNameFactory(new DefaultTableNameFactory());
             }
 
-            [Test]
+            [Fact]
             public void Creates_a_temp_table()
             {
                 // Arrange
-                var entities = new[]
-                    {
-                        new TempNoKey { Name = "Bobby", Age = 4 },
-                        new TempNoKey { Name = "Jimmy", Age = 10 }
-                    };
                 var schema = this.dialect.MakeSchema<TempNoKey>(this.tableNameFactory.Object);
 
                 // Act
@@ -102,7 +73,7 @@ namespace Dapper.MicroCRUD.Tests
                 this.connection.DropTempTable<TempNoKey>(schema.Name, dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public void Adds_entities_to_temp_table()
             {
                 // Arrange
@@ -117,42 +88,56 @@ namespace Dapper.MicroCRUD.Tests
                 this.connection.CreateTempTable(entities, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(2, this.connection.Count<TempNoKey>(dialect: this.dialect));
+                this.connection.Count<TempNoKey>(dialect: this.dialect).Should().Be(2);
 
                 // Cleanup
                 this.connection.DropTempTable<TempNoKey>(schema.Name, dialect: this.dialect);
             }
-        }
 
-        private class DropTempTable
-            : DbConnectionTempTableExtensionsTests
-        {
-            private Mock<ITableNameFactory> tableNameFactory;
-
-            public DropTempTable(string dialectName)
-                : base(dialectName)
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : CreateTempTableAndInsert
             {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
             }
 
-            [SetUp]
-            public void SetUp()
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : CreateTempTableAndInsert
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+        }
+
+        public abstract class DropTempTable
+            : DbConnectionTempTableExtensionsTests, IDisposable
+        {
+            private readonly Mock<ITableNameFactory> tableNameFactory;
+
+            protected DropTempTable(DatabaseFixture fixture)
+                : base(fixture)
             {
                 var defaultFactory = new DefaultTableNameFactory();
 
                 this.tableNameFactory = new Mock<ITableNameFactory>();
                 this.tableNameFactory.Setup(f => f.GetTableName(It.IsAny<Type>(), It.IsAny<IDialect>()))
-                                .Returns((Type t, IDialect d) => GetTableName(defaultFactory, t, d));
+                    .Returns((Type t, IDialect d) => GetTableName(defaultFactory, t, d));
 
                 MicroCRUDConfig.SetTableNameFactory(this.tableNameFactory.Object);
             }
 
-            [TearDown]
-            public void TearDown()
+            public void Dispose()
             {
                 MicroCRUDConfig.SetTableNameFactory(new DefaultTableNameFactory());
             }
 
-            [Test]
+            [Fact]
             public void Throws_exception_if_names_do_not_match()
             {
                 // Arrange
@@ -163,13 +148,13 @@ namespace Dapper.MicroCRUD.Tests
                 var ex = Assert.Throws<ArgumentException>(() => this.connection.DropTempTable<TempNoKey>("Not a match", dialect: this.dialect));
 
                 // Assert
-                Assert.AreEqual($"Attempting to drop table '{schema.Name}', but said table name should be 'Not a match'", ex.Message);
+                ex.Message.Should().Be($"Attempting to drop table '{schema.Name}', but said table name should be 'Not a match'");
 
                 // Cleanup
                 this.connection.DropTempTable<TempNoKey>(schema.Name, dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public void Drops_temporary_table()
             {
                 // Arrange
@@ -180,7 +165,28 @@ namespace Dapper.MicroCRUD.Tests
                 this.connection.DropTempTable<TempNoKey>(schema.Name, dialect: this.dialect);
 
                 // Assert
-                Assert.Catch(() => this.connection.Query($"SELECT * FROM {schema.Name}"));
+                Action act = () => this.connection.Query($"SELECT * FROM {schema.Name}");
+                act.ShouldThrow<Exception>();
+            }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : DropTempTable
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : DropTempTable
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
             }
         }
     }

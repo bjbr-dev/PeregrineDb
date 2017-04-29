@@ -6,23 +6,17 @@ namespace Dapper.MicroCRUD.Tests.Schema
     using System;
     using System.ComponentModel.DataAnnotations.Schema;
     using Dapper.MicroCRUD.Schema;
-    using NUnit.Framework;
+    using FluentAssertions;
+    using Xunit;
 
-    [TestFixture]
     public class DefaultColumnNameFactoryTests
     {
-        private class GetColumnName
+        public class GetColumnName
             : DefaultColumnNameFactoryTests
         {
-            private DefaultColumnNameFactory sut;
+            private readonly DefaultColumnNameFactory sut = new DefaultColumnNameFactory();
 
-            [SetUp]
-            public void SetUp()
-            {
-                this.sut = new DefaultColumnNameFactory();
-            }
-
-            [Test]
+            [Fact]
             public void Returns_name_of_property()
             {
                 // Arrange
@@ -32,10 +26,10 @@ namespace Dapper.MicroCRUD.Tests.Schema
                 var result = this.sut.GetColumnName(makePropertySchema);
 
                 // Assert
-                Assert.AreEqual("Property", result);
+                result.Should().Be("Property");
             }
 
-            [Test]
+            [Fact]
             public void Returns_name_in_columnAttribute()
             {
                 // Arrange
@@ -47,7 +41,7 @@ namespace Dapper.MicroCRUD.Tests.Schema
                 var result = this.sut.GetColumnName(makePropertySchema);
 
                 // Assert
-                Assert.AreEqual("ActualProperty", result);
+                result.Should().Be("ActualProperty");
             }
 
             private static PropertySchema MakePropertySchema(Type type, string propertyName)

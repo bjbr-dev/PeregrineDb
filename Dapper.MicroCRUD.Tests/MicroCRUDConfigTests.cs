@@ -6,17 +6,16 @@ namespace Dapper.MicroCRUD.Tests
     using System;
     using Dapper.MicroCRUD.Schema;
     using NCrunch.Framework;
-    using NUnit.Framework;
+    using Xunit;
 
+    [Collection("MicroCRUDConfig")]
     [ExclusivelyUses("MicroCRUDConfig")]
-    [Parallelizable(ParallelScope.None)]
-    [TestFixture]
     public class MicroCRUDConfigTests
     {
-        private class Misc
+        public class Misc
             : MicroCRUDConfigTests
         {
-            [Test]
+            [Fact]
             public void CanSetDefaultDialect()
             {
                 // Act
@@ -30,7 +29,7 @@ namespace Dapper.MicroCRUD.Tests
                 }
             }
 
-            [Test]
+            [Fact]
             public void Can_set_TableNameFactory()
             {
                 // Act
@@ -44,7 +43,7 @@ namespace Dapper.MicroCRUD.Tests
                 }
             }
 
-            [Test]
+            [Fact]
             public void Can_set_ColumnNameFactory()
             {
                 // Act
@@ -58,7 +57,7 @@ namespace Dapper.MicroCRUD.Tests
                 }
             }
 
-            [Test]
+            [Fact]
             public void Can_set_DefaultVerifyAffectedRowCount()
             {
                 // Act
@@ -73,10 +72,10 @@ namespace Dapper.MicroCRUD.Tests
             }
         }
 
-        private class SetCurrent
+        public class SetCurrent
             : MicroCRUDConfigTests
         {
-            [Test]
+            [Fact]
             public void Throws_exception_if_current_is_set_to_null()
             {
                 // Act

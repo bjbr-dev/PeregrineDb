@@ -7,11 +7,11 @@ namespace Dapper.MicroCRUD.Tests.Utils
     using System.Collections.Generic;
 
     public class SqlStringComparer
-        : IComparer<string>
+        : IComparer<string>, IEqualityComparer<string>
     {
         private readonly IComparer<string> comparer;
 
-        public SqlStringComparer(IComparer<string> comparer)
+        public SqlStringComparer(StringComparer comparer)
         {
             this.comparer = comparer;
         }
@@ -24,6 +24,19 @@ namespace Dapper.MicroCRUD.Tests.Utils
             y = y?.Replace("\r\n", "\n");
 
             return this.comparer.Compare(x, y);
+        }
+
+        public bool Equals(string x, string y)
+        {
+            x = x?.Replace("\r\n", "\n");
+            y = y?.Replace("\r\n", "\n");
+
+            return ((IEqualityComparer<string>)this.comparer).Equals(x, y);
+        }
+
+        public int GetHashCode(string obj)
+        {
+            throw new NotSupportedException();
         }
     }
 }

@@ -13,27 +13,20 @@ namespace Dapper.MicroCRUD.Tests.Schema
     using Dapper.MicroCRUD.Schema;
     using Dapper.MicroCRUD.Tests.ExampleEntities;
     using Dapper.MicroCRUD.Tests.Utils;
+    using FluentAssertions;
     using Moq;
-    using NUnit.Framework;
+    using Xunit;
 
-    [TestFixture]
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
     [SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
     [SuppressMessage("ReSharper", "UnusedMember.Local")]
     [SuppressMessage("ReSharper", "UnassignedGetOnlyAutoProperty")]
     public class TableSchemaFactoryTests
     {
-        private TableSchemaFactory sut;
-        private IDialect dialect;
+        private readonly IDialect dialect = new TestDialect();
+        private TableSchemaFactory sut = new TableSchemaFactory(new DefaultTableNameFactory(), new DefaultColumnNameFactory());
 
-        [SetUp]
-        public void BaseSetUp()
-        {
-            this.dialect = new TestDialect();
-            this.sut = new TableSchemaFactory(new DefaultTableNameFactory(), new DefaultColumnNameFactory());
-        }
-
-        private class MakeTableSchema
+        public class MakeTableSchema
             : TableSchemaFactoryTests
         {
             private TableSchema PerformAct(Type entityType)
@@ -41,10 +34,10 @@ namespace Dapper.MicroCRUD.Tests.Schema
                 return this.sut.MakeTableSchema(entityType, this.dialect);
             }
 
-            private class Naming
+            public class Naming
                 : MakeTableSchema
             {
-                [Test]
+                [Fact]
                 public void Uses_table_name_resolver_to_get_table_name()
                 {
                     // Arrange
@@ -57,10 +50,10 @@ namespace Dapper.MicroCRUD.Tests.Schema
                     var result = this.PerformAct(typeof(SingleColumn));
 
                     // Assert
-                    Assert.AreEqual("'SingleColumn'", result.Name);
+                    result.Name.Should().Be("'SingleColumn'");
                 }
 
-                [Test]
+                [Fact]
                 public void Uses_column_name_resolver_to_get_column_name()
                 {
                     // Arrange
@@ -77,10 +70,10 @@ namespace Dapper.MicroCRUD.Tests.Schema
 
                     // Assert
                     var column = result.Columns.Single();
-                    Assert.AreEqual("'Id'", column.ColumnName);
+                    column.ColumnName.Should().Be("'Id'");
                 }
 
-                [Test]
+                [Fact]
                 public void Uses_property_name_to_populate_select_name()
                 {
                     // Act
@@ -88,10 +81,10 @@ namespace Dapper.MicroCRUD.Tests.Schema
 
                     // Assert
                     var column = result.Columns.Single();
-                    Assert.AreEqual("'Id'", column.SelectName);
+                    column.SelectName.Should().Be("'Id'");
                 }
 
-                [Test]
+                [Fact]
                 public void Uses_property_name_to_populate_parameter_name()
                 {
                     // Act
@@ -99,7 +92,7 @@ namespace Dapper.MicroCRUD.Tests.Schema
 
                     // Assert
                     var column = result.Columns.Single();
-                    Assert.AreEqual("Id", column.ParameterName);
+                    column.ParameterName.Should().Be("Id");
                 }
 
                 private class SingleColumn
@@ -108,10 +101,10 @@ namespace Dapper.MicroCRUD.Tests.Schema
                 }
             }
 
-            private class Columns
+            public class Columns
                 : MakeTableSchema
             {
-                [Test]
+                [Fact]
                 public void Treats_readonly_properties_as_computed()
                 {
                     // Act
@@ -119,12 +112,12 @@ namespace Dapper.MicroCRUD.Tests.Schema
 
                     // Assert
                     var column = result.Columns.Single();
-                    Assert.IsFalse(column.Usage.IsPrimaryKey);
-                    Assert.IsFalse(column.Usage.IncludeInInsertStatements);
-                    Assert.IsFalse(column.Usage.IncludeInUpdateStatements);
+                    column.Usage.IsPrimaryKey.Should().BeFalse();
+                    column.Usage.IncludeInInsertStatements.Should().BeFalse();
+                    column.Usage.IncludeInUpdateStatements.Should().BeFalse();
                 }
 
-                [Test]
+                [Fact]
                 public void Sets_none_generated_property_to_included_in_insert_statements()
                 {
                     // Act
@@ -132,10 +125,10 @@ namespace Dapper.MicroCRUD.Tests.Schema
 
                     // Assert
                     var column = result.Columns.Single();
-                    Assert.IsTrue(column.Usage.IncludeInInsertStatements);
+                    column.Usage.IncludeInInsertStatements.Should().BeTrue();
                 }
 
-                [Test]
+                [Fact]
                 public void Sets_generated_property_to_not_be_in_insert_statements()
                 {
                     // Act
@@ -143,11 +136,11 @@ namespace Dapper.MicroCRUD.Tests.Schema
 
                     // Assert
                     var column = result.Columns.Single();
-                    Assert.IsFalse(column.Usage.IncludeInInsertStatements);
-                    Assert.IsTrue(column.Usage.IncludeInUpdateStatements);
+                    column.Usage.IncludeInInsertStatements.Should().BeFalse();
+                    column.Usage.IncludeInUpdateStatements.Should().BeTrue();
                 }
 
-                [Test]
+                [Fact]
                 public void Sets_computed_property_to_not_be_in_insert_or_update_statements()
                 {
                     // Act
@@ -155,28 +148,28 @@ namespace Dapper.MicroCRUD.Tests.Schema
 
                     // Assert
                     var column = result.Columns.Single();
-                    Assert.IsFalse(column.Usage.IncludeInInsertStatements);
-                    Assert.IsFalse(column.Usage.IncludeInUpdateStatements);
+                    column.Usage.IncludeInInsertStatements.Should().BeFalse();
+                    column.Usage.IncludeInUpdateStatements.Should().BeFalse();
                 }
 
-                [Test]
+                [Fact]
                 public void Ignores_methods()
                 {
                     // Act
                     var result = this.PerformAct(typeof(Method));
 
                     // Assert
-                    Assert.IsEmpty(result.Columns);
+                    result.Columns.Should().BeEmpty();
                 }
 
-                [Test]
+                [Fact]
                 public void Ignores_unmapped_properties()
                 {
                     // Act
                     var result = this.PerformAct(typeof(NotMapped));
 
                     // Assert
-                    Assert.IsEmpty(result.Columns);
+                    result.Columns.Should().BeEmpty();
                 }
 
                 private class ReadOnlyProperty
@@ -217,50 +210,50 @@ namespace Dapper.MicroCRUD.Tests.Schema
                 }
             }
 
-            private class PrimaryKeys
+            public class PrimaryKeys
                 : MakeTableSchema
             {
-                [Test]
+                [Fact]
                 public void Marks_property_called_id_as_primary_key()
                 {
                     // Act
                     var result = this.PerformAct(typeof(KeyDefault));
 
                     // Assert
-                    Assert.AreEqual("Id", result.PrimaryKeyColumns.Single().ParameterName);
+                    result.PrimaryKeyColumns.Single().ParameterName.Should().Be("Id");
                 }
 
-                [Test]
+                [Fact]
                 public void Marks_property_with_key_attribute_as_primary_key()
                 {
                     // Act
                     var result = this.PerformAct(typeof(KeyAlias));
 
                     // Assert
-                    Assert.AreEqual("Key", result.PrimaryKeyColumns.Single().ParameterName);
+                    result.PrimaryKeyColumns.Single().ParameterName.Should().Be("Key");
                 }
 
-                [Test]
+                [Fact]
                 public void Marks_properties_with_key_attribute_as_primary_keys()
                 {
                     // Act
                     var result = this.PerformAct(typeof(KeyComposite));
 
                     // Assert
-                    Assert.AreEqual(2, result.PrimaryKeyColumns.Length);
+                    result.PrimaryKeyColumns.Length.Should().Be(2);
                 }
 
-                [Test]
+                [Fact]
                 public void Takes_key_attribute_over_property_called_id()
                 {
                     // Act
                     var result = this.PerformAct(typeof(KeyNotId));
 
                     // Assert
-                    Assert.AreEqual("Key", result.PrimaryKeyColumns.Single().ParameterName);
+                    result.PrimaryKeyColumns.Single().ParameterName.Should().Be("Key");
                 }
 
-                [Test]
+                [Fact]
                 public void Treats_readonly_keys_as_computed()
                 {
                     // Act
@@ -268,12 +261,12 @@ namespace Dapper.MicroCRUD.Tests.Schema
 
                     // Assert
                     var column = result.Columns.Single();
-                    Assert.IsTrue(column.Usage.IsPrimaryKey);
-                    Assert.IsFalse(column.Usage.IncludeInInsertStatements);
-                    Assert.IsFalse(column.Usage.IncludeInUpdateStatements);
+                    column.Usage.IsPrimaryKey.Should().BeTrue();
+                    column.Usage.IncludeInInsertStatements.Should().BeFalse();
+                    column.Usage.IncludeInUpdateStatements.Should().BeFalse();
                 }
 
-                [Test]
+                [Fact]
                 public void Sets_none_generated_key_to_included_in_insert_statements()
                 {
                     // Act
@@ -281,10 +274,10 @@ namespace Dapper.MicroCRUD.Tests.Schema
 
                     // Assert
                     var column = result.Columns.Single(c => c.ParameterName == "Id");
-                    Assert.IsTrue(column.Usage.IncludeInInsertStatements);
+                    column.Usage.IncludeInInsertStatements.Should().BeTrue();
                 }
 
-                [Test]
+                [Fact]
                 public void Sets_computed_key_to_not_be_in_insert_or_update_statements()
                 {
                     // Act
@@ -292,11 +285,11 @@ namespace Dapper.MicroCRUD.Tests.Schema
 
                     // Assert
                     var column = result.Columns.Single(c => c.ParameterName == "Id");
-                    Assert.IsFalse(column.Usage.IncludeInInsertStatements);
-                    Assert.IsFalse(column.Usage.IncludeInUpdateStatements);
+                    column.Usage.IncludeInInsertStatements.Should().BeFalse();
+                    column.Usage.IncludeInUpdateStatements.Should().BeFalse();
                 }
 
-                [Test]
+                [Fact]
                 public void Sets_generated_key_to_not_be_in_insert_or_update_statements()
                 {
                     // Act
@@ -304,48 +297,48 @@ namespace Dapper.MicroCRUD.Tests.Schema
 
                     // Assert
                     var column = result.Columns.Single(c => c.ParameterName == "Id");
-                    Assert.IsFalse(column.Usage.IncludeInInsertStatements);
-                    Assert.IsFalse(column.Usage.IncludeInUpdateStatements);
+                    column.Usage.IncludeInInsertStatements.Should().BeFalse();
+                    column.Usage.IncludeInUpdateStatements.Should().BeFalse();
                 }
 
-                [Test]
+                [Fact]
                 public void Ignores_methods()
                 {
                     // Act
                     var result = this.PerformAct(typeof(MethodKey));
 
                     // Assert
-                    Assert.IsEmpty(result.Columns);
+                    result.Columns.Should().BeEmpty();
                 }
 
-                [Test]
+                [Fact]
                 public void Ignores_unmapped_properties()
                 {
                     // Act
                     var result = this.PerformAct(typeof(NotMappedKey));
 
                     // Assert
-                    Assert.IsEmpty(result.Columns);
+                    result.Columns.Should().BeEmpty();
                 }
 
-                [Test]
+                [Fact]
                 public void Ignores_static_properties()
                 {
                     // Act
                     var result = this.PerformAct(typeof(StaticProperty));
 
                     // Assert
-                    Assert.IsEmpty(result.Columns);
+                    result.Columns.Should().BeEmpty();
                 }
 
-                [Test]
+                [Fact]
                 public void Ignores_indexers()
                 {
                     // Act
                     var result = this.PerformAct(typeof(Indexer));
 
                     // Assert
-                    Assert.IsEmpty(result.Columns);
+                    result.Columns.Should().BeEmpty();
                 }
 
                 private class ReadOnlyKey
@@ -429,7 +422,7 @@ namespace Dapper.MicroCRUD.Tests.Schema
             }
         }
 
-        private class MakeConditionsSchema
+        public class MakeConditionsSchema
             : TableSchemaFactoryTests
         {
             private ImmutableArray<ConditionColumnSchema> PerformAct<T>(T conditions, TableSchema schema)
@@ -442,10 +435,10 @@ namespace Dapper.MicroCRUD.Tests.Schema
                 return this.sut.MakeTableSchema(typeof(T), this.dialect);
             }
 
-            private class Naming
+            public class Naming
                 : MakeConditionsSchema
             {
-                [Test]
+                [Fact]
                 public void Gets_column_by_property_name()
                 {
                     // Arrange
@@ -456,15 +449,15 @@ namespace Dapper.MicroCRUD.Tests.Schema
 
                     // Assert
                     var column = result.Single().Column;
-                    Assert.AreEqual("'YearsOld'", column.ColumnName);
-                    Assert.AreEqual("Age", column.ParameterName);
+                    column.ColumnName.Should().Be("'YearsOld'");
+                    column.ParameterName.Should().Be("Age");
                 }
             }
 
-            private class Columns
+            public class Columns
                 : MakeConditionsSchema
             {
-                [Test]
+                [Fact]
                 public void Ignores_methods()
                 {
                     // Arrange
@@ -474,10 +467,10 @@ namespace Dapper.MicroCRUD.Tests.Schema
                     var result = this.PerformAct(new Method(), tableSchema);
 
                     // Assert
-                    Assert.IsEmpty(result);
+                    result.Should().BeEmpty();
                 }
 
-                [Test]
+                [Fact]
                 public void Ignores_unmapped_properties()
                 {
                     // Arrange
@@ -487,10 +480,10 @@ namespace Dapper.MicroCRUD.Tests.Schema
                     var result = this.PerformAct(new NotMapped(), tableSchema);
 
                     // Assert
-                    Assert.IsEmpty(result);
+                    result.Should().BeEmpty();
                 }
 
-                [Test]
+                [Fact]
                 public void Ignores_unreadable_properties()
                 {
                     // Arrange
@@ -500,7 +493,7 @@ namespace Dapper.MicroCRUD.Tests.Schema
                     var result = this.PerformAct(new NotMapped(), tableSchema);
 
                     // Assert
-                    Assert.IsEmpty(result);
+                    result.Should().BeEmpty();
                 }
 
                 private class Method

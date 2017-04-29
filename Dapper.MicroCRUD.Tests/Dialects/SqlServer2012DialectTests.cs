@@ -11,24 +11,17 @@ namespace Dapper.MicroCRUD.Tests.Dialects
     using Dapper.MicroCRUD.Tests.ExampleEntities;
     using Dapper.MicroCRUD.Tests.Utils;
     using Moq;
-    using NUnit.Framework;
     using Pagination;
+    using Xunit;
 
-    [TestFixture]
     public class SqlServer2012DialectTests
     {
-        private IDialect dialect;
+        private readonly IDialect dialect = Dialect.SqlServer2012;
 
-        [SetUp]
-        public void BaseSetUp()
-        {
-            this.dialect = Dialect.SqlServer2012;
-        }
-
-        private class MakeCountStatement
+        public class MakeCountStatement
             : SqlServer2012DialectTests
         {
-            [Test]
+            [Fact]
             public void Selects_from_given_table()
             {
                 // Arrange
@@ -41,10 +34,10 @@ namespace Dapper.MicroCRUD.Tests.Dialects
                 var expected = @"SELECT COUNT(*)
 FROM [Users]";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Adds_conditions()
             {
                 // Arrange
@@ -58,14 +51,14 @@ FROM [Users]";
 FROM [Users]
 WHERE Foo IS NOT NULL";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
         }
 
-        private class MakeFindStatement
+        public class MakeFindStatement
             : SqlServer2012DialectTests
         {
-            [Test]
+            [Fact]
             public void Selects_from_given_table()
             {
                 // Arrange
@@ -79,10 +72,10 @@ WHERE Foo IS NOT NULL";
 FROM [Users]
 WHERE [Id] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Uses_non_default_primary_key_name()
             {
                 // Arrange
@@ -96,10 +89,10 @@ WHERE [Id] = @Id";
 FROM [KeyExplicit]
 WHERE [Key] = @Key";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Uses_each_key_in_composite_key()
             {
                 // Arrange
@@ -113,10 +106,10 @@ WHERE [Key] = @Key";
 FROM [CompositeKeys]
 WHERE [Key1] = @Key1 AND [Key2] = @Key2";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Adds_alias_when_primary_key_is_aliased()
             {
                 // Arrange
@@ -130,10 +123,10 @@ WHERE [Key1] = @Key1 AND [Key2] = @Key2";
 FROM [KeyAlias]
 WHERE [Key] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Arrange
@@ -147,14 +140,14 @@ WHERE [Key] = @Id";
 FROM [PropertyAlias]
 WHERE [Id] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
         }
 
-        private class MakeGetRangeStatement
+        public class MakeGetRangeStatement
             : SqlServer2012DialectTests
         {
-            [Test]
+            [Fact]
             public void Selects_from_given_table()
             {
                 // Arrange
@@ -167,10 +160,10 @@ WHERE [Id] = @Id";
                 var expected = @"SELECT [Id], [Name], [Age]
 FROM [Users]";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Adds_conditions_clause()
             {
                 // Arrange
@@ -184,10 +177,10 @@ FROM [Users]";
 FROM [Users]
 WHERE Age > @Age";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Uses_explicit_primary_key_name()
             {
                 // Arrange
@@ -200,10 +193,10 @@ WHERE Age > @Age";
                 var expected = @"SELECT [Key], [Name]
 FROM [KeyExplicit]";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Adds_alias_when_primary_key_is_aliased()
             {
                 // Arrange
@@ -216,10 +209,10 @@ FROM [KeyExplicit]";
                 var expected = @"SELECT [Key] AS [Id], [Name]
 FROM [KeyAlias]";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Arrange
@@ -232,16 +225,17 @@ FROM [KeyAlias]";
                 var expected = @"SELECT [Id], [YearsOld] AS [Age]
 FROM [PropertyAlias]";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
         }
 
-        private class MakeGetPageStatement
+        public class MakeGetPageStatement
             : SqlServer2012DialectTests
         {
-            [TestCase(null)]
-            [TestCase("")]
-            [TestCase(" ")]
+            [Theory]
+            [InlineData(null)]
+            [InlineData("")]
+            [InlineData(" ")]
             public void Throws_exception_when_order_by_is_empty(string orderBy)
             {
                 // Arrange
@@ -252,7 +246,7 @@ FROM [PropertyAlias]";
                     () => this.dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), null, orderBy));
             }
 
-            [Test]
+            [Fact]
             public void Selects_from_given_table()
             {
                 // Arrange
@@ -267,10 +261,10 @@ FROM [Users]
 ORDER BY Name
 OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Adds_conditions_clause()
             {
                 // Arrange
@@ -286,10 +280,10 @@ WHERE Name LIKE 'Foo%'
 ORDER BY Name
 OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Arrange
@@ -304,10 +298,10 @@ FROM [PropertyAlias]
 ORDER BY Name
 OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Selects_second_page()
             {
                 // Arrange
@@ -322,10 +316,10 @@ FROM [Users]
 ORDER BY Name
 OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Selects_appropriate_number_of_rows()
             {
                 // Arrange
@@ -340,14 +334,14 @@ FROM [Users]
 ORDER BY Name
 OFFSET 5 ROWS FETCH NEXT 5 ROWS ONLY";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
         }
 
-        private class MakeInsertStatement
+        public class MakeInsertStatement
             : SqlServer2012DialectTests
         {
-            [Test]
+            [Fact]
             public void Inserts_into_given_table()
             {
                 // Arrange
@@ -360,10 +354,10 @@ OFFSET 5 ROWS FETCH NEXT 5 ROWS ONLY";
                 var expected = @"INSERT INTO [Users] ([Name], [Age])
 VALUES (@Name, @Age);";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Adds_primary_key_if_its_not_generated_by_database()
             {
                 // Arrange
@@ -376,10 +370,10 @@ VALUES (@Name, @Age);";
                 var expected = @"INSERT INTO [KeyNotGenerated] ([Id], [Name])
 VALUES (@Id, @Name);";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Does_not_include_computed_columns()
             {
                 // Arrange
@@ -392,10 +386,10 @@ VALUES (@Id, @Name);";
                 var expected = @"INSERT INTO [PropertyComputed] ([Name])
 VALUES (@Name);";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Does_not_include_generated_columns()
             {
                 // Arrange
@@ -408,14 +402,14 @@ VALUES (@Name);";
                 var expected = @"INSERT INTO [PropertyGenerated] ([Name])
 VALUES (@Name);";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
         }
 
-        private class MakeInsertReturningIdentityStatement
+        public class MakeInsertReturningIdentityStatement
             : SqlServer2012DialectTests
         {
-            [Test]
+            [Fact]
             public void Inserts_into_given_table()
             {
                 // Arrange
@@ -429,10 +423,10 @@ VALUES (@Name);";
 VALUES (@Name, @Age);
 SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Adds_primary_key_if_its_not_generated_by_database()
             {
                 // Arrange
@@ -446,10 +440,10 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
 VALUES (@Id, @Name);
 SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Does_not_include_computed_columns()
             {
                 // Arrange
@@ -463,10 +457,10 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
 VALUES (@Name);
 SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Does_not_include_generated_columns()
             {
                 // Arrange
@@ -480,14 +474,14 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
 VALUES (@Name);
 SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
         }
 
-        private class MakeUpdateStatement
+        public class MakeUpdateStatement
             : SqlServer2012DialectTests
         {
-            [Test]
+            [Fact]
             public void Updates_given_table()
             {
                 // Arrange
@@ -501,10 +495,10 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
 SET [Name] = @Name, [Age] = @Age
 WHERE [Id] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Uses_each_key_in_composite_key()
             {
                 // Arrange
@@ -518,10 +512,10 @@ WHERE [Id] = @Id";
 SET [Name] = @Name
 WHERE [Key1] = @Key1 AND [Key2] = @Key2";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Does_not_update_primary_key_even_if_its_not_auto_generated()
             {
                 // Arrange
@@ -535,10 +529,10 @@ WHERE [Key1] = @Key1 AND [Key2] = @Key2";
 SET [Name] = @Name
 WHERE [Id] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Uses_aliased_property_names()
             {
                 // Arrange
@@ -552,10 +546,10 @@ WHERE [Id] = @Id";
 SET [YearsOld] = @Age
 WHERE [Id] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Uses_aliased_key_name()
             {
                 // Arrange
@@ -569,10 +563,10 @@ WHERE [Id] = @Id";
 SET [Name] = @Name
 WHERE [Key] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Uses_explicit_key_name()
             {
                 // Arrange
@@ -586,10 +580,10 @@ WHERE [Key] = @Id";
 SET [Name] = @Name
 WHERE [Key] = @Key";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Does_not_include_computed_columns()
             {
                 // Arrange
@@ -603,10 +597,10 @@ WHERE [Key] = @Key";
 SET [Name] = @Name
 WHERE [Id] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Includes_generated_columns()
             {
                 // Arrange
@@ -620,14 +614,14 @@ WHERE [Id] = @Id";
 SET [Name] = @Name, [Created] = @Created
 WHERE [Id] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
         }
 
-        private class MakeDeleteByPrimaryKeyStatement
+        public class MakeDeleteByPrimaryKeyStatement
             : SqlServer2012DialectTests
         {
-            [Test]
+            [Fact]
             public void Deletes_from_given_table()
             {
                 // Arrange
@@ -640,10 +634,10 @@ WHERE [Id] = @Id";
                 var expected = @"DELETE FROM [Users]
 WHERE [Id] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Uses_each_key_in_composite_key()
             {
                 // Arrange
@@ -656,10 +650,10 @@ WHERE [Id] = @Id";
                 var expected = @"DELETE FROM [CompositeKeys]
 WHERE [Key1] = @Key1 AND [Key2] = @Key2";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Uses_primary_key_even_if_its_not_auto_generated()
             {
                 // Arrange
@@ -672,10 +666,10 @@ WHERE [Key1] = @Key1 AND [Key2] = @Key2";
                 var expected = @"DELETE FROM [KeyNotGenerated]
 WHERE [Id] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Uses_aliased_key_name()
             {
                 // Arrange
@@ -688,10 +682,10 @@ WHERE [Id] = @Id";
                 var expected = @"DELETE FROM [KeyAlias]
 WHERE [Key] = @Id";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Uses_explicit_key_name()
             {
                 // Arrange
@@ -704,14 +698,14 @@ WHERE [Key] = @Id";
                 var expected = @"DELETE FROM [KeyExplicit]
 WHERE [Key] = @Key";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
         }
 
-        private class MakeDeleteRangeStatement
+        public class MakeDeleteRangeStatement
             : SqlServer2012DialectTests
         {
-            [Test]
+            [Fact]
             public void Deletes_from_given_table()
             {
                 // Arrange
@@ -724,14 +718,14 @@ WHERE [Key] = @Key";
                 var expected = @"DELETE FROM [Users]
 WHERE [Age] > 10";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
         }
 
-        private class MakeWhereClause
+        public class MakeWhereClause
             : SqlServer2012DialectTests
         {
-            [Test]
+            [Fact]
             public void Returns_empty_string_for_empty_conditions_object()
             {
                 // Arrange
@@ -743,10 +737,10 @@ WHERE [Age] > 10";
 
                 // Assert
                 var expected = string.Empty;
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Includes_column_in_where_clause()
             {
                 // Arrange
@@ -759,10 +753,10 @@ WHERE [Age] > 10";
                 // Assert
                 var expected = @"WHERE [Name] = @Name";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Includes_all_columns_in_where_clause()
             {
                 // Arrange
@@ -775,10 +769,10 @@ WHERE [Age] > 10";
                 // Assert
                 var expected = @"WHERE [Name] = @Name AND [Age] = @Age";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
-            [Test]
+            [Fact]
             public void Checks_for_null_when_condition_value_is_null()
             {
                 // Arrange
@@ -791,7 +785,7 @@ WHERE [Age] > 10";
                 // Assert
                 var expected = @"WHERE [Name] IS NULL";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
             private ImmutableArray<ConditionColumnSchema> GetConditionsSchema<TEntity>(object value)
@@ -802,13 +796,12 @@ WHERE [Age] > 10";
             }
         }
 
-        private class MakeCreateTempTableStatement
+        public class MakeCreateTempTableStatement
             : SqlServer2012DialectTests
         {
-            private Mock<ITableNameFactory> tableNameFactory;
+            private readonly Mock<ITableNameFactory> tableNameFactory;
 
-            [SetUp]
-            public void SetUp()
+            public MakeCreateTempTableStatement()
             {
                 MicroCRUDConfig.AddTypeMap(typeof(DateTime), DbType.DateTime2);
                 this.tableNameFactory = new Mock<ITableNameFactory>();
@@ -818,7 +811,7 @@ WHERE [Age] > 10";
                     .Returns((Type type, IDialect d) => "[#" + defaultTableNameFactory.GetTableName(type, d).Substring(1));
             }
 
-            [Test]
+            [Fact]
             public void Throws_exception_when_tablename_doesnt_begin_with_a_hash()
             {
                 // Arrange
@@ -830,7 +823,7 @@ WHERE [Age] > 10";
                 Assert.Throws<ArgumentException>(() => this.dialect.MakeCreateTempTableStatement(tableSchema));
             }
 
-            [Test]
+            [Fact]
             public void Throws_exception_if_there_are_no_columns()
             {
                 // Arrange
@@ -840,7 +833,7 @@ WHERE [Age] > 10";
                 Assert.Throws<ArgumentException>(() => this.dialect.MakeCreateTempTableStatement(tableSchema));
             }
 
-            [Test]
+            [Fact]
             public void Creates_table_with_all_possible_types()
             {
                 // Arrange
@@ -883,7 +876,7 @@ WHERE [Age] > 10";
     [NullableColor] INT NULL
 );";
 
-                Assert.That(sql, Is.EqualTo(expected).Using(SqlStringComparer.Instance));
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
         }
     }

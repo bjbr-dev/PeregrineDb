@@ -7,7 +7,7 @@ namespace Dapper.MicroCRUD.Tests.Utils
     using System.Data;
     using Dapper.MicroCRUD.Dialects;
 
-    internal class BlankDatabase
+    public class BlankDatabase
         : IDisposable
     {
         private readonly Action dropDatabase;

@@ -7,52 +7,45 @@ namespace Dapper.MicroCRUD.Tests.Schema
     using Dapper.MicroCRUD.Dialects;
     using Dapper.MicroCRUD.Schema;
     using Dapper.MicroCRUD.Tests.Utils;
-    using NUnit.Framework;
+    using FluentAssertions;
+    using Xunit;
 
-    [TestFixture]
     public class DefaultTableNameFactoryTests
     {
-        private class GetTableName
+        public class GetTableName
             : DefaultTableNameFactoryTests
         {
-            private DefaultTableNameFactory sut;
-            private IDialect dialect;
+            private readonly DefaultTableNameFactory sut = new DefaultTableNameFactory();
+            private readonly IDialect dialect = new TestDialect();
 
-            [SetUp]
-            public void SetUp()
-            {
-                this.sut = new DefaultTableNameFactory();
-                this.dialect = new TestDialect();
-            }
-
-            [Test]
+            [Fact]
             public void Returns_name_in_TableAttribute()
             {
                 // Act
                 var result = this.sut.GetTableName(typeof(TableWtihAttribute), this.dialect);
 
                 // Assert
-                Assert.AreEqual("'Tables'", result);
+                result.Should().Be("'Tables'");
             }
 
-            [Test]
+            [Fact]
             public void Returns_name_and_schema_in_TableAttribute()
             {
                 // Act
                 var result = this.sut.GetTableName(typeof(TableWtihSchema), this.dialect);
 
                 // Assert
-                Assert.AreEqual("'Schema'.'Tables'", result);
+                result.Should().Be("'Schema'.'Tables'");
             }
 
-            [Test]
+            [Fact]
             public void Pluralizes_name_of_table()
             {
                 // Act
                 var result = this.sut.GetTableName(typeof(SimpleTable), this.dialect);
 
                 // Assert
-                Assert.AreEqual("'SimpleTables'", result);
+                result.Should().Be("'SimpleTables'");
             }
 
             private class SimpleTable

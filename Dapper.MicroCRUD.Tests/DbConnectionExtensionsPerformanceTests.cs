@@ -8,35 +8,21 @@ namespace Dapper.MicroCRUD.Tests
     using System.Diagnostics;
     using System.Linq;
     using Dapper.MicroCRUD.Dialects;
+    using Dapper.MicroCRUD.Tests.Dialects.Postgres;
+    using Dapper.MicroCRUD.Tests.Dialects.SqlServer;
     using Dapper.MicroCRUD.Tests.ExampleEntities;
-    using Dapper.MicroCRUD.Tests.Utils;
-    using NUnit.Framework;
+    using FluentAssertions;
+    using Xunit;
 
-    internal abstract class DbConnectionExtensionsPerformanceTests
+    public abstract class DbConnectionExtensionsPerformanceTests
     {
-        private readonly string dialectName;
+        private readonly IDbConnection connection;
+        private readonly IDialect dialect;
 
-        private IDbConnection connection;
-        private IDialect dialect;
-        private BlankDatabase database;
-
-        protected DbConnectionExtensionsPerformanceTests(string dialectName)
+        protected DbConnectionExtensionsPerformanceTests(DatabaseFixture fixture)
         {
-            this.dialectName = dialectName;
-        }
-
-        [OneTimeSetUp]
-        public void OneTimeSetup()
-        {
-            this.database = BlankDatabaseFactory.MakeDatabase(this.dialectName);
-            this.connection = this.database.Connection;
-            this.dialect = this.database.Dialect;
-        }
-
-        [OneTimeTearDown]
-        public void OneTimeTearDown()
-        {
-            this.database?.Dispose();
+            this.dialect = fixture.DatabaseDialect;
+            this.connection = fixture.Database.Connection;
         }
 
         private long PerformInsert()
@@ -104,51 +90,51 @@ namespace Dapper.MicroCRUD.Tests
             return stopWatch.ElapsedMilliseconds;
         }
 
-        [TestFixture]
-        private class SqlServer2012
+        [Collection(nameof(SqlServerCollection))]
+        public class SqlServer2012
             : DbConnectionExtensionsPerformanceTests
         {
-            public SqlServer2012()
-                : base(Dialect.SqlServer2012.Name)
+            public SqlServer2012(SqlServerFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public void Takes_less_than_5_seconds_to_insert_30000_rows()
             {
                 var timeTaken = this.PerformInsert();
-                Assert.That(timeTaken, Is.LessThan(5000));
+                timeTaken.Should().BeLessThan(5000);
             }
 
-            [Test]
+            [Fact]
             public void Takes_less_than_4_seconds_to_InsertRange_30000_rows()
             {
                 var timeTaken = this.PerformInsertRange();
-                Assert.That(timeTaken, Is.LessThan(4000));
+                timeTaken.Should().BeLessThan(4000);
             }
         }
 
-        [TestFixture]
-        private class PostgreSQL
+        [Collection(nameof(PostgresCollection))]
+        public class PostgreSQL
             : DbConnectionExtensionsPerformanceTests
         {
-            public PostgreSQL()
-                : base(Dialect.PostgreSql.Name)
+            public PostgreSQL(PostgresFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public void Takes_less_than_6_seconds_to_insert_30000_rows()
             {
                 var timeTaken = this.PerformInsert();
-                Assert.That(timeTaken, Is.LessThan(6000));
+                timeTaken.Should().BeLessThan(6000);
             }
 
-            [Test]
+            [Fact]
             public void Takes_less_than_5_seconds_to_InsertRange_30000_rows()
             {
                 var timeTaken = this.PerformInsertRange();
-                Assert.That(timeTaken, Is.LessThan(5000));
+                timeTaken.Should().BeLessThan(5000);
             }
         }
     }

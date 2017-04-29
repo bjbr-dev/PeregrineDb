@@ -9,70 +9,52 @@ namespace Dapper.MicroCRUD.Tests
     using System.Threading.Tasks;
     using Dapper.MicroCRUD.Dialects;
     using Dapper.MicroCRUD.Schema;
+    using Dapper.MicroCRUD.Tests.Dialects.Postgres;
+    using Dapper.MicroCRUD.Tests.Dialects.SqlServer;
     using Dapper.MicroCRUD.Tests.ExampleEntities;
-    using Dapper.MicroCRUD.Tests.Utils;
-    using NCrunch.Framework;
-    using NUnit.Framework;
+    using FluentAssertions;
     using Pagination;
+    using Xunit;
 
-    [ExclusivelyUses("Database")]
-    [Parallelizable(ParallelScope.None)]
-    [TestFixtureSource(typeof(BlankDatabaseFactory), nameof(BlankDatabaseFactory.PossibleDialects))]
     public class DbConnectionAsyncExtensionsTests
     {
-        private readonly string dialectName;
+        private readonly IDbConnection connection;
+        private readonly IDialect dialect;
 
-        private IDbConnection connection;
-        private IDialect dialect;
-        private BlankDatabase database;
-
-        public DbConnectionAsyncExtensionsTests(string dialectName)
+        protected DbConnectionAsyncExtensionsTests(DatabaseFixture fixture)
         {
-            this.dialectName = dialectName;
+            this.dialect = fixture?.DatabaseDialect;
+            this.connection = fixture?.Database?.Connection;
         }
 
-        [OneTimeSetUp]
-        public void OneTimeSetup()
-        {
-            this.database = BlankDatabaseFactory.MakeDatabase(this.dialectName);
-            this.connection = this.database.Connection;
-            this.dialect = this.database.Dialect;
-        }
-
-        [OneTimeTearDown]
-        public void OneTimeTearDown()
-        {
-            this.database?.Dispose();
-        }
-
-        private class MiscAsync
+        public class MiscAsync
             : DbConnectionAsyncExtensionsTests
         {
-            public MiscAsync(string dialectName)
-                : base(dialectName)
+            public MiscAsync()
+                : base(null)
             {
             }
 
-            [Test]
+            [Fact]
             public void Is_in_same_namespace_as_dapper()
             {
                 // Assert
                 var dapperType = typeof(SqlMapper);
                 var sutType = typeof(DbConnectionAsyncExtensions);
 
-                Assert.That(sutType.Namespace, Is.EqualTo(dapperType.Namespace));
+                sutType.Namespace.Should().Be(dapperType.Namespace);
             }
         }
 
-        private class CountAsync
+        public abstract class CountAsync
             : DbConnectionAsyncExtensionsTests
         {
-            public CountAsync(string dialectName)
-                : base(dialectName)
+            public CountAsync(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public async Task Counts_entities()
             {
                 // Arrange
@@ -85,13 +67,13 @@ namespace Dapper.MicroCRUD.Tests
                 var result = await this.connection.CountAsync<User>(dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(4, result);
+                result.Should().Be(4);
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Counts_entities_matching_conditions()
             {
                 // Arrange
@@ -107,13 +89,13 @@ namespace Dapper.MicroCRUD.Tests
                     dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(3, result);
+                result.Should().Be(3);
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Counts_entities_in_alternate_schema()
             {
                 this.connection.Insert<int>(new SchemaOther { Name = "Some Name" }, dialect: this.dialect);
@@ -125,29 +107,52 @@ namespace Dapper.MicroCRUD.Tests
                 var result = await this.connection.CountAsync<SchemaOther>(dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(4, result);
+                result.Should().Be(4);
 
                 // Cleanup
                 this.connection.DeleteAll<SchemaOther>(dialect: this.dialect);
             }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : CountAsync
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : CountAsync
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
         }
 
-        private class CountAsyncWhereObject
+        public abstract class CountAsyncWhereObject
             : DbConnectionAsyncExtensionsTests
         {
-            public CountAsyncWhereObject(string dialectName)
-                : base(dialectName)
+            public CountAsyncWhereObject(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public void Throws_exception_when_conditions_is_null()
             {
                 // Act
-                Assert.ThrowsAsync<ArgumentNullException>(async () => await this.connection.CountAsync<User>((object)null, dialect: this.dialect));
+                Func<Task> act = async () => await this.connection.CountAsync<User>((object)null, dialect: this.dialect);
+
+                // Assert
+                act.ShouldThrow<ArgumentNullException>();
             }
 
-            [Test]
+            [Fact]
             public async Task Counts_all_entities_when_conditions_is_empty()
             {
                 // Arrange
@@ -160,13 +165,13 @@ namespace Dapper.MicroCRUD.Tests
                 var result = await this.connection.CountAsync<User>(new { }, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(4, result);
+                result.Should().Be(4);
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Counts_entities_matching_conditions()
             {
                 // Arrange
@@ -179,43 +184,65 @@ namespace Dapper.MicroCRUD.Tests
                 var result = await this.connection.CountAsync<User>(new { Age = 10 }, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(3, result);
+                result.Should().Be(3);
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : CountAsyncWhereObject
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : CountAsyncWhereObject
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
         }
 
-        private class FindAsync
+        public abstract class FindAsync
             : DbConnectionAsyncExtensionsTests
         {
-            public FindAsync(string dialectName)
-                : base(dialectName)
+            public FindAsync(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public void Throws_exception_when_entity_has_no_key()
             {
                 // Arrange
                 this.connection.Insert(new NoKey { Name = "Some Name", Age = 1 }, dialect: this.dialect);
 
                 // Act
-                Assert.ThrowsAsync<InvalidPrimaryKeyException>(
-                    async () => await this.connection.FindAsync<NoKey>("Some Name", dialect: this.dialect));
+                Func<Task> act = async () => await this.connection.FindAsync<NoKey>("Some Name", dialect: this.dialect);
+
+                // Assert
+                act.ShouldThrow<InvalidPrimaryKeyException>();
             }
 
-            [Test]
+            [Fact]
             public async Task Returns_null_when_entity_is_not_found()
             {
                 // Act
                 var entity = await this.connection.FindAsync<KeyInt32>(12, dialect: this.dialect);
 
                 // Assert
-                Assert.IsNull(entity);
+                entity.Should().Be(null);
             }
 
-            [Test]
+            [Fact]
             public async Task Finds_entity_by_Int32_primary_key()
             {
                 // Arrange
@@ -225,13 +252,13 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = await this.connection.FindAsync<KeyInt32>(id, dialect: this.dialect);
 
                 // Assert
-                Assert.That(entity.Name, Is.EqualTo("Some Name"));
+                entity.Name.Should().Be("Some Name");
 
                 // Cleanup
                 this.connection.Delete<KeyInt32>(id, dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Finds_entity_by_Int64_primary_key()
             {
                 // Arrange
@@ -241,13 +268,13 @@ namespace Dapper.MicroCRUD.Tests
                 var user = await this.connection.FindAsync<KeyInt64>(id, dialect: this.dialect);
 
                 // Assert
-                Assert.That(user.Name, Is.EqualTo("Some Name"));
+                user.Name.Should().Be("Some Name");
 
                 // Cleanup
                 this.connection.Delete<KeyInt64>(id, dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Finds_entity_by_string_primary_key()
             {
                 // Arrange
@@ -257,13 +284,13 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = await this.connection.FindAsync<KeyString>("Some Name", dialect: this.dialect);
 
                 // Assert
-                Assert.That(entity.Age, Is.EqualTo(42));
+                entity.Age.Should().Be(42);
 
                 // Cleanup
                 this.connection.Delete(entity, dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Finds_entity_by_guid_primary_key()
             {
                 // Arrange
@@ -274,13 +301,13 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = await this.connection.FindAsync<KeyGuid>(id, dialect: this.dialect);
 
                 // Assert
-                Assert.That(entity.Name, Is.EqualTo("Some Name"));
+                entity.Name.Should().Be("Some Name");
 
                 // Cleanup
                 this.connection.Delete(entity, dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Finds_entity_by_composite_key()
             {
                 // Arrange
@@ -293,13 +320,13 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = await this.connection.FindAsync<CompositeKeys>(id, dialect: this.dialect);
 
                 // Assert
-                Assert.That(entity.Name, Is.EqualTo("Some Name"));
+                entity.Name.Should().Be("Some Name");
 
                 // Cleanup
                 this.connection.DeleteAll<CompositeKeys>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Finds_entities_in_alternate_schema()
             {
                 // Arrange
@@ -309,13 +336,13 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = await this.connection.FindAsync<SchemaOther>(id, dialect: this.dialect);
 
                 // Assert
-                Assert.That(entity.Name, Is.EqualTo("Some Name"));
+                entity.Name.Should().Be("Some Name");
 
                 // Cleanup
                 this.connection.Delete<SchemaOther>(id, dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Finds_entities_with_enum_property()
             {
                 // Arrange
@@ -327,13 +354,13 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = await this.connection.FindAsync<PropertyEnum>(id, dialect: this.dialect);
 
                 // Assert
-                Assert.That(entity.FavoriteColor, Is.EqualTo(Color.Green));
+                entity.FavoriteColor.Should().Be(Color.Green);
 
                 // Cleanup
                 this.connection.Delete<PropertyEnum>(id, dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Finds_entities_with_all_possible_types()
             {
                 // Arrange
@@ -373,40 +400,36 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = await this.connection.FindAsync<PropertyAllPossibleTypes>(id, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(-16, entity.Int16Property);
-                Assert.AreEqual(-16, entity.NullableInt16Property);
-                Assert.AreEqual(-32, entity.Int32Property);
-                Assert.AreEqual(-32, entity.NullableInt32Property);
-                Assert.AreEqual(-64, entity.Int64Property);
-                Assert.AreEqual(-64, entity.NullableInt64Property);
-                Assert.AreEqual(1, entity.SingleProperty);
-                Assert.AreEqual(1, entity.NullableSingleProperty);
-                Assert.AreEqual(2, entity.DoubleProperty);
-                Assert.AreEqual(2, entity.NullableDoubleProperty);
-                Assert.AreEqual(10, entity.DecimalProperty);
-                Assert.AreEqual(10, entity.NullableDecimalProperty);
-                Assert.AreEqual(true, entity.BoolProperty);
-                Assert.AreEqual(true, entity.NullableBoolProperty);
-                Assert.AreEqual("Foo", entity.StringProperty);
-                Assert.AreEqual('F', entity.CharProperty);
-                Assert.AreEqual('N', entity.NullableCharProperty);
-                Assert.AreEqual(new Guid("da8326a1-c703-4a79-9fb2-2909b0f40367"), entity.GuidProperty);
-                Assert.AreEqual(new Guid("706e6bcf-4a6d-4d19-91e9-935852140c4d"), entity.NullableGuidProperty);
-                Assert.AreEqual(new DateTime(2016, 12, 31), entity.DateTimeProperty);
-                Assert.AreEqual(new DateTime(2016, 12, 31), entity.NullableDateTimeProperty);
-                Assert.AreEqual(
-                    new DateTimeOffset(new DateTime(2016, 12, 31), new TimeSpan(0, 1, 0, 0)),
-                    entity.DateTimeOffsetProperty);
-                Assert.AreEqual(
-                    new DateTimeOffset(new DateTime(2016, 12, 31), new TimeSpan(0, 1, 0, 0)),
-                    entity.NullableDateTimeOffsetProperty);
-                Assert.AreEqual(new byte[] { 1, 2, 3 }, entity.ByteArrayProperty);
+                entity.Int16Property.Should().Be(-16);
+                entity.NullableInt16Property.Should().Be(-16);
+                entity.Int32Property.Should().Be(-32);
+                entity.NullableInt32Property.Should().Be(-32);
+                entity.Int64Property.Should().Be(-64);
+                entity.NullableInt64Property.Should().Be(-64);
+                entity.SingleProperty.Should().Be(1);
+                entity.NullableSingleProperty.Should().Be(1);
+                entity.DoubleProperty.Should().Be(2);
+                entity.NullableDoubleProperty.Should().Be(2);
+                entity.DecimalProperty.Should().Be(10);
+                entity.NullableDecimalProperty.Should().Be(10);
+                entity.BoolProperty.Should().Be(true);
+                entity.NullableBoolProperty.Should().Be(true);
+                entity.StringProperty.Should().Be("Foo");
+                entity.CharProperty.Should().Be('F');
+                entity.NullableCharProperty.Should().Be('N');
+                entity.GuidProperty.Should().Be(new Guid("da8326a1-c703-4a79-9fb2-2909b0f40367"));
+                entity.NullableGuidProperty.Should().Be(new Guid("706e6bcf-4a6d-4d19-91e9-935852140c4d"));
+                entity.DateTimeProperty.Should().Be(new DateTime(2016, 12, 31));
+                entity.NullableDateTimeProperty.Should().Be(new DateTime(2016, 12, 31));
+                entity.DateTimeOffsetProperty.Should().Be(new DateTimeOffset(new DateTime(2016, 12, 31), new TimeSpan(0, 1, 0, 0)));
+                entity.NullableDateTimeOffsetProperty.Should().Be(new DateTimeOffset(new DateTime(2016, 12, 31), new TimeSpan(0, 1, 0, 0)));
+                entity.ByteArrayProperty.ShouldAllBeEquivalentTo(new byte[] { 1, 2, 3 }, o => o.WithStrictOrdering());
 
                 // Cleanup
                 this.connection.Delete<PropertyAllPossibleTypes>(id, dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Ignores_columns_which_are_not_mapped()
             {
                 // Arrange
@@ -418,44 +441,68 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = await this.connection.FindAsync<PropertyNotMapped>(id, dialect: this.dialect);
 
                 // Assert
-                Assert.That(entity.Firstname, Is.EqualTo("Bobby"));
-                Assert.That(entity.LastName, Is.EqualTo("DropTables"));
-                Assert.That(entity.FullName, Is.EqualTo("Bobby DropTables"));
-                Assert.That(entity.Age, Is.EqualTo(0));
+                entity.Firstname.Should().Be("Bobby");
+                entity.LastName.Should().Be("DropTables");
+                entity.FullName.Should().Be("Bobby DropTables");
+                entity.Age.Should().Be(0);
 
                 // Cleanup
                 this.connection.DeleteAll<PropertyNotMapped>(dialect: this.dialect);
             }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : FindAsync
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : FindAsync
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
         }
 
-        private class GetAsync
+        public abstract class GetAsync
             : DbConnectionAsyncExtensionsTests
         {
-            public GetAsync(string dialectName)
-                : base(dialectName)
+            public GetAsync(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public void Throws_exception_when_entity_has_no_key()
             {
                 // Arrange
                 this.connection.Insert(new NoKey { Name = "Some Name", Age = 1 }, dialect: this.dialect);
 
                 // Act
-                Assert.ThrowsAsync<InvalidPrimaryKeyException>(
-                    async () => await this.connection.GetAsync<NoKey>("Some Name", dialect: this.dialect));
+                Func<Task> act = async () => await this.connection.GetAsync<NoKey>("Some Name", dialect: this.dialect);
+
+                // Assert
+                act.ShouldThrow<InvalidPrimaryKeyException>();
             }
 
-            [Test]
+            [Fact]
             public void Throws_exception_when_entity_is_not_found()
             {
                 // Act
-                Assert.ThrowsAsync<InvalidOperationException>(
-                    async () => await this.connection.GetAsync<KeyInt32>(5, dialect: this.dialect));
+                Func<Task> act = async () => await this.connection.GetAsync<KeyInt32>(5, dialect: this.dialect);
+
+                // Assert
+                act.ShouldThrow<InvalidOperationException>();
             }
 
-            [Test]
+            [Fact]
             public async Task Finds_entity_by_Int32_primary_key()
             {
                 // Arrange
@@ -465,29 +512,29 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = await this.connection.GetAsync<KeyInt32>(id, dialect: this.dialect);
 
                 // Assert
-                Assert.That(entity.Name, Is.EqualTo("Some Name"));
+                entity.Name.Should().Be("Some Name");
 
                 // Cleanup
                 this.connection.Delete<KeyInt32>(id, dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Finds_entity_by_Int64_primary_key()
             {
                 // Arrange
                 var id = this.connection.Insert<long>(new KeyInt64 { Name = "Some Name" }, dialect: this.dialect);
 
                 // Act
-                var user = await this.connection.GetAsync<KeyInt64>(id, dialect: this.dialect);
+                var entity = await this.connection.GetAsync<KeyInt64>(id, dialect: this.dialect);
 
                 // Assert
-                Assert.That(user.Name, Is.EqualTo("Some Name"));
+                entity.Name.Should().Be("Some Name");
 
                 // Cleanup
                 this.connection.Delete<KeyInt64>(id, dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Finds_entity_by_string_primary_key()
             {
                 // Arrange
@@ -497,13 +544,13 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = await this.connection.GetAsync<KeyString>("Some Name", dialect: this.dialect);
 
                 // Assert
-                Assert.That(entity.Age, Is.EqualTo(42));
+                entity.Age.Should().Be(42);
 
                 // Cleanup
                 this.connection.Delete(entity, dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Finds_entity_by_guid_primary_key()
             {
                 // Arrange
@@ -514,13 +561,13 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = await this.connection.GetAsync<KeyGuid>(id, dialect: this.dialect);
 
                 // Assert
-                Assert.That(entity.Name, Is.EqualTo("Some Name"));
+                entity.Name.Should().Be("Some Name");
 
                 // Cleanup
                 this.connection.Delete(entity, dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Finds_entity_by_composite_key()
             {
                 // Arrange
@@ -533,13 +580,13 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = await this.connection.GetAsync<CompositeKeys>(id, dialect: this.dialect);
 
                 // Assert
-                Assert.That(entity.Name, Is.EqualTo("Some Name"));
+                entity.Name.Should().Be("Some Name");
 
                 // Cleanup
                 this.connection.DeleteAll<CompositeKeys>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Finds_entities_in_alternate_schema()
             {
                 // Arrange
@@ -549,13 +596,13 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = await this.connection.GetAsync<SchemaOther>(id, dialect: this.dialect);
 
                 // Assert
-                Assert.That(entity.Name, Is.EqualTo("Some Name"));
+                entity.Name.Should().Be("Some Name");
 
                 // Cleanup
                 this.connection.Delete<SchemaOther>(id, dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Ignores_columns_which_are_not_mapped()
             {
                 // Arrange
@@ -567,25 +614,45 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = await this.connection.GetAsync<PropertyNotMapped>(id, dialect: this.dialect);
 
                 // Assert
-                Assert.That(entity.Firstname, Is.EqualTo("Bobby"));
-                Assert.That(entity.LastName, Is.EqualTo("DropTables"));
-                Assert.That(entity.FullName, Is.EqualTo("Bobby DropTables"));
-                Assert.That(entity.Age, Is.EqualTo(0));
+                entity.Firstname.Should().Be("Bobby");
+                entity.LastName.Should().Be("DropTables");
+                entity.FullName.Should().Be("Bobby DropTables");
+                entity.Age.Should().Be(0);
 
                 // Cleanup
                 this.connection.DeleteAll<PropertyNotMapped>(dialect: this.dialect);
             }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : GetAsync
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : GetAsync
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
         }
 
-        private class GetRangeAsync
+        public abstract class GetRangeAsync
             : DbConnectionAsyncExtensionsTests
         {
-            public GetRangeAsync(string dialectName)
-                : base(dialectName)
+            public GetRangeAsync(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public async Task Filters_result_by_conditions()
             {
                 // Arrange
@@ -601,13 +668,13 @@ namespace Dapper.MicroCRUD.Tests
                     dialect: this.dialect);
 
                 // Assert
-                Assert.That(users.Count(), Is.EqualTo(3));
+                users.Count().Should().Be(3);
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Returns_everything_when_conditions_is_null()
             {
                 // Arrange
@@ -620,29 +687,52 @@ namespace Dapper.MicroCRUD.Tests
                 var users = await this.connection.GetRangeAsync<User>(null, dialect: this.dialect);
 
                 // Assert
-                Assert.That(users.Count(), Is.EqualTo(4));
+                users.Count().Should().Be(4);
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : GetRangeAsync
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : GetRangeAsync
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
         }
 
-        private class GetRangeAsyncWhereObject
+        public abstract class GetRangeAsyncWhereObject
             : DbConnectionAsyncExtensionsTests
         {
-            public GetRangeAsyncWhereObject(string dialectName)
-                : base(dialectName)
+            public GetRangeAsyncWhereObject(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public void Throws_exception_when_conditions_is_null()
             {
                 // Act
-                Assert.ThrowsAsync<ArgumentNullException>(async () => await this.connection.GetRangeAsync<User>((object)null, dialect: this.dialect));
+                Func<Task> act = async () => await this.connection.GetRangeAsync<User>((object)null, dialect: this.dialect);
+
+                // Assert
+                act.ShouldThrow<ArgumentNullException>();
             }
 
-            [Test]
+            [Fact]
             public async Task Returns_all_when_conditions_is_empty()
             {
                 // Arrange
@@ -655,13 +745,13 @@ namespace Dapper.MicroCRUD.Tests
                 var users = await this.connection.GetRangeAsync<User>(new { }, dialect: this.dialect);
 
                 // Assert
-                Assert.That(users.Count(), Is.EqualTo(4));
+                users.Count().Should().Be(4);
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Filters_result_by_conditions()
             {
                 // Arrange
@@ -674,13 +764,13 @@ namespace Dapper.MicroCRUD.Tests
                 var users = await this.connection.GetRangeAsync<User>(new { Age = 10 }, dialect: this.dialect);
 
                 // Assert
-                Assert.That(users.Count(), Is.EqualTo(3));
+                users.Count().Should().Be(3);
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task When_value_is_not_null_does_not_find_nulls()
             {
                 // Arrange
@@ -689,16 +779,16 @@ namespace Dapper.MicroCRUD.Tests
                 this.connection.Insert(new PropertyNullable { Name = null }, dialect: this.dialect);
 
                 // Act
-                var users = await this.connection.GetRangeAsync<PropertyNullable>(new { Name = "Some Name 3" }, dialect: this.dialect);
+                var entities = await this.connection.GetRangeAsync<PropertyNullable>(new { Name = "Some Name 3" }, dialect: this.dialect);
 
                 // Assert
-                Assert.That(users.Count(), Is.EqualTo(1));
+                entities.Count().Should().Be(1);
 
                 // Cleanup
                 this.connection.DeleteAll<PropertyNullable>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task When_value_is_null_finds_nulls()
             {
                 // Arrange
@@ -707,16 +797,16 @@ namespace Dapper.MicroCRUD.Tests
                 this.connection.Insert(new PropertyNullable { Name = null }, dialect: this.dialect);
 
                 // Act
-                var users = await this.connection.GetRangeAsync<PropertyNullable>(new { Name = (string)null }, dialect: this.dialect);
+                var entities = await this.connection.GetRangeAsync<PropertyNullable>(new { Name = (string)null }, dialect: this.dialect);
 
                 // Assert
-                Assert.That(users.Count(), Is.EqualTo(2));
+                entities.Count().Should().Be(2);
 
                 // Cleanup
                 this.connection.DeleteAll<PropertyNullable>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Filters_on_multiple_properties()
             {
                 // Arrange
@@ -728,22 +818,42 @@ namespace Dapper.MicroCRUD.Tests
                 var users = await this.connection.GetRangeAsync<User>(new { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
 
                 // Assert
-                Assert.That(users.Count(), Is.EqualTo(1));
+                users.Count().Should().Be(1);
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : GetRangeAsyncWhereObject
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : GetRangeAsyncWhereObject
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
         }
 
-        private class GetPageAsync
+        public abstract class GetPageAsync
             : DbConnectionAsyncExtensionsTests
         {
-            public GetPageAsync(string dialectName)
-                : base(dialectName)
+            public GetPageAsync(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public async Task Returns_empty_list_when_there_are_no_entities()
             {
                 // Act
@@ -751,10 +861,10 @@ namespace Dapper.MicroCRUD.Tests
                 var users = await this.connection.GetPageAsync<User>(pageBuilder, null, "Age", (object)null, dialect: this.dialect);
 
                 // Assert
-                Assert.That(users.Items.Count(), Is.EqualTo(0));
+                users.Items.Count().Should().Be(0);
             }
 
-            [Test]
+            [Fact]
             public async Task Filters_result_by_conditions()
             {
                 // Arrange
@@ -772,13 +882,13 @@ namespace Dapper.MicroCRUD.Tests
                     dialect: this.dialect);
 
                 // Assert
-                Assert.That(users.Items.Count(), Is.EqualTo(3));
+                users.Items.Count().Should().Be(3);
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Gets_first_page()
             {
                 // Arrange
@@ -796,15 +906,15 @@ namespace Dapper.MicroCRUD.Tests
                     dialect: this.dialect)).Items;
 
                 // Assert
-                Assert.That(users.Count(), Is.EqualTo(2));
-                Assert.That(users[0].Name, Is.EqualTo("Some Name 1"));
-                Assert.That(users[1].Name, Is.EqualTo("Some Name 2"));
+                users.Count().Should().Be(2);
+                users[0].Name.Should().Be("Some Name 1");
+                users[1].Name.Should().Be("Some Name 2");
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Gets_second_page()
             {
                 // Arrange
@@ -822,14 +932,14 @@ namespace Dapper.MicroCRUD.Tests
                     dialect: this.dialect)).Items;
 
                 // Assert
-                Assert.That(users.Count(), Is.EqualTo(1));
-                Assert.That(users[0].Name, Is.EqualTo("Some Name 3"));
+                users.Count().Should().Be(1);
+                users[0].Name.Should().Be("Some Name 3");
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Returns_empty_set_past_last_page()
             {
                 // Arrange
@@ -847,13 +957,13 @@ namespace Dapper.MicroCRUD.Tests
                     dialect: this.dialect)).Items;
 
                 // Assert
-                Assert.That(users, Is.Empty);
+                users.Should().BeEmpty();
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Returns_page_from_everything_when_conditions_is_null()
             {
                 // Arrange
@@ -867,22 +977,42 @@ namespace Dapper.MicroCRUD.Tests
                 var users = page.Items;
 
                 // Assert
-                Assert.That(users.Count(), Is.EqualTo(2));
+                users.Count().Should().Be(2);
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : GetPageAsync
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : GetPageAsync
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
         }
 
-        private class GetPageWhereObjectAsync
+        public abstract class GetPageAsyncWhereObject
             : DbConnectionAsyncExtensionsTests
         {
-            public GetPageWhereObjectAsync(string dialectName)
-                : base(dialectName)
+            public GetPageAsyncWhereObject(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public async Task Returns_empty_list_when_there_are_no_entities()
             {
                 // Act
@@ -890,10 +1020,10 @@ namespace Dapper.MicroCRUD.Tests
                 var users = await this.connection.GetPageAsync<User>(pageBuilder, new { Age = 10 }, "Age", dialect: this.dialect);
 
                 // Assert
-                Assert.That(users.Items.Count(), Is.EqualTo(0));
+                users.Items.Should().BeEmpty();
             }
 
-            [Test]
+            [Fact]
             public async Task Filters_result_by_conditions()
             {
                 // Arrange
@@ -907,13 +1037,13 @@ namespace Dapper.MicroCRUD.Tests
                 var users = await this.connection.GetPageAsync<User>(pageBuilder, new { Age = 10 }, "Age", dialect: this.dialect);
 
                 // Assert
-                Assert.That(users.Items.Count(), Is.EqualTo(3));
+                users.Items.Count().Should().Be(3);
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Gets_first_page()
             {
                 // Arrange
@@ -928,15 +1058,15 @@ namespace Dapper.MicroCRUD.Tests
                 var users = page.Items;
 
                 // Assert
-                Assert.That(users.Count(), Is.EqualTo(2));
-                Assert.That(users[0].Name, Is.EqualTo("Some Name 1"));
-                Assert.That(users[1].Name, Is.EqualTo("Some Name 2"));
+                users.Count().Should().Be(2);
+                users[0].Name.Should().Be("Some Name 1");
+                users[1].Name.Should().Be("Some Name 2");
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Gets_second_page()
             {
                 // Arrange
@@ -951,14 +1081,14 @@ namespace Dapper.MicroCRUD.Tests
                 var users = page.Items;
 
                 // Assert
-                Assert.That(users.Count(), Is.EqualTo(1));
-                Assert.That(users[0].Name, Is.EqualTo("Some Name 3"));
+                users.Count().Should().Be(1);
+                users[0].Name.Should().Be("Some Name 3");
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Returns_empty_set_past_last_page()
             {
                 // Arrange
@@ -973,22 +1103,42 @@ namespace Dapper.MicroCRUD.Tests
                 var users = page.Items;
 
                 // Assert
-                Assert.That(users, Is.Empty);
+                users.Should().BeEmpty();
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : GetPageAsyncWhereObject
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : GetPageAsyncWhereObject
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
         }
 
-        private class GetAllAsync
+        public abstract class GetAllAsync
             : DbConnectionAsyncExtensionsTests
         {
-            public GetAllAsync(string dialectName)
-                : base(dialectName)
+            public GetAllAsync(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public async Task Gets_all()
             {
                 // Arrange
@@ -1001,22 +1151,42 @@ namespace Dapper.MicroCRUD.Tests
                 var users = await this.connection.GetAllAsync<User>(dialect: this.dialect);
 
                 // Assert
-                Assert.That(users.Count(), Is.EqualTo(4));
+                users.Count().Should().Be(4);
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : GetAllAsync
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : GetAllAsync
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
         }
 
-        private class InsertAsync
+        public abstract class InsertAsync
             : DbConnectionAsyncExtensionsTests
         {
-            public InsertAsync(string dialectName)
-                : base(dialectName)
+            public InsertAsync(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public async Task Inserts_entity_with_int32_key()
             {
                 // Arrange
@@ -1026,13 +1196,13 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.InsertAsync(entity, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(1, this.connection.Count<KeyInt32>(dialect: this.dialect));
+                this.connection.Count<KeyInt32>(dialect: this.dialect).Should().Be(1);
 
                 // Cleanup
                 this.connection.DeleteAll<KeyInt32>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Inserts_entity_with_int64_key()
             {
                 // Arrange
@@ -1042,13 +1212,13 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.InsertAsync(entity, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(1, this.connection.Count<KeyInt64>(dialect: this.dialect));
+                this.connection.Count<KeyInt64>(dialect: this.dialect).Should().Be(1);
 
                 // Cleanup
                 this.connection.DeleteAll<KeyInt64>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Inserts_entities_with_composite_keys()
             {
                 // Arrange
@@ -1058,26 +1228,26 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.InsertAsync(entity, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(1, this.connection.Count<CompositeKeys>(dialect: this.dialect));
+                this.connection.Count<CompositeKeys>(dialect: this.dialect).Should().Be(1);
 
                 // Cleanup
                 this.connection.DeleteAll<CompositeKeys>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public void Does_not_allow_part_of_composite_key_to_be_null()
             {
                 // Arrange
                 var entity = new CompositeKeys { Key1 = null, Key2 = 5, Name = "Some Name" };
 
                 // Act
-                var ex = Assert.CatchAsync(async () => await this.connection.InsertAsync(entity, dialect: this.dialect));
+                Func<Task> act = async () => await this.connection.InsertAsync(entity, dialect: this.dialect);
 
                 // Assert
-                Assert.That(ex, Is.Not.Null);
+                act.ShouldThrow<Exception>();
             }
 
-            [Test]
+            [Fact]
             public async Task Inserts_entities_with_string_key()
             {
                 // Arrange
@@ -1087,23 +1257,26 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.InsertAsync(entity, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(1, this.connection.Count<KeyString>(dialect: this.dialect));
+                this.connection.Count<KeyString>(dialect: this.dialect).Should().Be(1);
 
                 // Cleanup
                 this.connection.DeleteAll<KeyString>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public void Does_not_allow_string_key_to_be_null()
             {
                 // Arrange
                 var entity = new KeyString { Name = null, Age = 10 };
 
                 // Act
-                Assert.CatchAsync(async () => await this.connection.InsertAsync(entity, dialect: this.dialect));
+                Func<Task> act = async () => await this.connection.InsertAsync(entity, dialect: this.dialect);
+
+                // Assert
+                act.ShouldThrow<Exception>();
             }
 
-            [Test]
+            [Fact]
             public async Task Inserts_entities_with_guid_key()
             {
                 // Arrange
@@ -1113,13 +1286,13 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.InsertAsync(entity, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(1, this.connection.Count<KeyGuid>(dialect: this.dialect));
+                this.connection.Count<KeyGuid>(dialect: this.dialect).Should().Be(1);
 
                 // Cleanup
                 this.connection.DeleteAll<KeyGuid>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Uses_key_attribute_to_determine_key()
             {
                 // Arrange
@@ -1129,13 +1302,13 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.InsertAsync(entity, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(1, this.connection.Count<KeyAlias>(dialect: this.dialect));
+                this.connection.Count<KeyAlias>(dialect: this.dialect).Should().Be(1);
 
                 // Cleanup
                 this.connection.DeleteAll<KeyAlias>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Inserts_into_other_schemas()
             {
                 // Arrange
@@ -1145,13 +1318,13 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.InsertAsync(entity, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(1, this.connection.Count<SchemaOther>(dialect: this.dialect));
+                this.connection.Count<SchemaOther>(dialect: this.dialect).Should().Be(1);
 
                 // Cleanup
                 this.connection.DeleteAll<SchemaOther>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Ignores_columns_which_are_not_mapped()
             {
                 // Arrange
@@ -1161,60 +1334,88 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.InsertAsync(entity, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(1, this.connection.Count<PropertyNotMapped>(dialect: this.dialect));
+                this.connection.Count<PropertyNotMapped>(dialect: this.dialect).Should().Be(1);
 
                 // Cleanup
                 this.connection.DeleteAll<PropertyNotMapped>(dialect: this.dialect);
             }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : InsertAsync
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : InsertAsync
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
         }
 
-        private class InsertAndReturnKeyAsync
+        public abstract class InsertAndReturnKeyAsync
             : DbConnectionAsyncExtensionsTests
         {
-            public InsertAndReturnKeyAsync(string dialectName)
-                : base(dialectName)
+            public InsertAndReturnKeyAsync(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public void Throws_exception_when_entity_has_no_key()
             {
                 // Act
-                Assert.ThrowsAsync<InvalidPrimaryKeyException>(
-                    async () => await this.connection.InsertAsync<int>(new NoKey(), dialect: this.dialect));
+                Func<Task> act = async () => await this.connection.InsertAsync<int>(new NoKey(), dialect: this.dialect);
+
+                // Assert
+                act.ShouldThrow<InvalidPrimaryKeyException>();
             }
 
-            [Test]
+            [Fact]
             public void Throws_exception_when_entity_has_composite_keys()
             {
                 // Act
-                Assert.ThrowsAsync<InvalidPrimaryKeyException>(
-                    async () => await this.connection.InsertAsync<int>(new CompositeKeys(), dialect: this.dialect));
+                Func<Task> act = async () => await this.connection.InsertAsync<int>(new CompositeKeys(), dialect: this.dialect);
+
+                // Assert
+                act.ShouldThrow<InvalidPrimaryKeyException>();
             }
 
-            [Test]
+            [Fact]
             public void Throws_exception_for_string_keys()
             {
                 // Arrange
                 var entity = new KeyString { Name = "Some Name", Age = 10 };
 
-                // Act / Assert
-                Assert.ThrowsAsync<InvalidPrimaryKeyException>(
-                    async () => await this.connection.InsertAsync<string>(entity, dialect: this.dialect));
+                // Act
+                Func<Task> act = async () => await this.connection.InsertAsync<string>(entity, dialect: this.dialect);
+
+                // Assert
+                act.ShouldThrow<InvalidPrimaryKeyException>();
             }
 
-            [Test]
+            [Fact]
             public void Throws_exception_for_guid_keys()
             {
                 // Arrange
                 var entity = new KeyGuid { Id = Guid.NewGuid(), Name = "Some Name" };
 
-                // Act / Assert
-                Assert.ThrowsAsync<InvalidPrimaryKeyException>(
-                    async () => await this.connection.InsertAsync<Guid>(entity, dialect: this.dialect));
+                // Act
+                Func<Task> act = async () => await this.connection.InsertAsync<Guid>(entity, dialect: this.dialect);
+
+                // Assert
+                act.ShouldThrow<InvalidPrimaryKeyException>();
             }
 
-            [Test]
+            [Fact]
             public async Task Inserts_entity_with_int32_primary_key()
             {
                 // Act
@@ -1223,13 +1424,13 @@ namespace Dapper.MicroCRUD.Tests
                     dialect: this.dialect);
 
                 // Assert
-                Assert.That(id, Is.GreaterThan(0));
+                id.Should().BeGreaterThan(0);
 
                 // Cleanup
                 this.connection.Delete<KeyInt32>(id, dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Inserts_entity_with_int64_primary_key()
             {
                 // Act
@@ -1238,13 +1439,13 @@ namespace Dapper.MicroCRUD.Tests
                     dialect: this.dialect);
 
                 // Assert
-                Assert.That(id, Is.GreaterThan(0));
+                id.Should().BeGreaterThan(0);
 
                 // Cleanup
                 this.connection.Delete<KeyInt64>(id, dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Uses_key_attribute_to_determine_key()
             {
                 // Act
@@ -1253,13 +1454,13 @@ namespace Dapper.MicroCRUD.Tests
                     dialect: this.dialect);
 
                 // Assert
-                Assert.That(id, Is.GreaterThan(0));
+                id.Should().BeGreaterThan(0);
 
                 // Cleanup
                 this.connection.Delete<KeyAlias>(id, dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Inserts_into_other_schemas()
             {
                 // Act
@@ -1268,22 +1469,42 @@ namespace Dapper.MicroCRUD.Tests
                     dialect: this.dialect);
 
                 // Assert
-                Assert.That(id, Is.GreaterThan(0));
+                id.Should().BeGreaterThan(0);
 
                 // Cleanup
                 this.connection.Delete<SchemaOther>(id, dialect: this.dialect);
             }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : InsertAndReturnKeyAsync
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : InsertAndReturnKeyAsync
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
         }
 
-        private class InsertRangeAsync
+        public abstract class InsertRangeAsync
             : DbConnectionAsyncExtensionsTests
         {
-            public InsertRangeAsync(string dialectName)
-                : base(dialectName)
+            public InsertRangeAsync(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public async Task Inserts_entity_with_int32_key()
             {
                 // Arrange
@@ -1297,13 +1518,13 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.InsertRangeAsync(entities, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(2, this.connection.Count<KeyInt32>(dialect: this.dialect));
+                this.connection.Count<KeyInt32>(dialect: this.dialect).Should().Be(2);
 
                 // Cleanup
                 this.connection.DeleteAll<KeyInt32>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Inserts_entity_with_int64_key()
             {
                 // Arrange
@@ -1317,13 +1538,13 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.InsertRangeAsync(entities, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(2, this.connection.Count<KeyInt64>(dialect: this.dialect));
+                this.connection.Count<KeyInt64>(dialect: this.dialect).Should().Be(2);
 
                 // Cleanup
                 this.connection.DeleteAll<KeyInt64>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Inserts_entities_with_composite_keys()
             {
                 // Arrange
@@ -1337,13 +1558,13 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.InsertRangeAsync(entities, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(2, this.connection.Count<CompositeKeys>(dialect: this.dialect));
+                this.connection.Count<CompositeKeys>(dialect: this.dialect).Should().Be(2);
 
                 // Cleanup
                 this.connection.DeleteAll<CompositeKeys>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Inserts_entities_with_string_key()
             {
                 // Arrange
@@ -1357,13 +1578,13 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.InsertRangeAsync(entities, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(2, this.connection.Count<KeyString>(dialect: this.dialect));
+                this.connection.Count<KeyString>(dialect: this.dialect).Should().Be(2);
 
                 // Cleanup
                 this.connection.DeleteAll<KeyString>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Inserts_entities_with_guid_key()
             {
                 // Arrange
@@ -1377,13 +1598,13 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.InsertRangeAsync(entities, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(2, this.connection.Count<KeyGuid>(dialect: this.dialect));
+                this.connection.Count<KeyGuid>(dialect: this.dialect).Should().Be(2);
 
                 // Cleanup
                 this.connection.DeleteAll<KeyGuid>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Uses_key_attribute_to_determine_key()
             {
                 // Arrange
@@ -1397,13 +1618,13 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.InsertRangeAsync(entities, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(2, this.connection.Count<KeyAlias>(dialect: this.dialect));
+                this.connection.Count<KeyAlias>(dialect: this.dialect).Should().Be(2);
 
                 // Cleanup
                 this.connection.DeleteAll<KeyAlias>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Inserts_into_other_schemas()
             {
                 // Arrange
@@ -1417,22 +1638,42 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.InsertRangeAsync(entities, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(2, this.connection.Count<SchemaOther>(dialect: this.dialect));
+                this.connection.Count<SchemaOther>(dialect: this.dialect).Should().Be(2);
 
                 // Cleanup
                 this.connection.DeleteAll<SchemaOther>(dialect: this.dialect);
             }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : InsertRangeAsync
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : InsertRangeAsync
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
         }
 
-        private class InsertRangeAndSetKeyAsync
+        public abstract class InsertRangeAndSetKeyAsync
             : DbConnectionAsyncExtensionsTests
         {
-            public InsertRangeAndSetKeyAsync(string dialectName)
-                : base(dialectName)
+            public InsertRangeAndSetKeyAsync(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public void Throws_exception_when_entity_has_no_key()
             {
                 // Arrange
@@ -1441,13 +1682,15 @@ namespace Dapper.MicroCRUD.Tests
                         new NoKey()
                     };
 
-                // Act / Assert
+                // Act
                 Action<NoKey, int> setKey = (e, k) => { };
-                Assert.ThrowsAsync<InvalidPrimaryKeyException>(
-                    async () => await this.connection.InsertRangeAsync(entities, setKey, dialect: this.dialect));
+                Func<Task> act = async () => await this.connection.InsertRangeAsync(entities, setKey, dialect: this.dialect);
+
+                // Assert
+                act.ShouldThrow<InvalidPrimaryKeyException>();
             }
 
-            [Test]
+            [Fact]
             public void Throws_exception_when_entity_has_composite_keys()
             {
                 // Arrange
@@ -1456,13 +1699,15 @@ namespace Dapper.MicroCRUD.Tests
                         new CompositeKeys()
                     };
 
-                // Act / Assert
+                // Act
                 Action<CompositeKeys, int> setKey = (e, k) => { };
-                Assert.ThrowsAsync<InvalidPrimaryKeyException>(
-                    async () => await this.connection.InsertRangeAsync(entities, setKey, dialect: this.dialect));
+                Func<Task> act = async () => await this.connection.InsertRangeAsync(entities, setKey, dialect: this.dialect);
+
+                // Assert
+                act.ShouldThrow<InvalidPrimaryKeyException>();
             }
 
-            [Test]
+            [Fact]
             public void Throws_exception_for_string_keys()
             {
                 // Arrange
@@ -1471,13 +1716,15 @@ namespace Dapper.MicroCRUD.Tests
                         new KeyString { Name = "Some Name", Age = 10 }
                     };
 
-                // Act / Assert
+                // Act
                 Action<KeyString, string> setKey = (e, k) => { };
-                Assert.ThrowsAsync<InvalidPrimaryKeyException>(
-                    async () => await this.connection.InsertRangeAsync(entities, setKey, dialect: this.dialect));
+                Func<Task> act = async () => await this.connection.InsertRangeAsync(entities, setKey, dialect: this.dialect);
+
+                // Assert
+                act.ShouldThrow<InvalidPrimaryKeyException>();
             }
 
-            [Test]
+            [Fact]
             public void Throws_exception_for_guid_keys()
             {
                 // Arrange
@@ -1486,13 +1733,15 @@ namespace Dapper.MicroCRUD.Tests
                         new KeyGuid { Id = Guid.NewGuid(), Name = "Some Name" }
                     };
 
-                // Act / Assert
+                // Act
                 Action<KeyGuid, Guid> setKey = (e, k) => { };
-                Assert.ThrowsAsync<InvalidPrimaryKeyException>(
-                    async () => await this.connection.InsertRangeAsync(entities, setKey, dialect: this.dialect));
+                Func<Task> act = async () => await this.connection.InsertRangeAsync(entities, setKey, dialect: this.dialect);
+
+                // Assert
+                act.ShouldThrow<InvalidPrimaryKeyException>();
             }
 
-            [Test]
+            [Fact]
             public async Task Inserts_entity_with_int32_primary_key()
             {
                 // Arrange
@@ -1508,15 +1757,15 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.InsertRangeAsync(entities, setKey, dialect: this.dialect);
 
                 // Assert
-                Assert.That(entities[0].Id, Is.GreaterThan(0));
-                Assert.That(entities[1].Id, Is.GreaterThan(entities[0].Id));
-                Assert.That(entities[2].Id, Is.GreaterThan(entities[1].Id));
+                entities[0].Id.Should().BeGreaterThan(0);
+                entities[1].Id.Should().BeGreaterThan(entities[0].Id);
+                entities[2].Id.Should().BeGreaterThan(entities[1].Id);
 
                 // Cleanup
                 this.connection.DeleteAll<KeyInt32>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Inserts_entity_with_int64_primary_key()
             {
                 // Arrange
@@ -1532,15 +1781,15 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.InsertRangeAsync(entities, setKey, dialect: this.dialect);
 
                 // Assert
-                Assert.That(entities[0].Id, Is.GreaterThan(0));
-                Assert.That(entities[1].Id, Is.GreaterThan(entities[0].Id));
-                Assert.That(entities[2].Id, Is.GreaterThan(entities[1].Id));
+                entities[0].Id.Should().BeGreaterThan(0);
+                entities[1].Id.Should().BeGreaterThan(entities[0].Id);
+                entities[2].Id.Should().BeGreaterThan(entities[1].Id);
 
                 // Cleanup
                 this.connection.DeleteAll<KeyInt64>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Uses_key_attribute_to_determine_key()
             {
                 // Arrange
@@ -1554,13 +1803,13 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.InsertRangeAsync(entities, setKey, dialect: this.dialect);
 
                 // Assert
-                Assert.That(entities[0].Key, Is.GreaterThan(0));
+                entities[0].Key.Should().BeGreaterThan(0);
 
                 // Cleanup
                 this.connection.DeleteAll<KeyAlias>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Inserts_into_other_schemas()
             {
                 // Arrange
@@ -1576,24 +1825,44 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.InsertRangeAsync(entities, setKey, dialect: this.dialect);
 
                 // Assert
-                Assert.That(entities[0].Id, Is.GreaterThan(0));
-                Assert.That(entities[1].Id, Is.GreaterThan(entities[0].Id));
-                Assert.That(entities[2].Id, Is.GreaterThan(entities[1].Id));
+                entities[0].Id.Should().BeGreaterThan(0);
+                entities[1].Id.Should().BeGreaterThan(entities[0].Id);
+                entities[2].Id.Should().BeGreaterThan(entities[1].Id);
 
                 // Cleanup
                 this.connection.DeleteAll<SchemaOther>(dialect: this.dialect);
             }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : InsertRangeAndSetKeyAsync
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : InsertRangeAndSetKeyAsync
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
         }
 
-        private class UpdateAsync
+        public abstract class UpdateAsync
             : DbConnectionAsyncExtensionsTests
         {
-            public UpdateAsync(string dialectName)
-                : base(dialectName)
+            public UpdateAsync(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public async Task Updates_the_entity()
             {
                 // Arrange
@@ -1606,13 +1875,13 @@ namespace Dapper.MicroCRUD.Tests
 
                 // Assert
                 var updatedEntity = this.connection.Find<User>(id, dialect: this.dialect);
-                Assert.That(updatedEntity.Name, Is.EqualTo("Other name"));
+                updatedEntity.Name.Should().Be("Other name");
 
                 // Cleanup
                 this.connection.Delete<User>(id, dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Ignores_columns_which_are_not_mapped()
             {
                 // Arrange
@@ -1625,13 +1894,13 @@ namespace Dapper.MicroCRUD.Tests
 
                 // Assert
                 var updatedEntity = this.connection.Find<PropertyNotMapped>(entity.Id, dialect: this.dialect);
-                Assert.That(updatedEntity.LastName, Is.EqualTo("Other name"));
+                updatedEntity.LastName.Should().Be("Other name");
 
                 // Cleanup
                 this.connection.DeleteAll<PropertyNotMapped>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Updates_entities_with_composite_keys()
             {
                 // Arrange
@@ -1646,22 +1915,42 @@ namespace Dapper.MicroCRUD.Tests
                 var id = new { Key1 = 5, Key2 = 20 };
                 var updatedEntity = this.connection.Find<CompositeKeys>(id, dialect: this.dialect);
 
-                Assert.That(updatedEntity.Name, Is.EqualTo("Other name"));
+                updatedEntity.Name.Should().Be("Other name");
 
                 // Cleanup
                 this.connection.DeleteAll<CompositeKeys>(dialect: this.dialect);
             }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : UpdateAsync
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : UpdateAsync
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
         }
 
-        private class UpdateRangeAsync
+        public abstract class UpdateRangeAsync
             : DbConnectionAsyncExtensionsTests
         {
-            public UpdateRangeAsync(string dialectName)
-                : base(dialectName)
+            public UpdateRangeAsync(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public async Task Updates_the_entity()
             {
                 // Arrange
@@ -1684,16 +1973,16 @@ namespace Dapper.MicroCRUD.Tests
                 var result = await this.connection.UpdateRangeAsync(entities, dialect: this.dialect);
 
                 // Assert
-                Assert.That(result.NumRowsAffected, Is.EqualTo(2));
+                result.NumRowsAffected.Should().Be(2);
 
                 var updatedEntities = this.connection.GetRange<User>("WHERE Name = 'Other name'", dialect: this.dialect);
-                Assert.That(updatedEntities.Count(), Is.EqualTo(2));
+                updatedEntities.Count().Should().Be(2);
 
                 // Cleanup
                 this.connection.DeleteAll<User>(dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Updates_entities_with_composite_keys()
             {
                 // Arrange
@@ -1719,27 +2008,47 @@ namespace Dapper.MicroCRUD.Tests
                 var result = await this.connection.UpdateRangeAsync(entities, dialect: this.dialect);
 
                 // Assert
-                Assert.That(result.NumRowsAffected, Is.EqualTo(2));
+                result.NumRowsAffected.Should().Be(2);
 
                 var updatedEntities = this.connection.GetRange<CompositeKeys>(
                     "WHERE Name = 'Other name'",
                     dialect: this.dialect);
-                Assert.That(updatedEntities.Count(), Is.EqualTo(2));
+                updatedEntities.Count().Should().Be(2);
 
                 // Cleanup
                 this.connection.DeleteAll<CompositeKeys>(dialect: this.dialect);
             }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : UpdateRangeAsync
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : UpdateRangeAsync
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
         }
 
-        private class DeleteIdAsync
+        public abstract class DeleteIdAsync
             : DbConnectionAsyncExtensionsTests
         {
-            public DeleteIdAsync(string dialectName)
-                : base(dialectName)
+            public DeleteIdAsync(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public async Task Deletes_the_entity_with_the_specified_id()
             {
                 // Arrange
@@ -1749,10 +2058,10 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.DeleteAsync<User>(id, dialect: this.dialect);
 
                 // Assert
-                Assert.That(this.connection.Find<User>(id, dialect: this.dialect), Is.Null);
+                this.connection.Find<User>(id, dialect: this.dialect).Should().BeNull();
             }
 
-            [Test]
+            [Fact]
             public async Task Deletes_entity_with_string_key()
             {
                 // Arrange
@@ -1762,7 +2071,7 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.DeleteAsync<KeyString>("Some Name", dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Deletes_entity_with_guid_key()
             {
                 // Arrange
@@ -1773,7 +2082,7 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.DeleteAsync<KeyGuid>(id, dialect: this.dialect);
             }
 
-            [Test]
+            [Fact]
             public async Task Deletes_entity_with_composite_keys()
             {
                 // Arrange
@@ -1784,17 +2093,37 @@ namespace Dapper.MicroCRUD.Tests
                 // Act
                 await this.connection.DeleteAsync<CompositeKeys>(id, dialect: this.dialect);
             }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : DeleteIdAsync
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : DeleteIdAsync
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
         }
 
-        private class DeleteEntityAsync
+        public abstract class DeleteEntityAsync
             : DbConnectionAsyncExtensionsTests
         {
-            public DeleteEntityAsync(string dialectName)
-                : base(dialectName)
+            public DeleteEntityAsync(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public async Task Deletes_entity_with_matching_key()
             {
                 // Arrange
@@ -1805,10 +2134,10 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.DeleteAsync(entity, dialect: this.dialect);
 
                 // Assert
-                Assert.That(this.connection.Find<User>(id, dialect: this.dialect), Is.Null);
+                this.connection.Find<User>(id, dialect: this.dialect).Should().BeNull();
             }
 
-            [Test]
+            [Fact]
             public async Task Deletes_entity_with_composite_keys()
             {
                 // Arrange
@@ -1820,41 +2149,67 @@ namespace Dapper.MicroCRUD.Tests
                 await this.connection.DeleteAsync(entity, dialect: this.dialect);
 
                 // Assert
-                Assert.That(this.connection.Find<CompositeKeys>(id, dialect: this.dialect), Is.Null);
+                this.connection.Find<CompositeKeys>(id, dialect: this.dialect).Should().BeNull();
+            }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : DeleteEntityAsync
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : DeleteEntityAsync
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
             }
         }
 
-        private class DeleteRangeAsync
+        public abstract class DeleteRangeAsync
             : DbConnectionAsyncExtensionsTests
         {
-            public DeleteRangeAsync(string dialectName)
-                : base(dialectName)
+            public DeleteRangeAsync(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [TestCase(null)]
-            [TestCase("")]
-            [TestCase(" ")]
-            [TestCase("HAVING Age = 10")]
-            [TestCase("WHERE")]
+            [Theory]
+            [InlineData(null)]
+            [InlineData("")]
+            [InlineData(" ")]
+            [InlineData("HAVING Age = 10")]
+            [InlineData("WHERE")]
             public void Throws_exception_if_conditions_does_not_contain_where_clause(string conditions)
             {
-                // Act / Assert
-                Assert.ThrowsAsync<ArgumentException>(
-                    async () => await this.connection.DeleteRangeAsync<User>(conditions, dialect: this.dialect));
+                // Act
+                Func<Task> act = async () => await this.connection.DeleteRangeAsync<User>(conditions, dialect: this.dialect);
+
+                // Assert
+                act.ShouldThrow<ArgumentException>();
             }
 
-            [TestCase("Where Age = 10")]
-            [TestCase("where Age = 10")]
-            [TestCase("WHERE Age = 10")]
+            [Theory]
+            [InlineData("Where Age = 10")]
+            [InlineData("where Age = 10")]
+            [InlineData("WHERE Age = 10")]
             public void Allows_any_capitalization_of_where_clause(string conditions)
             {
-                // Act / Assert
-                Assert.DoesNotThrowAsync(
-                    async () => await this.connection.DeleteRangeAsync<User>(conditions, dialect: this.dialect));
+                // Act
+                Func<Task> act = async () => await this.connection.DeleteRangeAsync<User>(conditions, dialect: this.dialect);
+
+                // Assert
+                act.ShouldNotThrow();
             }
 
-            [Test]
+            [Fact]
             public async Task Deletes_all_matching_entities()
             {
                 // Arrange
@@ -1870,34 +2225,63 @@ namespace Dapper.MicroCRUD.Tests
                     dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(3, result.NumRowsAffected);
-                Assert.AreEqual(1, this.connection.Count<User>(dialect: this.dialect));
+                result.NumRowsAffected.Should().Be(3);
+                this.connection.Count<User>(dialect: this.dialect).Should().Be(1);
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : DeleteRangeAsync
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : DeleteRangeAsync
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
             }
         }
 
-        private class DeleteRangeAsyncWhereObject
+        public abstract class DeleteRangeAsyncWhereObject
             : DbConnectionAsyncExtensionsTests
         {
-            public DeleteRangeAsyncWhereObject(string dialectName)
-                : base(dialectName)
+            public DeleteRangeAsyncWhereObject(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public void Throws_exception_if_conditions_is_null()
             {
-                // Act / Assert
-                Assert.ThrowsAsync<ArgumentNullException>(async () => await this.connection.DeleteRangeAsync<User>((object)null, dialect: this.dialect));
+                // Act
+                Func<Task> act = async () => await this.connection.DeleteRangeAsync<User>((object)null, dialect: this.dialect);
+
+                // Assert
+                act.ShouldThrow<ArgumentNullException>();
             }
 
-            [Test]
+            [Fact]
             public void Throws_exception_if_conditions_is_empty()
             {
-                // Act / Assert
-                Assert.ThrowsAsync<ArgumentException>(async () => await this.connection.DeleteRangeAsync<User>(new { }, dialect: this.dialect));
+                // Act
+                Func<Task> act = async () => await this.connection.DeleteRangeAsync<User>(new { }, dialect: this.dialect);
+
+                // Assert
+                act.ShouldThrow<ArgumentException>();
             }
 
-            [Test]
+            [Fact]
             public async Task Deletes_all_matching_entities()
             {
                 // Arrange
@@ -1910,20 +2294,43 @@ namespace Dapper.MicroCRUD.Tests
                 var result = await this.connection.DeleteRangeAsync<User>(new { Age = 10 }, dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(3, result.NumRowsAffected);
-                Assert.AreEqual(1, this.connection.Count<User>(dialect: this.dialect));
+                result.NumRowsAffected.Should().Be(3);
+                this.connection.Count<User>(dialect: this.dialect).Should().Be(1);
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : DeleteRangeAsyncWhereObject
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : DeleteRangeAsyncWhereObject
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
             }
         }
 
-        private class DeleteAllAsync
+        public abstract class DeleteAllAsync
             : DbConnectionAsyncExtensionsTests
         {
-            public DeleteAllAsync(string dialectName)
-                : base(dialectName)
+            public DeleteAllAsync(DatabaseFixture fixture)
+                : base(fixture)
             {
             }
 
-            [Test]
+            [Fact]
             public async Task Deletes_all_entities()
             {
                 // Arrange
@@ -1936,8 +2343,28 @@ namespace Dapper.MicroCRUD.Tests
                 var result = await this.connection.DeleteAllAsync<User>(dialect: this.dialect);
 
                 // Assert
-                Assert.AreEqual(4, result.NumRowsAffected);
-                Assert.AreEqual(0, this.connection.Count<User>(dialect: this.dialect));
+                result.NumRowsAffected.Should().Be(4);
+                this.connection.Count<User>(dialect: this.dialect).Should().Be(0);
+            }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : DeleteAllAsync
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : DeleteAllAsync
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
             }
         }
     }

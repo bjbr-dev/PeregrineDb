@@ -7,82 +7,75 @@ namespace Dapper.MicroCRUD.Tests.Schema
     using Dapper.MicroCRUD.Dialects;
     using Dapper.MicroCRUD.Schema;
     using Dapper.MicroCRUD.Tests.Utils;
-    using NUnit.Framework;
+    using FluentAssertions;
+    using Xunit;
 
-    [TestFixture]
     public class SuffixRemovingTableNameFactoryTests
     {
-        private class GetTableName
+        public class GetTableName
             : SuffixRemovingTableNameFactoryTests
         {
-            private SuffixRemovingTableNameFactory sut;
-            private IDialect dialect;
+            private readonly SuffixRemovingTableNameFactory sut = new SuffixRemovingTableNameFactory("Entity");
+            private readonly IDialect dialect = new TestDialect();
 
-            [SetUp]
-            public void SetUp()
-            {
-                this.sut = new SuffixRemovingTableNameFactory("Entity");
-                this.dialect = new TestDialect();
-            }
-
-            [Test]
+            [Fact]
             public void Returns_name_in_TableAttribute()
             {
                 // Act
                 var result = this.sut.GetTableName(typeof(TableWtihAttribute), this.dialect);
 
                 // Assert
-                Assert.AreEqual("'Tables'", result);
+                result.Should().Be("'Tables'");
             }
 
-            [Test]
+            [Fact]
             public void Returns_name_and_schema_in_TableAttribute()
             {
                 // Act
                 var result = this.sut.GetTableName(typeof(TableWtihSchema), this.dialect);
 
                 // Assert
-                Assert.AreEqual("'Schema'.'Tables'", result);
+                result.Should().Be("'Schema'.'Tables'");
             }
 
-            [Test]
+            [Fact]
             public void Pluralizes_name_of_table()
             {
                 // Act
                 var result = this.sut.GetTableName(typeof(SimpleTable), this.dialect);
 
                 // Assert
-                Assert.AreEqual("'SimpleTables'", result);
+                result.Should().Be("'SimpleTables'");
             }
 
-            [Test]
+            [Fact]
             public void Removes_suffix()
             {
                 // Act
                 var result = this.sut.GetTableName(typeof(TableEntity), this.dialect);
 
                 // Assert
-                Assert.AreEqual("'Tables'", result);
+                result.Should().Be("'Tables'");
             }
 
-            [Test]
+            [Fact]
             public void Removes_suffix_CI()
             {
                 // Act
                 var result = this.sut.GetTableName(typeof(TableENtity), this.dialect);
 
                 // Assert
-                Assert.AreEqual("'Tables'", result);
+                result.Should().Be("'Tables'");
             }
 
-            [Test]
+            [Fact]
             public void Does_not_remove_suffix_if_the_entire_table_name_is_that_suffix()
             {
                 // Act
                 var result = this.sut.GetTableName(typeof(Entity), this.dialect);
 
                 // Assert
-                Assert.AreEqual("'Entitys'", result);
+                result.Should().Be("'Entitys'");
             }
 
             private class SimpleTable
