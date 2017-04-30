@@ -100,17 +100,17 @@ namespace Dapper.MicroCRUD.Tests
             }
 
             [Fact]
-            public void Takes_less_than_5_seconds_to_insert_30000_rows()
+            public void Takes_less_than_6_seconds_to_insert_30000_rows()
             {
                 var timeTaken = this.PerformInsert();
-                timeTaken.Should().BeLessThan(5000);
+                timeTaken.Should().BeLessThan(6000);
             }
 
             [Fact]
-            public void Takes_less_than_4_seconds_to_InsertRange_30000_rows()
+            public void Takes_less_than_5_seconds_to_InsertRange_30000_rows()
             {
                 var timeTaken = this.PerformInsertRange();
-                timeTaken.Should().BeLessThan(4000);
+                timeTaken.Should().BeLessThan(5000);
             }
         }
 
