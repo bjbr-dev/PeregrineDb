@@ -4,7 +4,6 @@
 namespace Dapper.MicroCRUD.SqlCommands
 {
     using System;
-    using System.Runtime.Serialization;
 
     /// <summary>
     /// Exception thrown when the number of affected rows in a query does not match the expected number.
@@ -32,14 +31,6 @@ namespace Dapper.MicroCRUD.SqlCommands
         /// </summary>
         public AffectedRowCountException(string message, Exception innerException)
             : base(message, innerException)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AffectedRowCountException"/> class.
-        /// </summary>
-        protected AffectedRowCountException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
         {
         }
     }

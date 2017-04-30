@@ -5,6 +5,7 @@ namespace Dapper.MicroCRUD.Tests.Schema
 {
     using System;
     using System.ComponentModel.DataAnnotations.Schema;
+    using System.Reflection;
     using Dapper.MicroCRUD.Schema;
     using FluentAssertions;
     using Xunit;

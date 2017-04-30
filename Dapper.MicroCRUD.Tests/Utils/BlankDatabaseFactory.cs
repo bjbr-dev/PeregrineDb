@@ -5,9 +5,8 @@ namespace Dapper.MicroCRUD.Tests.Utils
 {
     using System;
     using System.Data.SqlClient;
+    using System.IO;
     using System.Reflection;
-    using DbUp;
-    using DbUp.Builder;
     using Npgsql;
 
     internal class BlankDatabaseFactory
@@ -39,20 +38,29 @@ namespace Dapper.MicroCRUD.Tests.Utils
                 : @"Server=localhost; Integrated Security=true; Pooling=false";
 
             var databaseName = MakeRandomDatabaseName();
-            var connectionStringBuilder = new SqlConnectionStringBuilder(serverConnectionString)
+            using (var database = new SqlConnection(serverConnectionString))
+            {
+                database.Open();
+                
+                database.Execute("CREATE DATABASE " + databaseName);
+            }
+
+            var connectionString = new SqlConnectionStringBuilder(serverConnectionString)
                 {
                     InitialCatalog = databaseName,
                     MultipleActiveResultSets = false
                 };
 
-            var connectionString = connectionStringBuilder.ToString();
-
-            EnsureDatabase.For.SqlDatabase(connectionString);
-            CreateDatabase(DeployChanges.To.SqlDatabase(connectionString), "CreateSqlServer2012.sql");
+            var sql = GetSql("CreateSqlServer2012.sql");
+            using (var database = new SqlConnection(connectionString.ToString()))
+            {
+                database.Execute("CREATE SCHEMA Other;");
+                database.Execute(sql);
+            }
 
             return new BlankDatabase(
                 Dialect.SqlServer2012,
-                new SqlConnection(connectionString),
+                new SqlConnection(connectionString.ToString()),
                 () =>
                 {
                     using (var connection = new SqlConnection(serverConnectionString))
@@ -69,6 +77,11 @@ namespace Dapper.MicroCRUD.Tests.Utils
                 : "Server=localhost;Port=5432;User Id=postgres;Password=postgres123; Pooling=false;";
 
             var databaseName = MakeRandomDatabaseName();
+            using (var database = new NpgsqlConnection(serverConnectionString))
+            {
+                database.Execute("CREATE DATABASE " + databaseName);
+            }
+
             var connectionStringBuilder = new NpgsqlConnectionStringBuilder(serverConnectionString)
                 {
                     Database = databaseName
@@ -76,8 +89,11 @@ namespace Dapper.MicroCRUD.Tests.Utils
 
             var connectionString = connectionStringBuilder.ToString();
 
-            EnsureDatabase.For.PostgresqlDatabase(connectionString);
-            CreateDatabase(DeployChanges.To.PostgresqlDatabase(connectionString), "CreatePostgreSql.sql");
+            var sql = GetSql("CreatePostgreSql.sql");
+            using (var database = new NpgsqlConnection(connectionString))
+            {
+                database.Execute(sql);
+            }
 
             return new BlankDatabase(
                 Dialect.PostgreSql,
@@ -91,18 +107,17 @@ namespace Dapper.MicroCRUD.Tests.Utils
                 });
         }
 
-        private static void CreateDatabase(UpgradeEngineBuilder builder, string name)
+        private static string GetSql(string name)
         {
-            var result = builder.WithScriptsEmbeddedInAssembly(
-                                    Assembly.GetExecutingAssembly(),
-                                    s => s == "Dapper.MicroCRUD.Tests.Scripts." + name)
-                                .Build()
-                                .PerformUpgrade();
-
-            if (!result.Successful)
+            string sql;
+            using (var stream = typeof(BlankDatabaseFactory).GetTypeInfo().Assembly.GetManifestResourceStream("Dapper.MicroCRUD.Tests.Scripts." + name))
             {
-                throw new InvalidOperationException("Could not deploy scripts for " + name);
+                using (var reader = new StreamReader(stream))
+                {
+                    sql = reader.ReadToEnd();
+                }
             }
+            return sql;
         }
 
         private static string MakeRandomDatabaseName()

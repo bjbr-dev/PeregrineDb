@@ -182,7 +182,7 @@ namespace Dapper.MicroCRUD.Schema
             }
 
             var propertyType = property.PropertyType.GetUnderlyingType();
-            return propertyType.IsEnum || TypeMapping.ContainsKey(propertyType);
+            return propertyType.GetTypeInfo().IsEnum || TypeMapping.ContainsKey(propertyType);
         }
 
         private static ColumnUsage GetColumnUsage(bool explicitKeyDefined, PropertySchema property)
@@ -266,7 +266,7 @@ namespace Dapper.MicroCRUD.Schema
 
         private DbTypeEx GetDbType(PropertySchema property)
         {
-            if (property.EffectiveType.IsEnum)
+            if (property.EffectiveType.GetTypeInfo().IsEnum)
             {
                 return new DbTypeEx(DbType.Int32, property.IsNullable, null);
             }
@@ -274,7 +274,7 @@ namespace Dapper.MicroCRUD.Schema
             DbType dbType;
             if (TypeMapping.TryGetValue(property.EffectiveType, out dbType))
             {
-                var allowNull = property.IsNullable || (!property.Type.IsValueType && property.FindAttribute<RequiredAttribute>() == null);
+                var allowNull = property.IsNullable || (!property.Type.GetTypeInfo().IsValueType && property.FindAttribute<RequiredAttribute>() == null);
 
                 var maxLength = this.GetMaxLength(property);
                 return new DbTypeEx(dbType, allowNull, maxLength);

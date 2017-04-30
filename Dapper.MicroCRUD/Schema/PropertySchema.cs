@@ -4,6 +4,7 @@
 namespace Dapper.MicroCRUD.Schema
 {
     using System;
+    using System.Linq;
     using System.Reflection;
 
     /// <summary>
@@ -26,7 +27,7 @@ namespace Dapper.MicroCRUD.Schema
         /// Gets or sets the custom attributes on the property.
         /// NB: To get an attribute efficiently, use the <see cref="FindAttribute{T}"/> method.
         /// </summary>
-        public object[] CustomAttributes { get; set; }
+        public Attribute[] CustomAttributes { get; set; }
 
         /// <summary>
         /// Gets or sets the type of the property.
@@ -53,7 +54,7 @@ namespace Dapper.MicroCRUD.Schema
 
             return new PropertySchema
                 {
-                    CustomAttributes = property.GetCustomAttributes(false),
+                    CustomAttributes = property.GetCustomAttributes(false).ToArray(),
                     Name = property.Name,
                     PropertyInfo = property,
                     Type = type,

@@ -1,14 +1,8 @@
-﻿CREATE SCHEMA Other;
-
-GO
-
-CREATE TABLE Other.SchemaOther 
+﻿CREATE TABLE Other.SchemaOther 
 (
 	Id INT NOT NULL IDENTITY PRIMARY KEY,
 	Name NVARCHAR(MAX) NOT NULL,
-)
-
-GO
+);
 
 CREATE TABLE CompositeKeys
 (

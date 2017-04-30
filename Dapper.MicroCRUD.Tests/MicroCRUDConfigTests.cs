@@ -5,11 +5,9 @@ namespace Dapper.MicroCRUD.Tests
 {
     using System;
     using Dapper.MicroCRUD.Schema;
-    using NCrunch.Framework;
     using Xunit;
 
     [Collection("MicroCRUDConfig")]
-    [ExclusivelyUses("MicroCRUDConfig")]
     public class MicroCRUDConfigTests
     {
         public class Misc

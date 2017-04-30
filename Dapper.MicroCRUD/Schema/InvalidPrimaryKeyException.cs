@@ -4,7 +4,6 @@
 namespace Dapper.MicroCRUD.Schema
 {
     using System;
-    using System.Runtime.Serialization;
 
     /// <summary>
     /// Exception raised when an entity's primary key declaration is invalid for some reason.
@@ -32,14 +31,6 @@ namespace Dapper.MicroCRUD.Schema
         /// </summary>
         public InvalidPrimaryKeyException(string message, Exception innerException)
             : base(message, innerException)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="InvalidPrimaryKeyException"/> class.
-        /// </summary>
-        protected InvalidPrimaryKeyException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
         {
         }
     }

@@ -18,7 +18,7 @@ namespace Dapper.MicroCRUD.Schema
         /// <inheritdoc/>
         public string GetTableName(Type type, IDialect dialect)
         {
-            var tableAttribute = type.GetCustomAttribute<TableAttribute>(false);
+            var tableAttribute = type.GetTypeInfo().GetCustomAttribute<TableAttribute>(false);
             return tableAttribute != null
                 ? GetTableNameFromAttribute(dialect, tableAttribute)
                 : dialect.MakeTableName(this.GetTableNameFromType(type));

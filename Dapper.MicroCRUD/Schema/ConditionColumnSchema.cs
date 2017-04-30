@@ -33,7 +33,7 @@ namespace Dapper.MicroCRUD.Schema
         public bool IsNull(object conditions)
         {
             var propertyValue = this.propertyInfo.GetValue(conditions);
-            return propertyValue == null || Convert.IsDBNull(propertyValue);
+            return propertyValue == null || propertyValue is DBNull;
         }
     }
 }
