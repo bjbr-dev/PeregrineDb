@@ -10,5 +10,5 @@ test: off
 artifacts:
   - path: 'Dapper.MicroCRUD\*.nupkg'
 services:
-  - mssql2012sp1
+  - mssql2014
   - postgresql

@@ -34,7 +34,7 @@ namespace Dapper.MicroCRUD.Tests.Utils
         private static BlankDatabase CreateSqlServer2012Database()
         {
             var serverConnectionString = IsInAppVeyor()
-                ? @"Server=(local)\SQL2012SP1;Database=master;User ID=sa;Password=Password12!; Pooling=false"
+                ? @"Server=(local)\SQL2014;Database=master;User ID=sa;Password=Password12!; Pooling=false"
                 : @"Server=localhost; Integrated Security=true; Pooling=false";
 
             var databaseName = MakeRandomDatabaseName();
