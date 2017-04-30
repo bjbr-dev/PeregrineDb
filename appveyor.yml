@@ -8,7 +8,7 @@ build_script:
 - ps: dotnet pack Dapper.MicroCRUD/Dapper.MicroCRUD.csproj -c Release --include-symbols /p:Version=$($Env:APPVEYOR_BUILD_VERSION)
 test: off
 artifacts:
-  - path: 'Dapper.MicroCRUD\*.nupkg'
+  - path: 'Dapper.MicroCRUD\**\*.nupkg'
 services:
   - mssql2014
   - postgresql
