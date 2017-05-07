@@ -54,7 +54,7 @@ namespace Dapper.MicroCRUD.Schema
 
             return new PropertySchema
                 {
-                    CustomAttributes = property.GetCustomAttributes(false).ToArray(),
+                    CustomAttributes = property.GetCustomAttributes(false).Cast<Attribute>().ToArray(),
                     Name = property.Name,
                     PropertyInfo = property,
                     Type = type,
