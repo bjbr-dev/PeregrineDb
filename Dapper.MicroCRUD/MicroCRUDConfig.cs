@@ -132,12 +132,8 @@ namespace Dapper.MicroCRUD
             lock (LockObject)
             {
                 var newValue = updater(current);
-                if (newValue == null)
-                {
-                    throw new ArgumentException("Updater returned a null object");
-                }
 
-                current = newValue;
+                current = newValue ?? throw new ArgumentException("Updater returned a null object");
             }
         }
 

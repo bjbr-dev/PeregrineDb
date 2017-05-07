@@ -4,9 +4,8 @@
 namespace Dapper.MicroCRUD.Tests
 {
     using System;
-    using System.Data;
     using System.Linq;
-    using Dapper.MicroCRUD.Dialects;
+    using Dapper.MicroCRUD.Databases;
     using Dapper.MicroCRUD.Schema;
     using Dapper.MicroCRUD.Tests.Dialects.Postgres;
     using Dapper.MicroCRUD.Tests.Dialects.SqlServer;
@@ -15,19 +14,17 @@ namespace Dapper.MicroCRUD.Tests
     using Pagination;
     using Xunit;
 
-    public abstract class DbConnectionExtensionsTests
+    public abstract class DapperConnectionMicroCrudExtensionsTests
     {
-        private readonly IDbConnection connection;
-        private readonly IDialect dialect;
+        private readonly IDatabase database;
 
-        protected DbConnectionExtensionsTests(DatabaseFixture fixture)
+        protected DapperConnectionMicroCrudExtensionsTests(DatabaseFixture fixture)
         {
-            this.dialect = fixture?.DatabaseDialect;
-            this.connection = fixture?.Database?.Connection;
+            this.database = fixture?.DefaultDatabase;
         }
 
         public class Misc
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
             public Misc()
                 : base(null)
@@ -39,16 +36,16 @@ namespace Dapper.MicroCRUD.Tests
             {
                 // Assert
                 var dapperType = typeof(SqlMapper);
-                var sutType = typeof(DbConnectionExtensions);
-
-                sutType.Namespace.Should().Be(dapperType.Namespace);
+                typeof(DbConnectionExtensions).Namespace.Should().Be(dapperType.Namespace);
+                typeof(DapperConnectionExtensions).Namespace.Should().Be(dapperType.Namespace);
+                typeof(DapperConnectionMicroCrudExtensions).Namespace.Should().Be(dapperType.Namespace);
             }
         }
 
         public abstract class Count
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public Count(DatabaseFixture fixture)
+            protected Count(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -57,56 +54,56 @@ namespace Dapper.MicroCRUD.Tests
             public void Counts_all_entities_when_conditions_is_null()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
-                var result = this.connection.Count<User>(dialect: this.dialect);
+                var result = this.database.Count<User>();
 
                 // Assert
                 result.Should().Be(4);
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Fact]
             public void Counts_entities_matching_conditions()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
-                var result = this.connection.Count<User>("WHERE Age < @Age", new { Age = 11 }, dialect: this.dialect);
+                var result = this.database.Count<User>("WHERE Age < @Age", new { Age = 11 });
 
                 // Assert
                 result.Should().Be(3);
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Fact]
             public void Counts_entities_in_alternate_schema()
             {
-                this.connection.Insert<int>(new SchemaOther { Name = "Some Name" }, dialect: this.dialect);
-                this.connection.Insert<int>(new SchemaOther { Name = "Some Name" }, dialect: this.dialect);
-                this.connection.Insert<int>(new SchemaOther { Name = "Some Name" }, dialect: this.dialect);
-                this.connection.Insert<int>(new SchemaOther { Name = "Some Name" }, dialect: this.dialect);
+                this.database.Insert<int>(new SchemaOther { Name = "Some Name" });
+                this.database.Insert<int>(new SchemaOther { Name = "Some Name" });
+                this.database.Insert<int>(new SchemaOther { Name = "Some Name" });
+                this.database.Insert<int>(new SchemaOther { Name = "Some Name" });
 
                 // Act
-                var result = this.connection.Count<SchemaOther>(dialect: this.dialect);
+                var result = this.database.Count<SchemaOther>();
 
                 // Assert
                 result.Should().Be(4);
 
                 // Cleanup
-                this.connection.DeleteAll<SchemaOther>(dialect: this.dialect);
+                this.database.DeleteAll<SchemaOther>();
             }
 
             [Collection(nameof(PostgresCollection))]
@@ -131,9 +128,9 @@ namespace Dapper.MicroCRUD.Tests
         }
 
         public abstract class CountWhereObject
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public CountWhereObject(DatabaseFixture fixture)
+            protected CountWhereObject(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -142,45 +139,45 @@ namespace Dapper.MicroCRUD.Tests
             public void Throws_exception_when_conditions_is_null()
             {
                 // Act
-                Assert.Throws<ArgumentNullException>(() => this.connection.Count<User>((object)null, dialect: this.dialect));
+                Assert.Throws<ArgumentNullException>(() => this.database.Count<User>((object)null));
             }
 
             [Fact]
             public void Counts_all_entities_when_conditions_is_empty()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
-                var result = this.connection.Count<User>(new { }, dialect: this.dialect);
+                var result = this.database.Count<User>(new { });
 
                 // Assert
                 result.Should().Be(4);
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Fact]
             public void Counts_entities_matching_conditions()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
-                var result = this.connection.Count<User>(new { Age = 10 }, dialect: this.dialect);
+                var result = this.database.Count<User>(new { Age = 10 });
 
                 // Assert
                 result.Should().Be(3);
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Collection(nameof(PostgresCollection))]
@@ -205,9 +202,9 @@ namespace Dapper.MicroCRUD.Tests
         }
 
         public abstract class Find
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public Find(DatabaseFixture fixture)
+            protected Find(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -216,18 +213,18 @@ namespace Dapper.MicroCRUD.Tests
             public void Throws_exception_when_entity_has_no_key()
             {
                 // Arrange
-                this.connection.Insert(new NoKey { Name = "Some Name", Age = 1 }, dialect: this.dialect);
+                this.database.Insert(new NoKey { Name = "Some Name", Age = 1 });
 
                 // Act
                 Assert.Throws<InvalidPrimaryKeyException>(
-                    () => this.connection.Find<NoKey>("Some Name", dialect: this.dialect));
+                    () => this.database.Find<NoKey>("Some Name"));
             }
 
             [Fact]
             public void Returns_null_when_entity_is_not_found()
             {
                 // Act
-                var entity = this.connection.Find<KeyInt32>(12, dialect: this.dialect);
+                var entity = this.database.Find<KeyInt32>(12);
 
                 // Assert
                 entity.Should().Be(null);
@@ -237,48 +234,48 @@ namespace Dapper.MicroCRUD.Tests
             public void Finds_entity_by_Int32_primary_key()
             {
                 // Arrange
-                var id = this.connection.Insert<int>(new KeyInt32 { Name = "Some Name" }, dialect: this.dialect);
+                var id = this.database.Insert<int>(new KeyInt32 { Name = "Some Name" });
 
                 // Act
-                var entity = this.connection.Find<KeyInt32>(id, dialect: this.dialect);
+                var entity = this.database.Find<KeyInt32>(id);
 
                 // Assert
                 entity.Name.Should().Be("Some Name");
 
                 // Cleanup
-                this.connection.Delete<KeyInt32>(id, dialect: this.dialect);
+                this.database.Delete<KeyInt32>(id);
             }
 
             [Fact]
             public void Finds_entity_by_Int64_primary_key()
             {
                 // Arrange
-                var id = this.connection.Insert<long>(new KeyInt64 { Name = "Some Name" }, dialect: this.dialect);
+                var id = this.database.Insert<long>(new KeyInt64 { Name = "Some Name" });
 
                 // Act
-                var user = this.connection.Find<KeyInt64>(id, dialect: this.dialect);
+                var user = this.database.Find<KeyInt64>(id);
 
                 // Assert
                 user.Name.Should().Be("Some Name");
 
                 // Cleanup
-                this.connection.Delete<KeyInt64>(id, dialect: this.dialect);
+                this.database.Delete<KeyInt64>(id);
             }
 
             [Fact]
             public void Finds_entity_by_string_primary_key()
             {
                 // Arrange
-                this.connection.Insert(new KeyString { Name = "Some Name", Age = 42 }, dialect: this.dialect);
+                this.database.Insert(new KeyString { Name = "Some Name", Age = 42 });
 
                 // Act
-                var entity = this.connection.Find<KeyString>("Some Name", dialect: this.dialect);
+                var entity = this.database.Find<KeyString>("Some Name");
 
                 // Assert
                 entity.Age.Should().Be(42);
 
                 // Cleanup
-                this.connection.Delete(entity, dialect: this.dialect);
+                this.database.Delete(entity);
             }
 
             [Fact]
@@ -286,74 +283,72 @@ namespace Dapper.MicroCRUD.Tests
             {
                 // Arrange
                 var id = Guid.NewGuid();
-                this.connection.Insert(new KeyGuid { Id = id, Name = "Some Name" }, dialect: this.dialect);
+                this.database.Insert(new KeyGuid { Id = id, Name = "Some Name" });
 
                 // Act
-                var entity = this.connection.Find<KeyGuid>(id, dialect: this.dialect);
+                var entity = this.database.Find<KeyGuid>(id);
 
                 // Assert
                 entity.Name.Should().Be("Some Name");
 
                 // Cleanup
-                this.connection.Delete(entity, dialect: this.dialect);
+                this.database.Delete(entity);
             }
 
             [Fact]
             public void Finds_entity_by_composite_key()
             {
                 // Arrange
-                this.connection.Insert(new CompositeKeys { Key1 = 1, Key2 = 1, Name = "Some Name" }, dialect: this.dialect);
+                this.database.Insert(new CompositeKeys { Key1 = 1, Key2 = 1, Name = "Some Name" });
                 var id = new { Key1 = 1, Key2 = 1 };
 
                 // Act
-                var entity = this.connection.Find<CompositeKeys>(id, dialect: this.dialect);
+                var entity = this.database.Find<CompositeKeys>(id);
 
                 // Assert
                 entity.Name.Should().Be("Some Name");
 
                 // Cleanup
-                this.connection.DeleteAll<CompositeKeys>(dialect: this.dialect);
+                this.database.DeleteAll<CompositeKeys>();
             }
 
             [Fact]
             public void Finds_entities_in_alternate_schema()
             {
                 // Arrange
-                var id = this.connection.Insert<int>(new SchemaOther { Name = "Some Name" }, dialect: this.dialect);
+                var id = this.database.Insert<int>(new SchemaOther { Name = "Some Name" });
 
                 // Act
-                var entity = this.connection.Find<SchemaOther>(id, dialect: this.dialect);
+                var entity = this.database.Find<SchemaOther>(id);
 
                 // Assert
                 entity.Name.Should().Be("Some Name");
 
                 // Cleanup
-                this.connection.Delete<SchemaOther>(id, dialect: this.dialect);
+                this.database.Delete<SchemaOther>(id);
             }
 
             [Fact]
             public void Finds_entities_with_enum_property()
             {
                 // Arrange
-                var id = this.connection.Insert<int>(
-                    new PropertyEnum { FavoriteColor = Color.Green },
-                    dialect: this.dialect);
+                var id = this.database.Insert<int>(new PropertyEnum { FavoriteColor = Color.Green });
 
                 // Act
-                var entity = this.connection.Find<PropertyEnum>(id, dialect: this.dialect);
+                var entity = this.database.Find<PropertyEnum>(id);
 
                 // Assert
                 entity.FavoriteColor.Should().Be(Color.Green);
 
                 // Cleanup
-                this.connection.Delete<PropertyEnum>(id, dialect: this.dialect);
+                this.database.Delete<PropertyEnum>(id);
             }
 
             [Fact]
             public void Finds_entities_with_all_possible_types()
             {
                 // Arrange
-                var id = this.connection.Insert<int>(
+                var id = this.database.Insert<int>(
                     new PropertyAllPossibleTypes
                         {
                             Int16Property = -16,
@@ -382,11 +377,11 @@ namespace Dapper.MicroCRUD.Tests
                             NullableDateTimeOffsetProperty =
                                 new DateTimeOffset(new DateTime(2016, 12, 31), new TimeSpan(0, 1, 0, 0)),
                             ByteArrayProperty = new byte[] { 1, 2, 3 }
-                        },
-                    dialect: this.dialect);
+                        }
+                    );
 
                 // Act
-                var entity = this.connection.Find<PropertyAllPossibleTypes>(id, dialect: this.dialect);
+                var entity = this.database.Find<PropertyAllPossibleTypes>(id);
 
                 // Assert
                 entity.Int16Property.Should().Be(-16);
@@ -415,19 +410,17 @@ namespace Dapper.MicroCRUD.Tests
                 entity.ByteArrayProperty.ShouldAllBeEquivalentTo(new byte[] { 1, 2, 3 }, o => o.WithStrictOrdering());
 
                 // Cleanup
-                this.connection.Delete<PropertyAllPossibleTypes>(id, dialect: this.dialect);
+                this.database.Delete<PropertyAllPossibleTypes>(id);
             }
 
             [Fact]
             public void Ignores_columns_which_are_not_mapped()
             {
                 // Arrange
-                var id = this.connection.Insert<int>(
-                    new PropertyNotMapped { Firstname = "Bobby", LastName = "DropTables", Age = 10 },
-                    dialect: this.dialect);
+                var id = this.database.Insert<int>(new PropertyNotMapped { Firstname = "Bobby", LastName = "DropTables", Age = 10 });
 
                 // Act
-                var entity = this.connection.Find<PropertyNotMapped>(id, dialect: this.dialect);
+                var entity = this.database.Find<PropertyNotMapped>(id);
 
                 // Assert
                 entity.Firstname.Should().Be("Bobby");
@@ -436,7 +429,7 @@ namespace Dapper.MicroCRUD.Tests
                 entity.Age.Should().Be(0);
 
                 // Cleanup
-                this.connection.DeleteAll<PropertyNotMapped>(dialect: this.dialect);
+                this.database.DeleteAll<PropertyNotMapped>();
             }
 
             [Collection(nameof(PostgresCollection))]
@@ -461,9 +454,9 @@ namespace Dapper.MicroCRUD.Tests
         }
 
         public abstract class Get
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public Get(DatabaseFixture fixture)
+            protected Get(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -472,11 +465,11 @@ namespace Dapper.MicroCRUD.Tests
             public void Throws_exception_when_entity_has_no_key()
             {
                 // Arrange
-                this.connection.Insert(new NoKey { Name = "Some Name", Age = 1 }, dialect: this.dialect);
+                this.database.Insert(new NoKey { Name = "Some Name", Age = 1 });
 
                 // Act
                 Assert.Throws<InvalidPrimaryKeyException>(
-                    () => this.connection.Get<NoKey>("Some Name", dialect: this.dialect));
+                    () => this.database.Get<NoKey>("Some Name"));
             }
 
             [Fact]
@@ -484,55 +477,55 @@ namespace Dapper.MicroCRUD.Tests
             {
                 // Act
                 Assert.Throws<InvalidOperationException>(
-                    () => this.connection.Get<KeyInt32>(5, dialect: this.dialect));
+                    () => this.database.Get<KeyInt32>(5));
             }
 
             [Fact]
             public void Finds_entity_by_Int32_primary_key()
             {
                 // Arrange
-                var id = this.connection.Insert<int>(new KeyInt32 { Name = "Some Name" }, dialect: this.dialect);
+                var id = this.database.Insert<int>(new KeyInt32 { Name = "Some Name" });
 
                 // Act
-                var entity = this.connection.Get<KeyInt32>(id, dialect: this.dialect);
+                var entity = this.database.Get<KeyInt32>(id);
 
                 // Assert
                 entity.Name.Should().Be("Some Name");
 
                 // Cleanup
-                this.connection.Delete<KeyInt32>(id, dialect: this.dialect);
+                this.database.Delete<KeyInt32>(id);
             }
 
             [Fact]
             public void Finds_entity_by_Int64_primary_key()
             {
                 // Arrange
-                var id = this.connection.Insert<long>(new KeyInt64 { Name = "Some Name" }, dialect: this.dialect);
+                var id = this.database.Insert<long>(new KeyInt64 { Name = "Some Name" });
 
                 // Act
-                var user = this.connection.Get<KeyInt64>(id, dialect: this.dialect);
+                var user = this.database.Get<KeyInt64>(id);
 
                 // Assert
                 user.Name.Should().Be("Some Name");
 
                 // Cleanup
-                this.connection.Delete<KeyInt64>(id, dialect: this.dialect);
+                this.database.Delete<KeyInt64>(id);
             }
 
             [Fact]
             public void Finds_entity_by_string_primary_key()
             {
                 // Arrange
-                this.connection.Insert(new KeyString { Name = "Some Name", Age = 42 }, dialect: this.dialect);
+                this.database.Insert(new KeyString { Name = "Some Name", Age = 42 });
 
                 // Act
-                var entity = this.connection.Get<KeyString>("Some Name", dialect: this.dialect);
+                var entity = this.database.Get<KeyString>("Some Name");
 
                 // Assert
                 entity.Age.Should().Be(42);
 
                 // Cleanup
-                this.connection.Delete(entity, dialect: this.dialect);
+                this.database.Delete(entity);
             }
 
             [Fact]
@@ -540,61 +533,59 @@ namespace Dapper.MicroCRUD.Tests
             {
                 // Arrange
                 var id = Guid.NewGuid();
-                this.connection.Insert(new KeyGuid { Id = id, Name = "Some Name" }, dialect: this.dialect);
+                this.database.Insert(new KeyGuid { Id = id, Name = "Some Name" });
 
                 // Act
-                var entity = this.connection.Get<KeyGuid>(id, dialect: this.dialect);
+                var entity = this.database.Get<KeyGuid>(id);
 
                 // Assert
                 entity.Name.Should().Be("Some Name");
 
                 // Cleanup
-                this.connection.Delete(entity, dialect: this.dialect);
+                this.database.Delete(entity);
             }
 
             [Fact]
             public void Finds_entity_by_composite_key()
             {
                 // Arrange
-                this.connection.Insert(new CompositeKeys { Key1 = 1, Key2 = 1, Name = "Some Name" }, dialect: this.dialect);
+                this.database.Insert(new CompositeKeys { Key1 = 1, Key2 = 1, Name = "Some Name" });
                 var id = new { Key1 = 1, Key2 = 1 };
 
                 // Act
-                var entity = this.connection.Get<CompositeKeys>(id, dialect: this.dialect);
+                var entity = this.database.Get<CompositeKeys>(id);
 
                 // Assert
                 entity.Name.Should().Be("Some Name");
 
                 // Cleanup
-                this.connection.DeleteAll<CompositeKeys>(dialect: this.dialect);
+                this.database.DeleteAll<CompositeKeys>();
             }
 
             [Fact]
             public void Finds_entities_in_alternate_schema()
             {
                 // Arrange
-                var id = this.connection.Insert<int>(new SchemaOther { Name = "Some Name" }, dialect: this.dialect);
+                var id = this.database.Insert<int>(new SchemaOther { Name = "Some Name" });
 
                 // Act
-                var entity = this.connection.Get<SchemaOther>(id, dialect: this.dialect);
+                var entity = this.database.Get<SchemaOther>(id);
 
                 // Assert
                 entity.Name.Should().Be("Some Name");
 
                 // Cleanup
-                this.connection.Delete<SchemaOther>(id, dialect: this.dialect);
+                this.database.Delete<SchemaOther>(id);
             }
 
             [Fact]
             public void Ignores_columns_which_are_not_mapped()
             {
                 // Arrange
-                var id = this.connection.Insert<int>(
-                    new PropertyNotMapped { Firstname = "Bobby", LastName = "DropTables", Age = 10 },
-                    dialect: this.dialect);
+                var id = this.database.Insert<int>(new PropertyNotMapped { Firstname = "Bobby", LastName = "DropTables", Age = 10 });
 
                 // Act
-                var entity = this.connection.Get<PropertyNotMapped>(id, dialect: this.dialect);
+                var entity = this.database.Get<PropertyNotMapped>(id);
 
                 // Assert
                 entity.Firstname.Should().Be("Bobby");
@@ -603,7 +594,7 @@ namespace Dapper.MicroCRUD.Tests
                 entity.Age.Should().Be(0);
 
                 // Cleanup
-                this.connection.DeleteAll<PropertyNotMapped>(dialect: this.dialect);
+                this.database.DeleteAll<PropertyNotMapped>();
             }
 
             [Collection(nameof(PostgresCollection))]
@@ -628,9 +619,9 @@ namespace Dapper.MicroCRUD.Tests
         }
 
         public abstract class GetRange
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public GetRange(DatabaseFixture fixture)
+            protected GetRange(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -639,41 +630,40 @@ namespace Dapper.MicroCRUD.Tests
             public void Filters_result_by_conditions()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
-                var users = this.connection.GetRange<User>(
+                var users = this.database.GetRange<User>(
                     "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                    new { Search = "Some Name", Age = 10 },
-                    dialect: this.dialect);
+                    new { Search = "Some Name", Age = 10 });
 
                 // Assert
                 users.Count().Should().Be(3);
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Fact]
             public void Returns_everything_when_conditions_is_null()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
-                var users = this.connection.GetRange<User>(null, dialect: this.dialect);
+                var users = this.database.GetRange<User>(null);
 
                 // Assert
                 users.Count().Should().Be(4);
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Collection(nameof(PostgresCollection))]
@@ -698,9 +688,9 @@ namespace Dapper.MicroCRUD.Tests
         }
 
         public abstract class GetRangeWhereObject
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public GetRangeWhereObject(DatabaseFixture fixture)
+            protected GetRangeWhereObject(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -709,99 +699,99 @@ namespace Dapper.MicroCRUD.Tests
             public void Throws_exception_when_conditions_is_null()
             {
                 // Act
-                Assert.Throws<ArgumentNullException>(() => this.connection.GetRange<User>((object)null, dialect: this.dialect));
+                Assert.Throws<ArgumentNullException>(() => this.database.GetRange<User>((object)null));
             }
 
             [Fact]
             public void Returns_all_when_conditions_is_empty()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
-                var users = this.connection.GetRange<User>(new { }, dialect: this.dialect);
+                var users = this.database.GetRange<User>(new { });
 
                 // Assert
                 users.Count().Should().Be(4);
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Fact]
             public void Filters_result_by_conditions()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
-                var users = this.connection.GetRange<User>(new { Age = 10 }, dialect: this.dialect);
+                var users = this.database.GetRange<User>(new { Age = 10 });
 
                 // Assert
                 users.Count().Should().Be(3);
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Fact]
             public void When_value_is_not_null_does_not_find_nulls()
             {
                 // Arrange
-                this.connection.Insert(new PropertyNullable { Name = null }, dialect: this.dialect);
-                this.connection.Insert(new PropertyNullable { Name = "Some Name 3" }, dialect: this.dialect);
-                this.connection.Insert(new PropertyNullable { Name = null }, dialect: this.dialect);
+                this.database.Insert(new PropertyNullable { Name = null });
+                this.database.Insert(new PropertyNullable { Name = "Some Name 3" });
+                this.database.Insert(new PropertyNullable { Name = null });
 
                 // Act
-                var users = this.connection.GetRange<PropertyNullable>(new { Name = "Some Name 3" }, dialect: this.dialect);
+                var users = this.database.GetRange<PropertyNullable>(new { Name = "Some Name 3" });
 
                 // Assert
                 users.Count().Should().Be(1);
 
                 // Cleanup
-                this.connection.DeleteAll<PropertyNullable>(dialect: this.dialect);
+                this.database.DeleteAll<PropertyNullable>();
             }
 
             [Fact]
             public void When_value_is_null_finds_nulls()
             {
                 // Arrange
-                this.connection.Insert(new PropertyNullable { Name = null }, dialect: this.dialect);
-                this.connection.Insert(new PropertyNullable { Name = "Some Name 3" }, dialect: this.dialect);
-                this.connection.Insert(new PropertyNullable { Name = null }, dialect: this.dialect);
+                this.database.Insert(new PropertyNullable { Name = null });
+                this.database.Insert(new PropertyNullable { Name = "Some Name 3" });
+                this.database.Insert(new PropertyNullable { Name = null });
 
                 // Act
-                var users = this.connection.GetRange<PropertyNullable>(new { Name = (string)null }, dialect: this.dialect);
+                var users = this.database.GetRange<PropertyNullable>(new { Name = (string)null });
 
                 // Assert
                 users.Count().Should().Be(2);
 
                 // Cleanup
-                this.connection.DeleteAll<PropertyNullable>(dialect: this.dialect);
+                this.database.DeleteAll<PropertyNullable>();
             }
 
             [Fact]
             public void Filters_on_multiple_properties()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 12 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 12 });
 
                 // Act
-                var users = this.connection.GetRange<User>(new { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                var users = this.database.GetRange<User>(new { Name = "Some Name 2", Age = 10 });
 
                 // Assert
                 users.Count().Should().Be(1);
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Collection(nameof(PostgresCollection))]
@@ -826,9 +816,9 @@ namespace Dapper.MicroCRUD.Tests
         }
 
         public abstract class GetPage
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public GetPage(DatabaseFixture fixture)
+            protected GetPage(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -838,7 +828,7 @@ namespace Dapper.MicroCRUD.Tests
             {
                 // Act
                 var pageBuilder = new PageIndexPageBuilder(1, 10);
-                var users = this.connection.GetPage<User>(pageBuilder, null, "Age", (object)null, dialect: this.dialect);
+                var users = this.database.GetPage<User>(pageBuilder, null, "Age");
 
                 // Assert
                 users.Items.Count().Should().Be(0);
@@ -848,42 +838,40 @@ namespace Dapper.MicroCRUD.Tests
             public void Filters_result_by_conditions()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
-                var users = this.connection.GetPage<User>(
+                var users = this.database.GetPage<User>(
                     new PageIndexPageBuilder(1, 10),
                     "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
                     "Age",
-                    new { Search = "Some Name", Age = 10 },
-                    dialect: this.dialect);
+                    new { Search = "Some Name", Age = 10 });
 
                 // Assert
                 users.Items.Count().Should().Be(3);
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Fact]
             public void Gets_first_page()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
-                var users = this.connection.GetPage<User>(
+                var users = this.database.GetPage<User>(
                     new PageIndexPageBuilder(1, 2),
                     "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
                     "Age DESC",
-                    new { Search = "Some Name", Age = 10 },
-                    dialect: this.dialect).Items;
+                    new { Search = "Some Name", Age = 10 }).Items;
 
                 // Assert
                 users.Count().Should().Be(2);
@@ -891,75 +879,73 @@ namespace Dapper.MicroCRUD.Tests
                 users[1].Name.Should().Be("Some Name 2");
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Fact]
             public void Gets_second_page()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
-                var users = this.connection.GetPage<User>(
+                var users = this.database.GetPage<User>(
                     new PageIndexPageBuilder(2, 2),
                     "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
                     "Age DESC",
-                    new { Search = "Some Name", Age = 10 },
-                    dialect: this.dialect).Items;
+                    new { Search = "Some Name", Age = 10 }).Items;
 
                 // Assert
                 users.Count().Should().Be(1);
                 users[0].Name.Should().Be("Some Name 3");
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Fact]
             public void Returns_empty_set_past_last_page()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
-                var users = this.connection.GetPage<User>(
+                var users = this.database.GetPage<User>(
                     new PageIndexPageBuilder(3, 2),
                     "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
                     "Age DESC",
-                    new { Search = "Some Name", Age = 10 },
-                    dialect: this.dialect).Items;
+                    new { Search = "Some Name", Age = 10 }).Items;
 
                 // Assert
                 users.Should().BeEmpty();
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Fact]
             public void Returns_page_from_everything_when_conditions_is_null()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
-                var users = this.connection.GetPage<User>(new PageIndexPageBuilder(2, 2), null, "Age DESC", (object)null, dialect: this.dialect).Items;
+                var users = this.database.GetPage<User>(new PageIndexPageBuilder(2, 2), null, "Age DESC").Items;
 
                 // Assert
                 users.Count().Should().Be(2);
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Collection(nameof(PostgresCollection))]
@@ -984,9 +970,9 @@ namespace Dapper.MicroCRUD.Tests
         }
 
         public abstract class GetPageWhereObject
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public GetPageWhereObject(DatabaseFixture fixture)
+            protected GetPageWhereObject(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -996,7 +982,7 @@ namespace Dapper.MicroCRUD.Tests
             {
                 // Act
                 var pageBuilder = new PageIndexPageBuilder(1, 10);
-                var users = this.connection.GetPage<User>(pageBuilder, new { Age = 10 }, "Age", dialect: this.dialect);
+                var users = this.database.GetPage<User>(pageBuilder, new { Age = 10 }, "Age");
 
                 // Assert
                 users.Items.Should().BeEmpty();
@@ -1006,34 +992,34 @@ namespace Dapper.MicroCRUD.Tests
             public void Filters_result_by_conditions()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
                 var pageBuilder = new PageIndexPageBuilder(1, 10);
-                var users = this.connection.GetPage<User>(pageBuilder, new { Age = 10 }, "Age", dialect: this.dialect);
+                var users = this.database.GetPage<User>(pageBuilder, new { Age = 10 }, "Age");
 
                 // Assert
                 users.Items.Count().Should().Be(3);
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Fact]
             public void Gets_first_page()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
                 var pageBuilder = new PageIndexPageBuilder(1, 2);
-                var page = this.connection.GetPage<User>(pageBuilder, new { Age = 10 }, "Age", dialect: this.dialect);
+                var page = this.database.GetPage<User>(pageBuilder, new { Age = 10 }, "Age");
                 var users = page.Items;
 
                 // Assert
@@ -1042,21 +1028,21 @@ namespace Dapper.MicroCRUD.Tests
                 users[1].Name.Should().Be("Some Name 2");
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Fact]
             public void Gets_second_page()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
                 var pageBuilder = new PageIndexPageBuilder(2, 2);
-                var page = this.connection.GetPage<User>(pageBuilder, new { Age = 10 }, "Age", dialect: this.dialect);
+                var page = this.database.GetPage<User>(pageBuilder, new { Age = 10 }, "Age");
                 var users = page.Items;
 
                 // Assert
@@ -1064,28 +1050,28 @@ namespace Dapper.MicroCRUD.Tests
                 users[0].Name.Should().Be("Some Name 3");
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Fact]
             public void Returns_empty_set_past_last_page()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
                 var pageBuilder = new PageIndexPageBuilder(3, 2);
-                var page = this.connection.GetPage<User>(pageBuilder, new { Age = 10 }, "Age", dialect: this.dialect);
+                var page = this.database.GetPage<User>(pageBuilder, new { Age = 10 }, "Age");
                 var users = page.Items;
 
                 // Assert
                 users.Should().BeEmpty();
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Collection(nameof(PostgresCollection))]
@@ -1110,9 +1096,9 @@ namespace Dapper.MicroCRUD.Tests
         }
 
         public abstract class GetAll
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public GetAll(DatabaseFixture fixture)
+            protected GetAll(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -1121,19 +1107,19 @@ namespace Dapper.MicroCRUD.Tests
             public void Gets_all()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
-                var users = this.connection.GetAll<User>(dialect: this.dialect);
+                var users = this.database.GetAll<User>();
 
                 // Assert
                 users.Count().Should().Be(4);
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Collection(nameof(PostgresCollection))]
@@ -1158,9 +1144,9 @@ namespace Dapper.MicroCRUD.Tests
         }
 
         public abstract class Insert
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public Insert(DatabaseFixture fixture)
+            protected Insert(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -1172,13 +1158,13 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = new KeyInt32 { Name = "Some Name" };
 
                 // Act
-                this.connection.Insert(entity, dialect: this.dialect);
+                this.database.Insert(entity);
 
                 // Assert
-                this.connection.Count<KeyInt32>(dialect: this.dialect).Should().Be(1);
+                this.database.Count<KeyInt32>().Should().Be(1);
 
                 // Cleanup
-                this.connection.DeleteAll<KeyInt32>(dialect: this.dialect);
+                this.database.DeleteAll<KeyInt32>();
             }
 
             [Fact]
@@ -1188,13 +1174,13 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = new KeyInt64 { Name = "Some Name" };
 
                 // Act
-                this.connection.Insert(entity, dialect: this.dialect);
+                this.database.Insert(entity);
 
                 // Assert
-                this.connection.Count<KeyInt64>(dialect: this.dialect).Should().Be(1);
+                this.database.Count<KeyInt64>().Should().Be(1);
 
                 // Cleanup
-                this.connection.DeleteAll<KeyInt64>(dialect: this.dialect);
+                this.database.DeleteAll<KeyInt64>();
             }
 
             [Fact]
@@ -1204,13 +1190,13 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = new CompositeKeys { Key1 = 2, Key2 = 3, Name = "Some Name" };
 
                 // Act
-                this.connection.Insert(entity, dialect: this.dialect);
+                this.database.Insert(entity);
 
                 // Assert
-                this.connection.Count<CompositeKeys>(dialect: this.dialect).Should().Be(1);
+                this.database.Count<CompositeKeys>().Should().Be(1);
 
                 // Cleanup
-                this.connection.DeleteAll<CompositeKeys>(dialect: this.dialect);
+                this.database.DeleteAll<CompositeKeys>();
             }
 
             [Fact]
@@ -1220,7 +1206,7 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = new CompositeKeys { Key1 = null, Key2 = 5, Name = "Some Name" };
 
                 // Act
-                Action act = () => this.connection.Insert(entity, dialect: this.dialect);
+                Action act = () => this.database.Insert(entity);
 
                 // Assert
                 act.ShouldThrow<Exception>();
@@ -1233,13 +1219,13 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = new KeyString { Name = "Some Name", Age = 10 };
 
                 // Act
-                this.connection.Insert(entity, dialect: this.dialect);
+                this.database.Insert(entity);
 
                 // Assert
-                this.connection.Count<KeyString>(dialect: this.dialect).Should().Be(1);
+                this.database.Count<KeyString>().Should().Be(1);
 
                 // Cleanup
-                this.connection.DeleteAll<KeyString>(dialect: this.dialect);
+                this.database.DeleteAll<KeyString>();
             }
 
             [Fact]
@@ -1249,7 +1235,7 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = new KeyString { Name = null, Age = 10 };
 
                 // Act
-                Action act = () => this.connection.Insert(entity, dialect: this.dialect);
+                Action act = () => this.database.Insert(entity);
 
                 // Assert
                 act.ShouldThrow<Exception>();
@@ -1262,13 +1248,13 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = new KeyGuid { Id = Guid.NewGuid(), Name = "Some Name" };
 
                 // Act
-                this.connection.Insert(entity, dialect: this.dialect);
+                this.database.Insert(entity);
 
                 // Assert
-                this.connection.Count<KeyGuid>(dialect: this.dialect).Should().Be(1);
+                this.database.Count<KeyGuid>().Should().Be(1);
 
                 // Cleanup
-                this.connection.DeleteAll<KeyGuid>(dialect: this.dialect);
+                this.database.DeleteAll<KeyGuid>();
             }
 
             [Fact]
@@ -1278,13 +1264,13 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = new KeyAlias { Name = "Some Name" };
 
                 // Act
-                this.connection.Insert(entity, dialect: this.dialect);
+                this.database.Insert(entity);
 
                 // Assert
-                this.connection.Count<KeyAlias>(dialect: this.dialect).Should().Be(1);
+                this.database.Count<KeyAlias>().Should().Be(1);
 
                 // Cleanup
-                this.connection.DeleteAll<KeyAlias>(dialect: this.dialect);
+                this.database.DeleteAll<KeyAlias>();
             }
 
             [Fact]
@@ -1294,13 +1280,13 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = new SchemaOther { Name = "Some name" };
 
                 // Act
-                this.connection.Insert(entity, dialect: this.dialect);
+                this.database.Insert(entity);
 
                 // Assert
-                this.connection.Count<SchemaOther>(dialect: this.dialect).Should().Be(1);
+                this.database.Count<SchemaOther>().Should().Be(1);
 
                 // Cleanup
-                this.connection.DeleteAll<SchemaOther>(dialect: this.dialect);
+                this.database.DeleteAll<SchemaOther>();
             }
 
             [Fact]
@@ -1310,13 +1296,13 @@ namespace Dapper.MicroCRUD.Tests
                 var entity = new PropertyNotMapped { Firstname = "Bobby", LastName = "DropTables", Age = 10 };
 
                 // Act
-                this.connection.Insert(entity, dialect: this.dialect);
+                this.database.Insert(entity);
 
                 // Assert
-                this.connection.Count<PropertyNotMapped>(dialect: this.dialect).Should().Be(1);
+                this.database.Count<PropertyNotMapped>().Should().Be(1);
 
                 // Cleanup
-                this.connection.DeleteAll<PropertyNotMapped>(dialect: this.dialect);
+                this.database.DeleteAll<PropertyNotMapped>();
             }
 
             [Collection(nameof(PostgresCollection))]
@@ -1341,9 +1327,9 @@ namespace Dapper.MicroCRUD.Tests
         }
 
         public abstract class InsertAndReturnKey
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public InsertAndReturnKey(DatabaseFixture fixture)
+            protected InsertAndReturnKey(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -1353,7 +1339,7 @@ namespace Dapper.MicroCRUD.Tests
             {
                 // Act
                 Assert.Throws<InvalidPrimaryKeyException>(
-                    () => this.connection.Insert<int>(new NoKey(), dialect: this.dialect));
+                    () => this.database.Insert<int>(new NoKey()));
             }
 
             [Fact]
@@ -1361,7 +1347,7 @@ namespace Dapper.MicroCRUD.Tests
             {
                 // Act
                 Assert.Throws<InvalidPrimaryKeyException>(
-                    () => this.connection.Insert<int>(new CompositeKeys(), dialect: this.dialect));
+                    () => this.database.Insert<int>(new CompositeKeys()));
             }
 
             [Fact]
@@ -1372,7 +1358,7 @@ namespace Dapper.MicroCRUD.Tests
 
                 // Act / Assert
                 Assert.Throws<InvalidPrimaryKeyException>(
-                    () => this.connection.Insert<string>(entity, dialect: this.dialect));
+                    () => this.database.Insert<string>(entity));
             }
 
             [Fact]
@@ -1383,59 +1369,59 @@ namespace Dapper.MicroCRUD.Tests
 
                 // Act / Assert
                 Assert.Throws<InvalidPrimaryKeyException>(
-                    () => this.connection.Insert<Guid>(entity, dialect: this.dialect));
+                    () => this.database.Insert<Guid>(entity));
             }
 
             [Fact]
             public void Inserts_entity_with_int32_primary_key()
             {
                 // Act
-                var id = this.connection.Insert<int>(new KeyInt32 { Name = "Some Name" }, dialect: this.dialect);
+                var id = this.database.Insert<int>(new KeyInt32 { Name = "Some Name" });
 
                 // Assert
                 id.Should().BeGreaterThan(0);
 
                 // Cleanup
-                this.connection.Delete<KeyInt32>(id, dialect: this.dialect);
+                this.database.Delete<KeyInt32>(id);
             }
 
             [Fact]
             public void Inserts_entity_with_int64_primary_key()
             {
                 // Act
-                var id = this.connection.Insert<int>(new KeyInt64 { Name = "Some Name" }, dialect: this.dialect);
+                var id = this.database.Insert<int>(new KeyInt64 { Name = "Some Name" });
 
                 // Assert
                 id.Should().BeGreaterThan(0);
 
                 // Cleanup
-                this.connection.Delete<KeyInt64>(id, dialect: this.dialect);
+                this.database.Delete<KeyInt64>(id);
             }
 
             [Fact]
             public void Uses_key_attribute_to_determine_key()
             {
                 // Act
-                var id = this.connection.Insert<int>(new KeyAlias { Name = "Some Name" }, dialect: this.dialect);
+                var id = this.database.Insert<int>(new KeyAlias { Name = "Some Name" });
 
                 // Assert
                 id.Should().BeGreaterThan(0);
 
                 // Cleanup
-                this.connection.Delete<KeyAlias>(id, dialect: this.dialect);
+                this.database.Delete<KeyAlias>(id);
             }
 
             [Fact]
             public void Inserts_into_other_schemas()
             {
                 // Act
-                var id = this.connection.Insert<int>(new SchemaOther { Name = "Some name" }, dialect: this.dialect);
+                var id = this.database.Insert<int>(new SchemaOther { Name = "Some name" });
 
                 // Assert
                 id.Should().BeGreaterThan(0);
 
                 // Cleanup
-                this.connection.Delete<SchemaOther>(id, dialect: this.dialect);
+                this.database.Delete<SchemaOther>(id);
             }
 
             [Collection(nameof(PostgresCollection))]
@@ -1460,9 +1446,9 @@ namespace Dapper.MicroCRUD.Tests
         }
 
         public abstract class InsertRange
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public InsertRange(DatabaseFixture fixture)
+            protected InsertRange(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -1478,13 +1464,13 @@ namespace Dapper.MicroCRUD.Tests
                     };
 
                 // Act
-                this.connection.InsertRange(entities, dialect: this.dialect);
+                this.database.InsertRange(entities);
 
                 // Assert
-                this.connection.Count<KeyInt32>(dialect: this.dialect).Should().Be(2);
+                this.database.Count<KeyInt32>().Should().Be(2);
 
                 // Cleanup
-                this.connection.DeleteAll<KeyInt32>(dialect: this.dialect);
+                this.database.DeleteAll<KeyInt32>();
             }
 
             [Fact]
@@ -1498,13 +1484,13 @@ namespace Dapper.MicroCRUD.Tests
                     };
 
                 // Act
-                this.connection.InsertRange(entities, dialect: this.dialect);
+                this.database.InsertRange(entities);
 
                 // Assert
-                this.connection.Count<KeyInt64>(dialect: this.dialect).Should().Be(2);
+                this.database.Count<KeyInt64>().Should().Be(2);
 
                 // Cleanup
-                this.connection.DeleteAll<KeyInt64>(dialect: this.dialect);
+                this.database.DeleteAll<KeyInt64>();
             }
 
             [Fact]
@@ -1518,13 +1504,13 @@ namespace Dapper.MicroCRUD.Tests
                     };
 
                 // Act
-                this.connection.InsertRange(entities, dialect: this.dialect);
+                this.database.InsertRange(entities);
 
                 // Assert
-                this.connection.Count<CompositeKeys>(dialect: this.dialect).Should().Be(2);
+                this.database.Count<CompositeKeys>().Should().Be(2);
 
                 // Cleanup
-                this.connection.DeleteAll<CompositeKeys>(dialect: this.dialect);
+                this.database.DeleteAll<CompositeKeys>();
             }
 
             [Fact]
@@ -1538,13 +1524,13 @@ namespace Dapper.MicroCRUD.Tests
                     };
 
                 // Act
-                this.connection.InsertRange(entities, dialect: this.dialect);
+                this.database.InsertRange(entities);
 
                 // Assert
-                this.connection.Count<KeyString>(dialect: this.dialect).Should().Be(2);
+                this.database.Count<KeyString>().Should().Be(2);
 
                 // Cleanup
-                this.connection.DeleteAll<KeyString>(dialect: this.dialect);
+                this.database.DeleteAll<KeyString>();
             }
 
             [Fact]
@@ -1558,13 +1544,13 @@ namespace Dapper.MicroCRUD.Tests
                     };
 
                 // Act
-                this.connection.InsertRange(entities, dialect: this.dialect);
+                this.database.InsertRange(entities);
 
                 // Assert
-                this.connection.Count<KeyGuid>(dialect: this.dialect).Should().Be(2);
+                this.database.Count<KeyGuid>().Should().Be(2);
 
                 // Cleanup
-                this.connection.DeleteAll<KeyGuid>(dialect: this.dialect);
+                this.database.DeleteAll<KeyGuid>();
             }
 
             [Fact]
@@ -1578,13 +1564,13 @@ namespace Dapper.MicroCRUD.Tests
                     };
 
                 // Act
-                this.connection.InsertRange(entities, dialect: this.dialect);
+                this.database.InsertRange(entities);
 
                 // Assert
-                this.connection.Count<KeyAlias>(dialect: this.dialect).Should().Be(2);
+                this.database.Count<KeyAlias>().Should().Be(2);
 
                 // Cleanup
-                this.connection.DeleteAll<KeyAlias>(dialect: this.dialect);
+                this.database.DeleteAll<KeyAlias>();
             }
 
             [Fact]
@@ -1598,13 +1584,13 @@ namespace Dapper.MicroCRUD.Tests
                     };
 
                 // Act
-                this.connection.InsertRange(entities, dialect: this.dialect);
+                this.database.InsertRange(entities);
 
                 // Assert
-                this.connection.Count<SchemaOther>(dialect: this.dialect).Should().Be(2);
+                this.database.Count<SchemaOther>().Should().Be(2);
 
                 // Cleanup
-                this.connection.DeleteAll<SchemaOther>(dialect: this.dialect);
+                this.database.DeleteAll<SchemaOther>();
             }
 
             [Collection(nameof(PostgresCollection))]
@@ -1629,9 +1615,9 @@ namespace Dapper.MicroCRUD.Tests
         }
 
         public abstract class InsertRangeAndSetKey
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public InsertRangeAndSetKey(DatabaseFixture fixture)
+            protected InsertRangeAndSetKey(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -1647,7 +1633,7 @@ namespace Dapper.MicroCRUD.Tests
 
                 // Act / Assert
                 Assert.Throws<InvalidPrimaryKeyException>(
-                    () => this.connection.InsertRange<NoKey, int>(entities, (e, k) => { }, dialect: this.dialect));
+                    () => this.database.InsertRange<NoKey, int>(entities, (e, k) => { }));
             }
 
             [Fact]
@@ -1661,7 +1647,7 @@ namespace Dapper.MicroCRUD.Tests
 
                 // Act / Assert
                 Assert.Throws<InvalidPrimaryKeyException>(
-                    () => this.connection.InsertRange<CompositeKeys, int>(entities, (e, k) => { }, dialect: this.dialect));
+                    () => this.database.InsertRange<CompositeKeys, int>(entities, (e, k) => { }));
             }
 
             [Fact]
@@ -1675,7 +1661,7 @@ namespace Dapper.MicroCRUD.Tests
 
             // Act / Assert
             Assert.Throws<InvalidPrimaryKeyException>(
-                    () => this.connection.InsertRange<KeyString, string>(entities, (e, k) => { }, dialect: this.dialect));
+                    () => this.database.InsertRange<KeyString, string>(entities, (e, k) => { }));
             }
 
             [Fact]
@@ -1689,7 +1675,7 @@ namespace Dapper.MicroCRUD.Tests
 
                 // Act / Assert
                 Assert.Throws<InvalidPrimaryKeyException>(
-                        () => this.connection.InsertRange<KeyGuid, Guid>(entities, (e, k) => { }, dialect: this.dialect));
+                        () => this.database.InsertRange<KeyGuid, Guid>(entities, (e, k) => { }));
             }
 
             [Fact]
@@ -1704,7 +1690,7 @@ namespace Dapper.MicroCRUD.Tests
                     };
 
                 // Act
-                this.connection.InsertRange<KeyInt32, int>(entities, (e, k) => { e.Id = k; }, dialect: this.dialect);
+                this.database.InsertRange<KeyInt32, int>(entities, (e, k) => { e.Id = k; });
 
                 // Assert
                 entities[0].Id.Should().BeGreaterThan(0);
@@ -1712,7 +1698,7 @@ namespace Dapper.MicroCRUD.Tests
                 entities[2].Id.Should().BeGreaterThan(entities[1].Id);
 
                 // Cleanup
-                this.connection.DeleteAll<KeyInt32>(dialect: this.dialect);
+                this.database.DeleteAll<KeyInt32>();
             }
 
             [Fact]
@@ -1727,7 +1713,7 @@ namespace Dapper.MicroCRUD.Tests
                     };
 
                 // Act
-                this.connection.InsertRange<KeyInt64, long>(entities, (e, k) => { e.Id = k; }, dialect: this.dialect);
+                this.database.InsertRange<KeyInt64, long>(entities, (e, k) => { e.Id = k; });
 
                 // Assert
                 entities[0].Id.Should().BeGreaterThan(0);
@@ -1735,7 +1721,7 @@ namespace Dapper.MicroCRUD.Tests
                 entities[2].Id.Should().BeGreaterThan(entities[1].Id);
 
                 // Cleanup
-                this.connection.DeleteAll<KeyInt64>(dialect: this.dialect);
+                this.database.DeleteAll<KeyInt64>();
             }
 
             [Fact]
@@ -1748,13 +1734,13 @@ namespace Dapper.MicroCRUD.Tests
                     };
 
                 // Act
-                this.connection.InsertRange<KeyExplicit, int>(entities, (e, k) => { e.Key = k; }, dialect: this.dialect);
+                this.database.InsertRange<KeyExplicit, int>(entities, (e, k) => { e.Key = k; });
 
                 // Assert
                 entities[0].Key.Should().BeGreaterThan(0);
 
                 // Cleanup
-                this.connection.DeleteAll<KeyAlias>(dialect: this.dialect);
+                this.database.DeleteAll<KeyAlias>();
             }
 
             [Fact]
@@ -1769,7 +1755,7 @@ namespace Dapper.MicroCRUD.Tests
                     };
 
                 // Act
-                this.connection.InsertRange<SchemaOther, int>(entities, (e, k) => { e.Id = k; }, dialect: this.dialect);
+                this.database.InsertRange<SchemaOther, int>(entities, (e, k) => { e.Id = k; });
 
                 // Assert
                 entities[0].Id.Should().BeGreaterThan(0);
@@ -1777,7 +1763,7 @@ namespace Dapper.MicroCRUD.Tests
                 entities[2].Id.Should().BeGreaterThan(entities[1].Id);
 
                 // Cleanup
-                this.connection.DeleteAll<SchemaOther>(dialect: this.dialect);
+                this.database.DeleteAll<SchemaOther>();
             }
 
             [Collection(nameof(PostgresCollection))]
@@ -1802,9 +1788,9 @@ namespace Dapper.MicroCRUD.Tests
         }
 
         public abstract class Update
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public Update(DatabaseFixture fixture)
+            protected Update(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -1813,19 +1799,19 @@ namespace Dapper.MicroCRUD.Tests
             public void Updates_the_entity()
             {
                 // Arrange
-                var id = this.connection.Insert<int>(new User { Name = "Some name", Age = 10 }, dialect: this.dialect);
+                var id = this.database.Insert<int>(new User { Name = "Some name", Age = 10 });
 
                 // Act
-                var entity = this.connection.Find<User>(id, dialect: this.dialect);
+                var entity = this.database.Find<User>(id);
                 entity.Name = "Other name";
-                this.connection.Update(entity, dialect: this.dialect);
+                this.database.Update(entity);
 
                 // Assert
-                var updatedEntity = this.connection.Find<User>(id, dialect: this.dialect);
+                var updatedEntity = this.database.Find<User>(id);
                 updatedEntity.Name.Should().Be("Other name");
 
                 // Cleanup
-                this.connection.Delete<User>(id, dialect: this.dialect);
+                this.database.Delete<User>(id);
             }
 
             [Fact]
@@ -1833,18 +1819,18 @@ namespace Dapper.MicroCRUD.Tests
             {
                 // Arrange
                 var entity = new PropertyNotMapped { Firstname = "Bobby", LastName = "DropTables", Age = 10 };
-                entity.Id = this.connection.Insert<int>(entity, dialect: this.dialect);
+                entity.Id = this.database.Insert<int>(entity);
 
                 // Act
                 entity.LastName = "Other name";
-                this.connection.Update(entity, dialect: this.dialect);
+                this.database.Update(entity);
 
                 // Assert
-                var updatedEntity = this.connection.Find<PropertyNotMapped>(entity.Id, dialect: this.dialect);
+                var updatedEntity = this.database.Find<PropertyNotMapped>(entity.Id);
                 updatedEntity.LastName.Should().Be("Other name");
 
                 // Cleanup
-                this.connection.DeleteAll<PropertyNotMapped>(dialect: this.dialect);
+                this.database.DeleteAll<PropertyNotMapped>();
             }
 
             [Fact]
@@ -1852,20 +1838,20 @@ namespace Dapper.MicroCRUD.Tests
             {
                 // Arrange
                 var entity = new CompositeKeys { Key1 = 5, Key2 = 20, Name = "Some name" };
-                this.connection.Insert(entity, dialect: this.dialect);
+                this.database.Insert(entity);
 
                 // Act
                 entity.Name = "Other name";
-                this.connection.Update(entity, dialect: this.dialect);
+                this.database.Update(entity);
 
                 // Assert
                 var id = new { Key1 = 5, Key2 = 20 };
-                var updatedEntity = this.connection.Find<CompositeKeys>(id, dialect: this.dialect);
+                var updatedEntity = this.database.Find<CompositeKeys>(id);
 
                 updatedEntity.Name.Should().Be("Other name");
 
                 // Cleanup
-                this.connection.DeleteAll<CompositeKeys>(dialect: this.dialect);
+                this.database.DeleteAll<CompositeKeys>();
             }
 
             [Collection(nameof(PostgresCollection))]
@@ -1890,9 +1876,9 @@ namespace Dapper.MicroCRUD.Tests
         }
 
         public abstract class UpdateRange
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public UpdateRange(DatabaseFixture fixture)
+            protected UpdateRange(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -1901,69 +1887,65 @@ namespace Dapper.MicroCRUD.Tests
             public void Updates_the_entity()
             {
                 // Arrange
-                this.connection.InsertRange(
+                this.database.InsertRange(
                     new[]
                         {
                             new User { Name = "Some name1", Age = 10 },
                             new User { Name = "Some name2", Age = 10 },
                             new User { Name = "Some name2", Age = 11 }
-                        },
-                    dialect: this.dialect);
+                        }
+                    );
 
                 // Act
-                var entities = this.connection.GetRange<User>("WHERE Age = 10", dialect: this.dialect).ToList();
+                var entities = this.database.GetRange<User>("WHERE Age = 10").ToList();
                 foreach (var entity in entities)
                 {
                     entity.Name = "Other name";
                 }
 
-                var result = this.connection.UpdateRange(entities, dialect: this.dialect);
+                var result = this.database.UpdateRange(entities);
 
                 // Assert
                 result.NumRowsAffected.Should().Be(2);
 
-                var updatedEntities = this.connection.GetRange<User>("WHERE Name = 'Other name'", dialect: this.dialect);
+                var updatedEntities = this.database.GetRange<User>("WHERE Name = 'Other name'");
                 updatedEntities.Count().Should().Be(2);
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Fact]
             public void Updates_entities_with_composite_keys()
             {
                 // Arrange
-                this.connection.InsertRange(
+                this.database.InsertRange(
                     new[]
                         {
                             new CompositeKeys { Key1 = 5, Key2 = 20, Name = "Some name1" },
                             new CompositeKeys { Key1 = 6, Key2 = 21, Name = "Some name2" },
                             new CompositeKeys { Key1 = 7, Key2 = 22, Name = "Some other name" }
-                        },
-                    dialect: this.dialect);
+                        }
+                    );
 
                 // Act
-                var entities = this.connection.GetRange<CompositeKeys>(
-                    "WHERE Name Like 'Some name%'",
-                    dialect: this.dialect).ToList();
+                var entities = this.database.GetRange<CompositeKeys>("WHERE Name Like 'Some name%'").ToList();
 
                 foreach (var entity in entities)
                 {
                     entity.Name = "Other name";
                 }
 
-                var result = this.connection.UpdateRange(entities, dialect: this.dialect);
+                var result = this.database.UpdateRange(entities);
 
                 // Assert
                 result.NumRowsAffected.Should().Be(2);
 
-                var updatedEntities = this.connection.GetRange<CompositeKeys>(
-                    "WHERE Name = 'Other name'",
-                    dialect: this.dialect);
+                var updatedEntities = this.database.GetRange<CompositeKeys>("WHERE Name = 'Other name'");
                 updatedEntities.Count().Should().Be(2);
 
                 // Cleanup
-                this.connection.DeleteAll<CompositeKeys>(dialect: this.dialect);
+                this.database.DeleteAll<CompositeKeys>();
             }
 
             [Collection(nameof(PostgresCollection))]
@@ -1988,9 +1970,9 @@ namespace Dapper.MicroCRUD.Tests
         }
 
         public abstract class DeleteId
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public DeleteId(DatabaseFixture fixture)
+            protected DeleteId(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -1999,23 +1981,23 @@ namespace Dapper.MicroCRUD.Tests
             public void Deletes_the_entity_with_the_specified_id()
             {
                 // Arrange
-                var id = this.connection.Insert<int>(new User { Name = "Some name", Age = 10 }, dialect: this.dialect);
+                var id = this.database.Insert<int>(new User { Name = "Some name", Age = 10 });
 
                 // Act
-                this.connection.Delete<User>(id, dialect: this.dialect);
+                this.database.Delete<User>(id);
 
                 // Assert
-                this.connection.Find<User>(id, dialect: this.dialect).Should().BeNull();
+                this.database.Find<User>(id).Should().BeNull();
             }
 
             [Fact]
             public void Deletes_entity_with_string_key()
             {
                 // Arrange
-                this.connection.Insert(new KeyString { Name = "Some Name", Age = 10 }, dialect: this.dialect);
+                this.database.Insert(new KeyString { Name = "Some Name", Age = 10 });
 
                 // Act
-                this.connection.Delete<KeyString>("Some Name", dialect: this.dialect);
+                this.database.Delete<KeyString>("Some Name");
             }
 
             [Fact]
@@ -2023,10 +2005,10 @@ namespace Dapper.MicroCRUD.Tests
             {
                 // Arrange
                 var id = Guid.NewGuid();
-                this.connection.Insert(new KeyGuid { Id = id, Name = "Some Name" }, dialect: this.dialect);
+                this.database.Insert(new KeyGuid { Id = id, Name = "Some Name" });
 
                 // Act
-                this.connection.Delete<KeyGuid>(id, dialect: this.dialect);
+                this.database.Delete<KeyGuid>(id);
             }
 
             [Fact]
@@ -2035,10 +2017,10 @@ namespace Dapper.MicroCRUD.Tests
                 // Arrange
                 var id = new { Key1 = 5, Key2 = 20 };
                 var entity = new CompositeKeys { Key1 = 5, Key2 = 20, Name = "Some Name" };
-                this.connection.Insert(entity, dialect: this.dialect);
+                this.database.Insert(entity);
 
                 // Act
-                this.connection.Delete<CompositeKeys>(id, dialect: this.dialect);
+                this.database.Delete<CompositeKeys>(id);
             }
 
             [Collection(nameof(PostgresCollection))]
@@ -2063,9 +2045,9 @@ namespace Dapper.MicroCRUD.Tests
         }
 
         public abstract class DeleteEntity
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public DeleteEntity(DatabaseFixture fixture)
+            protected DeleteEntity(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -2074,14 +2056,14 @@ namespace Dapper.MicroCRUD.Tests
             public void Deletes_entity_with_matching_key()
             {
                 // Arrange
-                var id = this.connection.Insert<int>(new User { Name = "Some name", Age = 10 }, dialect: this.dialect);
+                var id = this.database.Insert<int>(new User { Name = "Some name", Age = 10 });
 
                 // Act
-                var entity = this.connection.Find<User>(id, dialect: this.dialect);
-                this.connection.Delete(entity, dialect: this.dialect);
+                var entity = this.database.Find<User>(id);
+                this.database.Delete(entity);
 
                 // Assert
-                this.connection.Find<User>(id, dialect: this.dialect).Should().BeNull();
+                this.database.Find<User>(id).Should().BeNull();
             }
 
             [Fact]
@@ -2090,13 +2072,13 @@ namespace Dapper.MicroCRUD.Tests
                 // Arrange
                 var id = new { Key1 = 5, Key2 = 20 };
                 var entity = new CompositeKeys { Key1 = 5, Key2 = 20, Name = "Some Name" };
-                this.connection.Insert(entity, dialect: this.dialect);
+                this.database.Insert(entity);
 
                 // Act
-                this.connection.Delete(entity, dialect: this.dialect);
+                this.database.Delete(entity);
 
                 // Assert
-                this.connection.Find<CompositeKeys>(id, dialect: this.dialect).Should().BeNull();
+                this.database.Find<CompositeKeys>(id).Should().BeNull();
             }
 
             [Collection(nameof(PostgresCollection))]
@@ -2121,9 +2103,9 @@ namespace Dapper.MicroCRUD.Tests
         }
 
         public abstract class DeleteRange
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public DeleteRange(DatabaseFixture fixture)
+            protected DeleteRange(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -2138,7 +2120,7 @@ namespace Dapper.MicroCRUD.Tests
             {
                 // Act / Assert
                 Assert.Throws<ArgumentException>(
-                    () => this.connection.DeleteRange<User>(conditions, dialect: this.dialect));
+                    () => this.database.DeleteRange<User>(conditions));
             }
 
             [Theory]
@@ -2148,7 +2130,7 @@ namespace Dapper.MicroCRUD.Tests
             public void Allows_any_capitalization_of_where_clause(string conditions)
             {
                 // Act
-                Action act = () => this.connection.DeleteRange<User>(conditions, dialect: this.dialect);
+                Action act = () => this.database.DeleteRange<User>(conditions);
 
                 // Assert
                 act.ShouldNotThrow();
@@ -2158,23 +2140,20 @@ namespace Dapper.MicroCRUD.Tests
             public void Deletes_all_matching_entities()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
-                var result = this.connection.DeleteRange<User>(
-                    "WHERE Age = @Age",
-                    new { Age = 10 },
-                    dialect: this.dialect);
+                var result = this.database.DeleteRange<User>("WHERE Age = @Age", new { Age = 10 });
 
                 // Assert
                 result.NumRowsAffected.Should().Be(3);
-                this.connection.Count<User>(dialect: this.dialect).Should().Be(1);
+                this.database.Count<User>().Should().Be(1);
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Collection(nameof(PostgresCollection))]
@@ -2199,9 +2178,9 @@ namespace Dapper.MicroCRUD.Tests
         }
 
         public abstract class DeleteRangeWhereObject
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public DeleteRangeWhereObject(DatabaseFixture fixture)
+            protected DeleteRangeWhereObject(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -2210,34 +2189,34 @@ namespace Dapper.MicroCRUD.Tests
             public void Throws_exception_if_conditions_is_null()
             {
                 // Act / Assert
-                Assert.Throws<ArgumentNullException>(() => this.connection.DeleteRange<User>((object)null, dialect: this.dialect));
+                Assert.Throws<ArgumentNullException>(() => this.database.DeleteRange<User>((object)null));
             }
 
             [Fact]
             public void Throws_exception_if_conditions_is_empty()
             {
                 // Act / Assert
-                Assert.Throws<ArgumentException>(() => this.connection.DeleteRange<User>(new { }, dialect: this.dialect));
+                Assert.Throws<ArgumentException>(() => this.database.DeleteRange<User>(new { }));
             }
 
             [Fact]
             public void Deletes_all_matching_entities()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
-                var result = this.connection.DeleteRange<User>(new { Age = 10 }, dialect: this.dialect);
+                var result = this.database.DeleteRange<User>(new { Age = 10 });
 
                 // Assert
                 result.NumRowsAffected.Should().Be(3);
-                this.connection.Count<User>(dialect: this.dialect).Should().Be(1);
+                this.database.Count<User>().Should().Be(1);
 
                 // Cleanup
-                this.connection.DeleteAll<User>(dialect: this.dialect);
+                this.database.DeleteAll<User>();
             }
 
             [Collection(nameof(PostgresCollection))]
@@ -2262,9 +2241,9 @@ namespace Dapper.MicroCRUD.Tests
         }
 
         public abstract class DeleteAll
-            : DbConnectionExtensionsTests
+            : DapperConnectionMicroCrudExtensionsTests
         {
-            public DeleteAll(DatabaseFixture fixture)
+            protected DeleteAll(DatabaseFixture fixture)
                 : base(fixture)
             {
             }
@@ -2273,17 +2252,17 @@ namespace Dapper.MicroCRUD.Tests
             public void Deletes_all_entities()
             {
                 // Arrange
-                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
-                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                 // Act
-                var result = this.connection.DeleteAll<User>(dialect: this.dialect);
+                var result = this.database.DeleteAll<User>();
 
                 // Assert
                 result.NumRowsAffected.Should().Be(4);
-                this.connection.Count<User>(dialect: this.dialect).Should().Be(0);
+                this.database.Count<User>().Should().Be(0);
             }
 
             [Collection(nameof(PostgresCollection))]

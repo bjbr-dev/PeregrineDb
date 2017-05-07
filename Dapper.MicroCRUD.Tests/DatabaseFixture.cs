@@ -4,6 +4,7 @@
 namespace Dapper.MicroCRUD.Tests
 {
     using System;
+    using Dapper.MicroCRUD.Databases;
     using Dapper.MicroCRUD.Dialects;
     using Dapper.MicroCRUD.Tests.Utils;
 
@@ -15,6 +16,7 @@ namespace Dapper.MicroCRUD.Tests
             this.Database = BlankDatabaseFactory.MakeDatabase(dialectName);
             this.DialectName = dialectName;
             this.DatabaseDialect = this.Database.Dialect;
+            this.DefaultDatabase = new DefaultDatabase(this.Database.Connection, this.DatabaseDialect);
         }
 
         public string DialectName { get; set; }
@@ -22,6 +24,8 @@ namespace Dapper.MicroCRUD.Tests
         public BlankDatabase Database { get; }
 
         public IDialect DatabaseDialect { get; set; }
+
+        public IDatabase DefaultDatabase { get; set; }
 
         public void Dispose()
         {
