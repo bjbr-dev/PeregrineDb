@@ -62,6 +62,14 @@ namespace Dapper.MicroCRUD
             connection.Execute(insertCommnad);
         }
 
+        public static void CreateTempTable<TEntity>(
+            this IDapperConnection connection,
+            IEnumerable<TEntity> entities,
+            int? commandTimeout = null)
+        {
+            connection.DbConnection.CreateTempTable(entities, connection.Transaction, connection.Dialect, commandTimeout);
+        }
+
         /// <summary>
         /// <para>Drops the temporary table with the given <paramref name="tableName"/>.</para>
         /// <para>USE WITH CAUTION! In some dialects, this can drop a non-temporary table! Make sure you specify the right entity and tablename.</para>
@@ -94,6 +102,14 @@ namespace Dapper.MicroCRUD
             Ensure.NotNull(connection, nameof(connection));
             var command = CommandFactory.MakeDropTempTableCommand<TEntity>(tableName, transaction, dialect, commandTimeout);
             connection.Execute(command);
+        }
+
+        public static void DropTempTable<TEntity>(
+            this IDapperConnection connection,
+            string tableName,
+            int? commandTimeout = null)
+        {
+            connection.DbConnection.DropTempTable<TEntity>(tableName, connection.Transaction, connection.Dialect, commandTimeout);
         }
     }
 }
