@@ -1,5 +1,6 @@
 ﻿namespace Dapper.MicroCRUD.Databases
 {
+    using System;
     using System.Data;
     using Dapper.MicroCRUD.Dialects;
 
@@ -12,6 +13,20 @@
             this.Dialect = dialect;
         }
 
+        public static DefaultDatabase Create<T>(T seed, Func<T, IDbConnection> connectionFactory, IDialect dialect)
+        {
+            var connection = connectionFactory(seed);
+            try
+            {
+                return new DefaultDatabase(connection, dialect);
+            }
+            catch
+            {
+                connection.Dispose();
+                throw;
+            }
+        }
+
         public IDbConnection DbConnection { get; }
 
         public IDbTransaction Transaction => null;
@@ -21,13 +36,13 @@
         public IUnitOfWork StartUnitOfWork()
         {
             var transaction = this.DbConnection.BeginTransaction();
-            return DefaultUnitOfWork.Create(this, transaction, false);
+            return DefaultUnitOfWorkFactory.Create(this, transaction, false);
         }
 
         public IUnitOfWork StartUnitOfWork(IsolationLevel isolationLevel)
         {
             var transaction = this.DbConnection.BeginTransaction(isolationLevel);
-            return DefaultUnitOfWork.Create(this, transaction, false);
+            return DefaultUnitOfWorkFactory.Create(this, transaction, false);
         }
 
         public void Dispose()

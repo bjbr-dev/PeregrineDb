@@ -33,42 +33,6 @@
             this.disposeDatabase = disposeDatabase;
         }
 
-        /// <summary>
-        /// Creates a <see cref="DefaultUnitOfWork"/>. If an exception happens, it will safely dispose of the transaction, and optionally the database
-        /// </summary>
-        public static IUnitOfWork Create(IDatabase database, IDbTransaction transaction, bool disposeDatabase)
-        {
-            try
-            {
-                return new DefaultUnitOfWork(database, transaction, disposeDatabase);
-            }
-            catch (Exception ex)
-            {
-                try
-                {
-                    transaction?.Rollback();
-                }
-                catch (Exception rollbackEx)
-                {
-                    DisposeArguments();
-                    throw new AggregateException(ex, rollbackEx);
-                }
-
-                DisposeArguments();
-                throw;
-            }
-
-            void DisposeArguments()
-            {
-                transaction?.Dispose();
-
-                if (disposeDatabase)
-                {
-                    database?.Dispose();
-                }
-            }
-        }
-
         public IDbConnection DbConnection
         {
             get
