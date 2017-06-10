@@ -741,6 +741,35 @@ namespace Dapper.MicroCRUD.Tests
             }
 
             [Fact]
+            public void Matches_column_name_case_insensitively()
+            {
+                // Arrange
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
+
+                // Act
+                var users = this.database.GetRange<User>(new { age = 10 });
+
+                // Assert
+                users.Count().Should().Be(3);
+
+                // Cleanup
+                this.database.DeleteAll<User>();
+            }
+
+            [Fact]
+            public void Throws_exception_when_column_not_found()
+            {
+                // Act
+                Action act = () => this.database.GetRange<User>(new { Ages = 10 });
+
+                // Assert
+                act.ShouldThrow<InvalidConditionSchemaException>();
+            }
+
+            [Fact]
             public void When_value_is_not_null_does_not_find_nulls()
             {
                 // Arrange

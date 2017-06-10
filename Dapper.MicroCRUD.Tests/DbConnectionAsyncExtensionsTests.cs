@@ -771,6 +771,35 @@ namespace Dapper.MicroCRUD.Tests
             }
 
             [Fact]
+            public async Task Matches_column_name_case_insensitively()
+            {
+                // Arrange
+                this.connection.Insert(new User { Name = "Some Name 1", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 2", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 3", Age = 10 }, dialect: this.dialect);
+                this.connection.Insert(new User { Name = "Some Name 4", Age = 11 }, dialect: this.dialect);
+
+                // Act
+                var users = await this.connection.GetRangeAsync<User>(new { age = 10 }, dialect: this.dialect);
+
+                // Assert
+                users.Count().Should().Be(3);
+
+                // Cleanup
+                this.connection.DeleteAll<User>(dialect: this.dialect);
+            }
+
+            [Fact]
+            public void Throws_exception_when_column_not_found()
+            {
+                // Act
+                Func<Task> act = async () => await this.connection.GetRangeAsync<User>(new { Ages = 10 }, dialect: this.dialect);
+
+                // Assert
+                act.ShouldThrow<InvalidConditionSchemaException>();
+            }
+
+            [Fact]
             public async Task When_value_is_not_null_does_not_find_nulls()
             {
                 // Arrange

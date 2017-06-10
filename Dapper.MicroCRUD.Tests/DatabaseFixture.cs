@@ -14,12 +14,9 @@ namespace Dapper.MicroCRUD.Tests
         protected DatabaseFixture(string dialectName)
         {
             this.Database = BlankDatabaseFactory.MakeDatabase(dialectName);
-            this.DialectName = dialectName;
             this.DatabaseDialect = this.Database.Dialect;
             this.DefaultDatabase = new DefaultDatabase(this.Database.Connection, this.DatabaseDialect);
         }
-
-        public string DialectName { get; set; }
 
         public BlankDatabase Database { get; }
 

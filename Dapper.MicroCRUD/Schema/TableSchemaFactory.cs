@@ -94,8 +94,7 @@ namespace Dapper.MicroCRUD.Schema
         {
             var key = new TableSchemaCacheIdentity(entityType, dialect.Name);
 
-            TableSchema result;
-            if (Schemas.TryGetValue(key, out result))
+            if (Schemas.TryGetValue(key, out var result))
             {
                 return result;
             }
@@ -117,8 +116,7 @@ namespace Dapper.MicroCRUD.Schema
         {
             var key = new ConditionsColumnCacheIdentity(conditionsType, entityType, dialect.Name);
 
-            ImmutableArray<ConditionColumnSchema> result;
-            if (ConditionColumns.TryGetValue(key, out result))
+            if (ConditionColumns.TryGetValue(key, out var result))
             {
                 return result;
             }
@@ -248,8 +246,24 @@ namespace Dapper.MicroCRUD.Schema
         private static ConditionColumnSchema MakeConditionSchema(TableSchema tableSchema, PropertyInfo property)
         {
             var propertyName = property.Name;
-            var column = tableSchema.Columns.Single(c => c.ParameterName == propertyName);
-            return new ConditionColumnSchema(column, property);
+            var possibleColumns = tableSchema.Columns.Where(c => string.Equals(c.ParameterName, propertyName, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            if (possibleColumns.Count > 1)
+            {
+                possibleColumns = tableSchema.Columns.Where(c => string.Equals(c.ParameterName, propertyName, StringComparison.Ordinal)).ToList();
+
+                if (possibleColumns.Count > 1)
+                {
+                    throw new InvalidConditionSchemaException($"Ambiguous property '{propertyName}' on table {tableSchema.Name}");
+                }
+            }
+
+            if (possibleColumns.Count < 1)
+            {
+                throw new InvalidConditionSchemaException($"Target table {tableSchema.Name} does not have a property called {propertyName}");
+            }
+
+            return new ConditionColumnSchema(possibleColumns.Single(), property);
         }
 
         private ColumnSchema MakeColumnSchema(IDialect dialect, PropertySchema property, ColumnUsage columnUsage)

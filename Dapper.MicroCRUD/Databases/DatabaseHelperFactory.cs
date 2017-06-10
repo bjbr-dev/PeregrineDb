@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Dapper.MicroCRUD.Databases
+﻿namespace Dapper.MicroCRUD.Databases
 {
+    using System;
+
     public class DatabaseHelperFactory
     {
         public static THelper StartUnitOfWork<TSeed, THelper>(TSeed seed, Func<TSeed, IUnitOfWork> unitOfWorkFactory, Func<IUnitOfWork, THelper> helperFactory)

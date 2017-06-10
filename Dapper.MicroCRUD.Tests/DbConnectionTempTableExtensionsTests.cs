@@ -40,7 +40,7 @@ namespace Dapper.MicroCRUD.Tests
         {
             private readonly Mock<ITableNameFactory> tableNameFactory;
 
-            public CreateTempTableAndInsert(DatabaseFixture fixture)
+            protected CreateTempTableAndInsert(DatabaseFixture fixture)
                 : base(fixture)
             {
                 var defaultFactory = new DefaultTableNameFactory();
