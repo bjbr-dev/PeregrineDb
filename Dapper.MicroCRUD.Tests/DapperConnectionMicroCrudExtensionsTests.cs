@@ -618,6 +618,550 @@ namespace Dapper.MicroCRUD.Tests
             }
         }
 
+        public abstract class GetFirstOrDefault
+            : DapperConnectionMicroCrudExtensionsTests
+        {
+            protected GetFirstOrDefault(DatabaseFixture fixture)
+                : base(fixture)
+            {
+            }
+
+            [Fact]
+            public void Gets_first_matching_result()
+            {
+                // Arrange
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
+
+                // Act
+                var user = this.database.GetFirstOrDefault<User>(
+                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
+                    "Name DESC",
+                    new { Search = "Some Name", Age = 10 });
+
+                // Assert
+                user.ShouldBeEquivalentTo(new User { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
+
+                // Cleanup
+                this.database.DeleteAll<User>();
+            }
+
+            [Fact]
+            public void Returns_default_when_no_entity_matches()
+            {
+                // Act
+                var user = this.database.GetFirstOrDefault<User>(
+                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
+                    "Name DESC",
+                    new { Search = "Some Name", Age = 10 });
+
+                // Assert
+                user.Should().BeNull();
+            }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : GetFirstOrDefault
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : GetFirstOrDefault
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+        }
+
+        public abstract class GetFirstOrDefaultWhereObject
+            : DapperConnectionMicroCrudExtensionsTests
+        {
+            protected GetFirstOrDefaultWhereObject(DatabaseFixture fixture)
+                : base(fixture)
+            {
+            }
+
+            [Fact]
+            public void Gets_first_matching_result()
+            {
+                // Arrange
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
+
+                // Act
+                var user = this.database.GetFirstOrDefault<User>(new { Age = 10 }, "Name DESC");
+
+                // Assert
+                user.ShouldBeEquivalentTo(new User { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
+
+                // Cleanup
+                this.database.DeleteAll<User>();
+            }
+
+            [Fact]
+            public void Returns_default_when_no_entity_matches()
+            {
+                // Act
+                var user = this.database.GetFirstOrDefault<User>(new { Age = 10 }, "Name DESC");
+
+                // Assert
+                user.Should().BeNull();
+            }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : GetFirstOrDefaultWhereObject
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : GetFirstOrDefaultWhereObject
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+        }
+
+        public abstract class GetFirst
+            : DapperConnectionMicroCrudExtensionsTests
+        {
+            protected GetFirst(DatabaseFixture fixture)
+                : base(fixture)
+            {
+            }
+
+            [Fact]
+            public void Gets_first_matching_result()
+            {
+                // Arrange
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
+
+                // Act
+                var user = this.database.GetFirst<User>(
+                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
+                    "Name DESC",
+                    new { Search = "Some Name", Age = 10 });
+
+                // Assert
+                user.ShouldBeEquivalentTo(new User { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
+
+                // Cleanup
+                this.database.DeleteAll<User>();
+            }
+
+            [Fact]
+            public void Throws_exception_when_no_entity_matches()
+            {
+                // Act
+                Action act = () => this.database.GetFirst<User>(
+                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
+                    "Name DESC",
+                    new { Search = "Some Name", Age = 10 });
+
+                // Assert
+                act.ShouldThrow<InvalidOperationException>();
+            }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : GetFirst
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : GetFirst
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+        }
+
+        public abstract class GetFirstWhereObject
+            : DapperConnectionMicroCrudExtensionsTests
+        {
+            protected GetFirstWhereObject(DatabaseFixture fixture)
+                : base(fixture)
+            {
+            }
+
+            [Fact]
+            public void Gets_first_matching_result()
+            {
+                // Arrange
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 3", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 4", Age = 11 });
+
+                // Act
+                var user = this.database.GetFirst<User>(new { Age = 10 }, "Name DESC");
+
+                // Assert
+                user.ShouldBeEquivalentTo(new User { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
+
+                // Cleanup
+                this.database.DeleteAll<User>();
+            }
+
+            [Fact]
+            public void Throws_exception_when_no_entity_matches()
+            {
+                // Act
+                Action act = () => this.database.GetFirst<User>(new { Age = 10 }, "Name DESC");
+
+                // Assert
+                act.ShouldThrow<InvalidOperationException>();
+            }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : GetFirstWhereObject
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : GetFirstWhereObject
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+        }
+
+        public abstract class GetSingleOrDefault
+            : DapperConnectionMicroCrudExtensionsTests
+        {
+            protected GetSingleOrDefault(DatabaseFixture fixture)
+                : base(fixture)
+            {
+            }
+
+            [Fact]
+            public void Gets_only_matching_result()
+            {
+                // Arrange
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 11 });
+
+                // Act
+                var user = this.database.GetSingleOrDefault<User>(
+                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
+                    new { Search = "Some Name", Age = 10 });
+
+                // Assert
+                user.ShouldBeEquivalentTo(new User { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
+
+                // Cleanup
+                this.database.DeleteAll<User>();
+            }
+
+            [Fact]
+            public void Returns_default_when_no_entity_matches()
+            {
+                // Act
+                var user = this.database.GetSingleOrDefault<User>(
+                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
+                    new { Search = "Some Name", Age = 10 });
+
+                // Assert
+                user.Should().BeNull();
+            }
+
+            [Fact]
+            public void Throws_exception_when_multiple_entities_match()
+            {
+                // Arrange
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+
+                // Act
+                Action act = () => this.database.GetSingleOrDefault<User>("Age = @Age", new { Age = 10 });
+
+                // Assert
+                act.ShouldThrow<InvalidOperationException>();
+
+                // Cleanup
+                this.database.DeleteAll<User>();
+            }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : GetSingleOrDefault
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : GetSingleOrDefault
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+        }
+
+        public abstract class GetSingleOrDefaultWhereObject
+            : DapperConnectionMicroCrudExtensionsTests
+        {
+            protected GetSingleOrDefaultWhereObject(DatabaseFixture fixture)
+                : base(fixture)
+            {
+            }
+
+            [Fact]
+            public void Gets_first_matching_result()
+            {
+                // Arrange
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 11 });
+
+                // Act
+                var user = this.database.GetSingleOrDefault<User>(new { Age = 10 });
+
+                // Assert
+                user.ShouldBeEquivalentTo(new User { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
+
+                // Cleanup
+                this.database.DeleteAll<User>();
+            }
+
+            [Fact]
+            public void Returns_default_when_no_entity_matches()
+            {
+                // Act
+                var user = this.database.GetSingleOrDefault<User>(new { Age = 10 });
+
+                // Assert
+                user.Should().BeNull();
+            }
+
+            [Fact]
+            public void Throws_exception_when_multiple_entities_match()
+            {
+                // Arrange
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+
+                // Act
+                Action act = () => this.database.GetSingleOrDefault<User>(new { Age = 10 });
+
+                // Assert
+                act.ShouldThrow<InvalidOperationException>();
+
+                // Cleanup
+                this.database.DeleteAll<User>();
+            }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : GetSingleOrDefaultWhereObject
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : GetSingleOrDefaultWhereObject
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+        }
+
+        public abstract class GetSingle
+            : DapperConnectionMicroCrudExtensionsTests
+        {
+            protected GetSingle(DatabaseFixture fixture)
+                : base(fixture)
+            {
+            }
+
+            [Fact]
+            public void Gets_first_matching_result()
+            {
+                // Arrange
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 11 });
+
+                // Act
+                var user = this.database.GetSingle<User>(
+                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
+                    new { Search = "Some Name", Age = 10 });
+
+                // Assert
+                user.ShouldBeEquivalentTo(new User { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
+
+                // Cleanup
+                this.database.DeleteAll<User>();
+            }
+
+            [Fact]
+            public void Throws_exception_when_no_entity_matches()
+            {
+                // Act
+                Action act = () => this.database.GetSingle<User>(
+                    "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
+                    new { Search = "Some Name", Age = 10 });
+
+                // Assert
+                act.ShouldThrow<InvalidOperationException>();
+            }
+
+            [Fact]
+            public void Throws_exception_when_multiple_entities_match()
+            {
+                // Arrange
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+
+                // Act
+                Action act = () => this.database.GetSingle<User>("WHERE Age = @Age", new { Age = 10 });
+
+                // Assert
+                act.ShouldThrow<InvalidOperationException>();
+
+                // Cleanup
+                this.database.DeleteAll<User>();
+            }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : GetSingle
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : GetSingle
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+        }
+
+        public abstract class GetSingleWhereObject
+            : DapperConnectionMicroCrudExtensionsTests
+        {
+            protected GetSingleWhereObject(DatabaseFixture fixture)
+                : base(fixture)
+            {
+            }
+
+            [Fact]
+            public void Gets_first_matching_result()
+            {
+                // Arrange
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 11 });
+
+                // Act
+                var user = this.database.GetSingle<User>(new { Age = 10 });
+
+                // Assert
+                user.ShouldBeEquivalentTo(new User { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
+
+                // Cleanup
+                this.database.DeleteAll<User>();
+            }
+
+            [Fact]
+            public void Throws_exception_when_no_entity_matches()
+            {
+                // Act
+                Action act = () => this.database.GetSingle<User>(new { Age = 10 });
+
+                // Assert
+                act.ShouldThrow<InvalidOperationException>();
+            }
+
+            [Fact]
+            public void Throws_exception_when_multiple_entities_match()
+            {
+                // Arrange
+                this.database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
+
+                // Act
+                Action act = () => this.database.GetSingle<User>(new { Age = 10 });
+
+                // Assert
+                act.ShouldThrow<InvalidOperationException>();
+
+                // Cleanup
+                this.database.DeleteAll<User>();
+            }
+
+            [Collection(nameof(PostgresCollection))]
+            public class Postgres
+                : GetSingleWhereObject
+            {
+                public Postgres(PostgresFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+
+            [Collection(nameof(SqlServerCollection))]
+            public class SqlServer
+                : GetSingleWhereObject
+            {
+                public SqlServer(SqlServerFixture fixture)
+                    : base(fixture)
+                {
+                }
+            }
+        }
+
         public abstract class GetRange
             : DapperConnectionMicroCrudExtensionsTests
         {

@@ -28,6 +28,11 @@ namespace Dapper.MicroCRUD.Dialects
         string MakeFindStatement(TableSchema tableSchema);
 
         /// <summary>
+        /// Generates a SQL statement to select the top N records which match the conditions
+        /// </summary>
+        string MakeGetTopNStatement(TableSchema tableSchema, int take, string conditions, string orderBy);
+
+        /// <summary>
         /// Generates a SQL statement to select multiple rows.
         /// </summary>
         string MakeGetRangeStatement(TableSchema tableSchema, string conditions);

@@ -229,6 +229,81 @@ FROM [PropertyAlias]";
             }
         }
 
+        public class MakeGetTopNStatement
+            : SqlServer2012DialectTests
+        {
+            [Fact]
+            public void Selects_from_given_table()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = this.dialect.MakeGetTopNStatement(schema, 1, null, "Name");
+
+                // Assert
+                var expected = @"SELECT TOP 1 [Id], [Name], [Age]
+FROM [Users]
+ORDER BY Name";
+
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
+            }
+
+            [Fact]
+            public void Adds_conditions_clause()
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = this.dialect.MakeGetTopNStatement(schema, 1, "WHERE Name LIKE 'Foo%'", "Name");
+
+                // Assert
+                var expected = @"SELECT TOP 1 [Id], [Name], [Age]
+FROM [Users]
+WHERE Name LIKE 'Foo%'
+ORDER BY Name";
+
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
+            }
+
+            [Fact]
+            public void Adds_alias_when_column_name_is_aliased()
+            {
+                // Arrange
+                var schema = this.dialect.PropertyAlias();
+
+                // Act
+                var sql = this.dialect.MakeGetTopNStatement(schema, 1, null, "Name");
+
+                // Assert
+                var expected = @"SELECT TOP 1 [Id], [YearsOld] AS [Age]
+FROM [PropertyAlias]
+ORDER BY Name";
+
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
+            }
+
+            [Theory]
+            [InlineData(null)]
+            [InlineData("")]
+            [InlineData(" ")]
+            public void Does_not_order_when_no_orderby_given(string orderBy)
+            {
+                // Arrange
+                var schema = this.dialect.User();
+
+                // Act
+                var sql = this.dialect.MakeGetTopNStatement(schema, 1, null, orderBy);
+
+                // Assert
+                var expected = @"SELECT TOP 1 [Id], [Name], [Age]
+FROM [Users]";
+
+                Assert.Equal(expected, sql, SqlStringComparer.Instance);
+            }
+        }
+
         public class MakeGetPageStatement
             : SqlServer2012DialectTests
         {

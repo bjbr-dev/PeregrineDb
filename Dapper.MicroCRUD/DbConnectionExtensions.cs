@@ -156,6 +156,214 @@ namespace Dapper
         }
 
         /// <summary>
+        /// Gets the first matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
+        /// or the default value if none match.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// var user = this.connection.GetFirstOrDefault<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// ]]>
+        /// </code>
+        /// </example>
+        public static TEntity GetFirstOrDefault<TEntity>(
+            this IDbConnection connection,
+            string conditions,
+            string orderBy,
+            object parameters = null,
+            IDbTransaction transaction = null,
+            IDialect dialect = null,
+            int? commandTimeout = null)
+        {
+            Ensure.NotNull(connection, nameof(connection));
+            var command = CommandFactory.MakeGetTopNCommand<TEntity>(1, conditions, orderBy, parameters, transaction, dialect, commandTimeout);
+            return connection.Query<TEntity>(command).FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Gets the first matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
+        /// or the default value if none match.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// var user = this.connection.GetFirstOrDefault<UserEntity>(new { Age = 18 });
+        /// ]]>
+        /// </code>
+        /// </example>
+        public static TEntity GetFirstOrDefault<TEntity>(
+            this IDbConnection connection,
+            object conditions,
+            string orderBy,
+            IDbTransaction transaction = null,
+            IDialect dialect = null,
+            int? commandTimeout = null)
+        {
+            Ensure.NotNull(connection, nameof(connection));
+            var command = CommandFactory.MakeGetTopNCommand<TEntity>(1, conditions, orderBy, transaction, dialect, commandTimeout);
+            return connection.Query<TEntity>(command).FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Gets the first matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
+        /// or throws an <see cref="InvalidOperationException"/> if none match.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// var user = this.connection.GetFirst<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// ]]>
+        /// </code>
+        /// </example>
+        public static TEntity GetFirst<TEntity>(
+            this IDbConnection connection,
+            string conditions,
+            string orderBy,
+            object parameters = null,
+            IDbTransaction transaction = null,
+            IDialect dialect = null,
+            int? commandTimeout = null)
+        {
+            var result = connection.GetFirstOrDefault<TEntity>(conditions, orderBy, parameters, transaction, dialect, commandTimeout);
+            if (result != null)
+            {
+                return result;
+            }
+
+            throw new InvalidOperationException($"No entity matching {conditions} was found");
+        }
+
+        /// <summary>
+        /// Gets the first matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
+        /// or throws an <see cref="InvalidOperationException"/> if none match.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// var user = this.connection.GetFirst<UserEntity>(new { Age = 18 });
+        /// ]]>
+        /// </code>
+        /// </example>
+        public static TEntity GetFirst<TEntity>(
+            this IDbConnection connection,
+            object conditions,
+            string orderBy,
+            IDbTransaction transaction = null,
+            IDialect dialect = null,
+            int? commandTimeout = null)
+        {
+            var result = connection.GetFirstOrDefault<TEntity>(conditions, orderBy, transaction, dialect, commandTimeout);
+            if (result != null)
+            {
+                return result;
+            }
+
+            throw new InvalidOperationException($"No entity matching {conditions} was found");
+        }
+
+        /// <summary>
+        /// Gets the only matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
+        /// or the default value if none match. Throws an <see cref="InvalidOperationException"/> if multiple entities match.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// var user = this.connection.GetSingleOrDefault<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// ]]>
+        /// </code>
+        /// </example>
+        public static TEntity GetSingleOrDefault<TEntity>(
+            this IDbConnection connection,
+            string conditions,
+            object parameters = null,
+            IDbTransaction transaction = null,
+            IDialect dialect = null,
+            int? commandTimeout = null)
+        {
+            Ensure.NotNull(connection, nameof(connection));
+            var command = CommandFactory.MakeGetTopNCommand<TEntity>(2, conditions, null, parameters, transaction, dialect, commandTimeout);
+            return connection.Query<TEntity>(command).SingleOrDefault();
+        }
+
+        /// <summary>
+        /// Gets the only matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
+        /// or the default value if none match. Throws an <see cref="InvalidOperationException"/> if multiple entities match.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// var user = this.connection.GetSingleOrDefault<UserEntity>(new { Age = 18 });
+        /// ]]>
+        /// </code>
+        /// </example>
+        public static TEntity GetSingleOrDefault<TEntity>(
+            this IDbConnection connection,
+            object conditions,
+            IDbTransaction transaction = null,
+            IDialect dialect = null,
+            int? commandTimeout = null)
+        {
+            Ensure.NotNull(connection, nameof(connection));
+            var command = CommandFactory.MakeGetTopNCommand<TEntity>(2, conditions, null, transaction, dialect, commandTimeout);
+            return connection.Query<TEntity>(command).SingleOrDefault();
+        }
+
+        /// <summary>
+        /// Gets the only matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
+        /// or throws an <see cref="InvalidOperationException"/> if no entries, or multiple entities match.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// var user = this.connection.GetSingle<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// ]]>
+        /// </code>
+        /// </example>
+        public static TEntity GetSingle<TEntity>(
+            this IDbConnection connection,
+            string conditions,
+            object parameters = null,
+            IDbTransaction transaction = null,
+            IDialect dialect = null,
+            int? commandTimeout = null)
+        {
+            var result = connection.GetSingleOrDefault<TEntity>(conditions, parameters, transaction, dialect, commandTimeout);
+            if (result != null)
+            {
+                return result;
+            }
+
+            throw new InvalidOperationException($"No entity matching {conditions} was found");
+        }
+
+        /// <summary>
+        /// Gets the only matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
+        /// or throws an <see cref="InvalidOperationException"/> if no entries, or multiple entities match.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// var user = this.connection.GetSingle<UserEntity>(new { Age = 18 });
+        /// ]]>
+        /// </code>
+        /// </example>
+        public static TEntity GetSingle<TEntity>(
+            this IDbConnection connection,
+            object conditions,
+            IDbTransaction transaction = null,
+            IDialect dialect = null,
+            int? commandTimeout = null)
+        {
+            var result = connection.GetSingleOrDefault<TEntity>(conditions, transaction, dialect, commandTimeout);
+            if (result != null)
+            {
+                return result;
+            }
+
+            throw new InvalidOperationException($"No entity matching {conditions} was found");
+        }
+
+        /// <summary>
         /// Gets a collection of entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
         /// </summary>
         /// <example>

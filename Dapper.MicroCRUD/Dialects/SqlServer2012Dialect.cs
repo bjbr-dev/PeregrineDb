@@ -61,6 +61,19 @@ namespace Dapper.MicroCRUD.Dialects
             return this.MakeInsertStatement(tableSchema) + Environment.NewLine + getIdentitySql;
         }
 
+        public override string MakeGetTopNStatement(TableSchema tableSchema, int take, string conditions, string orderBy)
+        {
+            var sql = new StringBuilder("SELECT TOP ").Append(take).Append(" ").AppendSelectPropertiesClause(tableSchema.Columns);
+            sql.AppendClause("FROM ").Append(tableSchema.Name);
+            sql.AppendClause(conditions);
+            if (!string.IsNullOrWhiteSpace(orderBy))
+            {
+                sql.AppendClause("ORDER BY ").Append(orderBy);
+            }
+
+            return sql.ToString();
+        }
+
         /// <inheritdoc />
         public override string MakeGetPageStatement(TableSchema tableSchema, Page page, string conditions, string orderBy)
         {

@@ -78,6 +78,52 @@ namespace Dapper.MicroCRUD.SqlCommands
         }
 
         /// <summary>
+        /// Creates a command which will get the top N entities which match the condition
+        /// </summary>
+        public static CommandDefinition MakeGetTopNCommand<TEntity>(
+            int take,
+            string conditions,
+            string orderBy,
+            object parameters,
+            IDbTransaction transaction,
+            IDialect dialect,
+            int? commandTimeout,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var config = MicroCRUDConfig.Current;
+            dialect = dialect ?? config.Dialect;
+
+            var entityType = typeof(TEntity);
+            var tableSchema = TableSchemaFactory.GetTableSchema(entityType, dialect, config.SchemaFactory);
+            var sql = dialect.MakeGetTopNStatement(tableSchema, take, conditions, orderBy);
+            return MakeCommandDefinition(sql, parameters, transaction, commandTimeout, cancellationToken);
+        }
+        
+        /// <summary>
+        /// Creates a command which will get the top N entities which match the condition
+        /// </summary>
+        public static CommandDefinition MakeGetTopNCommand<TEntity>(
+            int take,
+            object conditions,
+            string orderBy,
+            IDbTransaction transaction,
+            IDialect dialect,
+            int? commandTimeout,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            Ensure.NotNull(conditions, nameof(conditions));
+
+            var config = MicroCRUDConfig.Current;
+            dialect = dialect ?? config.Dialect;
+
+            var entityType = typeof(TEntity);
+            var tableSchema = TableSchemaFactory.GetTableSchema(entityType, dialect, config.SchemaFactory);
+            var conditionsSchema = TableSchemaFactory.GetConditionsSchema(entityType, tableSchema, conditions.GetType(), dialect, config.SchemaFactory);
+            var sql = dialect.MakeGetTopNStatement(tableSchema, take, dialect.MakeWhereClause(conditionsSchema, conditions), orderBy);
+            return MakeCommandDefinition(sql, conditions, transaction, commandTimeout, cancellationToken);
+        }
+
+        /// <summary>
         /// Creates a command which will get all the entities matching the <paramref name="conditions"/>.
         /// </summary>
         public static CommandDefinition MakeGetRangeCommand<TEntity>(
