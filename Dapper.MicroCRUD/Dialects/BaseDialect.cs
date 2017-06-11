@@ -3,7 +3,6 @@
 // </copyright>
 namespace Dapper.MicroCRUD.Dialects
 {
-    using System;
     using System.Collections.Immutable;
     using System.Text;
     using Dapper.MicroCRUD.Schema;
@@ -47,6 +46,8 @@ namespace Dapper.MicroCRUD.Dialects
             return sql.ToString();
         }
 
+        public abstract string MakeGetTopNStatement(TableSchema tableSchema, int take, string conditions, string orderBy);
+
         /// <inheritdoc />
         public string MakeGetRangeStatement(TableSchema tableSchema, string conditions)
         {
@@ -62,23 +63,23 @@ namespace Dapper.MicroCRUD.Dialects
         /// <inheritdoc />
         public string MakeInsertStatement(TableSchema tableSchema)
         {
-            Func<ColumnSchema, bool> include = p => p.Usage.IncludeInInsertStatements;
+            bool Include(ColumnSchema p) => p.Usage.IncludeInInsertStatements;
             var columns = tableSchema.Columns;
 
             var sql = new StringBuilder("INSERT INTO ")
                 .Append(tableSchema.Name)
-                .Append(" (").AppendColumnNames(columns, include).Append(")");
-            sql.AppendClause("VALUES (").AppendParameterNames(columns, include).Append(");");
+                .Append(" (").AppendColumnNames(columns, Include).Append(")");
+            sql.AppendClause("VALUES (").AppendParameterNames(columns, Include).Append(");");
             return sql.ToString();
         }
 
         /// <inheritdoc />
         public string MakeUpdateStatement(TableSchema tableSchema)
         {
-            Func<ColumnSchema, bool> include = p => p.Usage.IncludeInUpdateStatements;
+            bool Include(ColumnSchema p) => p.Usage.IncludeInUpdateStatements;
 
             var sql = new StringBuilder("UPDATE ").Append(tableSchema.Name);
-            sql.AppendClause("SET ").AppendColumnNamesEqualParameterNames(tableSchema.Columns, ", ", include);
+            sql.AppendClause("SET ").AppendColumnNamesEqualParameterNames(tableSchema.Columns, ", ", Include);
             sql.AppendWherePrimaryKeysClause(tableSchema);
             return sql.ToString();
         }
