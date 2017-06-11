@@ -909,7 +909,7 @@ namespace Dapper.MicroCRUD.Tests
                 this.database.Insert(new User { Name = "Some Name 2", Age = 10 });
 
                 // Act
-                Action act = () => this.database.GetSingleOrDefault<User>("Age = @Age", new { Age = 10 });
+                Action act = () => this.database.GetSingleOrDefault<User>("WHERE Age = @Age", new { Age = 10 });
 
                 // Assert
                 act.ShouldThrow<InvalidOperationException>();
