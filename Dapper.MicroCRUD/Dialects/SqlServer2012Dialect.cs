@@ -8,13 +8,14 @@ namespace Dapper.MicroCRUD.Dialects
     using System.Data;
     using System.Text;
     using Dapper.MicroCRUD.Schema;
+    using Dapper.MicroCRUD.Schema.Relations;
     using Pagination;
 
     /// <summary>
     /// Implementation of <see cref="IDialect"/> for SQL Server 2012 and above
     /// </summary>
     public class SqlServer2012Dialect
-        : BaseDialect
+        : BaseDialect, ISchemaQueryDialect
     {
         private static readonly ImmutableArray<string> ColumnTypes;
 
@@ -142,6 +143,33 @@ namespace Dapper.MicroCRUD.Dialects
         public override string MakeTableName(string schema, string tableName)
         {
             return "[" + schema + "].[" + tableName + "]";
+        }
+
+        public string MakeGetAllTablesStatement()
+        {
+            return @"
+SELECT TABLE_SCHEMA + '.' + TABLE_NAME AS Name
+FROM  INFORMATION_SCHEMA.TABLES
+WHERE TABLE_TYPE='BASE TABLE'";
+        }
+
+        public string MakeGetAllRelationsStatement()
+        {
+            return @"
+SELECT ReferencedTable = OBJECT_SCHEMA_NAME(pt.referenced_object_id) + '.' + OBJECT_NAME(pt.referenced_object_id),
+       ReferencingTable = OBJECT_SCHEMA_NAME(pt.parent_object_id) + '.' + OBJECT_NAME(pt.parent_object_id),
+       ReferencingColumn = pc.name,
+       RelationIsOptional = pc.is_nullable
+FROM sys.foreign_key_columns AS pt
+INNER JOIN sys.columns AS pc ON pt.parent_object_id = pc.[object_id] AND pt.parent_column_id = pc.column_id
+INNER JOIN sys.columns AS rc ON pt.referenced_column_id = rc.column_id AND pt.referenced_object_id = rc.[object_id]";
+        }
+
+        public string MakeSetColumnNullStatement(string tableName, string columnName)
+        {
+            var sql = new StringBuilder("UPDATE ").Append(tableName);
+            sql.AppendClause("SET ").Append(columnName).Append(" = NULL");
+            return sql.ToString();
         }
 
         private static void EnsureValidSchemaForTempTables(TableSchema tableSchema)

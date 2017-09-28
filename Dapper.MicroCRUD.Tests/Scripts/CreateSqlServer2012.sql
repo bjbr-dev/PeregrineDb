@@ -122,3 +122,60 @@ CREATE TABLE Users
 	Name NVARCHAR(MAX) NOT NULL,
 	Age INT NOT NULL
 );
+
+CREATE TABLE SimpleForeignKeys
+(
+	Id INT NOT NULL IDENTITY PRIMARY KEY,
+	Name NVARCHAR(MAX) NOT NULL,
+	UserId INT NOT NULL,
+	CONSTRAINT FK_SimpleForeignKeys_Users
+		FOREIGN KEY (UserId)
+		REFERENCES Users(Id)
+);
+
+CREATE TABLE SelfReferenceForeignKeys
+(
+	Id INT NOT NULL IDENTITY PRIMARY KEY,
+	ForeignId INT NULL,
+	CONSTRAINT FK_SelfReferenceForeignKeys_SelfReferenceForeignKeys
+		FOREIGN KEY (ForeignId)
+		REFERENCES SelfReferenceForeignKeys(Id)
+);
+
+CREATE TABLE CyclicForeignKeyA
+(
+	Id INT NOT NULL IDENTITY PRIMARY KEY,
+	ForeignId INT NULL
+);
+
+CREATE TABLE CyclicForeignKeyB
+(
+	Id INT NOT NULL IDENTITY PRIMARY KEY,
+	ForeignId INT NOT NULL,
+	CONSTRAINT FK_CyclicForeignKeyB_CyclicForeignKeyA
+		FOREIGN KEY (ForeignId)
+		REFERENCES CyclicForeignKeyA(Id)
+);
+
+CREATE TABLE CyclicForeignKeyC
+(
+	Id INT NOT NULL IDENTITY PRIMARY KEY,
+	ForeignId INT NOT NULL,
+	CONSTRAINT FK_CyclicForeignKeyC_CyclicForeignKeyB
+		FOREIGN KEY (ForeignId)
+		REFERENCES CyclicForeignKeyB(Id)
+);
+
+ALTER TABLE CyclicForeignKeyA
+ADD CONSTRAINT FK_CyclicForeignKeyA_CyclicForeignKeyC
+	FOREIGN KEY (ForeignId)
+	REFERENCES CyclicForeignKeyC(Id);
+
+CREATE TABLE Other.SchemaSimpleForeignKeys 
+(
+	Id INT NOT NULL IDENTITY PRIMARY KEY,
+	SchemaOtherId INT NOT NULL,
+	CONSTRAINT FK_SimpleForeignKeys_SchemaOther
+		FOREIGN KEY (SchemaOtherId)
+		REFERENCES Other.SchemaOther(Id)
+);
