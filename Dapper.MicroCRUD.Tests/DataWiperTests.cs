@@ -99,6 +99,9 @@
 
                 // Assert
                 act.ShouldThrow<Exception>();
+
+                // Cleanup
+                this.database.DeleteAll<SimpleForeignKey>();
             }
 
             [Fact]
