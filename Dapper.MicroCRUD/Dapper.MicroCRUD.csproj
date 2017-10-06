@@ -13,17 +13,17 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
-    <PackageReference Remove="NETStandard.Library" />
-    <PackageReference Include="berkeleybross.Pagination" Version="1.0.23" />
-    <PackageReference Include="Dapper" Version="1.50.2" />
-    <PackageReference Include="System.ComponentModel.Annotations" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net46'">
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Remove="NETStandard.Library" />
-    <PackageReference Include="berkeleybross.Pagination" Version="1.0.23" />
+    <PackageReference Include="berkeleybross.Pagination" Version="1.0.24" />
     <PackageReference Include="Dapper" Version="1.50.2" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.3.0" />
+    <PackageReference Include="System.Diagnostics.Tools" Version="4.3.0" />
   </ItemGroup>
 
 </Project>
