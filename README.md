@@ -1,7 +1,7 @@
-# Dapper.MicroCRUD - Lightweight CRUD Extensions for Dapper.Net
+# PeregrineDb - Lightweight CRUD Extensions for Dapper.Net
 ## Overview
 
-Dapper.MicroCRUD is a small and fast [Dapper.Net](https://github.com/StackExchange/dapper-dot-net) extension library to perform CRUD statement with POCO models.
+PeregrineDb is a small and fast [Dapper.Net](https://github.com/StackExchange/dapper-dot-net) extension library to perform CRUD statement with POCO models.
 
 [![Build status](https://ci.appveyor.com/api/projects/status/1jwpeo49kmmlv9jr/branch/master?svg=true)](https://ci.appveyor.com/project/berkeleybross/dapper-microcrud/branch/master)
 
@@ -20,7 +20,7 @@ Currently, the following DBMS are supported. More will be added (e.g. SQLite) wh
 - PostgreSQL
 
 #### CRUD Helpers
-Dapper.MicroCRUD provides the following extensions to the IDbConnection (with Async equivalents):
+PeregrineDb provides the following extensions to the IDbConnection (with Async equivalents):
 
 - [Count](documentation/Count.md): Counts how many entities in the table match the conditions.
 - [Find](documentation/Get.md): Find an entity by it's id, or null.
@@ -39,7 +39,7 @@ Dapper.MicroCRUD provides the following extensions to the IDbConnection (with As
 #### Configuration
 *Documentation in progress!*
 
-Don't forget, for practical examples of usage, you can also browse our extensive [unit tests suite](Dapper.MicroCRUD.Tests).
+Don't forget, for practical examples of usage, you can also browse our extensive [unit tests suite](tests/PeregrineDb.Tests).
 
 ## Comparison
 *NB: These may not be correct nor up-to-date. I made this comparison very quickly*
@@ -53,7 +53,7 @@ Don't forget, for practical examples of usage, you can also browse our extensive
 | [Dapper.SimpleCRUD](https://github.com/ericdc1/Dapper.SimpleCRUD) | Get<br>GetList<br>GetListPaged<br>Insert<br>Update<br>Delete(List)<br>RecordCount | | :heavy_check_mark: | | <ul><li>Can create WHERE clauses from objects</li><li>Generates GUID keys</li></ul> |
 
 ## Installation
-Simply add the nuget package [Dapper.MicroCRUD](https://www.nuget.org/packages/Dapper.MicroCRUD/) to your project.
+Simply add the nuget package [PeregrineDb](https://www.nuget.org/packages/PeregrineDb/) to your project.
 
 ## Licensing and Attribution
 See [License](LICENSE).

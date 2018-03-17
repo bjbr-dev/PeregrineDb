@@ -1,14 +1,11 @@
-version: 1.0.{build}
 image: Visual Studio 2017
 pull_requests:
   do_not_increment_build_number: true
 build_script:
-- ps: dotnet restore
-- ps: dotnet test Dapper.MicroCRUD.Tests/Dapper.MicroCRUD.Tests.csproj
-- ps: dotnet pack Dapper.MicroCRUD/Dapper.MicroCRUD.csproj -c Release --include-symbols /p:Version=$($Env:APPVEYOR_BUILD_VERSION)
+- ps: ./build.ps1 -ScriptArgs "-buildCounter=`"$($env:APPVEYOR_BUILD_NUMBER)`""
 test: off
 artifacts:
-  - path: 'Dapper.MicroCRUD\**\*.nupkg'
+  - path: 'artifacts\**\*.nupkg'
 services:
   - mssql2014
   - postgresql

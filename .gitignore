@@ -4,10 +4,22 @@ src/PeregrineDb/obj/
 tests/PeregrineDb.Tests/bin/
 tests/PeregrineDb.Tests/obj/
 
-# Standard VS folders
+tools/*
+!tools/packages.config
+
 **/packages/*
 !**/packages/build/
 
+# Visual Studio
 .vs/
 **/*.user
+
+# Rider
+.idea/**/contentModel.xml
+.idea/**/modules.xml
+.idea/**/workspace.xml
+.idea/**/*.iml
+
+# Other tools
 _NCrunch_*
+ncrunchtemp*
