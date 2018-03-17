@@ -1,8 +1,8 @@
 # Project build artifacts
-Dapper.MicroCRUD/bin/
-Dapper.MicroCRUD/obj/
-Dapper.MicroCRUD.Tests/bin/
-Dapper.MicroCRUD.Tests/obj/
+src/PeregrineDb/bin/
+src/PeregrineDb/obj/
+tests/PeregrineDb.Tests/bin/
+tests/PeregrineDb.Tests/obj/
 
 # Standard VS folders
 **/packages/*

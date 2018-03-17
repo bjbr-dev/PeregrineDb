@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Dapper.MicroCRUD\Dapper.MicroCRUD.csproj" />
+    <ProjectReference Include="..\..\src\PeregrineDb\PeregrineDb.csproj" />
   </ItemGroup>
 
   <ItemGroup>

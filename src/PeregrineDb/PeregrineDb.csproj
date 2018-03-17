@@ -6,10 +6,10 @@
     <Company>Berkeleybross</Company>
     <Description>CRUD Extensions for Dapper.Net</Description>
     <Copyright>Copyright ©  2017</Copyright>
-    <PackageLicenseUrl>https://github.com/berkeleybross/Dapper.MicroCRUD/blob/master/LICENSE</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/berkeleybross/Dapper.MicroCRUD</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/berkeleybross/Dapper.MicroCRUD</RepositoryUrl>
-    <PackageTags>Dapper micro-orm orm CRUD sql postgresql</PackageTags>
+    <PackageLicenseUrl>https://github.com/berkeleybross/PeregrineDb/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/berkeleybross/PeregrineDb</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/berkeleybross/PeregrineDb</RepositoryUrl>
+    <PackageTags>micro-orm orm CRUD sql postgresql</PackageTags>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
