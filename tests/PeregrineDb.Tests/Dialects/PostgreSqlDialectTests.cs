@@ -16,7 +16,7 @@
     [SuppressMessage("ReSharper", "ConvertToConstant.Local")]
     public class PostgreSqlDialectTests
     {
-        private PeregrineConfig config = DefaultConfig.MakeNewConfig().WithDialect(Dialect.PostgreSql);
+        private PeregrineConfig config = DefaultPeregrineConfig.MakeNewConfig().WithDialect(Dialect.PostgreSql);
 
         public class MakeCountStatement
             : PostgreSqlDialectTests

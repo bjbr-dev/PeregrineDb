@@ -16,11 +16,11 @@
             {
                 try
                 {
-                    DefaultConfig.Dialect = Dialect.PostgreSql;
+                    DefaultPeregrineConfig.Dialect = Dialect.PostgreSql;
                 }
                 finally
                 {
-                    DefaultConfig.Reset();
+                    DefaultPeregrineConfig.Reset();
                 }
             }
 
@@ -29,11 +29,11 @@
             {
                 try
                 {
-                    DefaultConfig.TableNameFactory = new NonPluralizingTableNameFactory();
+                    DefaultPeregrineConfig.TableNameFactory = new NonPluralizingTableNameFactory();
                 }
                 finally
                 {
-                    DefaultConfig.Reset();
+                    DefaultPeregrineConfig.Reset();
                 }
             }
 
@@ -42,11 +42,11 @@
             {
                 try
                 {
-                    DefaultConfig.ColumnNameFactory = new DefaultColumnNameFactory();
+                    DefaultPeregrineConfig.ColumnNameFactory = new DefaultColumnNameFactory();
                 }
                 finally
                 {
-                    DefaultConfig.Reset();
+                    DefaultPeregrineConfig.Reset();
                 }
             }
 
@@ -55,11 +55,11 @@
             {
                 try
                 {
-                    DefaultConfig.VerifyAffectedRowCount = false;
+                    DefaultPeregrineConfig.VerifyAffectedRowCount = false;
                 }
                 finally
                 {
-                    DefaultConfig.Reset();
+                    DefaultPeregrineConfig.Reset();
                 }
             }
         }
@@ -71,7 +71,7 @@
             public void Throws_exception_if_update_function_returns_null()
             {
                 // Act
-                Assert.Throws<InvalidOperationException>(() => DefaultConfig.Update(c => null));
+                Assert.Throws<InvalidOperationException>(() => DefaultPeregrineConfig.Update(c => null));
             }
         }
     }

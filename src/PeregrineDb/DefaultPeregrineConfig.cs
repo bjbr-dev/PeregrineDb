@@ -7,7 +7,7 @@
     using PeregrineDb.Dialects;
     using PeregrineDb.Schema;
 
-    public static class DefaultConfig
+    public static class DefaultPeregrineConfig
     {
         private static readonly ImmutableDictionary<Type, DbType> DefaultSqlTypeMapping = new Dictionary<Type, DbType>
             {
@@ -53,7 +53,7 @@
         private static readonly object Sync = new object();
         private static PeregrineConfig current;
 
-        static DefaultConfig()
+        static DefaultPeregrineConfig()
         {
             current = MakeNewConfig();
         }

@@ -16,7 +16,7 @@
     [SuppressMessage("ReSharper", "ConvertToConstant.Local")]
     public class SqlServer2012DialectTests
     {
-        private PeregrineConfig config = DefaultConfig.MakeNewConfig().WithDialect(Dialect.SqlServer2012);
+        private PeregrineConfig config = DefaultPeregrineConfig.MakeNewConfig().WithDialect(Dialect.SqlServer2012);
 
         public class MakeCountStatement
             : SqlServer2012DialectTests

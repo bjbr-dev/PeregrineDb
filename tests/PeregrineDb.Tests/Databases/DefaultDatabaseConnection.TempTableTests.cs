@@ -47,7 +47,7 @@
             [MemberData(nameof(TestDialects))]
             public void Creates_a_temp_table(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(DefaultConfig.MakeNewConfig().WithTableNameFactory(this.tableNameFactory.Object)))
+                using (var instance = BlankDatabaseFactory.MakeDatabase(DefaultPeregrineConfig.MakeNewConfig().WithTableNameFactory(this.tableNameFactory.Object)))
                 {
                     // Arrange
                     var database = instance.Item;
@@ -68,7 +68,7 @@
             [MemberData(nameof(TestDialects))]
             public void Adds_entities_to_temp_table(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(DefaultConfig.MakeNewConfig().WithTableNameFactory(this.tableNameFactory.Object)))
+                using (var instance = BlankDatabaseFactory.MakeDatabase(DefaultPeregrineConfig.MakeNewConfig().WithTableNameFactory(this.tableNameFactory.Object)))
                 {
                     // Arrange
                     var database = instance.Item;
@@ -109,7 +109,7 @@
             [MemberData(nameof(TestDialects), MemberType = typeof(DefaultDatabaseConnectionTempTableTests))]
             public void Throws_exception_if_names_do_not_match(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(DefaultConfig.MakeNewConfig().WithTableNameFactory(this.tableNameFactory.Object)))
+                using (var instance = BlankDatabaseFactory.MakeDatabase(DefaultPeregrineConfig.MakeNewConfig().WithTableNameFactory(this.tableNameFactory.Object)))
                 {
                     // Arrange
                     var database = instance.Item;
@@ -131,7 +131,7 @@
             [MemberData(nameof(TestDialects), MemberType = typeof(DefaultDatabaseConnectionTempTableTests))]
             public void Drops_temporary_table(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(DefaultConfig.MakeNewConfig().WithTableNameFactory(this.tableNameFactory.Object)))
+                using (var instance = BlankDatabaseFactory.MakeDatabase(DefaultPeregrineConfig.MakeNewConfig().WithTableNameFactory(this.tableNameFactory.Object)))
                 {
                     // Arrange
                     var database = instance.Item;

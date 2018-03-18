@@ -25,7 +25,7 @@
 
         public static PooledInstance<IDatabase> MakeDatabase(IDialect dialect)
         {
-            return MakeDatabase(DefaultConfig.MakeNewConfig().WithDialect(dialect));
+            return MakeDatabase(DefaultPeregrineConfig.MakeNewConfig().WithDialect(dialect));
         }
 
         public static PooledInstance<IDatabase> MakeDatabase(PeregrineConfig config)
