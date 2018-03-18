@@ -3,7 +3,7 @@
 
 PeregrineDb is a small and fast [Dapper.Net](https://github.com/StackExchange/dapper-dot-net) extension library to perform CRUD statement with POCO models.
 
-[![Build status](https://ci.appveyor.com/api/projects/status/1jwpeo49kmmlv9jr/branch/master?svg=true)](https://ci.appveyor.com/project/berkeleybross/dapper-microcrud/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/kcepamp69b45xkjj/branch/master?svg=true)](https://ci.appveyor.com/project/berkeleybross/peregrinedb/branch/master)
 
 ## Project aims
 
