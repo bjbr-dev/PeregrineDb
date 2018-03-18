@@ -21,7 +21,7 @@
     public class TableSchemaFactoryTests
     {
         private readonly IDialect dialect = new TestDialect();
-        private PeregrineConfig sut = DefaultPeregrineConfig.MakeNewConfig().WithDialect(new TestDialect());
+        private PeregrineConfig sut = DefaultPeregrineConfig.SqlServer2012.WithDialect(new TestDialect());
 
         public class MakeTableSchema
             : TableSchemaFactoryTests

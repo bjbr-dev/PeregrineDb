@@ -12,8 +12,7 @@
         /// </summary>
         public static Type GetUnderlyingType(this Type type)
         {
-            var underlyingType = Nullable.GetUnderlyingType(type);
-            return underlyingType ?? type;
+            return Nullable.GetUnderlyingType(type) ?? type;
         }
     }
 }

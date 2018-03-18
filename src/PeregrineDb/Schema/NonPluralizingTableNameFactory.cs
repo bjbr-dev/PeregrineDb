@@ -8,7 +8,7 @@
     /// otherwise just takes the class name.
     /// </summary>
     public class NonPluralizingTableNameFactory
-        : DefaultTableNameFactory
+        : AtttributeTableNameFactory
     {
         /// <inheritdoc />
         protected override string GetTableNameFromType(Type type)

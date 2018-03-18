@@ -6,12 +6,21 @@ namespace PeregrineDb.Schema
     using PeregrineDb.Dialects;
 
     /// <summary>
-    /// Default implementation of an <see cref="ITableNameFactory"/>.
-    /// Uses the <see cref="TableAttribute"/> if present, otherwise takes the class name and pluralizes it.
+    /// If class has <see cref="TableAttribute"/> then it returns <see cref="TableAttribute.Name"/> without manipulating it. Otherwise;
+    /// - Removes the specified suffix, if any (so classes can be called e.g. UserEntity)
+    /// - Converts the class name into snake_case
     /// </summary>
-    public class DefaultTableNameFactory
+    public class AtttributeTableNameFactory
         : ITableNameFactory
     {
+        protected const string DefaultSuffix = "Entity";
+        private readonly string suffix;
+
+        public AtttributeTableNameFactory(string suffix = DefaultSuffix)
+        {
+            this.suffix = suffix;
+        }
+
         /// <inheritdoc/>
         public string GetTableName(Type type, IDialect dialect)
         {
@@ -35,6 +44,24 @@ namespace PeregrineDb.Schema
             return string.IsNullOrEmpty(tableAttribute.Schema)
                 ? dialect.MakeTableName(tableAttribute.Name)
                 : dialect.MakeTableName(tableAttribute.Schema, tableAttribute.Name);
+        }
+
+        protected string RemoveSuffix(string value)
+        {
+            if (this.suffix == null)
+            {
+                return value;
+            }
+
+            var length = value.Length - this.suffix.Length;
+            if (length <= 0)
+            {
+                return value;
+            }
+
+            return value.EndsWith(this.suffix, StringComparison.OrdinalIgnoreCase)
+                ? value.Substring(0, length)
+                : value;
         }
     }
 }

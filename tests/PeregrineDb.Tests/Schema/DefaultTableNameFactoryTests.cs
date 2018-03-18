@@ -12,7 +12,7 @@
         public class GetTableName
             : DefaultTableNameFactoryTests
         {
-            private readonly DefaultTableNameFactory sut = new DefaultTableNameFactory();
+            private readonly AtttributeTableNameFactory sut = new AtttributeTableNameFactory();
             private readonly IDialect dialect = new TestDialect();
 
             [Fact]

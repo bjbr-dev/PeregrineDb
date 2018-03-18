@@ -1,6 +1,7 @@
 ﻿namespace PeregrineDb
 {
     using PeregrineDb.Dialects;
+    using PeregrineDb.Dialects.Postgres;
 
     /// <summary>
     /// Defines the SQL to generate when targeting specific vendor implementations.

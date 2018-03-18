@@ -1,75 +1,33 @@
 ﻿namespace PeregrineDb.Databases
 {
-    using System;
     using System.Data;
-    using PeregrineDb.Utils;
 
     public class DefaultUnitOfWork
         : DefaultDatabaseConnection, IDatabaseUnitOfWork
     {
-        private bool completed;
-        private readonly IDbTransaction transaction;
+        private readonly AutoRollbackTransaction transaction;
 
         public DefaultUnitOfWork(IDbConnection connection, IDbTransaction transaction, PeregrineConfig config, bool disposeConnection = true)
             : base(connection, transaction, config, disposeConnection)
         {
-            Ensure.NotNull(transaction, nameof(transaction));
-            this.transaction = transaction;
+            this.transaction = new AutoRollbackTransaction(transaction);
         }
 
-        public IDbTransaction Transaction
-        {
-            get
-            {
-                if (this.transaction != null)
-                {
-                    return this.transaction;
-                }
-                
-                throw new InvalidOperationException("No transaction has been started");
-            }
-        }
+        public IDbTransaction Transaction => this.transaction.Transaction;
 
         public void SaveChanges()
         {
-            if (this.transaction != null)
-            {
-                this.transaction.Commit();
-                this.completed = true;
-            }
-            else
-            {
-                throw new InvalidOperationException("No transaction to save");
-            }
+            this.transaction.SaveChanges();
         }
 
         public void Rollback()
         {
-            if (this.transaction != null)
-            {
-                this.transaction.Rollback();
-                this.completed = true;
-            }
-            else
-            {
-                throw new InvalidOperationException("No transaction to rollback");
-            }
+            this.transaction.Rollback();
         }
 
         protected override void Dispose(bool disposing)
         {
-            try
-            {
-                if (!this.completed)
-                {
-                    this.transaction?.Rollback();
-                    this.completed = true;
-                }
-            }
-            finally
-            {
-                this.transaction?.Dispose();
-            }
+            this.transaction.Dispose();
         }
     }
 }

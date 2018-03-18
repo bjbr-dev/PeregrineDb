@@ -12,7 +12,7 @@
         public class GetColumnName
             : DefaultColumnNameFactoryTests
         {
-            private readonly DefaultColumnNameFactory sut = new DefaultColumnNameFactory();
+            private readonly AttributeColumnNameFactory sut = new AttributeColumnNameFactory();
 
             [Fact]
             public void Returns_name_of_property()

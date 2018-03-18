@@ -12,7 +12,7 @@
         {
             if (!(connection.Config.Dialect is ISchemaQueryDialect dialect))
             {
-                throw new ArgumentException($"The dialect '{connection.Config.Dialect.Name}' does not support querying the schema and can therefore not be used");
+                throw new ArgumentException($"The dialect '{connection.Config.Dialect.Name}' does not support querying the schema");
             }
 
             ignoredTables = ignoredTables ?? new HashSet<string>();

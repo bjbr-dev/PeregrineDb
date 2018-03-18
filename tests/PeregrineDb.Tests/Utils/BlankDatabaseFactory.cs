@@ -11,6 +11,7 @@
     using PeregrineDb;
     using PeregrineDb.Databases;
     using PeregrineDb.Dialects;
+    using PeregrineDb.Dialects.Postgres;
     using PeregrineDb.Tests.Utils.Pooling;
 
     internal class BlankDatabaseFactory
@@ -25,7 +26,7 @@
 
         public static PooledInstance<IDatabase> MakeDatabase(IDialect dialect)
         {
-            return MakeDatabase(DefaultPeregrineConfig.MakeNewConfig().WithDialect(dialect));
+            return MakeDatabase(DefaultPeregrineConfig.SqlServer2012.WithDialect(dialect));
         }
 
         public static PooledInstance<IDatabase> MakeDatabase(PeregrineConfig config)

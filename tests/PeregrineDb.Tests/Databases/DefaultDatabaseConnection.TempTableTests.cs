@@ -20,9 +20,9 @@
                 new[] { Dialect.PostgreSql }
             };
 
-        private static string GetTableName(DefaultTableNameFactory defaultFactory, Type type, IDialect dialect)
+        private static string GetTableName(AtttributeTableNameFactory atttributeFactory, Type type, IDialect dialect)
         {
-            var tableName = defaultFactory.GetTableName(type, dialect);
+            var tableName = atttributeFactory.GetTableName(type, dialect);
 
             return dialect.Name == nameof(Dialect.SqlServer2012)
                 ? "[#" + tableName.Substring(1)
@@ -36,7 +36,7 @@
 
             public CreateTempTableAndInsert()
             {
-                var defaultFactory = new DefaultTableNameFactory();
+                var defaultFactory = new AtttributeTableNameFactory();
 
                 this.tableNameFactory = new Mock<ITableNameFactory>();
                 this.tableNameFactory.Setup(f => f.GetTableName(It.IsAny<Type>(), It.IsAny<IDialect>()))
@@ -47,7 +47,7 @@
             [MemberData(nameof(TestDialects))]
             public void Creates_a_temp_table(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(DefaultPeregrineConfig.MakeNewConfig().WithTableNameFactory(this.tableNameFactory.Object)))
+                using (var instance = BlankDatabaseFactory.MakeDatabase(DefaultPeregrineConfig.SqlServer2012.WithTableNameFactory(this.tableNameFactory.Object)))
                 {
                     // Arrange
                     var database = instance.Item;
@@ -68,7 +68,7 @@
             [MemberData(nameof(TestDialects))]
             public void Adds_entities_to_temp_table(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(DefaultPeregrineConfig.MakeNewConfig().WithTableNameFactory(this.tableNameFactory.Object)))
+                using (var instance = BlankDatabaseFactory.MakeDatabase(DefaultPeregrineConfig.SqlServer2012.WithTableNameFactory(this.tableNameFactory.Object)))
                 {
                     // Arrange
                     var database = instance.Item;
@@ -98,7 +98,7 @@
 
             public DropTempTable()
             {
-                var defaultFactory = new DefaultTableNameFactory();
+                var defaultFactory = new AtttributeTableNameFactory();
 
                 this.tableNameFactory = new Mock<ITableNameFactory>();
                 this.tableNameFactory.Setup(f => f.GetTableName(It.IsAny<Type>(), It.IsAny<IDialect>()))
@@ -109,7 +109,7 @@
             [MemberData(nameof(TestDialects), MemberType = typeof(DefaultDatabaseConnectionTempTableTests))]
             public void Throws_exception_if_names_do_not_match(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(DefaultPeregrineConfig.MakeNewConfig().WithTableNameFactory(this.tableNameFactory.Object)))
+                using (var instance = BlankDatabaseFactory.MakeDatabase(DefaultPeregrineConfig.SqlServer2012.WithTableNameFactory(this.tableNameFactory.Object)))
                 {
                     // Arrange
                     var database = instance.Item;
@@ -131,7 +131,7 @@
             [MemberData(nameof(TestDialects), MemberType = typeof(DefaultDatabaseConnectionTempTableTests))]
             public void Drops_temporary_table(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(DefaultPeregrineConfig.MakeNewConfig().WithTableNameFactory(this.tableNameFactory.Object)))
+                using (var instance = BlankDatabaseFactory.MakeDatabase(DefaultPeregrineConfig.SqlServer2012.WithTableNameFactory(this.tableNameFactory.Object)))
                 {
                     // Arrange
                     var database = instance.Item;

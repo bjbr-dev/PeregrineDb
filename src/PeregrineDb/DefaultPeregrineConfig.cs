@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Data;
-    using PeregrineDb.Dialects;
+    using PeregrineDb.Dialects.Postgres;
     using PeregrineDb.Schema;
 
     public static class DefaultPeregrineConfig
@@ -50,87 +50,11 @@
                 [typeof(object)] = DbType.Object
             }.ToImmutableDictionary();
 
-        private static readonly object Sync = new object();
-        private static PeregrineConfig current;
 
-        static DefaultPeregrineConfig()
-        {
-            current = MakeNewConfig();
-        }
+        public static PeregrineConfig SqlServer2012 => new PeregrineConfig(
+            Dialect.SqlServer2012, new AtttributeTableNameFactory(), new AttributeColumnNameFactory(), true, DefaultSqlTypeMapping);
 
-        public static PeregrineConfig MakeNewConfig()
-        {
-            return new PeregrineConfig(
-                PeregrineDb.Dialect.SqlServer2012, new DefaultTableNameFactory(), new DefaultColumnNameFactory(), true,
-                DefaultSqlTypeMapping);
-        }
-
-        /// <summary>
-        /// Gets the current config
-        /// </summary>
-        public static PeregrineConfig Current
-        {
-            get
-            {
-                lock (Sync)
-                {
-                    return current;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the default dialect
-        /// </summary>
-        public static IDialect Dialect
-        {
-            get => Current.Dialect;
-            set => Update(c => c.WithDialect(value));
-        }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether to verify the affected row count was the expected count after a command.
-        /// </summary>
-        public static bool VerifyAffectedRowCount
-        {
-            get => Current.VerifyAffectedRowCount;
-            set => Update(c => c.WithVerifyAffectedRowCount(value));
-        }
-
-        public static ITableNameFactory TableNameFactory
-        {
-            get => Current.TableNameFactory;
-            set => Update(c => c.WithTableNameFactory(value));
-        }
-
-        public static IColumnNameFactory ColumnNameFactory
-        {
-            get => Current.ColumnNameFactory;
-            set => Update(c => c.WithColumnNameFactory(value));
-        }
-
-        /// <summary>
-        /// Configure the specified type to be mapped to a given db-type
-        /// </summary>
-        public static void AddSqlTypeMapping(Type type, DbType dbType)
-        {
-            Update(c => c.AddSqlTypeMapping(type, dbType));
-        }
-
-        public static void Update(Func<PeregrineConfig, PeregrineConfig> updater)
-        {
-            lock (Sync)
-            {
-                current = updater(current) ?? throw new InvalidOperationException("Updater returned null");
-            }
-        }
-
-        public static void Reset()
-        {
-            lock (Sync)
-            {
-                current = MakeNewConfig();
-            }
-        }
+        public static PeregrineConfig Postgres => new PeregrineConfig(
+            Dialect.PostgreSql, new PostgresAttributeTableNameFactory(), new PostgresAttributeColumnNameFactory(), true, DefaultSqlTypeMapping);
     }
 }

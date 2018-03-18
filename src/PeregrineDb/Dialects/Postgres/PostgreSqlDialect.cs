@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Dialects
+﻿namespace PeregrineDb.Dialects.Postgres
 {
     using System;
     using System.Collections.Immutable;

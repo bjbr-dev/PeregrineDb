@@ -16,7 +16,7 @@
     [SuppressMessage("ReSharper", "ConvertToConstant.Local")]
     public class SqlServer2012DialectTests
     {
-        private PeregrineConfig config = DefaultPeregrineConfig.MakeNewConfig().WithDialect(Dialect.SqlServer2012);
+        private PeregrineConfig config = DefaultPeregrineConfig.SqlServer2012;
 
         public class MakeCountStatement
             : SqlServer2012DialectTests
@@ -879,7 +879,7 @@ WHERE [Age] > 10";
             {
                 this.tableNameFactory = new Mock<ITableNameFactory>();
 
-                var defaultTableNameFactory = new DefaultTableNameFactory();
+                var defaultTableNameFactory = new AtttributeTableNameFactory();
                 this.tableNameFactory.Setup(f => f.GetTableName(It.IsAny<Type>(), It.IsAny<IDialect>()))
                     .Returns((Type type, IDialect d) => "[#" + defaultTableNameFactory.GetTableName(type, d).Substring(1));
 

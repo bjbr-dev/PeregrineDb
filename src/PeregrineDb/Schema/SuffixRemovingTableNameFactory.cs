@@ -8,7 +8,7 @@
     /// otherwise takes the class name, removes the suffix (if present) and pluralizes it.
     /// </summary>
     public class SuffixRemovingTableNameFactory
-        : DefaultTableNameFactory
+        : AtttributeTableNameFactory
     {
         private readonly string suffix;
 
