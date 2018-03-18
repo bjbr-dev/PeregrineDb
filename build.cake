@@ -99,7 +99,7 @@ Task("Default")
     .IsDependentOn("Publish");
 
 Task("CommitTest")
-    .IsDependentOn("Build");
+    .IsDependentOn("Test");
 
 //////////////////////////////////////////////////////////////////////
 // EXECUTION

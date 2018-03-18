@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests
+﻿namespace PeregrineDb.Tests.Databases
 {
     using System;
     using System.Collections.Generic;
@@ -13,13 +13,19 @@
 
     public abstract class DefaultDatabaseConnectionCrudTests
     {
-        private static IEnumerable<IDialect> TestDialects => new[]
+        public static IEnumerable<object[]> TestDialects => new[]
             {
-                Dialect.SqlServer2012,
-                Dialect.PostgreSql
+                new[] { Dialect.SqlServer2012 },
+                new[] { Dialect.PostgreSql }
             };
 
-        public abstract class Count
+        public static IEnumerable<object[]> TestDialectsWithData(string data) => new[]
+            {
+                new object[] { Dialect.SqlServer2012, data },
+                new object[] { Dialect.PostgreSql, data }
+            };
+
+        public class Count
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -98,7 +104,7 @@
             }
         }
 
-        public abstract class CountWhereObject
+        public class CountWhereObject
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -166,7 +172,7 @@
             }
         }
 
-        public abstract class Find
+        public class Find
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -463,7 +469,7 @@
             }
         }
 
-        public abstract class Get
+        public class Get
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -658,7 +664,7 @@
             }
         }
 
-        public abstract class GetFirstOrDefault
+        public class GetFirstOrDefault
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -710,7 +716,7 @@
             }
         }
 
-        public abstract class GetFirstOrDefaultWhereObject
+        public class GetFirstOrDefaultWhereObject
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -756,7 +762,7 @@
             }
         }
 
-        public abstract class GetFirst
+        public class GetFirst
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -808,7 +814,7 @@
             }
         }
 
-        public abstract class GetFirstWhereObject
+        public class GetFirstWhereObject
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -854,7 +860,7 @@
             }
         }
 
-        public abstract class GetSingleOrDefault
+        public class GetSingleOrDefault
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -925,7 +931,7 @@
             }
         }
 
-        public abstract class GetSingleOrDefaultWhereObject
+        public class GetSingleOrDefaultWhereObject
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -992,7 +998,7 @@
             }
         }
 
-        public abstract class GetSingle
+        public class GetSingle
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -1063,7 +1069,7 @@
             }
         }
 
-        public abstract class GetSingleWhereObject
+        public class GetSingleWhereObject
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -1130,7 +1136,7 @@
             }
         }
 
-        public abstract class GetRange
+        public class GetRange
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -1186,7 +1192,7 @@
             }
         }
 
-        public abstract class GetRangeWhereObject
+        public class GetRangeWhereObject
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -1368,7 +1374,7 @@
             }
         }
 
-        public abstract class GetPage
+        public class GetPage
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -1534,7 +1540,7 @@
             }
         }
 
-        public abstract class GetPageWhereObject
+        public class GetPageWhereObject
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -1667,7 +1673,7 @@
         }
 
 
-        public abstract class GetAll
+        public class GetAll
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -1696,7 +1702,7 @@
             }
         }
 
-        public abstract class Insert
+        public class Insert
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -1914,7 +1920,7 @@
             }
         }
 
-        public abstract class InsertAndReturnKey
+        public class InsertAndReturnKey
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -2059,7 +2065,7 @@
             }
         }
 
-        public abstract class InsertRange
+        public class InsertRange
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -2246,7 +2252,7 @@
             }
         }
 
-        public abstract class InsertRangeAndSetKey
+        public class InsertRangeAndSetKey
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -2442,7 +2448,7 @@
             }
         }
 
-        public abstract class Update
+        public class Update
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -2523,7 +2529,7 @@
             }
         }
 
-        public abstract class UpdateRange
+        public class UpdateRange
             : DefaultDatabaseConnectionCrudTests
         {
 
@@ -2602,7 +2608,7 @@
                 }
             }
 
-            public abstract class DeleteId
+            public class DeleteId
                 : DefaultDatabaseConnectionCrudTests
             {
 
@@ -2676,7 +2682,7 @@
                 }
             }
 
-            public abstract class DeleteEntity
+            public class DeleteEntity
                 : DefaultDatabaseConnectionCrudTests
             {
 
@@ -2721,15 +2727,15 @@
                 }
             }
 
-            public abstract class DeleteRange
+            public class DeleteRange
                 : DefaultDatabaseConnectionCrudTests
             {
                 [Theory]
-                [InlineData(null)]
-                [InlineData("")]
-                [InlineData(" ")]
-                [InlineData("HAVING Age = 10")]
-                [InlineData("WHERE")]
+                [MemberData(nameof(TestDialectsWithData), new object[] { null })]
+                [MemberData(nameof(TestDialectsWithData), "")]
+                [MemberData(nameof(TestDialectsWithData), " ")]
+                [MemberData(nameof(TestDialectsWithData), "HAVING Age = 10")]
+                [MemberData(nameof(TestDialectsWithData), "WHERE")]
                 public void Throws_exception_if_conditions_does_not_contain_where_clause(IDialect dialect, string conditions)
                 {
                     using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
@@ -2742,9 +2748,9 @@
                 }
 
                 [Theory]
-                [InlineData("Where Age = 10")]
-                [InlineData("where Age = 10")]
-                [InlineData("WHERE Age = 10")]
+                [MemberData(nameof(TestDialectsWithData), "Where Age = 10")]
+                [MemberData(nameof(TestDialectsWithData), "where Age = 10")]
+                [MemberData(nameof(TestDialectsWithData), "WHERE Age = 10")]
                 public void Allows_any_capitalization_of_where_clause(IDialect dialect, string conditions)
                 {
                     using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
@@ -2785,7 +2791,7 @@
                 }
             }
 
-            public abstract class DeleteRangeWhereObject
+            public class DeleteRangeWhereObject
                 : DefaultDatabaseConnectionCrudTests
             {
 
@@ -2844,7 +2850,7 @@
                 }
             }
 
-            public abstract class DeleteAll
+            public class DeleteAll
                 : DefaultDatabaseConnectionCrudTests
             {
                 [Theory]

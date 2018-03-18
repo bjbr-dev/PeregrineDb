@@ -13,7 +13,8 @@
     {
         private static IEnumerable<IDialect> TestDialects => new[]
             {
-                Dialect.SqlServer2012
+                Dialect.SqlServer2012,
+                Dialect.PostgreSql
             };
         
         public abstract class DeleteAllData

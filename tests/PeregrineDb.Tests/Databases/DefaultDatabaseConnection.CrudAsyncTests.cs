@@ -12,15 +12,21 @@
     using PeregrineDb.Tests.Utils;
     using Xunit;
 
-    public class DefaultDatabaseConnectionCrudAsyncTests
+    public abstract class DefaultDatabaseConnectionCrudAsyncTests
     {
-        private static IEnumerable<IDialect> TestDialects => new[]
+        public static IEnumerable<object[]> TestDialects => new[]
             {
-                Dialect.SqlServer2012,
-                Dialect.PostgreSql
+                new[] { Dialect.SqlServer2012 },
+                new[] { Dialect.PostgreSql }
             };
 
-        public abstract class CountAsync
+        public static IEnumerable<object[]> TestDialectsWithData(string data) => new[]
+            {
+                new object[] { Dialect.SqlServer2012, data },
+                new object[] { Dialect.PostgreSql, data }
+            };
+
+        public class CountAsync
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]
@@ -96,7 +102,7 @@
             }
         }
 
-        public abstract class CountAsyncWhereObject
+        public class CountAsyncWhereObject
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]
@@ -166,7 +172,7 @@
             }
         }
 
-        public abstract class FindAsync
+        public class FindAsync
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]
@@ -458,7 +464,7 @@
             }
         }
 
-        public abstract class GetAsync
+        public class GetAsync
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]
@@ -655,7 +661,7 @@
             }
         }
 
-        public abstract class GetRangeAsync
+        public class GetRangeAsync
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]
@@ -709,7 +715,7 @@
             }
         }
 
-        public abstract class GetRangeAsyncWhereObject
+        public class GetRangeAsyncWhereObject
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]
@@ -895,7 +901,7 @@
             }
         }
 
-        public abstract class GetPageAsync
+        public class GetPageAsync
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]
@@ -1058,7 +1064,7 @@
             }
         }
 
-        public abstract class GetPageAsyncWhereObject
+        public class GetPageAsyncWhereObject
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]
@@ -1189,7 +1195,7 @@
             }
         }
 
-        public abstract class GetAllAsync
+        public class GetAllAsync
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]
@@ -1217,7 +1223,7 @@
             }
         }
 
-        public abstract class InsertAsync
+        public class InsertAsync
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]
@@ -1434,7 +1440,7 @@
             }
         }
 
-        public abstract class InsertAndReturnKeyAsync
+        public class InsertAndReturnKeyAsync
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]
@@ -1589,7 +1595,7 @@
             }
         }
 
-        public abstract class InsertRangeAsync
+        public class InsertRangeAsync
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]
@@ -1774,7 +1780,7 @@
             }
         }
 
-        public abstract class InsertRangeAndSetKeyAsync
+        public class InsertRangeAndSetKeyAsync
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]
@@ -1977,7 +1983,7 @@
             }
         }
 
-        public abstract class UpdateAsync
+        public class UpdateAsync
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]
@@ -2057,7 +2063,7 @@
             }
         }
 
-        public abstract class UpdateRangeAsync
+        public class UpdateRangeAsync
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]
@@ -2135,7 +2141,7 @@
             }
         }
 
-        public abstract class DeleteIdAsync
+        public class DeleteIdAsync
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]
@@ -2208,7 +2214,7 @@
             }
         }
 
-        public abstract class DeleteEntityAsync
+        public class DeleteEntityAsync
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]
@@ -2252,15 +2258,15 @@
             }
         }
 
-        public abstract class DeleteRangeAsync
+        public class DeleteRangeAsync
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]
-            [InlineData(null)]
-            [InlineData("")]
-            [InlineData(" ")]
-            [InlineData("HAVING Age = 10")]
-            [InlineData("WHERE")]
+            [MemberData(nameof(TestDialectsWithData), new object[] { null })]
+            [MemberData(nameof(TestDialectsWithData), "")]
+            [MemberData(nameof(TestDialectsWithData), " ")]
+            [MemberData(nameof(TestDialectsWithData), "HAVING Age = 10")]
+            [MemberData(nameof(TestDialectsWithData), "WHERE")]
             public void Throws_exception_if_conditions_does_not_contain_where_clause(IDialect dialect, string conditions)
             {
                 using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
@@ -2276,9 +2282,9 @@
             }
 
             [Theory]
-            [InlineData("Where Age = 10")]
-            [InlineData("where Age = 10")]
-            [InlineData("WHERE Age = 10")]
+            [MemberData(nameof(TestDialectsWithData), "Where Age = 10")]
+            [MemberData(nameof(TestDialectsWithData), "where Age = 10")]
+            [MemberData(nameof(TestDialectsWithData), "WHERE Age = 10")]
             public void Allows_any_capitalization_of_where_clause(IDialect dialect, string conditions)
             {
                 using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
@@ -2321,7 +2327,7 @@
             }
         }
 
-        public abstract class DeleteRangeAsyncWhereObject
+        public class DeleteRangeAsyncWhereObject
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]
@@ -2385,7 +2391,7 @@
             }
         }
 
-        public abstract class DeleteAllAsync
+        public class DeleteAllAsync
             : DefaultDatabaseConnectionCrudAsyncTests
         {
             [Theory]

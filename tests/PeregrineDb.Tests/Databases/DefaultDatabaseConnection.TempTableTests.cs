@@ -14,10 +14,10 @@
 
     public abstract class DefaultDatabaseConnectionTempTableTests
     {
-        private static IEnumerable<IDialect> TestDialects => new[]
+        public static IEnumerable<object[]> TestDialects() => new[]
             {
-                Dialect.SqlServer2012,
-                Dialect.PostgreSql
+                new[] { Dialect.SqlServer2012 },
+                new[] { Dialect.PostgreSql }
             };
 
         private static string GetTableName(DefaultTableNameFactory defaultFactory, Type type, IDialect dialect)
@@ -29,12 +29,12 @@
                 : tableName;
         }
 
-        public abstract class CreateTempTableAndInsert
+        public class CreateTempTableAndInsert
             : DefaultDatabaseConnectionTempTableTests
         {
             private readonly Mock<ITableNameFactory> tableNameFactory;
 
-            protected CreateTempTableAndInsert()
+            public CreateTempTableAndInsert()
             {
                 var defaultFactory = new DefaultTableNameFactory();
 
@@ -91,12 +91,12 @@
             }
         }
 
-        public abstract class DropTempTable
+        public class DropTempTable
             : DefaultDatabaseConnectionTempTableTests
         {
             private readonly Mock<ITableNameFactory> tableNameFactory;
 
-            protected DropTempTable()
+            public DropTempTable()
             {
                 var defaultFactory = new DefaultTableNameFactory();
 
@@ -106,7 +106,7 @@
             }
 
             [Theory]
-            [MemberData(nameof(TestDialects))]
+            [MemberData(nameof(TestDialects), MemberType = typeof(DefaultDatabaseConnectionTempTableTests))]
             public void Throws_exception_if_names_do_not_match(IDialect dialect)
             {
                 using (var instance = BlankDatabaseFactory.MakeDatabase(DefaultConfig.MakeNewConfig().WithTableNameFactory(this.tableNameFactory.Object)))
@@ -128,7 +128,7 @@
             }
 
             [Theory]
-            [MemberData(nameof(TestDialects))]
+            [MemberData(nameof(TestDialects), MemberType = typeof(DefaultDatabaseConnectionTempTableTests))]
             public void Drops_temporary_table(IDialect dialect)
             {
                 using (var instance = BlankDatabaseFactory.MakeDatabase(DefaultConfig.MakeNewConfig().WithTableNameFactory(this.tableNameFactory.Object)))

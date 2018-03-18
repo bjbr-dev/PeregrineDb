@@ -6,12 +6,13 @@
     using System.Text;
     using Pagination;
     using PeregrineDb.Schema;
+    using PeregrineDb.Schema.Relations;
 
     /// <summary>
     /// Implementation of <see cref="IDialect"/> for the PostgreSQL DBMS.
     /// </summary>
     public class PostgreSqlDialect
-        : BaseDialect
+        : BaseDialect, ISchemaQueryDialect
     {
         private static readonly ImmutableArray<string> ColumnTypes;
 
@@ -184,6 +185,36 @@
 
                     throw new NotSupportedException("Unknown DbType: " + dbType.Type);
             }
+        }
+
+        public string MakeGetAllTablesStatement()
+        {
+            return @"
+SELECT table_name AS Name
+FROM information_schema.tables
+WHERE table_schema='public' AND table_type='BASE TABLE';";
+        }
+
+        public string MakeGetAllRelationsStatement()
+        {
+            return @"
+SELECT
+    foreign_column.table_schema || '.' || foreign_column.table_name AS ReferencedTable,
+    foreign_key.table_schema || '.' || foreign_key.table_name AS ReferencingTable,
+    primary_column.column_name AS ReferencingColumn,
+    primary_column.is_nullable::boolean AS RelationIsOptional
+FROM information_schema.table_constraints AS foreign_key
+JOIN information_schema.key_column_usage AS kcu ON foreign_key.constraint_name = kcu.constraint_name
+JOIN information_schema.constraint_column_usage AS foreign_column ON foreign_column.constraint_name = foreign_key.constraint_name
+JOIN information_schema.columns AS primary_column ON kcu.table_name = primary_column.table_name AND kcu.table_schema = primary_column.table_schema
+WHERE constraint_type = 'FOREIGN KEY'";
+        }
+
+        public string MakeSetColumnNullStatement(string tableName, string columnName)
+        {
+            var sql = new StringBuilder("UPDATE ").Append(tableName);
+            sql.AppendClause("SET ").Append(columnName).Append(" = NULL");
+            return sql.ToString();
         }
     }
 }

@@ -38,7 +38,11 @@
                     database = OpenDatabase(pooledConnectionString.Item);
                     DataWiper.ClearAllData(database);
 
-                    return new PooledInstance<IDatabase>(database, d => { pooledConnectionString.Dispose(); });
+                    return new PooledInstance<IDatabase>(database, d =>
+                    {
+                        d.Item.Dispose();
+                        pooledConnectionString.Dispose();
+                    });
                 }
                 catch
                 {
