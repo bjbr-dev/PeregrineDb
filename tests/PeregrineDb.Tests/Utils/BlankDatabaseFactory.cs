@@ -4,6 +4,7 @@
     using System.Collections.Concurrent;
     using System.Data.SqlClient;
     using System.IO;
+    using System.Linq;
     using System.Reflection;
     using Dapper;
     using Npgsql;
@@ -14,8 +15,13 @@
 
     internal class BlankDatabaseFactory
     {
+        private const string DatabasePrefix = "peregrinetests_";
+        
         private static readonly ConcurrentDictionary<IDialect, ObjectPool<string>> ConnectionStringPool =
             new ConcurrentDictionary<IDialect, ObjectPool<string>>();
+        
+        private static readonly object Sync = new object();
+        private static bool cleanedUp;
 
         public static PooledInstance<IDatabase> MakeDatabase(IDialect dialect)
         {
@@ -24,6 +30,8 @@
 
         public static PooledInstance<IDatabase> MakeDatabase(PeregrineConfig config)
         {
+            CleanUp();
+            
             var dialect = config.Dialect;
             var dialectPool = ConnectionStringPool.GetOrAdd(dialect, d => new ObjectPool<string>(CreateDatabase));
             
@@ -111,21 +119,74 @@
             }
         }
 
+        private static void CleanUp()
+        {
+            lock (Sync)
+            {
+                if (cleanedUp)
+                {
+                    return;
+                }
+                
+                using (var con = new SqlConnection(TestSettings.SqlServerConnectionString))
+                {
+                    var databases = con.Query<string>("SELECT name FROM sys.databases")
+                                       .Where(s => s.StartsWith(DatabasePrefix));
+                    
+                    foreach (var databaseName in databases)
+                    {
+                        if (!ProcessHelpers.IsRunning(GetProcessIdFromDatabaseName(databaseName)))
+                        {
+                            try
+                            {
+                                con.Execute($@"USE master; DROP DATABASE {databaseName};");
+                            }
+                            catch (SqlException)
+                            {
+                                // Ignore errors since multiple processes can try to clean up the same database - only one can win
+                                // Ideally we'd use a mutex but doesnt seem necessary - if we fail to cleanup we'll try again next time (or the other process did for us!)
+                            }
+                        }
+                    }
+                }
+                
+                using (var con = new NpgsqlConnection(TestSettings.PostgresServerConnectionString))
+                {
+                    var databases = con.Query<string>("SELECT datname FROM pg_database")
+                                       .Where(s => s.StartsWith(DatabasePrefix));
+                    
+                    foreach (var databaseName in databases)
+                    {
+                        if (!ProcessHelpers.IsRunning(GetProcessIdFromDatabaseName(databaseName)))
+                        {
+                            try
+                            {
+                                con.Execute($@"DROP DATABASE {databaseName};");
+                            }
+                            catch (NpgsqlException)
+                            {
+                                // Ignore errors since multiple processes can try to clean up the same database - only one can win
+                                // Ideally we'd use a mutex but doesnt seem necessary - if we fail to cleanup we'll try again next time (or the other process did for us!)
+                            }
+                        }
+                    }
+                }
+
+                cleanedUp = true;
+            }
+        }
+
         private static string CreateSqlServer2012Database()
         {
-            var serverConnectionString = IsInAppVeyor()
-                ? @"Server=(local)\SQL2014;Database=master;User ID=sa;Password=Password12!; Pooling=false"
-                : @"Server=localhost; Integrated Security=true; Pooling=false";
-
             var databaseName = MakeRandomDatabaseName();
-            using (var database = new SqlConnection(serverConnectionString))
+            using (var database = new SqlConnection(TestSettings.SqlServerConnectionString))
             {
                 database.Open();
 
                 database.Execute("CREATE DATABASE " + databaseName);
             }
 
-            var connectionString = new SqlConnectionStringBuilder(serverConnectionString)
+            var connectionString = new SqlConnectionStringBuilder(TestSettings.SqlServerConnectionString)
                 {
                     InitialCatalog = databaseName,
                     MultipleActiveResultSets = false
@@ -143,17 +204,13 @@
 
         private static string CreatePostgreSqlDatabase()
         {
-            var serverConnectionString = IsInAppVeyor()
-                ? "Server=localhost;Port=5432;User Id=postgres;Password=Password12!; Pooling=false;"
-                : "Server=10.10.3.202;Port=5432;User Id=postgres;Password=postgres123; Pooling=false;";
-
             var databaseName = MakeRandomDatabaseName();
-            using (var database = new NpgsqlConnection(serverConnectionString))
+            using (var database = new NpgsqlConnection(TestSettings.PostgresServerConnectionString))
             {
                 database.Execute("CREATE DATABASE " + databaseName);
             }
 
-            var connectionStringBuilder = new NpgsqlConnectionStringBuilder(serverConnectionString)
+            var connectionStringBuilder = new NpgsqlConnectionStringBuilder(TestSettings.PostgresServerConnectionString)
                 {
                     Database = databaseName
                 };
@@ -183,13 +240,12 @@
 
         private static string MakeRandomDatabaseName()
         {
-            return "microcrudtests_" + Guid.NewGuid().ToString("N");
+            return DatabasePrefix + Guid.NewGuid().ToString("N") + "_" + ProcessHelpers.CurrentProcessId;
         }
 
-        private static bool IsInAppVeyor()
+        private static int GetProcessIdFromDatabaseName(string databaseName)
         {
-            var result = Environment.GetEnvironmentVariable("APPVEYOR");
-            return string.Equals(result, "True", StringComparison.OrdinalIgnoreCase);
+            return int.Parse(databaseName.Substring(databaseName.LastIndexOf("_", StringComparison.Ordinal) + 1));
         }
     }
 }
