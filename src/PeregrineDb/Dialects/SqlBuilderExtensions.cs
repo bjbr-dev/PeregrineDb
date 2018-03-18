@@ -1,12 +1,9 @@
-﻿// <copyright file="SqlBuilderExtensions.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Dialects
+﻿namespace PeregrineDb.Dialects
 {
     using System;
     using System.Collections.Immutable;
     using System.Text;
-    using Dapper.MicroCRUD.Schema;
+    using PeregrineDb.Schema;
 
     /// <summary>
     /// Helpers to generate SQL statements

@@ -1,10 +1,11 @@
-﻿namespace Dapper.MicroCRUD.Tests.Databases
+﻿namespace PeregrineDb.Tests.Databases
 {
     using System;
     using System.Data;
-    using Dapper.MicroCRUD.Databases;
     using FluentAssertions;
     using Moq;
+    using PeregrineDb;
+    using PeregrineDb.Databases;
     using Xunit;
 
     public class DefaultDatabaseTests
@@ -17,7 +18,7 @@
                 // Arrange
                 var database = new Mock<IDbConnection>();
 
-                var sut = new DefaultDatabase(database.Object, Dialect.PostgreSql);
+                var sut = new DefaultDatabase(database.Object, DefaultConfig.MakeNewConfig().WithDialect(Dialect.PostgreSql));
 
                 // Act
                 sut.Dispose();
@@ -35,7 +36,7 @@
                 // Arrange
                 var database = new Mock<IDbConnection>();
 
-                var sut = new DefaultDatabase(database.Object, Dialect.PostgreSql);
+                var sut = new DefaultDatabase(database.Object, DefaultConfig.MakeNewConfig().WithDialect(Dialect.PostgreSql));
 
                 // Act
                 Action act = () => sut.StartUnitOfWork();
@@ -53,7 +54,7 @@
                 var transaction = new Mock<IDbTransaction>();
                 database.Setup(d => d.BeginTransaction()).Returns(transaction.Object);
 
-                var sut = new DefaultDatabase(database.Object, Dialect.PostgreSql);
+                var sut = new DefaultDatabase(database.Object, DefaultConfig.MakeNewConfig().WithDialect(Dialect.PostgreSql));
 
                 // Act
                 var result = sut.StartUnitOfWork();
@@ -70,8 +71,7 @@
                 var transaction = new Mock<IDbTransaction>();
                 database.Setup(d => d.BeginTransaction()).Returns(transaction.Object);
 
-                var sut = new DefaultDatabase(database.Object, Dialect.PostgreSql);
-
+                var sut = new DefaultDatabase(database.Object, DefaultConfig.MakeNewConfig().WithDialect(Dialect.PostgreSql));
                 // Act
                 using (sut.StartUnitOfWork())
                 {
@@ -90,7 +90,7 @@
                 // Arrange
                 var database = new Mock<IDbConnection>();
 
-                var sut = new DefaultDatabase(database.Object, Dialect.PostgreSql);
+                var sut = new DefaultDatabase(database.Object, DefaultConfig.MakeNewConfig().WithDialect(Dialect.PostgreSql));
 
                 // Act
                 Action act = () => sut.StartUnitOfWork(IsolationLevel.ReadCommitted);
@@ -108,7 +108,7 @@
                 var transaction = new Mock<IDbTransaction>();
                 database.Setup(d => d.BeginTransaction(IsolationLevel.ReadCommitted)).Returns(transaction.Object);
 
-                var sut = new DefaultDatabase(database.Object, Dialect.PostgreSql);
+                var sut = new DefaultDatabase(database.Object, DefaultConfig.MakeNewConfig().WithDialect(Dialect.PostgreSql));
 
                 // Act
                 var result = sut.StartUnitOfWork(IsolationLevel.ReadCommitted);
@@ -125,7 +125,7 @@
                 var transaction = new Mock<IDbTransaction>();
                 database.Setup(d => d.BeginTransaction(IsolationLevel.ReadCommitted)).Returns(transaction.Object);
 
-                var sut = new DefaultDatabase(database.Object, Dialect.PostgreSql);
+                var sut = new DefaultDatabase(database.Object, DefaultConfig.MakeNewConfig().WithDialect(Dialect.PostgreSql));
 
                 // Act
                 using (sut.StartUnitOfWork(IsolationLevel.ReadCommitted))

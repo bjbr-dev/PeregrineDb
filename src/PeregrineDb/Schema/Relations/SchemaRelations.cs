@@ -1,4 +1,4 @@
-﻿namespace Dapper.MicroCRUD.Schema.Relations
+﻿namespace PeregrineDb.Schema.Relations
 {
     using System;
     using System.Collections.Generic;

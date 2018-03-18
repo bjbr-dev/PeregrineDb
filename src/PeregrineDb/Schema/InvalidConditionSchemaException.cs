@@ -1,7 +1,4 @@
-﻿// <copyright file="InvalidPrimaryKeyException.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Schema
+﻿namespace PeregrineDb.Schema
 {
     using System;
 

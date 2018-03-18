@@ -1,7 +1,4 @@
-﻿// <copyright file="TypeExtensions.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Utils
+﻿namespace PeregrineDb.Utils
 {
     using System;
 

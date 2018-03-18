@@ -1,8 +1,8 @@
-﻿namespace Dapper.MicroCRUD.Tests.Schema
+﻿namespace PeregrineDb.Tests.Schema
 {
     using System;
-    using Dapper.MicroCRUD.Schema.Relations;
     using FluentAssertions;
+    using PeregrineDb.Schema.Relations;
     using Xunit;
 
     public class SchemaRelationsTests

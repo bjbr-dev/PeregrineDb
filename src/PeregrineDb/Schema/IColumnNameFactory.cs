@@ -1,7 +1,4 @@
-// <copyright file="IColumnNameFactory.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Schema
+namespace PeregrineDb.Schema
 {
     /// <summary>
     /// Defines how to get the column name from a specific property.

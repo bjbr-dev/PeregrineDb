@@ -1,15 +1,12 @@
-﻿// <copyright file="SqlServer2012Dialect.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Dialects
+﻿namespace PeregrineDb.Dialects
 {
     using System;
     using System.Collections.Immutable;
     using System.Data;
     using System.Text;
-    using Dapper.MicroCRUD.Schema;
-    using Dapper.MicroCRUD.Schema.Relations;
     using Pagination;
+    using PeregrineDb.Schema;
+    using PeregrineDb.Schema.Relations;
 
     /// <summary>
     /// Implementation of <see cref="IDialect"/> for SQL Server 2012 and above

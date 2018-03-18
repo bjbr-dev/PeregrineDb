@@ -1,22 +1,22 @@
-﻿// <copyright file="SqlServer2012DialectTests.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Tests.Dialects
+﻿namespace PeregrineDb.Tests.Dialects
 {
     using System;
     using System.Collections.Immutable;
     using System.Data;
-    using Dapper.MicroCRUD.Dialects;
-    using Dapper.MicroCRUD.Schema;
-    using Dapper.MicroCRUD.Tests.ExampleEntities;
-    using Dapper.MicroCRUD.Tests.Utils;
+    using System.Diagnostics.CodeAnalysis;
     using Moq;
     using Pagination;
+    using PeregrineDb;
+    using PeregrineDb.Dialects;
+    using PeregrineDb.Schema;
+    using PeregrineDb.Tests.ExampleEntities;
+    using PeregrineDb.Tests.Utils;
     using Xunit;
 
+    [SuppressMessage("ReSharper", "ConvertToConstant.Local")]
     public class SqlServer2012DialectTests
     {
-        private readonly IDialect dialect = Dialect.SqlServer2012;
+        private PeregrineConfig config = DefaultConfig.MakeNewConfig().WithDialect(Dialect.SqlServer2012);
 
         public class MakeCountStatement
             : SqlServer2012DialectTests
@@ -25,10 +25,10 @@ namespace Dapper.MicroCRUD.Tests.Dialects
             public void Selects_from_given_table()
             {
                 // Arrange
-                var schema = this.dialect.User();
+                var schema = this.config.User();
 
                 // Act
-                var sql = this.dialect.MakeCountStatement(schema, null);
+                var sql = this.config.Dialect.MakeCountStatement(schema, null);
 
                 // Assert
                 var expected = @"SELECT COUNT(*)
@@ -41,10 +41,10 @@ FROM [Users]";
             public void Adds_conditions()
             {
                 // Arrange
-                var schema = this.dialect.User();
+                var schema = this.config.User();
 
                 // Act
-                var sql = this.dialect.MakeCountStatement(schema, "WHERE Foo IS NOT NULL");
+                var sql = this.config.Dialect.MakeCountStatement(schema, "WHERE Foo IS NOT NULL");
 
                 // Assert
                 var expected = @"SELECT COUNT(*)
@@ -62,10 +62,10 @@ WHERE Foo IS NOT NULL";
             public void Selects_from_given_table()
             {
                 // Arrange
-                var schema = this.dialect.User();
+                var schema = this.config.User();
 
                 // Act
-                var sql = this.dialect.MakeFindStatement(schema);
+                var sql = this.config.Dialect.MakeFindStatement(schema);
 
                 // Assert
                 var expected = @"SELECT [Id], [Name], [Age]
@@ -79,10 +79,10 @@ WHERE [Id] = @Id";
             public void Uses_non_default_primary_key_name()
             {
                 // Arrange
-                var schema = this.dialect.KeyExplicit();
+                var schema = this.config.KeyExplicit();
 
                 // Act
-                var sql = this.dialect.MakeFindStatement(schema);
+                var sql = this.config.Dialect.MakeFindStatement(schema);
 
                 // Assert
                 var expected = @"SELECT [Key], [Name]
@@ -96,10 +96,10 @@ WHERE [Key] = @Key";
             public void Uses_each_key_in_composite_key()
             {
                 // Arrange
-                var schema = this.dialect.CompositeKeys();
+                var schema = this.config.CompositeKeys();
 
                 // Act
-                var sql = this.dialect.MakeFindStatement(schema);
+                var sql = this.config.Dialect.MakeFindStatement(schema);
 
                 // Assert
                 var expected = @"SELECT [Key1], [Key2], [Name]
@@ -113,10 +113,10 @@ WHERE [Key1] = @Key1 AND [Key2] = @Key2";
             public void Adds_alias_when_primary_key_is_aliased()
             {
                 // Arrange
-                var schema = this.dialect.KeyAlias();
+                var schema = this.config.KeyAlias();
 
                 // Act
-                var sql = this.dialect.MakeFindStatement(schema);
+                var sql = this.config.Dialect.MakeFindStatement(schema);
 
                 // Assert
                 var expected = @"SELECT [Key] AS [Id], [Name]
@@ -130,10 +130,10 @@ WHERE [Key] = @Id";
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Arrange
-                var schema = this.dialect.PropertyAlias();
+                var schema = this.config.PropertyAlias();
 
                 // Act
-                var sql = this.dialect.MakeFindStatement(schema);
+                var sql = this.config.Dialect.MakeFindStatement(schema);
 
                 // Assert
                 var expected = @"SELECT [Id], [YearsOld] AS [Age]
@@ -151,10 +151,10 @@ WHERE [Id] = @Id";
             public void Selects_from_given_table()
             {
                 // Arrange
-                var schema = this.dialect.User();
+                var schema = this.config.User();
 
                 // Act
-                var sql = this.dialect.MakeGetRangeStatement(schema, null);
+                var sql = this.config.Dialect.MakeGetRangeStatement(schema, null);
 
                 // Assert
                 var expected = @"SELECT [Id], [Name], [Age]
@@ -167,10 +167,10 @@ FROM [Users]";
             public void Adds_conditions_clause()
             {
                 // Arrange
-                var schema = this.dialect.User();
+                var schema = this.config.User();
 
                 // Act
-                var sql = this.dialect.MakeGetRangeStatement(schema, "WHERE Age > @Age");
+                var sql = this.config.Dialect.MakeGetRangeStatement(schema, "WHERE Age > @Age");
 
                 // Assert
                 var expected = @"SELECT [Id], [Name], [Age]
@@ -184,10 +184,10 @@ WHERE Age > @Age";
             public void Uses_explicit_primary_key_name()
             {
                 // Arrange
-                var schema = this.dialect.KeyExplicit();
+                var schema = this.config.KeyExplicit();
 
                 // Act
-                var sql = this.dialect.MakeGetRangeStatement(schema, null);
+                var sql = this.config.Dialect.MakeGetRangeStatement(schema, null);
 
                 // Assert
                 var expected = @"SELECT [Key], [Name]
@@ -200,10 +200,10 @@ FROM [KeyExplicit]";
             public void Adds_alias_when_primary_key_is_aliased()
             {
                 // Arrange
-                var schema = this.dialect.KeyAlias();
+                var schema = this.config.KeyAlias();
 
                 // Act
-                var sql = this.dialect.MakeGetRangeStatement(schema, null);
+                var sql = this.config.Dialect.MakeGetRangeStatement(schema, null);
 
                 // Assert
                 var expected = @"SELECT [Key] AS [Id], [Name]
@@ -216,10 +216,10 @@ FROM [KeyAlias]";
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Arrange
-                var schema = this.dialect.PropertyAlias();
+                var schema = this.config.PropertyAlias();
 
                 // Act
-                var sql = this.dialect.MakeGetRangeStatement(schema, null);
+                var sql = this.config.Dialect.MakeGetRangeStatement(schema, null);
 
                 // Assert
                 var expected = @"SELECT [Id], [YearsOld] AS [Age]
@@ -236,10 +236,10 @@ FROM [PropertyAlias]";
             public void Selects_from_given_table()
             {
                 // Arrange
-                var schema = this.dialect.User();
+                var schema = this.config.User();
 
                 // Act
-                var sql = this.dialect.MakeGetTopNStatement(schema, 1, null, "Name");
+                var sql = this.config.Dialect.MakeGetTopNStatement(schema, 1, null, "Name");
 
                 // Assert
                 var expected = @"SELECT TOP 1 [Id], [Name], [Age]
@@ -253,10 +253,10 @@ ORDER BY Name";
             public void Adds_conditions_clause()
             {
                 // Arrange
-                var schema = this.dialect.User();
+                var schema = this.config.User();
 
                 // Act
-                var sql = this.dialect.MakeGetTopNStatement(schema, 1, "WHERE Name LIKE 'Foo%'", "Name");
+                var sql = this.config.Dialect.MakeGetTopNStatement(schema, 1, "WHERE Name LIKE 'Foo%'", "Name");
 
                 // Assert
                 var expected = @"SELECT TOP 1 [Id], [Name], [Age]
@@ -271,10 +271,10 @@ ORDER BY Name";
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Arrange
-                var schema = this.dialect.PropertyAlias();
+                var schema = this.config.PropertyAlias();
 
                 // Act
-                var sql = this.dialect.MakeGetTopNStatement(schema, 1, null, "Name");
+                var sql = this.config.Dialect.MakeGetTopNStatement(schema, 1, null, "Name");
 
                 // Assert
                 var expected = @"SELECT TOP 1 [Id], [YearsOld] AS [Age]
@@ -291,10 +291,10 @@ ORDER BY Name";
             public void Does_not_order_when_no_orderby_given(string orderBy)
             {
                 // Arrange
-                var schema = this.dialect.User();
+                var schema = this.config.User();
 
                 // Act
-                var sql = this.dialect.MakeGetTopNStatement(schema, 1, null, orderBy);
+                var sql = this.config.Dialect.MakeGetTopNStatement(schema, 1, null, orderBy);
 
                 // Assert
                 var expected = @"SELECT TOP 1 [Id], [Name], [Age]
@@ -314,21 +314,21 @@ FROM [Users]";
             public void Throws_exception_when_order_by_is_empty(string orderBy)
             {
                 // Arrange
-                var schema = this.dialect.User();
+                var schema = this.config.User();
 
                 // Act / Assert
                 Assert.Throws<ArgumentException>(
-                    () => this.dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), null, orderBy));
+                    () => this.config.Dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), null, orderBy));
             }
 
             [Fact]
             public void Selects_from_given_table()
             {
                 // Arrange
-                var schema = this.dialect.User();
+                var schema = this.config.User();
 
                 // Act
-                var sql = this.dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), null, "Name");
+                var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), null, "Name");
 
                 // Assert
                 var expected = @"SELECT [Id], [Name], [Age]
@@ -343,10 +343,10 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
             public void Adds_conditions_clause()
             {
                 // Arrange
-                var schema = this.dialect.User();
+                var schema = this.config.User();
 
                 // Act
-                var sql = this.dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), "WHERE Name LIKE 'Foo%'", "Name");
+                var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), "WHERE Name LIKE 'Foo%'", "Name");
 
                 // Assert
                 var expected = @"SELECT [Id], [Name], [Age]
@@ -362,10 +362,10 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Arrange
-                var schema = this.dialect.PropertyAlias();
+                var schema = this.config.PropertyAlias();
 
                 // Act
-                var sql = this.dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), null, "Name");
+                var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), null, "Name");
 
                 // Assert
                 var expected = @"SELECT [Id], [YearsOld] AS [Age]
@@ -380,10 +380,10 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
             public void Selects_second_page()
             {
                 // Arrange
-                var schema = this.dialect.User();
+                var schema = this.config.User();
 
                 // Act
-                var sql = this.dialect.MakeGetPageStatement(schema, new Page(2, 10, true, 10, 19), null, "Name");
+                var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(2, 10, true, 10, 19), null, "Name");
 
                 // Assert
                 var expected = @"SELECT [Id], [Name], [Age]
@@ -398,10 +398,10 @@ OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY";
             public void Selects_appropriate_number_of_rows()
             {
                 // Arrange
-                var schema = this.dialect.User();
+                var schema = this.config.User();
 
                 // Act
-                var sql = this.dialect.MakeGetPageStatement(schema, new Page(2, 5, true, 5, 9), null, "Name");
+                var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(2, 5, true, 5, 9), null, "Name");
 
                 // Assert
                 var expected = @"SELECT [Id], [Name], [Age]
@@ -420,10 +420,10 @@ OFFSET 5 ROWS FETCH NEXT 5 ROWS ONLY";
             public void Inserts_into_given_table()
             {
                 // Arrange
-                var schema = this.dialect.User();
+                var schema = this.config.User();
 
                 // Act
-                var sql = this.dialect.MakeInsertStatement(schema);
+                var sql = this.config.Dialect.MakeInsertStatement(schema);
 
                 // Assert
                 var expected = @"INSERT INTO [Users] ([Name], [Age])
@@ -436,10 +436,10 @@ VALUES (@Name, @Age);";
             public void Adds_primary_key_if_its_not_generated_by_database()
             {
                 // Arrange
-                var schema = this.dialect.KeyNotGenerated();
+                var schema = this.config.KeyNotGenerated();
 
                 // Act
-                var sql = this.dialect.MakeInsertStatement(schema);
+                var sql = this.config.Dialect.MakeInsertStatement(schema);
 
                 // Assert
                 var expected = @"INSERT INTO [KeyNotGenerated] ([Id], [Name])
@@ -452,10 +452,10 @@ VALUES (@Id, @Name);";
             public void Does_not_include_computed_columns()
             {
                 // Arrange
-                var schema = this.dialect.PropertyComputed();
+                var schema = this.config.PropertyComputed();
 
                 // Act
-                var sql = this.dialect.MakeInsertStatement(schema);
+                var sql = this.config.Dialect.MakeInsertStatement(schema);
 
                 // Assert
                 var expected = @"INSERT INTO [PropertyComputed] ([Name])
@@ -468,10 +468,10 @@ VALUES (@Name);";
             public void Does_not_include_generated_columns()
             {
                 // Arrange
-                var schema = this.dialect.PropertyGenerated();
+                var schema = this.config.PropertyGenerated();
 
                 // Act
-                var sql = this.dialect.MakeInsertStatement(schema);
+                var sql = this.config.Dialect.MakeInsertStatement(schema);
 
                 // Assert
                 var expected = @"INSERT INTO [PropertyGenerated] ([Name])
@@ -488,10 +488,10 @@ VALUES (@Name);";
             public void Inserts_into_given_table()
             {
                 // Arrange
-                var schema = this.dialect.User();
+                var schema = this.config.User();
 
                 // Act
-                var sql = this.dialect.MakeInsertReturningIdentityStatement(schema);
+                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema);
 
                 // Assert
                 var expected = @"INSERT INTO [Users] ([Name], [Age])
@@ -505,10 +505,10 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
             public void Adds_primary_key_if_its_not_generated_by_database()
             {
                 // Arrange
-                var schema = this.dialect.KeyNotGenerated();
+                var schema = this.config.KeyNotGenerated();
 
                 // Act
-                var sql = this.dialect.MakeInsertReturningIdentityStatement(schema);
+                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema);
 
                 // Assert
                 var expected = @"INSERT INTO [KeyNotGenerated] ([Id], [Name])
@@ -522,10 +522,10 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
             public void Does_not_include_computed_columns()
             {
                 // Arrange
-                var schema = this.dialect.PropertyComputed();
+                var schema = this.config.PropertyComputed();
 
                 // Act
-                var sql = this.dialect.MakeInsertReturningIdentityStatement(schema);
+                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema);
 
                 // Assert
                 var expected = @"INSERT INTO [PropertyComputed] ([Name])
@@ -539,10 +539,10 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
             public void Does_not_include_generated_columns()
             {
                 // Arrange
-                var schema = this.dialect.PropertyGenerated();
+                var schema = this.config.PropertyGenerated();
 
                 // Act
-                var sql = this.dialect.MakeInsertReturningIdentityStatement(schema);
+                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema);
 
                 // Assert
                 var expected = @"INSERT INTO [PropertyGenerated] ([Name])
@@ -560,10 +560,10 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
             public void Updates_given_table()
             {
                 // Arrange
-                var schema = this.dialect.User();
+                var schema = this.config.User();
 
                 // Act
-                var sql = this.dialect.MakeUpdateStatement(schema);
+                var sql = this.config.Dialect.MakeUpdateStatement(schema);
 
                 // Assert
                 var expected = @"UPDATE [Users]
@@ -577,10 +577,10 @@ WHERE [Id] = @Id";
             public void Uses_each_key_in_composite_key()
             {
                 // Arrange
-                var schema = this.dialect.CompositeKeys();
+                var schema = this.config.CompositeKeys();
 
                 // Act
-                var sql = this.dialect.MakeUpdateStatement(schema);
+                var sql = this.config.Dialect.MakeUpdateStatement(schema);
 
                 // Assert
                 var expected = @"UPDATE [CompositeKeys]
@@ -594,10 +594,10 @@ WHERE [Key1] = @Key1 AND [Key2] = @Key2";
             public void Does_not_update_primary_key_even_if_its_not_auto_generated()
             {
                 // Arrange
-                var schema = this.dialect.KeyNotGenerated();
+                var schema = this.config.KeyNotGenerated();
 
                 // Act
-                var sql = this.dialect.MakeUpdateStatement(schema);
+                var sql = this.config.Dialect.MakeUpdateStatement(schema);
 
                 // Assert
                 var expected = @"UPDATE [KeyNotGenerated]
@@ -611,10 +611,10 @@ WHERE [Id] = @Id";
             public void Uses_aliased_property_names()
             {
                 // Arrange
-                var schema = this.dialect.PropertyAlias();
+                var schema = this.config.PropertyAlias();
 
                 // Act
-                var sql = this.dialect.MakeUpdateStatement(schema);
+                var sql = this.config.Dialect.MakeUpdateStatement(schema);
 
                 // Assert
                 var expected = @"UPDATE [PropertyAlias]
@@ -628,10 +628,10 @@ WHERE [Id] = @Id";
             public void Uses_aliased_key_name()
             {
                 // Arrange
-                var schema = this.dialect.KeyAlias();
+                var schema = this.config.KeyAlias();
 
                 // Act
-                var sql = this.dialect.MakeUpdateStatement(schema);
+                var sql = this.config.Dialect.MakeUpdateStatement(schema);
 
                 // Assert
                 var expected = @"UPDATE [KeyAlias]
@@ -645,10 +645,10 @@ WHERE [Key] = @Id";
             public void Uses_explicit_key_name()
             {
                 // Arrange
-                var schema = this.dialect.KeyExplicit();
+                var schema = this.config.KeyExplicit();
 
                 // Act
-                var sql = this.dialect.MakeUpdateStatement(schema);
+                var sql = this.config.Dialect.MakeUpdateStatement(schema);
 
                 // Assert
                 var expected = @"UPDATE [KeyExplicit]
@@ -662,10 +662,10 @@ WHERE [Key] = @Key";
             public void Does_not_include_computed_columns()
             {
                 // Arrange
-                var schema = this.dialect.PropertyComputed();
+                var schema = this.config.PropertyComputed();
 
                 // Act
-                var sql = this.dialect.MakeUpdateStatement(schema);
+                var sql = this.config.Dialect.MakeUpdateStatement(schema);
 
                 // Assert
                 var expected = @"UPDATE [PropertyComputed]
@@ -679,10 +679,10 @@ WHERE [Id] = @Id";
             public void Includes_generated_columns()
             {
                 // Arrange
-                var schema = this.dialect.PropertyGenerated();
+                var schema = this.config.PropertyGenerated();
 
                 // Act
-                var sql = this.dialect.MakeUpdateStatement(schema);
+                var sql = this.config.Dialect.MakeUpdateStatement(schema);
 
                 // Assert
                 var expected = @"UPDATE [PropertyGenerated]
@@ -700,10 +700,10 @@ WHERE [Id] = @Id";
             public void Deletes_from_given_table()
             {
                 // Arrange
-                var schema = this.dialect.User();
+                var schema = this.config.User();
 
                 // Act
-                var sql = this.dialect.MakeDeleteByPrimaryKeyStatement(schema);
+                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema);
 
                 // Assert
                 var expected = @"DELETE FROM [Users]
@@ -716,10 +716,10 @@ WHERE [Id] = @Id";
             public void Uses_each_key_in_composite_key()
             {
                 // Arrange
-                var schema = this.dialect.CompositeKeys();
+                var schema = this.config.CompositeKeys();
 
                 // Act
-                var sql = this.dialect.MakeDeleteByPrimaryKeyStatement(schema);
+                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema);
 
                 // Assert
                 var expected = @"DELETE FROM [CompositeKeys]
@@ -732,10 +732,10 @@ WHERE [Key1] = @Key1 AND [Key2] = @Key2";
             public void Uses_primary_key_even_if_its_not_auto_generated()
             {
                 // Arrange
-                var schema = this.dialect.KeyNotGenerated();
+                var schema = this.config.KeyNotGenerated();
 
                 // Act
-                var sql = this.dialect.MakeDeleteByPrimaryKeyStatement(schema);
+                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema);
 
                 // Assert
                 var expected = @"DELETE FROM [KeyNotGenerated]
@@ -748,10 +748,10 @@ WHERE [Id] = @Id";
             public void Uses_aliased_key_name()
             {
                 // Arrange
-                var schema = this.dialect.KeyAlias();
+                var schema = this.config.KeyAlias();
 
                 // Act
-                var sql = this.dialect.MakeDeleteByPrimaryKeyStatement(schema);
+                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema);
 
                 // Assert
                 var expected = @"DELETE FROM [KeyAlias]
@@ -764,10 +764,10 @@ WHERE [Key] = @Id";
             public void Uses_explicit_key_name()
             {
                 // Arrange
-                var schema = this.dialect.KeyExplicit();
+                var schema = this.config.KeyExplicit();
 
                 // Act
-                var sql = this.dialect.MakeDeleteByPrimaryKeyStatement(schema);
+                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema);
 
                 // Assert
                 var expected = @"DELETE FROM [KeyExplicit]
@@ -784,10 +784,10 @@ WHERE [Key] = @Key";
             public void Deletes_from_given_table()
             {
                 // Arrange
-                var schema = this.dialect.User();
+                var schema = this.config.User();
 
                 // Act
-                var sql = this.dialect.MakeDeleteRangeStatement(schema, "WHERE [Age] > 10");
+                var sql = this.config.Dialect.MakeDeleteRangeStatement(schema, "WHERE [Age] > 10");
 
                 // Assert
                 var expected = @"DELETE FROM [Users]
@@ -808,7 +808,7 @@ WHERE [Age] > 10";
                 var schema = this.GetConditionsSchema<User>(conditions);
 
                 // Act
-                var sql = this.dialect.MakeWhereClause(schema, conditions);
+                var sql = this.config.Dialect.MakeWhereClause(schema, conditions);
 
                 // Assert
                 var expected = string.Empty;
@@ -823,7 +823,7 @@ WHERE [Age] > 10";
                 var schema = this.GetConditionsSchema<User>(conditions);
 
                 // Act
-                var sql = this.dialect.MakeWhereClause(schema, conditions);
+                var sql = this.config.Dialect.MakeWhereClause(schema, conditions);
 
                 // Assert
                 var expected = @"WHERE [Name] = @Name";
@@ -839,7 +839,7 @@ WHERE [Age] > 10";
                 var schema = this.GetConditionsSchema<User>(conditions);
 
                 // Act
-                var sql = this.dialect.MakeWhereClause(schema, conditions);
+                var sql = this.config.Dialect.MakeWhereClause(schema, conditions);
 
                 // Assert
                 var expected = @"WHERE [Name] = @Name AND [Age] = @Age";
@@ -855,7 +855,7 @@ WHERE [Age] > 10";
                 var schema = this.GetConditionsSchema<User>(conditions);
 
                 // Act
-                var sql = this.dialect.MakeWhereClause(schema, conditions);
+                var sql = this.config.Dialect.MakeWhereClause(schema, conditions);
 
                 // Assert
                 var expected = @"WHERE [Name] IS NULL";
@@ -865,9 +865,8 @@ WHERE [Age] > 10";
 
             private ImmutableArray<ConditionColumnSchema> GetConditionsSchema<TEntity>(object value)
             {
-                var config = new MicroCRUDConfig(this.dialect, new TableSchemaFactory(new DefaultTableNameFactory(), new DefaultColumnNameFactory()), true);
-                var tableSchema = TableSchemaFactory.GetTableSchema(typeof(TEntity), config.Dialect, config.SchemaFactory);
-                return TableSchemaFactory.GetConditionsSchema(typeof(TEntity), tableSchema, value.GetType(), config.Dialect, config.SchemaFactory);
+                var tableSchema = this.config.GetTableSchema(typeof(TEntity));
+                return this.config.GetConditionsSchema(typeof(TEntity), tableSchema, value.GetType());
             }
         }
 
@@ -878,12 +877,13 @@ WHERE [Age] > 10";
 
             public MakeCreateTempTableStatement()
             {
-                MicroCRUDConfig.AddTypeMap(typeof(DateTime), DbType.DateTime2);
                 this.tableNameFactory = new Mock<ITableNameFactory>();
 
                 var defaultTableNameFactory = new DefaultTableNameFactory();
                 this.tableNameFactory.Setup(f => f.GetTableName(It.IsAny<Type>(), It.IsAny<IDialect>()))
                     .Returns((Type type, IDialect d) => "[#" + defaultTableNameFactory.GetTableName(type, d).Substring(1));
+
+                this.config = this.config.AddSqlTypeMapping(typeof(DateTime), DbType.DateTime2).WithTableNameFactory(this.tableNameFactory.Object);
             }
 
             [Fact]
@@ -892,30 +892,23 @@ WHERE [Age] > 10";
                 // Arrange
                 this.tableNameFactory.Setup(f => f.GetTableName(It.IsAny<Type>(), It.IsAny<IDialect>()))
                     .Returns((Type type, IDialect d) => "table");
-                var tableSchema = this.dialect.MakeSchema<User>(this.tableNameFactory.Object);
 
                 // Act
-                Assert.Throws<ArgumentException>(() => this.dialect.MakeCreateTempTableStatement(tableSchema));
+                Assert.Throws<ArgumentException>(() => this.config.Dialect.MakeCreateTempTableStatement(this.config.User()));
             }
 
             [Fact]
             public void Throws_exception_if_there_are_no_columns()
             {
-                // Arrange
-                var tableSchema = this.dialect.MakeSchema<NoColumns>(this.tableNameFactory.Object);
-
                 // Act
-                Assert.Throws<ArgumentException>(() => this.dialect.MakeCreateTempTableStatement(tableSchema));
+                Assert.Throws<ArgumentException>(() => this.config.Dialect.MakeCreateTempTableStatement(this.config.NoColumns()));
             }
 
             [Fact]
             public void Creates_table_with_all_possible_types()
             {
-                // Arrange
-                var tableSchema = this.dialect.MakeSchema<TempAllPossibleTypes>(this.tableNameFactory.Object);
-
                 // Act
-                var sql = this.dialect.MakeCreateTempTableStatement(tableSchema);
+                var sql = this.config.Dialect.MakeCreateTempTableStatement(this.config.TempAllPossibleTypes());
 
                 // Assert
                 var expected = @"CREATE TABLE [#TempAllPossibleTypes]

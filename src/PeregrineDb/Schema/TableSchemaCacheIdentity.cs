@@ -1,7 +1,4 @@
-﻿// <copyright file="TableSchemaCacheIdentity.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Schema
+﻿namespace PeregrineDb.Schema
 {
     using System;
 
@@ -12,20 +9,15 @@ namespace Dapper.MicroCRUD.Schema
         : IEquatable<TableSchemaCacheIdentity>
     {
         private readonly Type type;
-        private readonly string dialectName;
         private readonly int hashCode;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TableSchemaCacheIdentity"/> class.
         /// </summary>
-        public TableSchemaCacheIdentity(Type type, string dialectName)
+        public TableSchemaCacheIdentity(Type type)
         {
             this.type = type;
-            this.dialectName = dialectName;
-            unchecked
-            {
-                this.hashCode = (this.type.GetHashCode() * 397) ^ this.dialectName.GetHashCode();
-            }
+            this.hashCode = this.type.GetHashCode();
         }
 
         /// <inheritdoc />
@@ -36,7 +28,7 @@ namespace Dapper.MicroCRUD.Schema
                 return false;
             }
 
-            return this.type == other.type && string.Equals(this.dialectName, other.dialectName);
+            return this.type == other.type;
         }
 
         /// <inheritdoc />

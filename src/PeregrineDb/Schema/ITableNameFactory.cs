@@ -1,10 +1,7 @@
-// <copyright file="ITableNameFactory.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Schema
+namespace PeregrineDb.Schema
 {
     using System;
-    using Dapper.MicroCRUD.Dialects;
+    using PeregrineDb.Dialects;
 
     /// <summary>
     /// Defines how to get the table name from a specific type.

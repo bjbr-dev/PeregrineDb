@@ -1,18 +1,16 @@
-﻿// <copyright file="BaseDialect.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Dialects
+﻿namespace PeregrineDb.Dialects
 {
+    using System;
     using System.Collections.Immutable;
     using System.Text;
-    using Dapper.MicroCRUD.Schema;
     using Pagination;
+    using PeregrineDb.Schema;
 
     /// <summary>
     /// Simple implementation of a SQL dialect which performs most SQL generation.
     /// </summary>
     public abstract class BaseDialect
-        : IDialect
+        : IDialect, IEquatable<BaseDialect>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseDialect"/> class.
@@ -153,6 +151,31 @@ namespace Dapper.MicroCRUD.Dialects
         /// <inheritdoc />
         public abstract string MakeTableName(string schema, string tableName);
 
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj as BaseDialect);
+        }
+
+        public bool Equals(BaseDialect other)
+        {
+            if (ReferenceEquals(null, other))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
+            return string.Equals(this.Name, other.Name);
+        }
+
+        public override int GetHashCode()
+        {
+            return this.Name.GetHashCode();
+        }
+        
         /// <inheritdoc />
         public override string ToString()
         {

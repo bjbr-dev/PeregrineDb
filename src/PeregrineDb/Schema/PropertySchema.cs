@@ -1,7 +1,4 @@
-﻿// <copyright file="PropertySchema.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Schema
+﻿namespace PeregrineDb.Schema
 {
     using System;
     using System.Linq;
@@ -75,8 +72,7 @@ namespace Dapper.MicroCRUD.Schema
             // PERF - Called several times in a tight loop
             for (var i = 0; i < attributes.Length; i++)
             {
-                var result = attributes[i] as T;
-                if (result != null)
+                if (attributes[i] is T result)
                 {
                     return result;
                 }

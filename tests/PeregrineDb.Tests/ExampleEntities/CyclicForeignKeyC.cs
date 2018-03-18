@@ -1,4 +1,4 @@
-﻿namespace Dapper.MicroCRUD.Tests.ExampleEntities
+﻿namespace PeregrineDb.Tests.ExampleEntities
 {
     using System.ComponentModel.DataAnnotations.Schema;
 

@@ -54,11 +54,11 @@ Task("Test")
     .IsDependentOn("Build")
     .Does(() =>
 {
-    //RunProcess("dotnet", new ProcessSettings
-    //    {
-    //        WorkingDirectory = Directory("./tests/PeregrineDb.Tests"),
-    //        Arguments = $@"test -c {configuration} --no-build --no-restore /p:Version={buildVersion}"
-    //    });
+    RunProcess("dotnet", new ProcessSettings
+        {
+            WorkingDirectory = Directory("./tests/PeregrineDb.Tests"),
+            Arguments = $@"test -c {configuration} --no-build --no-restore /p:Version={buildVersion}"
+        });
 });
 
 Task("Pack")
@@ -99,7 +99,7 @@ Task("Default")
     .IsDependentOn("Publish");
 
 Task("CommitTest")
-    .IsDependentOn("Test");
+    .IsDependentOn("Build");
 
 //////////////////////////////////////////////////////////////////////
 // EXECUTION

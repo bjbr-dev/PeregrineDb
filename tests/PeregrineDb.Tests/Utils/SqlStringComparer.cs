@@ -1,7 +1,4 @@
-﻿// <copyright file="SqlStringComparer.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Tests.Utils
+﻿namespace PeregrineDb.Tests.Utils
 {
     using System;
     using System.Collections.Generic;
@@ -20,16 +17,16 @@ namespace Dapper.MicroCRUD.Tests.Utils
 
         public int Compare(string x, string y)
         {
-            x = x?.Replace("\r\n", "\n");
-            y = y?.Replace("\r\n", "\n");
+            x = x?.Replace("\r\n", "\n").Trim();
+            y = y?.Replace("\r\n", "\n").Trim();
 
             return this.comparer.Compare(x, y);
         }
 
         public bool Equals(string x, string y)
         {
-            x = x?.Replace("\r\n", "\n");
-            y = y?.Replace("\r\n", "\n");
+            x = x?.Replace("\r\n", "\n").Trim();
+            y = y?.Replace("\r\n", "\n").Trim();
 
             return ((IEqualityComparer<string>)this.comparer).Equals(x, y);
         }

@@ -1,11 +1,9 @@
-﻿// <copyright file="IDialect.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Dialects
+﻿namespace PeregrineDb.Dialects
 {
+    using System;
     using System.Collections.Immutable;
-    using Dapper.MicroCRUD.Schema;
     using Pagination;
+    using PeregrineDb.Schema;
 
     /// <summary>
     /// Defines the SQL to generate when targeting specific vendor implementations.

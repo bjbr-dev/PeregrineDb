@@ -1,24 +1,21 @@
-﻿namespace Dapper.MicroCRUD
+﻿namespace PeregrineDb
 {
     using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
-    using System.Linq;
-    using Dapper.MicroCRUD.Schema;
-    using Dapper.MicroCRUD.Schema.Relations;
+    using PeregrineDb.Schema;
+    using PeregrineDb.Schema.Relations;
 
     public class DataWiper
     {
-        public IEnumerable<string> IgnoredTables { get; set; }
-
-        public void ClearAllData(IDapperConnection connection, int? commandTimeout = null)
+        public static void ClearAllData(IDatabaseConnection connection, HashSet<string> ignoredTables = null, int? commandTimeout = null)
         {
-            if (!(connection.Dialect is ISchemaQueryDialect dialect))
+            if (!(connection.Config.Dialect is ISchemaQueryDialect dialect))
             {
-                throw new ArgumentException($"The dialect '{connection.Dialect.Name}' does not support querying the schema and can therefore not be used");
+                throw new ArgumentException($"The dialect '{connection.Config.Dialect.Name}' does not support querying the schema and can therefore not be used");
             }
 
-            var ignoredTables = new HashSet<string>(this.IgnoredTables ?? Enumerable.Empty<string>());
+            ignoredTables = ignoredTables ?? new HashSet<string>();
 
             var tables = connection.Query<AllTablesQueryResult>(dialect.MakeGetAllTablesStatement());
             var relations = connection.Query<TableRelationsQueryResult>(dialect.MakeGetAllRelationsStatement());

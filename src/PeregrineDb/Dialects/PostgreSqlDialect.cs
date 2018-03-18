@@ -1,14 +1,11 @@
-﻿// <copyright file="PostgreSqlDialect.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Dialects
+﻿namespace PeregrineDb.Dialects
 {
     using System;
     using System.Collections.Immutable;
     using System.Data;
     using System.Text;
-    using Dapper.MicroCRUD.Schema;
     using Pagination;
+    using PeregrineDb.Schema;
 
     /// <summary>
     /// Implementation of <see cref="IDialect"/> for the PostgreSQL DBMS.

@@ -1,13 +1,10 @@
-﻿// <copyright file="DefaultColumnNameFactoryTests.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Tests.Schema
+﻿namespace PeregrineDb.Tests.Schema
 {
     using System;
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Reflection;
-    using Dapper.MicroCRUD.Schema;
     using FluentAssertions;
+    using PeregrineDb.Schema;
     using Xunit;
 
     public class DefaultColumnNameFactoryTests

@@ -46,10 +46,10 @@ Don't forget, for practical examples of usage, you can also browse our extensive
 
 | Library | Operations | Composite Keys | Async | .Net Core | Notes |
 |---|---|---|---|---|---|
+| [PeregrineDb](https://github.com/berkeleybross/PeregrineDb) | Count<br>Find/Get<br>Get(Range/All)<br>GetPage<br>Insert(Range)<br>Update(Range)<br>Delete(Range/All) | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | <ul><li>Can work across multiple DBMS in same project</li><li>Throws exceptions for inconsistencies (E.g. Update not affected anything)</li></ul> |
 | [Dapper.Contrib](https://github.com/StackExchange/dapper-dot-net/tree/master/Dapper.Contrib) | Get<br>GetAll<br>Insert<br>Update<br>Delete(All)<br>| :heavy_check_mark: | :heavy_check_mark: | | <ul><li>Can use interfaces to track changes</li></ul> |
 | [Dapper.Extensions](https://github.com/tmsmith/Dapper-Extensions) | Get<br>Insert<br>Update<br>Delete<br>GetList<br>GetPage/GetSet<br>Count | :heavy_check_mark: | | | <ul><li>Can use simple lambdas and predicates</li><li>Generates GUID keys</li><li>Can be configured without attributes</li></ul> |
 | [Dapper.FastCRUD](https://github.com/MoonStorm/Dapper.FastCRUD/tree/master/Dapper.FastCrud.Tests) | Insert<br>Get<br>Find(Equivalent to GetRange)<br>(Bulk)Update<br>(Bulk)Delete<br>Count | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | <ul><li>Has a nice fluent syntax for complex WHERE operations</li><li>Can be configured without attributes</li></ul> |
-| [Dapper.MicroCRUD](https://github.com/berkeleybross/Dapper.MicroCRUD) | Count<br>Find/Get<br>Get(Range/All)<br>GetPage<br>Insert(Range)<br>Update(Range)<br>Delete(Range/All) | :heavy_check_mark: | :heavy_check_mark: | | <ul><li>Can work across multiple DBMS in same project</li><li>Throws exceptions for inconsistencies (E.g. Update not affected anything)</li></ul> |
 | [Dapper.SimpleCRUD](https://github.com/ericdc1/Dapper.SimpleCRUD) | Get<br>GetList<br>GetListPaged<br>Insert<br>Update<br>Delete(List)<br>RecordCount | | :heavy_check_mark: | | <ul><li>Can create WHERE clauses from objects</li><li>Generates GUID keys</li></ul> |
 
 ## Installation

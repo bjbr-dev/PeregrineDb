@@ -1,9 +1,6 @@
-﻿// <copyright file="Dialect.cs" company="Berkeleybross">
-//   Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD
+﻿namespace PeregrineDb
 {
-    using Dapper.MicroCRUD.Dialects;
+    using PeregrineDb.Dialects;
 
     /// <summary>
     /// Defines the SQL to generate when targeting specific vendor implementations.

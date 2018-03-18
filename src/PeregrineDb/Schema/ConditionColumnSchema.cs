@@ -1,13 +1,10 @@
-﻿// <copyright file="ConditionColumnSchema.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Schema
+﻿namespace PeregrineDb.Schema
 {
     using System;
     using System.Reflection;
 
     /// <summary>
-    /// Represents a column in the database that is checked for equality with a property.
+    /// Represents a column in the databaseConnection that is checked for equality with a property.
     /// </summary>
     public class ConditionColumnSchema
     {

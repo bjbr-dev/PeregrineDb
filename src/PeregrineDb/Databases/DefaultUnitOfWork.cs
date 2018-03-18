@@ -1,110 +1,74 @@
-﻿namespace Dapper.MicroCRUD.Databases
+﻿namespace PeregrineDb.Databases
 {
     using System;
     using System.Data;
-    using Dapper.MicroCRUD.Dialects;
+    using PeregrineDb.Utils;
 
-    /// <summary>
-    /// Represents a single transaction in a database.
-    /// </summary>
-    /// <example>
-    /// <code>
-    /// <![CDATA[
-    /// using (var database = this.databaseFactory.StartUnitOfWork()) {
-    ///     database.Delete<UserEntity>(id);
-    ///     database.SaveChanges();
-    /// }
-    /// ]]>
-    /// </code>
-    /// </example>
-    public sealed class DefaultUnitOfWork
-        : IUnitOfWork
+    public class DefaultUnitOfWork
+        : DefaultDatabaseConnection, IDatabaseUnitOfWork
     {
-        private readonly IDatabase database;
-        private readonly IDbTransaction transaction;
-        private readonly bool disposeDatabase;
         private bool completed;
-        private bool disposed;
+        private readonly IDbTransaction transaction;
 
-        public DefaultUnitOfWork(IDatabase database, IDbTransaction transaction, bool disposeDatabase = true)
+        public DefaultUnitOfWork(IDbConnection connection, IDbTransaction transaction, PeregrineConfig config, bool disposeConnection = true)
+            : base(connection, transaction, config, disposeConnection)
         {
-            this.database = database ?? throw new ArgumentNullException(nameof(database));
-            this.transaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
-            this.disposeDatabase = disposeDatabase;
-        }
-
-        public IDbConnection DbConnection
-        {
-            get
-            {
-                this.EnsureNotDisposed();
-                return this.database.DbConnection;
-            }
+            Ensure.NotNull(transaction, nameof(transaction));
+            this.transaction = transaction;
         }
 
         public IDbTransaction Transaction
         {
             get
             {
-                this.EnsureNotDisposed();
-                return this.transaction;
+                if (this.transaction != null)
+                {
+                    return this.transaction;
+                }
+                
+                throw new InvalidOperationException("No transaction has been started");
             }
         }
 
-        public IDialect Dialect => this.database.Dialect;
-
         public void SaveChanges()
         {
-            this.EnsureNotDisposed();
-            this.Transaction.Commit();
-            this.completed = true;
+            if (this.transaction != null)
+            {
+                this.transaction.Commit();
+                this.completed = true;
+            }
+            else
+            {
+                throw new InvalidOperationException("No transaction to save");
+            }
         }
 
         public void Rollback()
         {
-            this.EnsureNotDisposed();
-            this.Transaction.Rollback();
-            this.completed = true;
+            if (this.transaction != null)
+            {
+                this.transaction.Rollback();
+                this.completed = true;
+            }
+            else
+            {
+                throw new InvalidOperationException("No transaction to rollback");
+            }
         }
 
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            if (this.disposed)
-            {
-                return;
-            }
-
             try
             {
                 if (!this.completed)
                 {
-                    this.transaction.Rollback();
+                    this.transaction?.Rollback();
                     this.completed = true;
                 }
             }
             finally
             {
-                try
-                {
-                    this.transaction.Dispose();
-                }
-                finally
-                {
-                    if (this.disposeDatabase)
-                    {
-                        this.database.Dispose();
-                    }
-                }
-            }
-
-            this.disposed = true;
-        }
-
-        private void EnsureNotDisposed()
-        {
-            if (this.disposed)
-            {
-                throw new ObjectDisposedException(this.GetType().FullName);
+                this.transaction?.Dispose();
             }
         }
     }

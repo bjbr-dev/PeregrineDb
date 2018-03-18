@@ -1,15 +1,13 @@
-﻿// <copyright file="TableSchema.cs" company="Berkeleybross">
-//   Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Schema
+﻿namespace PeregrineDb.Schema
 {
     using System;
     using System.Collections.Immutable;
     using System.Linq;
-    using Dapper.MicroCRUD.Utils;
+    using Dapper;
+    using PeregrineDb.Utils;
 
     /// <summary>
-    /// Represents a table in the database, as derived from the definition of an entity.
+    /// Represents a table in the databaseConnection, as derived from the definition of an entity.
     /// </summary>
     public class TableSchema
     {
@@ -24,7 +22,7 @@ namespace Dapper.MicroCRUD.Schema
         }
 
         /// <summary>
-        /// Gets the name of the database table.
+        /// Gets the name of the databaseConnection table.
         /// </summary>
         public string Name { get; }
 

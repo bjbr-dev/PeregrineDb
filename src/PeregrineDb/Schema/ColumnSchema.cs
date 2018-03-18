@@ -1,7 +1,4 @@
-﻿// <copyright file="ColumnSchema.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Schema
+﻿namespace PeregrineDb.Schema
 {
     /// <summary>
     /// Represents a column in a <see cref="TableSchema"/>.
@@ -26,7 +23,7 @@ namespace Dapper.MicroCRUD.Schema
         }
 
         /// <summary>
-        /// Gets the name of the column in the database
+        /// Gets the name of the column in the databaseConnection
         /// </summary>
         public string ColumnName { get; }
 

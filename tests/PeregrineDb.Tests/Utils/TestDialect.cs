@@ -1,13 +1,10 @@
-﻿// <copyright file="TestDialect.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Tests.Utils
+﻿namespace PeregrineDb.Tests.Utils
 {
     using System;
     using System.Text;
-    using Dapper.MicroCRUD.Dialects;
-    using Dapper.MicroCRUD.Schema;
     using Pagination;
+    using PeregrineDb.Dialects;
+    using PeregrineDb.Schema;
 
     /// <summary>
     /// Implementation of <see cref="IDialect"/> for testers

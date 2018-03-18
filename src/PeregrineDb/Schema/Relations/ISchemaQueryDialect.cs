@@ -1,18 +1,18 @@
-﻿namespace Dapper.MicroCRUD.Schema.Relations
+﻿namespace PeregrineDb.Schema.Relations
 {
-    using Dapper.MicroCRUD.Dialects;
+    using PeregrineDb.Dialects;
 
     public interface ISchemaQueryDialect
         : IDialect
     {
         /// <summary>
-        /// Generates a SQL SELECT statement which returns the name of all tables in the current database.
+        /// Generates a SQL SELECT statement which returns the name of all tables in the current databaseConnection.
         /// The result should have a single string field called 'Name', which is the name of a table (including its schema).
         /// </summary>
         string MakeGetAllTablesStatement();
 
         /// <summary>
-        /// Generates a SQL SELECT statement which returns the relations between two tables in the current database.
+        /// Generates a SQL SELECT statement which returns the relations between two tables in the current databaseConnection.
         /// The result should have the following fields:
         /// - ReferencedTable, System.String: The name of the table being referenced by a foreign key.
         /// - ReferencingTable, System.String: The name of the table containing the foreign key.

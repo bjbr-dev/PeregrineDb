@@ -1,7 +1,4 @@
-// <copyright file="Color.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Tests.ExampleEntities
+namespace PeregrineDb.Tests.ExampleEntities
 {
     public enum Color
     {

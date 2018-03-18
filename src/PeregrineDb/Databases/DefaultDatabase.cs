@@ -1,53 +1,43 @@
-﻿namespace Dapper.MicroCRUD.Databases
+﻿namespace PeregrineDb.Databases
 {
-    using System;
     using System.Data;
-    using Dapper.MicroCRUD.Dialects;
 
     public class DefaultDatabase
-        : IDatabase
+        : DefaultDatabaseConnection, IDatabase
     {
-        public DefaultDatabase(IDbConnection connection, IDialect dialect)
+        public DefaultDatabase(IDbConnection connection, PeregrineConfig config)
+            : base(connection, null, config, true)
         {
-            this.DbConnection = connection;
-            this.Dialect = dialect;
         }
 
-        public static DefaultDatabase Create<T>(T seed, Func<T, IDbConnection> connectionFactory, IDialect dialect)
+        public IDatabaseUnitOfWork StartUnitOfWork()
         {
-            var connection = connectionFactory(seed);
+            IDbTransaction transaction = null;
             try
             {
-                return new DefaultDatabase(connection, dialect);
+                transaction = this.DbConnection.BeginTransaction();
+                return new DefaultUnitOfWork(this.DbConnection, transaction, this.Config, false);
             }
             catch
             {
-                connection.Dispose();
+                transaction?.Dispose();
                 throw;
             }
         }
 
-        public IDbConnection DbConnection { get; }
-
-        public IDbTransaction Transaction => null;
-
-        public IDialect Dialect { get; }
-
-        public IUnitOfWork StartUnitOfWork()
+        public IDatabaseUnitOfWork StartUnitOfWork(IsolationLevel isolationLevel)
         {
-            var transaction = this.DbConnection.BeginTransaction();
-            return DefaultUnitOfWorkFactory.Create(this, transaction, false);
-        }
-
-        public IUnitOfWork StartUnitOfWork(IsolationLevel isolationLevel)
-        {
-            var transaction = this.DbConnection.BeginTransaction(isolationLevel);
-            return DefaultUnitOfWorkFactory.Create(this, transaction, false);
-        }
-
-        public void Dispose()
-        {
-            this.DbConnection.Dispose();
+            IDbTransaction transaction = null;
+            try
+            {
+                transaction = this.DbConnection.BeginTransaction(isolationLevel);
+                return new DefaultUnitOfWork(this.DbConnection, transaction, this.Config, false);
+            }
+            catch
+            {
+                transaction?.Dispose();
+                throw;
+            }
         }
     }
 }

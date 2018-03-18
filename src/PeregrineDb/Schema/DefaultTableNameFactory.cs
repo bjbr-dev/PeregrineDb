@@ -1,12 +1,9 @@
-// <copyright file="DefaultTableNameFactory.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Schema
+namespace PeregrineDb.Schema
 {
     using System;
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Reflection;
-    using Dapper.MicroCRUD.Dialects;
+    using PeregrineDb.Dialects;
 
     /// <summary>
     /// Default implementation of an <see cref="ITableNameFactory"/>.

@@ -1,7 +1,4 @@
-﻿// <copyright file="TableSchemaFactoryTests.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Tests.Schema
+﻿namespace PeregrineDb.Tests.Schema
 {
     using System;
     using System.Collections.Immutable;
@@ -9,12 +6,12 @@ namespace Dapper.MicroCRUD.Tests.Schema
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using Dapper.MicroCRUD.Dialects;
-    using Dapper.MicroCRUD.Schema;
-    using Dapper.MicroCRUD.Tests.ExampleEntities;
-    using Dapper.MicroCRUD.Tests.Utils;
     using FluentAssertions;
     using Moq;
+    using PeregrineDb.Dialects;
+    using PeregrineDb.Schema;
+    using PeregrineDb.Tests.ExampleEntities;
+    using PeregrineDb.Tests.Utils;
     using Xunit;
 
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
@@ -24,14 +21,14 @@ namespace Dapper.MicroCRUD.Tests.Schema
     public class TableSchemaFactoryTests
     {
         private readonly IDialect dialect = new TestDialect();
-        private TableSchemaFactory sut = new TableSchemaFactory(new DefaultTableNameFactory(), new DefaultColumnNameFactory());
+        private PeregrineConfig sut = DefaultConfig.MakeNewConfig().WithDialect(new TestDialect());
 
         public class MakeTableSchema
             : TableSchemaFactoryTests
         {
             private TableSchema PerformAct(Type entityType)
             {
-                return this.sut.MakeTableSchema(entityType, this.dialect);
+                return this.sut.GetTableSchema(entityType);
             }
 
             public class Naming
@@ -415,8 +412,8 @@ namespace Dapper.MicroCRUD.Tests.Schema
                 {
                     public string this[int i]
                     {
-                        get { throw new NotImplementedException(); }
-                        set { throw new NotImplementedException(); }
+                        get => throw new NotImplementedException();
+                        set => throw new NotImplementedException();
                     }
                 }
             }
@@ -427,12 +424,12 @@ namespace Dapper.MicroCRUD.Tests.Schema
         {
             private ImmutableArray<ConditionColumnSchema> PerformAct<T>(T conditions, TableSchema schema)
             {
-                return this.sut.MakeConditionsSchema(typeof(T), schema);
+                return this.sut.GetConditionsSchema(typeof(T), schema, typeof(T));
             }
 
             private TableSchema GetTableSchema<T>()
             {
-                return this.sut.MakeTableSchema(typeof(T), this.dialect);
+                return this.sut.GetTableSchema(typeof(T));
             }
 
             public class Naming

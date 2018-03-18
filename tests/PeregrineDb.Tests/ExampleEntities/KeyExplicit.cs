@@ -1,7 +1,4 @@
-﻿// <copyright file="KeyExplicit.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Tests.ExampleEntities
+﻿namespace PeregrineDb.Tests.ExampleEntities
 {
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;

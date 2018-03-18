@@ -1,7 +1,4 @@
-// <copyright file="TableSchemaFactory.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Schema
+namespace PeregrineDb.Schema
 {
     using System;
     using System.Collections.Concurrent;
@@ -12,135 +9,96 @@ namespace Dapper.MicroCRUD.Schema
     using System.Data;
     using System.Linq;
     using System.Reflection;
-    using Dapper.MicroCRUD.Dialects;
-    using Dapper.MicroCRUD.Utils;
+    using PeregrineDb.Dialects;
+    using PeregrineDb.Utils;
 
     /// <summary>
     /// Methods to create an instance of a <see cref="TableSchema"/>.
     /// </summary>
     internal class TableSchemaFactory
     {
-        private static readonly ConcurrentDictionary<TableSchemaCacheIdentity, TableSchema> Schemas =
+        private readonly ConcurrentDictionary<TableSchemaCacheIdentity, TableSchema> schemas =
             new ConcurrentDictionary<TableSchemaCacheIdentity, TableSchema>();
 
-        private static readonly ConcurrentDictionary<ConditionsColumnCacheIdentity, ImmutableArray<ConditionColumnSchema>> ConditionColumns =
+        private readonly ConcurrentDictionary<ConditionsColumnCacheIdentity, ImmutableArray<ConditionColumnSchema>> conditionColumns =
             new ConcurrentDictionary<ConditionsColumnCacheIdentity, ImmutableArray<ConditionColumnSchema>>();
 
+        private readonly IDialect dialect;
         private readonly ITableNameFactory tableNameFactory;
         private readonly IColumnNameFactory columnNameFactory;
+        private readonly Dictionary<Type, DbType> sqlTypeMappings;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TableSchemaFactory"/> class.
         /// </summary>
         public TableSchemaFactory(
+            IDialect dialect,
             ITableNameFactory tableNameFactory,
-            IColumnNameFactory columnNameFactory)
+            IColumnNameFactory columnNameFactory,
+            Dictionary<Type, DbType> sqlTypeMappings)
         {
+            Ensure.NotNull(dialect, nameof(dialect));
             Ensure.NotNull(tableNameFactory, nameof(tableNameFactory));
             Ensure.NotNull(columnNameFactory, nameof(columnNameFactory));
 
+            this.dialect = dialect;
             this.tableNameFactory = tableNameFactory;
             this.columnNameFactory = columnNameFactory;
+            this.sqlTypeMappings = sqlTypeMappings;
         }
-
-        /// <summary>
-        /// Gets or sets the types to convert to SQL types.
-        /// </summary>
-        internal static Dictionary<Type, DbType> TypeMapping { get; set; } = new Dictionary<Type, DbType>
-            {
-                [typeof(byte)] = DbType.Byte,
-                [typeof(sbyte)] = DbType.SByte,
-                [typeof(short)] = DbType.Int16,
-                [typeof(ushort)] = DbType.UInt16,
-                [typeof(int)] = DbType.Int32,
-                [typeof(uint)] = DbType.UInt32,
-                [typeof(long)] = DbType.Int64,
-                [typeof(ulong)] = DbType.UInt64,
-                [typeof(float)] = DbType.Single,
-                [typeof(double)] = DbType.Double,
-                [typeof(decimal)] = DbType.Decimal,
-                [typeof(bool)] = DbType.Boolean,
-                [typeof(string)] = DbType.String,
-                [typeof(char)] = DbType.StringFixedLength,
-                [typeof(Guid)] = DbType.Guid,
-                [typeof(DateTime)] = DbType.DateTime,
-                [typeof(DateTimeOffset)] = DbType.DateTimeOffset,
-                [typeof(TimeSpan)] = DbType.Time,
-                [typeof(byte[])] = DbType.Binary,
-                [typeof(byte?)] = DbType.Byte,
-                [typeof(sbyte?)] = DbType.SByte,
-                [typeof(short?)] = DbType.Int16,
-                [typeof(ushort?)] = DbType.UInt16,
-                [typeof(int?)] = DbType.Int32,
-                [typeof(uint?)] = DbType.UInt32,
-                [typeof(long?)] = DbType.Int64,
-                [typeof(ulong?)] = DbType.UInt64,
-                [typeof(float?)] = DbType.Single,
-                [typeof(double?)] = DbType.Double,
-                [typeof(decimal?)] = DbType.Decimal,
-                [typeof(bool?)] = DbType.Boolean,
-                [typeof(char?)] = DbType.StringFixedLength,
-                [typeof(Guid?)] = DbType.Guid,
-                [typeof(DateTime?)] = DbType.DateTime,
-                [typeof(DateTimeOffset?)] = DbType.DateTimeOffset,
-                [typeof(TimeSpan?)] = DbType.Time,
-                [typeof(object)] = DbType.Object
-            };
 
         /// <summary>
         /// Gets the <see cref="TableSchema"/> for the specified entityType and dialect.
         /// </summary>
-        public static TableSchema GetTableSchema(Type entityType, IDialect dialect, TableSchemaFactory schemaFactory)
+        public TableSchema GetTableSchema(Type entityType)
         {
-            var key = new TableSchemaCacheIdentity(entityType, dialect.Name);
+            var key = new TableSchemaCacheIdentity(entityType);
 
-            if (Schemas.TryGetValue(key, out var result))
+            if (this.schemas.TryGetValue(key, out var result))
             {
                 return result;
             }
 
-            var schema = schemaFactory.MakeTableSchema(entityType, dialect);
-            Schemas[key] = schema;
+            var schema = this.MakeTableSchema(entityType);
+            this.schemas[key] = schema;
             return schema;
         }
 
         /// <summary>
         /// Gets the <see cref="ConditionColumnSchema"/>s for the specified conditionsType and dialect.
         /// </summary>
-        public static ImmutableArray<ConditionColumnSchema> GetConditionsSchema(
+        public ImmutableArray<ConditionColumnSchema> GetConditionsSchema(
             Type entityType,
             TableSchema tableSchema,
-            Type conditionsType,
-            IDialect dialect,
-            TableSchemaFactory schemaFactory)
+            Type conditionsType)
         {
-            var key = new ConditionsColumnCacheIdentity(conditionsType, entityType, dialect.Name);
+            var key = new ConditionsColumnCacheIdentity(conditionsType, entityType);
 
-            if (ConditionColumns.TryGetValue(key, out var result))
+            if (this.conditionColumns.TryGetValue(key, out var result))
             {
                 return result;
             }
 
-            var column = schemaFactory.MakeConditionsSchema(conditionsType, tableSchema);
-            ConditionColumns[key] = column;
+            var column = this.MakeConditionsSchema(conditionsType, tableSchema);
+            this.conditionColumns[key] = column;
             return column;
         }
 
         /// <summary>
         /// Create the table schema for an entity
         /// </summary>
-        public TableSchema MakeTableSchema(Type entityType, IDialect dialect)
+        public TableSchema MakeTableSchema(Type entityType)
         {
-            var tableName = this.tableNameFactory.GetTableName(entityType, dialect);
+            var tableName = this.tableNameFactory.GetTableName(entityType, this.dialect);
             var properties = entityType.GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                                       .Where(CouldBeColumn)
+                                       .Where(this.CouldBeColumn)
                                        .Select(PropertySchema.MakePropertySchema)
                                        .Where(p => p.FindAttribute<NotMappedAttribute>() == null)
                                        .ToList();
 
             var explicitKeyDefined = properties.Any(p => p.FindAttribute<KeyAttribute>() != null);
 
-            var columns = properties.Select(p => this.MakeColumnSchema(dialect, p, GetColumnUsage(explicitKeyDefined, p)));
+            var columns = properties.Select(p => this.MakeColumnSchema(p, GetColumnUsage(explicitKeyDefined, p)));
 
             return new TableSchema(tableName, columns.ToImmutableArray());
         }
@@ -151,7 +109,7 @@ namespace Dapper.MicroCRUD.Schema
         public ImmutableArray<ConditionColumnSchema> MakeConditionsSchema(Type conditionsType, TableSchema tableSchema)
         {
             return conditionsType.GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                                 .Where(p => CouldBeColumn(p) && p.GetCustomAttribute<NotMappedAttribute>() == null && p.CanRead)
+                                 .Where(p => this.CouldBeColumn(p) && p.GetCustomAttribute<NotMappedAttribute>() == null && p.CanRead)
                                  .Select(p => MakeConditionSchema(tableSchema, p))
                                  .ToImmutableArray();
         }
@@ -161,7 +119,7 @@ namespace Dapper.MicroCRUD.Schema
         /// </summary>
         public TableSchemaFactory WithTableNameFactory(ITableNameFactory factory)
         {
-            return new TableSchemaFactory(factory, this.columnNameFactory);
+            return new TableSchemaFactory(this.dialect, factory, this.columnNameFactory, this.sqlTypeMappings);
         }
 
         /// <summary>
@@ -169,10 +127,10 @@ namespace Dapper.MicroCRUD.Schema
         /// </summary>
         public TableSchemaFactory WithColumnNameFactory(IColumnNameFactory factory)
         {
-            return new TableSchemaFactory(this.tableNameFactory, factory);
+            return new TableSchemaFactory(this.dialect, this.tableNameFactory, factory, this.sqlTypeMappings);
         }
 
-        private static bool CouldBeColumn(PropertyInfo property)
+        private bool CouldBeColumn(PropertyInfo property)
         {
             if (property.GetIndexParameters().Length != 0)
             {
@@ -180,7 +138,7 @@ namespace Dapper.MicroCRUD.Schema
             }
 
             var propertyType = property.PropertyType.GetUnderlyingType();
-            return propertyType.GetTypeInfo().IsEnum || TypeMapping.ContainsKey(propertyType);
+            return propertyType.GetTypeInfo().IsEnum || this.sqlTypeMappings.ContainsKey(propertyType);
         }
 
         private static ColumnUsage GetColumnUsage(bool explicitKeyDefined, PropertySchema property)
@@ -266,13 +224,11 @@ namespace Dapper.MicroCRUD.Schema
             return new ConditionColumnSchema(possibleColumns.Single(), property);
         }
 
-        private ColumnSchema MakeColumnSchema(IDialect dialect, PropertySchema property, ColumnUsage columnUsage)
+        private ColumnSchema MakeColumnSchema(PropertySchema property, ColumnUsage columnUsage)
         {
             var propertyName = property.Name;
 
-            return new ColumnSchema(
-                dialect.MakeColumnName(this.columnNameFactory.GetColumnName(property)),
-                dialect.MakeColumnName(propertyName),
+            return new ColumnSchema(this.dialect.MakeColumnName(this.columnNameFactory.GetColumnName(property)), this.dialect.MakeColumnName(propertyName),
                 propertyName,
                 columnUsage,
                 this.GetDbType(property));
@@ -285,13 +241,10 @@ namespace Dapper.MicroCRUD.Schema
                 return new DbTypeEx(DbType.Int32, property.IsNullable, null);
             }
 
-            DbType dbType;
-            if (TypeMapping.TryGetValue(property.EffectiveType, out dbType))
+            if (this.sqlTypeMappings.TryGetValue(property.EffectiveType, out var dbType))
             {
                 var allowNull = property.IsNullable || (!property.Type.GetTypeInfo().IsValueType && property.FindAttribute<RequiredAttribute>() == null);
-
-                var maxLength = this.GetMaxLength(property);
-                return new DbTypeEx(dbType, allowNull, maxLength);
+                return new DbTypeEx(dbType, allowNull, this.GetMaxLength(property));
             }
 
             throw new NotSupportedException("Unknown property type: " + property.EffectiveType);

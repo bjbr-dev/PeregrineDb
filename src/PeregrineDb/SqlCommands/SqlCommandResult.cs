@@ -1,7 +1,4 @@
-﻿// <copyright file="SqlCommandResult.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.SqlCommands
+﻿namespace PeregrineDb.SqlCommands
 {
     /// <summary>
     /// Represents the result of a SQL command.

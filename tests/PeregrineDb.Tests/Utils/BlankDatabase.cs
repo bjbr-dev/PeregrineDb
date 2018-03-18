@@ -1,11 +1,8 @@
-﻿// <copyright file="BlankDatabase.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Tests.Utils
+﻿namespace PeregrineDb.Tests.Utils
 {
     using System;
     using System.Data;
-    using Dapper.MicroCRUD.Dialects;
+    using PeregrineDb.Dialects;
 
     public class BlankDatabase
         : IDisposable
@@ -15,14 +12,10 @@ namespace Dapper.MicroCRUD.Tests.Utils
 
         public BlankDatabase(IDialect dialect, IDbConnection connection, Action dropDatabase)
         {
-            this.Connection = connection;
             this.dropDatabase = dropDatabase;
-            this.Dialect = dialect;
         }
 
-        public IDialect Dialect { get; }
-
-        public IDbConnection Connection { get; }
+        public IDatabase Database { get; set; }
 
         public void Dispose()
         {
@@ -31,7 +24,6 @@ namespace Dapper.MicroCRUD.Tests.Utils
                 return;
             }
 
-            this.Connection.Dispose();
             this.dropDatabase();
             this.disposed = true;
         }

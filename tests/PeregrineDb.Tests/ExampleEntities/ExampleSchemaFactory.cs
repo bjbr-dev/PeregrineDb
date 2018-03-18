@@ -1,67 +1,67 @@
-﻿// <copyright file="ExampleSchemaFactory.cs" company="Berkeleybross">
-// Copyright (c) Berkeleybross. All rights reserved.
-// </copyright>
-namespace Dapper.MicroCRUD.Tests.ExampleEntities
+﻿namespace PeregrineDb.Tests.ExampleEntities
 {
-    using Dapper.MicroCRUD.Dialects;
-    using Dapper.MicroCRUD.Schema;
+    using PeregrineDb.Schema;
 
     internal static class ExampleSchemaFactory
     {
-        public static TableSchema CompositeKeys(this IDialect dialect)
+        public static TableSchema CompositeKeys(this PeregrineConfig config)
         {
-            return dialect.MakeSchema<CompositeKeys>();
+            return config.MakeSchema<CompositeKeys>();
         }
 
-        public static TableSchema KeyAlias(this IDialect dialect)
+        public static TableSchema KeyAlias(this PeregrineConfig config)
         {
-            return dialect.MakeSchema<KeyAlias>();
+            return config.MakeSchema<KeyAlias>();
         }
 
-        public static TableSchema KeyExplicit(this IDialect dialect)
+        public static TableSchema KeyExplicit(this PeregrineConfig config)
         {
-            return dialect.MakeSchema<KeyExplicit>();
+            return config.MakeSchema<KeyExplicit>();
         }
 
-        public static TableSchema KeyNotGenerated(this IDialect dialect)
+        public static TableSchema KeyNotGenerated(this PeregrineConfig config)
         {
-            return dialect.MakeSchema<KeyNotGenerated>();
+            return config.MakeSchema<KeyNotGenerated>();
         }
 
-        public static TableSchema PropertyAlias(this IDialect dialect)
+        public static TableSchema PropertyAlias(this PeregrineConfig config)
         {
-            return dialect.MakeSchema<PropertyAlias>();
+            return config.MakeSchema<PropertyAlias>();
         }
 
-        public static TableSchema PropertyAllPossibleTypes(this IDialect dialect)
+        public static TableSchema PropertyAllPossibleTypes(this PeregrineConfig config)
         {
-            return dialect.MakeSchema<PropertyAllPossibleTypes>();
+            return config.MakeSchema<PropertyAllPossibleTypes>();
         }
 
-        public static TableSchema PropertyComputed(this IDialect dialect)
+        public static TableSchema PropertyComputed(this PeregrineConfig config)
         {
-            return dialect.MakeSchema<PropertyComputed>();
+            return config.MakeSchema<PropertyComputed>();
         }
 
-        public static TableSchema PropertyGenerated(this IDialect dialect)
+        public static TableSchema PropertyGenerated(this PeregrineConfig config)
         {
-            return dialect.MakeSchema<PropertyGenerated>();
+            return config.MakeSchema<PropertyGenerated>();
         }
 
-        public static TableSchema User(this IDialect dialect)
+        public static TableSchema User(this PeregrineConfig config)
         {
-            return dialect.MakeSchema<User>();
+            return config.MakeSchema<User>();
         }
 
-        public static TableSchema NoColumns(this IDialect dialect)
+        public static TableSchema NoColumns(this PeregrineConfig config)
         {
-            return dialect.MakeSchema<NoColumns>();
+            return config.MakeSchema<NoColumns>();
         }
 
-        public static TableSchema MakeSchema<TEntity>(this IDialect dialect, ITableNameFactory tableNameFactory = null)
+        public static TableSchema TempAllPossibleTypes(this PeregrineConfig config)
         {
-            var factory = new TableSchemaFactory(tableNameFactory ?? new DefaultTableNameFactory(), new DefaultColumnNameFactory());
-            return factory.MakeTableSchema(typeof(TEntity), dialect);
+            return config.MakeSchema<TempAllPossibleTypes>();
+        }
+
+        public static TableSchema MakeSchema<TEntity>(this PeregrineConfig config)
+        {
+            return config.GetTableSchema(typeof(TEntity));
         }
     }
 }
