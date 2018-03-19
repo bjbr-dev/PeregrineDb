@@ -41,7 +41,7 @@
 
                 sql.Append(property.ColumnName);
 
-                if (property.ColumnName != property.SelectName)
+                if (!string.Equals(property.ColumnName, property.SelectName, StringComparison.OrdinalIgnoreCase))
                 {
                     sql.Append(" AS " + property.SelectName);
                 }
