@@ -62,7 +62,7 @@
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
-            var command = this.commandFactory.MakeGetTopNCommand<TEntity>(1, conditions, orderBy, commandTimeout);
+            var command = this.commandFactory.MakeGetTopNCommand<TEntity>(1, conditions, orderBy, commandTimeout, cancellationToken);
             var result = await this.connection.QueryAsync<TEntity>(command).ConfigureAwait(false);
             return result.FirstOrDefault();
         }
@@ -106,7 +106,7 @@
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
-            var command = this.commandFactory.MakeGetTopNCommand<TEntity>(2, conditions, null, commandTimeout);
+            var command = this.commandFactory.MakeGetTopNCommand<TEntity>(2, conditions, null, commandTimeout, cancellationToken);
             var result = await this.connection.QueryAsync<TEntity>(command).ConfigureAwait(false);
             return result.SingleOrDefault();
         }
@@ -184,9 +184,9 @@
             return PagedList<TEntity>.Create(totalNumberOfItems, page, items);
         }
 
-        public Task<IEnumerable<TEntity>> GetAllAsync<TEntity>(int? commandTimeout = null)
+        public Task<IEnumerable<TEntity>> GetAllAsync<TEntity>(int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.commandFactory.MakeGetAllCommand<TEntity>(commandTimeout);
+            var command = this.commandFactory.MakeGetAllCommand<TEntity>(commandTimeout, cancellationToken);
             return this.connection.QueryAsync<TEntity>(command);
         }
 

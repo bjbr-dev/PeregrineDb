@@ -26,7 +26,7 @@
 
         public static PooledInstance<IDatabase> MakeDatabase(IDialect dialect)
         {
-            return MakeDatabase(DefaultPeregrineConfig.SqlServer2012.WithDialect(dialect));
+            return MakeDatabase(PeregrineConfig.SqlServer2012.WithDialect(dialect));
         }
 
         public static PooledInstance<IDatabase> MakeDatabase(PeregrineConfig config)

@@ -19,7 +19,7 @@
                 var database = new Mock<IDbConnection>();
                 var transaction = new Mock<IDbTransaction>();
 
-                var sut = new DefaultUnitOfWork(database.Object, transaction.Object, DefaultPeregrineConfig.Postgres);
+                var sut = new DefaultUnitOfWork(database.Object, transaction.Object, PeregrineConfig.Postgres);
 
                 // Act
                 sut.Dispose();
@@ -36,7 +36,7 @@
                 var database = new Mock<IDbConnection>();
                 var transaction = new Mock<IDbTransaction>();
 
-                var sut = new DefaultUnitOfWork(database.Object, transaction.Object, DefaultPeregrineConfig.Postgres, false);
+                var sut = new DefaultUnitOfWork(database.Object, transaction.Object, PeregrineConfig.Postgres, false);
 
                 // Act
                 sut.Dispose();
@@ -53,7 +53,7 @@
                 var database = new Mock<IDbConnection>();
                 var transaction = new Mock<IDbTransaction>();
 
-                var sut = new DefaultUnitOfWork(database.Object, transaction.Object, DefaultPeregrineConfig.Postgres);
+                var sut = new DefaultUnitOfWork(database.Object, transaction.Object, PeregrineConfig.Postgres);
 
                 // Act
                 sut.Dispose();
@@ -71,7 +71,7 @@
                 transaction.Setup(t => t.Rollback())
                            .Throws<CustomException>();
 
-                var sut = new DefaultUnitOfWork(database.Object, transaction.Object, DefaultPeregrineConfig.Postgres);
+                var sut = new DefaultUnitOfWork(database.Object, transaction.Object, PeregrineConfig.Postgres);
 
                 // Act
                 Action act = () => sut.Dispose();
@@ -89,7 +89,7 @@
                 var database = new Mock<IDbConnection>();
                 var transaction = new Mock<IDbTransaction>();
 
-                var sut = new DefaultUnitOfWork(database.Object, transaction.Object, DefaultPeregrineConfig.Postgres);
+                var sut = new DefaultUnitOfWork(database.Object, transaction.Object, PeregrineConfig.Postgres);
                 sut.SaveChanges();
 
                 // Act
@@ -108,7 +108,7 @@
                 var database = new Mock<IDbConnection>();
                 var transaction = new Mock<IDbTransaction>();
 
-                var sut = new DefaultUnitOfWork(database.Object, transaction.Object, DefaultPeregrineConfig.Postgres);
+                var sut = new DefaultUnitOfWork(database.Object, transaction.Object, PeregrineConfig.Postgres);
 
                 // Act
                 sut.Dispose();
@@ -126,7 +126,7 @@
                 var database = new Mock<IDbConnection>();
                 var transaction = new Mock<IDbTransaction>();
 
-                var sut = new DefaultUnitOfWork(database.Object, transaction.Object, DefaultPeregrineConfig.Postgres);
+                var sut = new DefaultUnitOfWork(database.Object, transaction.Object, PeregrineConfig.Postgres);
                 sut.Dispose();
 
                 // Act

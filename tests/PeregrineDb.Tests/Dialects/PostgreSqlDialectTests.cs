@@ -4,10 +4,8 @@
     using System.Collections.Immutable;
     using System.Data;
     using System.Diagnostics.CodeAnalysis;
-    using Moq;
     using Pagination;
     using PeregrineDb;
-    using PeregrineDb.Dialects;
     using PeregrineDb.Schema;
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
@@ -16,7 +14,7 @@
     [SuppressMessage("ReSharper", "ConvertToConstant.Local")]
     public class PostgreSqlDialectTests
     {
-        private PeregrineConfig config = DefaultPeregrineConfig.Postgres;
+        private PeregrineConfig config = PeregrineConfig.Postgres;
 
         public class MakeCountStatement
             : PostgreSqlDialectTests
@@ -877,17 +875,9 @@ WHERE age > 10";
         public class MakeCreateTempTableStatement
             : PostgreSqlDialectTests
         {
-            private readonly Mock<ITableNameFactory> tableNameFactory;
-
             public MakeCreateTempTableStatement()
             {
                 this.config = this.config.AddSqlTypeMapping(typeof(DateTime), DbType.DateTime2);
-                this.tableNameFactory = new Mock<ITableNameFactory>();
-
-                var defaultTableNameFactory = new AtttributeTableNameFactory();
-                this.tableNameFactory.Setup(f => f.GetTableName(It.IsAny<Type>(), It.IsAny<IDialect>()))
-                    .Returns((Type type, IDialect d) => defaultTableNameFactory.GetTableName(type, d));
-                this.config = this.config.WithTableNameFactory(this.tableNameFactory.Object);
             }
 
             [Fact]
@@ -944,20 +934,6 @@ WHERE age > 10";
         public class MakeDropTempTableStatement
             : PostgreSqlDialectTests
         {
-            private readonly Mock<ITableNameFactory> tableNameFactory;
-
-            public MakeDropTempTableStatement()
-            {
-                this.tableNameFactory = new Mock<ITableNameFactory>();
-
-                var defaultTableNameFactory = new AtttributeTableNameFactory();
-                this.tableNameFactory.Setup(f => f.GetTableName(It.IsAny<Type>(), It.IsAny<IDialect>()))
-                    .Returns((Type type, IDialect d) => defaultTableNameFactory.GetTableName(type, d));
-
-                this.config = this.config.AddSqlTypeMapping(typeof(DateTime), DbType.DateTime2)
-                                  .WithTableNameFactory(this.tableNameFactory.Object);
-            }
-
             [Fact]
             public void Drops_temporary_tables()
             {
@@ -968,7 +944,7 @@ WHERE age > 10";
                 var sql = this.config.Dialect.MakeDropTempTableStatement(tableSchema);
 
                 // Assert
-                var expected = @"DROP TABLE Users";
+                var expected = @"DROP TABLE user";
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }

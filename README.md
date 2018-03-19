@@ -23,15 +23,17 @@ Currently, the following DBMS are supported. More will be added (e.g. SQLite) wh
 - PostgreSQL
 
 ## Features
-* Getting Started - *Documentation in progress!*
+* Getting Started
+    * [Installing and using](https://github.com/berkeleybross/PeregrineDb/wiki)
+    * [Manual SQL methods](https://github.com/berkeleybross/PeregrineDb/wiki/Manual-SQL-Methods)
 * CRUD Methods
     * [Creating](https://github.com/berkeleybross/PeregrineDb/wiki/CRUD-Creating): Insert one or many entities, with or without generating a primary key.
+    * [Counting](https://github.com/berkeleybross/PeregrineDb/wiki/CRUD-Counting): Count how many entities match some conditions
     * [Reading an Entity](https://github.com/berkeleybross/PeregrineDb/wiki/CRUD-Reading-One-Entity): Many overloads for searching for a single entity.
     * [Reading many Entities](https://github.com/berkeleybross/PeregrineDb/wiki/CRUD-Reading-Many-Entities): Search for any number of entities matching arbitrary conditions. Includes pagination.
-    * [Counting](https://github.com/berkeleybross/PeregrineDb/wiki/CRUD-Counting): Count how many entities match some conditions
     * [Updating](https://github.com/berkeleybross/PeregrineDb/wiki/CRUD-Updating): Update one or many entities, matched on primary key
     * [Deleting](https://github.com/berkeleybross/PeregrineDb/wiki/CRUD-Deleting): Delete one, many or all entities
-* Testing your code
+* [Testing your code](Test-helpers)
     * DataWiper
 * Contributing
 

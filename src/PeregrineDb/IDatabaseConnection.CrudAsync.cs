@@ -203,11 +203,7 @@
         /// ]]>
         /// </code>
         /// </example>
-        Task<IEnumerable<TEntity>> GetRangeAsync<TEntity>(
-            string conditions,
-            object parameters = null,
-            int? commandTimeout = null,
-            CancellationToken cancellationToken = default);
+        Task<IEnumerable<TEntity>> GetRangeAsync<TEntity>(string conditions, object parameters = null, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets a collection of entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
@@ -262,7 +258,7 @@
         /// <summary>
         /// Gets all the entities in the <typeparamref name="TEntity"/> table.
         /// </summary>
-        Task<IEnumerable<TEntity>> GetAllAsync<TEntity>(int? commandTimeout = null);
+        Task<IEnumerable<TEntity>> GetAllAsync<TEntity>(int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Inserts the <paramref name="entity"/> into the databaseConnection.

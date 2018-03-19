@@ -10,13 +10,13 @@
         {
         }
 
-        public IDatabaseUnitOfWork StartUnitOfWork()
+        public IDatabaseUnitOfWork StartUnitOfWork(bool leaveOpen = true)
         {
             IDbTransaction transaction = null;
             try
             {
                 transaction = this.DbConnection.BeginTransaction();
-                return new DefaultUnitOfWork(this.DbConnection, transaction, this.Config, false);
+                return new DefaultUnitOfWork(this.DbConnection, transaction, this.Config, !leaveOpen);
             }
             catch
             {
@@ -25,13 +25,13 @@
             }
         }
 
-        public IDatabaseUnitOfWork StartUnitOfWork(IsolationLevel isolationLevel)
+        public IDatabaseUnitOfWork StartUnitOfWork(IsolationLevel isolationLevel, bool leaveOpen = true)
         {
             IDbTransaction transaction = null;
             try
             {
                 transaction = this.DbConnection.BeginTransaction(isolationLevel);
-                return new DefaultUnitOfWork(this.DbConnection, transaction, this.Config, false);
+                return new DefaultUnitOfWork(this.DbConnection, transaction, this.Config, !leaveOpen);
             }
             catch
             {
