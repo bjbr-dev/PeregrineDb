@@ -1,7 +1,13 @@
 # PeregrineDb - Lightweight CRUD Extensions for Dapper.Net
 ## Overview
 
-PeregrineDb is a small and fast [Dapper.Net](https://github.com/StackExchange/dapper-dot-net) extension library to perform CRUD statement with POCO models.
+<a href="https://www.rspb.org.uk/birds-and-wildlife/wildlife-guides/bird-a-z/peregrine" style="display: block; float: right; width: 100px;" target="_blank">
+
+![Image of a Peregrine, from the RSPB](documentation/Peregrine.png "Image of a Peregrine, from the RSPB")
+
+</a>
+
+PeregrineDb is a small and fast [Dapper.Net](https://github.com/StackExchange/dapper-dot-net) extension library to perform CRUD statement with POCO models. 
 
 [![Build status](https://ci.appveyor.com/api/projects/status/kcepamp69b45xkjj/branch/master?svg=true)](https://ci.appveyor.com/project/berkeleybross/peregrinedb/branch/master)
 
