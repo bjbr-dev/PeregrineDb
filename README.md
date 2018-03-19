@@ -1,6 +1,5 @@
 # PeregrineDb - Lightweight CRUD Extensions for Dapper.Net
 
-
 <a href="https://www.rspb.org.uk/birds-and-wildlife/wildlife-guides/bird-a-z/peregrine" target="_blank">
 <img src="https://github.com//berkeleybross/PeregrineDb/raw/master/documentation/Peregrine.png" alt="Image of a Peregrine, from the RSPB"/>
 </a>
@@ -17,16 +16,14 @@ PeregrineDb is a small and fast [Dapper.Net](https://github.com/StackExchange/da
 
 I was using the fantastic [Dapper.SimpleCRUD](https://github.com/ericdc1/Dapper.SimpleCRUD) library and found it incredibly easy to use. However, two things drove me to write this library - I have a project which uses SqlServer and Postgres databases side-by-side, and unfortunately Dapper.SimpleCRUD does not support this. Second, I found it was missing a few crucial optimizations which was doubling the time taken to easily insert many rows.
 
-## Features
+## DBMS Support
 Currently, the following DBMS are supported. More will be added (e.g. SQLite) when there is demand for them:
 
 - Microsoft SqlServer 2012 and above
 - PostgreSQL
 
-#### CRUD Helpers
-PeregrineDb provides the following CRUD methods (with Async equivalents):
-
-* Getting Started
+## Features
+* Getting Started - *Documentation in progress!*
 * CRUD Methods
     * [Creating](https://github.com/berkeleybross/PeregrineDb/wiki/CRUD-Creating): Insert one or many entities, with or without generating a primary key.
     * [Reading an Entity](https://github.com/berkeleybross/PeregrineDb/wiki/CRUD-Reading-One-Entity): Many overloads for searching for a single entity.
@@ -37,12 +34,6 @@ PeregrineDb provides the following CRUD methods (with Async equivalents):
 * Testing your code
     * DataWiper
 * Contributing
-
-#### Other Features
-- [DataWiper]()
-
-#### Configuration
-*Documentation in progress!*
 
 Don't forget, for practical examples of usage, you can also browse our extensive [unit tests suite](tests/PeregrineDb.Tests).
 
