@@ -1,10 +1,8 @@
 # PeregrineDb - Lightweight CRUD Extensions for Dapper.Net
-## Overview
 
-<a href="https://www.rspb.org.uk/birds-and-wildlife/wildlife-guides/bird-a-z/peregrine" style="display: block; float: right; width: 100px;" target="_blank">
 
-![Image of a Peregrine, from the RSPB](documentation/Peregrine.png "Image of a Peregrine, from the RSPB")
-
+<a href="https://www.rspb.org.uk/birds-and-wildlife/wildlife-guides/bird-a-z/peregrine" target="_blank">
+<img src="https://github.com//berkeleybross/PeregrineDb/raw/master/documentation/Peregrine.png" alt="Image of a Peregrine, from the RSPB"/>
 </a>
 
 PeregrineDb is a small and fast [Dapper.Net](https://github.com/StackExchange/dapper-dot-net) extension library to perform CRUD statement with POCO models. 
@@ -26,21 +24,22 @@ Currently, the following DBMS are supported. More will be added (e.g. SQLite) wh
 - PostgreSQL
 
 #### CRUD Helpers
-PeregrineDb provides the following extensions to the IDbConnection (with Async equivalents):
+PeregrineDb provides the following CRUD methods (with Async equivalents):
 
-- [Count](documentation/Count.md): Counts how many entities in the table match the conditions.
-- [Find](documentation/Get.md): Find an entity by it's id, or null.
-- [Get](documentation/Get.md): Get an entity by it's id, or throw an exception.
-- [GetRange](documentation/Get.md#GetRange): Gets all the entities in the table which match the conditions.
-- [GetPage](documentation/Get.md#GetPage): Gets a page of entities which match the conditions.
-- [GetAll](documentation/Get.md#GetAll): Gets all the entities in the table.
-- [Insert](documentation/Insert.md): Inserts an entity into the table, with the ability to return the generated identity.
-- [InsertRange](documentation/Insert.md#InsertRange): Efficiently inserts multiple entities.
-- [Update](documentation/Update.md): Updates the entity by using it's primary key.
-- [UpdateRange](documentation/Update.md): Efficiently updates multiple entities in the database.
-- [Delete](documentation/Delete.md): Deletes an entity
-- [DeleteRange](documentation/Delete.md#DeleteRange): Deletes the entities which match the given conditions.
-- [DeleteAll](documentation/Delete.md#DeleteRange): Deletes all entities in the table.
+* Getting Started
+* CRUD Methods
+    * [Creating](https://github.com/berkeleybross/PeregrineDb/wiki/CRUD-Creating): Insert one or many entities, with or without generating a primary key.
+    * [Reading an Entity](https://github.com/berkeleybross/PeregrineDb/wiki/CRUD-Reading-One-Entity): Many overloads for searching for a single entity.
+    * [Reading many Entities](https://github.com/berkeleybross/PeregrineDb/wiki/CRUD-Reading-Many-Entities): Search for any number of entities matching arbitrary conditions. Includes pagination.
+    * [Counting](https://github.com/berkeleybross/PeregrineDb/wiki/CRUD-Counting): Count how many entities match some conditions
+    * [Updating](https://github.com/berkeleybross/PeregrineDb/wiki/CRUD-Updating): Update one or many entities, matched on primary key
+    * [Deleting](https://github.com/berkeleybross/PeregrineDb/wiki/CRUD-Deleting): Delete one, many or all entities
+* Testing your code
+    * DataWiper
+* Contributing
+
+#### Other Features
+- [DataWiper]()
 
 #### Configuration
 *Documentation in progress!*

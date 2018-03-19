@@ -23,7 +23,6 @@
             return this.DbConnection.ExecuteScalar<int>(command);
         }
 
-        
         public TEntity Find<TEntity>(object id, int? commandTimeout = null)
         {
             var command = this.commandFactory.MakeFindCommand<TEntity>(id, commandTimeout);
