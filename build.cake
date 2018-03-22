@@ -5,14 +5,19 @@
 //////////////////////////////////////////////////////////////////////
 var target = Argument("Target", "Default");
 var configuration = Argument("configuration", "Release");
+var buildCounter = Argument("buildCounter", "0"); // "version" is reserved
 
 //////////////////////////////////////////////////////////////////////
 // CONSTANTS
 //////////////////////////////////////////////////////////////////////
 
-var buildVersion = "2.0.0-rc1";
 var artifactsDirectory = Directory("./artifacts");
 var tempDirectory = Directory("./temp");
+
+var semVer = FileReadText("./semver.txt");
+var buildVersion = semVer.Contains("rc")
+    ? semVer + "." + buildCounter
+	: semVer;
 
 //////////////////////////////////////////////////////////////////////
 // TASKS
