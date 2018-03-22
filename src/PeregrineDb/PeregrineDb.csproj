@@ -11,10 +11,13 @@
     <PackageTags>micro-orm orm CRUD sql postgresql</PackageTags>
     <LangVersion>7.1</LangVersion>
   </PropertyGroup>
+
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
   </ItemGroup>
+  
   <ItemGroup Condition="'$(TargetFramework)' == 'net46'">
   </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Remove="NETStandard.Library" />
     <PackageReference Include="berkeleybross.Pagination" Version="1.0.24" />

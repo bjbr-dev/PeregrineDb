@@ -3,8 +3,6 @@
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
 //////////////////////////////////////////////////////////////////////
-
-var buildVersion = "1.0." + Argument("buildCounter", "0"); // "version" is reserved
 var target = Argument("Target", "Default");
 var configuration = Argument("configuration", "Release");
 
@@ -12,6 +10,7 @@ var configuration = Argument("configuration", "Release");
 // CONSTANTS
 //////////////////////////////////////////////////////////////////////
 
+var buildVersion = "2.0.0-rc1";
 var artifactsDirectory = Directory("./artifacts");
 var tempDirectory = Directory("./temp");
 

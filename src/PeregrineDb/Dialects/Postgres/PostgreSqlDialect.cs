@@ -190,24 +190,23 @@
         public string MakeGetAllTablesStatement()
         {
             return @"
-SELECT table_name AS Name
+SELECT table_schema || '.' || table_name AS Name
 FROM information_schema.tables
-WHERE table_schema='public' AND table_type='BASE TABLE';";
+WHERE table_type='BASE TABLE' AND table_schema <> 'information_schema' AND table_schema NOT LIKE 'pg_%';";
         }
 
         public string MakeGetAllRelationsStatement()
         {
             return @"
-SELECT
-    foreign_column.table_schema || '.' || foreign_column.table_name AS ReferencedTable,
-    foreign_key.table_schema || '.' || foreign_key.table_name AS ReferencingTable,
-    primary_column.column_name AS ReferencingColumn,
-    primary_column.is_nullable::boolean AS RelationIsOptional
-FROM information_schema.table_constraints AS foreign_key
-JOIN information_schema.key_column_usage AS kcu ON foreign_key.constraint_name = kcu.constraint_name
-JOIN information_schema.constraint_column_usage AS foreign_column ON foreign_column.constraint_name = foreign_key.constraint_name
-JOIN information_schema.columns AS primary_column ON kcu.table_name = primary_column.table_name AND kcu.table_schema = primary_column.table_schema
-WHERE constraint_type = 'FOREIGN KEY'";
+SELECT target_table.table_schema || '.' || target_table.table_name AS ReferencedTable,
+       source_table.table_schema || '.' || source_table.table_name AS ReferencingTable,
+       source_column.column_name AS ReferencingColumn,
+       source_column.is_nullable::boolean AS RelationIsOptional
+FROM information_schema.table_constraints AS source_table
+JOIN information_schema.key_column_usage AS kcu ON source_table.constraint_name = kcu.constraint_name
+JOIN information_schema.constraint_column_usage AS target_table ON target_table.constraint_name = source_table.constraint_name
+JOIN information_schema.columns AS source_column ON kcu.table_name = source_column.table_name AND kcu.table_schema = source_column.table_schema AND kcu.column_name = source_column.column_name
+WHERE constraint_type = 'FOREIGN KEY';";
         }
 
         public string MakeSetColumnNullStatement(string tableName, string columnName)

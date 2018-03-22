@@ -5,19 +5,20 @@
     using FluentAssertions;
     using PeregrineDb;
     using PeregrineDb.Dialects;
+    using PeregrineDb.Dialects.Postgres;
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
     using Xunit;
 
     public abstract class DataWiperTests
     {
-        private static IEnumerable<IDialect> TestDialects => new[]
+        public static IEnumerable<object> TestDialects => new[]
             {
-                Dialect.SqlServer2012,
-                Dialect.PostgreSql
+                new[] { Dialect.SqlServer2012 },
+                new[] { Dialect.PostgreSql }
             };
         
-        public abstract class DeleteAllData
+        public class DeleteAllData
             : DataWiperTests
         {
             [Theory]
@@ -52,8 +53,21 @@
                     var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
 
+                    string tableName;
+                    switch (dialect)
+                    {
+                        case SqlServer2012Dialect _:
+                            tableName = "dbo.Users";
+                            break;
+                        case PostgreSqlDialect _:
+                            tableName = "public.users";
+                            break;
+                        default:
+                            throw new NotSupportedException("Unknown dialect: " + dialect.Name);
+                    }
+
                     // Act
-                    DataWiper.ClearAllData(database, new HashSet<string> { "dbo.Users" });
+                    DataWiper.ClearAllData(database, new HashSet<string> { tableName });
 
                     // Assert
                     database.Count<User>().Should().Be(1);
@@ -93,8 +107,21 @@
 
                     database.Insert(new SimpleForeignKey { Name = "Some Name 1", UserId = userId });
 
+                    string tableName;
+                    switch (dialect)
+                    {
+                        case SqlServer2012Dialect _:
+                            tableName = "dbo.SimpleForeignKeys";
+                            break;
+                        case PostgreSqlDialect _:
+                            tableName = "public.simpleforeignkeys";
+                            break;
+                        default:
+                            throw new NotSupportedException("Unknown dialect: " + dialect.Name);
+                    }
+
                     // Act
-                    Action act = () => DataWiper.ClearAllData(database, new HashSet<string> { "dbo.SimpleForeignKeys" });
+                    Action act = () => DataWiper.ClearAllData(database, new HashSet<string> { tableName });
 
                     // Assert
                     act.ShouldThrow<Exception>();
@@ -182,9 +209,21 @@
                     // Arrange
                     var database = instance.Item;
                     database.Insert(new SchemaOther { Name = "Other" });
+                    string name;
+                    switch (dialect)
+                    {
+                        case SqlServer2012Dialect _:
+                            name = "Other.SchemaOther";
+                            break;
+                        case PostgreSqlDialect _:
+                            name = "other.schemaother";
+                            break;
+                        default:
+                            throw new NotSupportedException("Unknown dialect: " + dialect.Name);
+                    }
 
                     // Act
-                    DataWiper.ClearAllData(database, new HashSet<string> { "Other.SchemaOther" });
+                    DataWiper.ClearAllData(database, new HashSet<string> { name });
 
                     // Assert
                     database.Count<SchemaOther>().Should().Be(1);

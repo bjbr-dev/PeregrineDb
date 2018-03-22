@@ -4,6 +4,7 @@ src/PeregrineDb/obj/
 tests/PeregrineDb.Tests/bin/
 tests/PeregrineDb.Tests/obj/
 
+artifacts/
 tools/*
 !tools/packages.config
 

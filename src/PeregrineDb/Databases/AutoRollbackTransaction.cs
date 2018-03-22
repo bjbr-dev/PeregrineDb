@@ -1,11 +1,10 @@
 ﻿namespace PeregrineDb.Databases
 {
-    using System;
     using System.Data;
     using PeregrineDb.Utils;
 
     public class AutoRollbackTransaction
-        : IDisposable
+        : IDbTransaction
     {
         private bool completed;
 
@@ -17,7 +16,11 @@
 
         public IDbTransaction Transaction { get; }
 
-        public void SaveChanges()
+        public IDbConnection Connection => this.Transaction.Connection;
+
+        public IsolationLevel IsolationLevel => this.Transaction.IsolationLevel;
+
+        public void Commit()
         {
             this.Transaction.Commit();
             this.completed = true;

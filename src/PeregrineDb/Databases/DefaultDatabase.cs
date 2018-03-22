@@ -5,8 +5,17 @@
     public class DefaultDatabase
         : DefaultDatabaseConnection, IDatabase
     {
+        /// <summary>
+        /// Create a new, dynamic instance of <see cref="DefaultDatabase{T}"/>. This method is a light weight wrapper for generic inference.
+        /// </summary>
+        public static DefaultDatabase<TConnection> From<TConnection>(TConnection connection, PeregrineConfig config)
+            where TConnection : IDbConnection
+        {
+            return new DefaultDatabase<TConnection>(connection, config);
+        }
+
         public DefaultDatabase(IDbConnection connection, PeregrineConfig config)
-            : base(connection, null, config, true)
+            : base(connection, null, config, false)
         {
         }
 
@@ -16,7 +25,7 @@
             try
             {
                 transaction = this.DbConnection.BeginTransaction();
-                return new DefaultUnitOfWork(this.DbConnection, transaction, this.Config, !leaveOpen);
+                return new DefaultUnitOfWork(this.DbConnection, transaction, this.Config, leaveOpen);
             }
             catch
             {
@@ -31,7 +40,7 @@
             try
             {
                 transaction = this.DbConnection.BeginTransaction(isolationLevel);
-                return new DefaultUnitOfWork(this.DbConnection, transaction, this.Config, !leaveOpen);
+                return new DefaultUnitOfWork(this.DbConnection, transaction, this.Config, leaveOpen);
             }
             catch
             {

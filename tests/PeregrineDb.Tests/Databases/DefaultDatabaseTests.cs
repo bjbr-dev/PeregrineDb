@@ -35,6 +35,7 @@
             {
                 // Arrange
                 var database = new Mock<IDbConnection>();
+                database.Setup(d => d.BeginTransaction()).Returns((IDbTransaction)null);
 
                 var sut = new DefaultDatabase(database.Object, PeregrineConfig.Postgres);
 
@@ -72,6 +73,7 @@
                 database.Setup(d => d.BeginTransaction()).Returns(transaction.Object);
 
                 var sut = new DefaultDatabase(database.Object, PeregrineConfig.Postgres);
+
                 // Act
                 using (sut.StartUnitOfWork())
                 {

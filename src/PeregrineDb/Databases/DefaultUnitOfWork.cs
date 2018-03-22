@@ -1,33 +1,48 @@
 ﻿namespace PeregrineDb.Databases
 {
     using System.Data;
+    using PeregrineDb.Utils;
 
     public class DefaultUnitOfWork
         : DefaultDatabaseConnection, IDatabaseUnitOfWork
     {
-        private readonly AutoRollbackTransaction transaction;
-
-        public DefaultUnitOfWork(IDbConnection connection, IDbTransaction transaction, PeregrineConfig config, bool disposeConnection = true)
-            : base(connection, transaction, config, disposeConnection)
+        /// <summary>
+        /// Create a new, dynamic instance of <see cref="DefaultUnitOfWork{TConnection,TTransaction}"/>. This method is a light weight wrapper for generic inference.
+        /// </summary>
+        public static DefaultUnitOfWork<TConnection, TTransaction> From<TConnection, TTransaction>(
+            TConnection connection,
+            TTransaction transaction,
+            PeregrineConfig config,
+            bool leaveOpen)
+            where TConnection : IDbConnection
+            where TTransaction : IDbTransaction
         {
-            this.transaction = new AutoRollbackTransaction(transaction);
+            return new DefaultUnitOfWork<TConnection, TTransaction>(connection, transaction, config, leaveOpen);
         }
 
-        public IDbTransaction Transaction => this.transaction.Transaction;
+        public DefaultUnitOfWork(IDbConnection connection, IDbTransaction transaction, PeregrineConfig config, bool leaveOpen = false)
+            : base(connection, transaction, config, leaveOpen)
+        {
+            Ensure.NotNull(transaction, nameof(transaction));
+
+            this.Transaction = transaction;
+        }
+
+        public IDbTransaction Transaction { get; }
 
         public void SaveChanges()
         {
-            this.transaction.SaveChanges();
+            this.Transaction.Commit();
         }
 
         public void Rollback()
         {
-            this.transaction.Rollback();
+            this.Transaction.Rollback();
         }
 
         protected override void Dispose(bool disposing)
         {
-            this.transaction.Dispose();
+            this.Transaction.Dispose();
         }
     }
 }

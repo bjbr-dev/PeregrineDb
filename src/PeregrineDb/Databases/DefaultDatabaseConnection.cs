@@ -8,17 +8,17 @@
         : IDatabaseConnection
     {
         private readonly IDbConnection connection;
-        private readonly bool disposeConnection;
+        private readonly bool leaveOpen;
         
         private readonly IDbTransaction transaction;
         private readonly CommandFactory commandFactory;
         private bool disposed;
 
-        protected DefaultDatabaseConnection(IDbConnection connection, IDbTransaction transaction, PeregrineConfig config, bool disposeConnection)
+        protected DefaultDatabaseConnection(IDbConnection connection, IDbTransaction transaction, PeregrineConfig config, bool leaveOpen)
         {
             this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
             this.transaction = transaction;
-            this.disposeConnection = disposeConnection;
+            this.leaveOpen = leaveOpen;
             this.Config = config ?? throw new ArgumentNullException(nameof(config));
 
             this.commandFactory = new CommandFactory(config, transaction);
@@ -48,7 +48,7 @@
             }
             finally
             {
-                if (this.disposeConnection)
+                if (!this.leaveOpen)
                 {
                     this.connection.Dispose();
                 }

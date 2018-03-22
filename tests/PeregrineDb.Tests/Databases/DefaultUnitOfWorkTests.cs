@@ -36,7 +36,7 @@
                 var database = new Mock<IDbConnection>();
                 var transaction = new Mock<IDbTransaction>();
 
-                var sut = new DefaultUnitOfWork(database.Object, transaction.Object, PeregrineConfig.Postgres, false);
+                var sut = new DefaultUnitOfWork(database.Object, transaction.Object, PeregrineConfig.Postgres, true);
 
                 // Act
                 sut.Dispose();
@@ -47,7 +47,7 @@
             }
 
             [Fact]
-            public void Rollsback_transaction()
+            public void Disposes_transaction()
             {
                 // Arrange
                 var database = new Mock<IDbConnection>();
@@ -59,17 +59,16 @@
                 sut.Dispose();
 
                 // Assert
-                transaction.Verify(t => t.Rollback());
+                transaction.Verify(t => t.Dispose());
             }
 
             [Fact]
-            public void Disposes_database_and_transaction_even_if_exception_occurs_during_rollback()
+            public void Disposes_database_even_if_exception_occurs_during_disposing_transaction()
             {
                 // Arrange
                 var database = new Mock<IDbConnection>();
                 var transaction = new Mock<IDbTransaction>();
-                transaction.Setup(t => t.Rollback())
-                           .Throws<CustomException>();
+                transaction.Setup(t => t.Dispose()).Throws<CustomException>();
 
                 var sut = new DefaultUnitOfWork(database.Object, transaction.Object, PeregrineConfig.Postgres);
 
@@ -102,7 +101,7 @@
             }
 
             [Fact]
-            public void Does_not_rollback_twice()
+            public void Does_not_dispose_twice()
             {
                 // Arrange
                 var database = new Mock<IDbConnection>();
@@ -112,11 +111,11 @@
 
                 // Act
                 sut.Dispose();
+                sut.Dispose();
 
                 // Assert
-                transaction.Verify(t => t.Rollback(), Times.Once);
-                database.Verify(d => d.Dispose());
-                transaction.Verify(t => t.Dispose());
+                database.Verify(d => d.Dispose(), Times.Once);
+                transaction.Verify(t => t.Dispose(), Times.Once);
             }
 
             [Fact]
