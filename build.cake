@@ -15,8 +15,8 @@ var artifactsDirectory = Directory("./artifacts");
 var tempDirectory = Directory("./temp");
 
 var semVer = FileReadText("./semver.txt");
-var buildVersion = semVer.Contains("rc")
-    ? semVer + "." + buildCounter
+var buildVersion = semVer.Contains("-")
+    ? semVer + buildCounter
 	: semVer;
 
 //////////////////////////////////////////////////////////////////////
