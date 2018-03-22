@@ -2,7 +2,7 @@ image: Visual Studio 2017
 pull_requests:
   do_not_increment_build_number: true
 build_script:
-- ps: Update-AppveyorBuild -Version "$([IO.File]::ReadAllText(".\semver.txt")).$($env:APPVEYOR_BUILD_NUMBER)"
+- ps: Update-AppveyorBuild -Version "$(Get-Content .\semver.txt -Raw).$($env:APPVEYOR_BUILD_NUMBER)"
 - ps: ./build.ps1 -ScriptArgs "-buildCounter=`"$($env:APPVEYOR_BUILD_NUMBER)`""
 test: off
 artifacts:
