@@ -6,12 +6,13 @@
 
     internal class SchemaRelations
     {
-        private readonly List<string> tables = new List<string>();
-        private readonly List<TableRelation> relations = new List<TableRelation>();
+        private readonly IEnumerable<string> tables;
+        private readonly List<TableRelation> relations;
 
-        public void AddTable(string tableName)
+        public SchemaRelations(IEnumerable<string> tables)
         {
-            this.tables.Add(tableName);
+            this.tables = tables;
+            this.relations = new List<TableRelation>();
         }
 
         public void AddRelationship(string referencedTable, string referencingTable, string columnName, bool isNullable)
@@ -32,7 +33,7 @@
         public IEnumerable<object> GetClearDataCommands()
         {
             var commands = new List<object>();
-            BuildTableList(this.tables, new RelationCollection(this.relations));
+            BuildTableList(this.tables.ToList(), new RelationCollection(this.relations));
             return commands;
 
             void BuildTableList(ICollection<string> remainingTables, RelationCollection remainingRelationships)

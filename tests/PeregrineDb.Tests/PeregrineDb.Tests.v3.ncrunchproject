@@ -1,0 +1,9 @@
+﻿<ProjectConfiguration>
+  <Settings>
+    <IgnoredTests>
+      <FixtureTestSelector>
+        <FixtureName>PeregrineDb.Tests.Databases.DefaultDatabaseConnectionPerformanceTests+PostgreSQL</FixtureName>
+      </FixtureTestSelector>
+    </IgnoredTests>
+  </Settings>
+</ProjectConfiguration>

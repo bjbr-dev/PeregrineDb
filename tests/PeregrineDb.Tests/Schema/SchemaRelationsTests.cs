@@ -1,6 +1,7 @@
 ﻿namespace PeregrineDb.Tests.Schema
 {
     using System;
+    using System.Linq;
     using FluentAssertions;
     using PeregrineDb.Schema.Relations;
     using Xunit;
@@ -14,7 +15,7 @@
             public void Returns_no_commands_when_there_are_no_tables()
             {
                 // Arrange
-                var sut = new SchemaRelations();
+                var sut = new SchemaRelations(Enumerable.Empty<string>());
 
                 // Act
                 var result = sut.GetClearDataCommands();
@@ -27,9 +28,7 @@
             public void Ignores_relationships_for_tables_which_dont_exist()
             {
                 // Arrange
-                var sut = new SchemaRelations();
-                sut.AddTable("A");
-
+                var sut = new SchemaRelations(new[] { "A" });
                 sut.AddRelationship("B", "A", "A -> B", false);
 
                 // Assert
@@ -47,9 +46,7 @@
             public void Returns_clear_table_commands_when_there_are_no_tables_with_relations()
             {
                 // Arrange
-                var sut = new SchemaRelations();
-                sut.AddTable("Foo");
-                sut.AddTable("Bar");
+                var sut = new SchemaRelations(new[] { "Foo", "Bar" });
 
                 // Act
                 var result = sut.GetClearDataCommands();
@@ -72,9 +69,7 @@
             public void Returns_clear_table_command_for_referencing_table_before_referenced_table()
             {
                 // Arrange
-                var sut = new SchemaRelations();
-                sut.AddTable("Foo");
-                sut.AddTable("Bar");
+                var sut = new SchemaRelations(new[] { "Foo", "Bar" });
 
                 sut.AddRelationship("Foo", "Bar", "Foo_Bar", false);
 
@@ -99,11 +94,7 @@
             public void Returns_clear_table_command_for_referencing_tables_before_referenced_tables()
             {
                 // Arrange
-                var sut = new SchemaRelations();
-                sut.AddTable("Foo");
-                sut.AddTable("Bar");
-                sut.AddTable("Baz");
-
+                var sut = new SchemaRelations(new[] { "Foo", "Bar", "Baz" });
                 sut.AddRelationship("Bar", "Baz", "Bar_Baz", false);
                 sut.AddRelationship("Foo", "Bar", "Foo_Bar", false);
 
@@ -130,11 +121,7 @@
             public void Returns_clear_table_command_for_multiple_referencing_tables_before_referenced_table()
             {
                 // Arrange
-                var sut = new SchemaRelations();
-                sut.AddTable("A");
-                sut.AddTable("B");
-                sut.AddTable("C");
-
+                var sut = new SchemaRelations(new[] { "A", "B", "C" });
                 sut.AddRelationship("A", "B", "B_A", false);
                 sut.AddRelationship("A", "C", "C_A", false);
 
@@ -160,10 +147,7 @@
             public void Clears_foreign_key_columns_before_clearing_recursive_relations()
             {
                 // Arrange
-                var sut = new SchemaRelations();
-                sut.AddTable("A");
-                sut.AddTable("B");
-
+                var sut = new SchemaRelations(new[] { "A", "B" });
                 sut.AddRelationship("A", "B", "B -> A", false);
                 sut.AddRelationship("B", "A", "A ~> B", true);
 
@@ -187,11 +171,7 @@
             public void Clears_leaf_tables_before_nulling_foreign_keys()
             {
                 // Arrange
-                var sut = new SchemaRelations();
-                sut.AddTable("A");
-                sut.AddTable("B");
-                sut.AddTable("C");
-
+                var sut = new SchemaRelations(new[] { "A", "B", "C" });
                 sut.AddRelationship("A", "B", "B -> A", false);
                 sut.AddRelationship("B", "A", "A ~> B", true);
                 sut.AddRelationship("A", "C", "C -> A", false);
@@ -219,11 +199,7 @@
             public void Clears_leaf_tables_before_nulling_foreign_keys_at_any_point_in_chain()
             {
                 // Arrange
-                var sut = new SchemaRelations();
-                sut.AddTable("A");
-                sut.AddTable("B");
-                sut.AddTable("C");
-
+                var sut = new SchemaRelations(new[] { "A", "B", "C" });
                 sut.AddRelationship("A", "B", "B -> A", false);
                 sut.AddRelationship("B", "A", "A ~> B", true);
                 sut.AddRelationship("B", "C", "C -> B", false);
@@ -249,11 +225,7 @@
             public void Throws_exception_if_there_are_no_nullable_foreign_keys()
             {
                 // Arrange
-                var sut = new SchemaRelations();
-                sut.AddTable("A");
-                sut.AddTable("B");
-                sut.AddTable("C");
-
+                var sut = new SchemaRelations(new[] { "A", "B", "C" });
                 sut.AddRelationship("A", "B", "B -> A", false);
                 sut.AddRelationship("B", "A", "A -> B", false);
 
@@ -272,11 +244,7 @@
             public void Nulls_multiple_foreign_keys()
             {
                 // Arrange
-                var sut = new SchemaRelations();
-                sut.AddTable("A");
-                sut.AddTable("B");
-                sut.AddTable("C");
-
+                var sut = new SchemaRelations(new[] { "A", "B", "C" });
                 sut.AddRelationship("A", "B", "B -> A", false);
                 sut.AddRelationship("C", "A", "A -> C", false);
                 sut.AddRelationship("B", "A", "A ~> B", true);
@@ -305,11 +273,7 @@
             public void Only_nulls_out_minimum_necessary()
             {
                 // Arrange
-                var sut = new SchemaRelations();
-                sut.AddTable("A");
-                sut.AddTable("B");
-                sut.AddTable("C");
-
+                var sut = new SchemaRelations(new[] { "A", "B", "C" });
                 sut.AddRelationship("B", "A", "A -> B", false);
                 sut.AddRelationship("A", "B", "B ~> A", true);
                 sut.AddRelationship("C", "B", "B ~> C", true);
@@ -336,12 +300,7 @@
             public void Only_nulls_out_minimum_necessary_regardless_of_order_added()
             {
                 // Arrange
-                var sut = new SchemaRelations();
-                sut.AddTable("A");
-                sut.AddTable("B");
-                sut.AddTable("C");
-                sut.AddTable("D");
-
+                var sut = new SchemaRelations(new[] { "A", "B", "C", "D" });
                 sut.AddRelationship("B", "A", "A -> B", false);
                 sut.AddRelationship("C", "B", "B ~> C", true);
                 sut.AddRelationship("A", "B", "B ~> A", true);
@@ -358,6 +317,56 @@
                             new ClearTableCommand("B"),
                             new ClearTableCommand("C"),
                             new ClearTableCommand("D")
+                        },
+                    o => o.RespectingRuntimeTypes().WithStrictOrdering());
+            }
+
+            /// <summary>
+            ///   A 1-> B
+            ///     2---^
+            /// </summary>
+            [Fact]
+            public void Clears_data_from_table_with_two_foreign_keys()
+            {
+                // Arrange
+                var sut = new SchemaRelations(new[] { "A", "B" });
+                sut.AddRelationship("B", "A", "A 1-> B", false);
+                sut.AddRelationship("B", "A", "A 2-> B", false);
+
+                // Assert
+                var result = sut.GetClearDataCommands();
+
+                // Assert
+                result.ShouldAllBeEquivalentTo(new object[]
+                        {
+                            new ClearTableCommand("A"),
+                            new ClearTableCommand("B")
+                        },
+                    o => o.RespectingRuntimeTypes().WithStrictOrdering());
+            }
+
+            /// <summary>
+            ///   A 1-> B -> C
+            ///     2---^
+            /// </summary>
+            [Fact]
+            public void Clears_data_from_table_with_two_foreign_keys_which_references_another_table()
+            {
+                // Arrange
+                var sut = new SchemaRelations(new[] { "A", "B", "C" });
+                sut.AddRelationship("C", "B", "B -> C", false);
+                sut.AddRelationship("B", "A", "A 1-> B", false);
+                sut.AddRelationship("B", "A", "A 2~> B", true);
+
+                // Assert
+                var result = sut.GetClearDataCommands();
+
+                // Assert
+                result.ShouldAllBeEquivalentTo(new object[]
+                        {
+                            new ClearTableCommand("A"),
+                            new ClearTableCommand("B"),
+                            new ClearTableCommand("C")
                         },
                     o => o.RespectingRuntimeTypes().WithStrictOrdering());
             }

@@ -12,6 +12,7 @@
     using PeregrineDb.Databases;
     using PeregrineDb.Dialects;
     using PeregrineDb.Dialects.Postgres;
+    using PeregrineDb.Testing;
     using PeregrineDb.Tests.Utils.Pooling;
 
     internal class BlankDatabaseFactory

@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests
+﻿namespace PeregrineDb.Tests.Testing
 {
     using System;
     using System.Collections.Generic;
@@ -6,6 +6,7 @@
     using PeregrineDb;
     using PeregrineDb.Dialects;
     using PeregrineDb.Dialects.Postgres;
+    using PeregrineDb.Testing;
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
     using Xunit;

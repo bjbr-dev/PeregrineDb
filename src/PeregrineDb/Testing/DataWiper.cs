@@ -1,33 +1,27 @@
-﻿namespace PeregrineDb
+﻿namespace PeregrineDb.Testing
 {
     using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
+    using System.Linq;
     using PeregrineDb.Schema;
     using PeregrineDb.Schema.Relations;
 
     public class DataWiper
     {
-        public static void ClearAllData(IDatabaseConnection connection, HashSet<string> ignoredTables = null, int? commandTimeout = null)
+        public static void ClearAllData(IDatabaseConnection connection, IEnumerable<string> ignoredTables = null, int? commandTimeout = null)
         {
             if (!(connection.Config.Dialect is ISchemaQueryDialect dialect))
             {
                 throw new ArgumentException($"The dialect '{connection.Config.Dialect.Name}' does not support querying the schema");
             }
 
-            ignoredTables = ignoredTables ?? new HashSet<string>();
+            var tables = connection.Query<AllTablesQueryResult>(dialect.MakeGetAllTablesStatement()).Select(t => t.Name)
+                                   .Except(ignoredTables ?? Enumerable.Empty<string>()).ToList();
 
-            var tables = connection.Query<AllTablesQueryResult>(dialect.MakeGetAllTablesStatement());
             var relations = connection.Query<TableRelationsQueryResult>(dialect.MakeGetAllRelationsStatement());
 
-            var schemaRelations = new SchemaRelations();
-            foreach (var table in tables)
-            {
-                if (!ignoredTables.Contains(table.Name))
-                {
-                    schemaRelations.AddTable(table.Name);
-                }
-            }
+            var schemaRelations = new SchemaRelations(tables);
 
             foreach (var relation in relations)
             {
