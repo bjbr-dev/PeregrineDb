@@ -230,6 +230,25 @@
                     database.Count<SchemaOther>().Should().Be(1);
                 }
             }
+
+            [Theory]
+            [MemberData(nameof(TestDialects))]
+            public void Can_delete_tables_which_reference_another_twice(IDialect dialect)
+            {
+                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                {
+                    // Arrange
+                    var database = instance.Item;
+                    var id = database.Insert<int>(new WipeMultipleForeignKeyTarget { Name = "Other" });
+                    database.Insert(new WipeMultipleForeignKeySource { NameId = id, OptionalNameId = id });
+
+                    // Act
+                    DataWiper.ClearAllData(database);
+
+                    // Assert
+                    database.Count<WipeMultipleForeignKeyTarget>().Should().Be(0);
+                }
+            }
         }
     }
 }

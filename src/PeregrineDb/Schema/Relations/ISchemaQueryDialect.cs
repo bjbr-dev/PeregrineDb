@@ -14,10 +14,10 @@
         /// <summary>
         /// Generates a SQL SELECT statement which returns the relations between two tables in the current databaseConnection.
         /// The result should have the following fields:
-        /// - ReferencedTable, System.String: The name of the table being referenced by a foreign key.
-        /// - ReferencingTable, System.String: The name of the table containing the foreign key.
-        /// - ReferencingColumn, System.String: The name of the column with the foreign key.
-        /// - RelationIsOptional, System.Boolean: Whether the column is nullable (and therefore whether the relation is optional).
+        /// - TargetTable, System.String: The name of the table being referenced by a foreign key.
+        /// - SourceTable, System.String: The name of the table containing the foreign key.
+        /// - SourceColumn, System.String: The name of the column with the foreign key.
+        /// - SourceIsOptional, System.Boolean: Whether the column is nullable (and therefore whether the relation is optional).
         /// </summary>
         string MakeGetAllRelationsStatement();
 

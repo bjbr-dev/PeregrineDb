@@ -4,6 +4,12 @@
       <FixtureTestSelector>
         <FixtureName>PeregrineDb.Tests.Databases.DefaultDatabaseConnectionPerformanceTests+PostgreSQL</FixtureName>
       </FixtureTestSelector>
+      <NamedTestSelector>
+        <TestName>PeregrineDb.Tests.Databases.DefaultDatabaseConnectionPerformanceTests+SqlServer2012.Takes_less_than_6_seconds_to_insert_30000_rows</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>PeregrineDb.Tests.Databases.DefaultDatabaseConnectionPerformanceTests+SqlServer2012.Takes_less_than_5_seconds_to_InsertRange_30000_rows</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

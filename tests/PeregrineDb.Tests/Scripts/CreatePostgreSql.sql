@@ -166,3 +166,16 @@ CREATE TABLE Other.SchemaSimpleForeignKeys
 	Id serial NOT NULL PRIMARY KEY,
 	SchemaOtherId int NOT NULL REFERENCES Other.SchemaOther(Id)
 );
+
+CREATE TABLE wipemultipleforeignkeytargets
+(
+	id serial NOT NULL PRIMARY KEY,
+	name text NOT NULL
+);
+
+CREATE TABLE wipemultipleforeignkeysources
+(
+	id serial NOT NULL PRIMARY KEY,
+	nameid int NOT NULL REFERENCES wipemultipleforeignkeytargets,
+	optionalnameid int NULL REFERENCES wipemultipleforeignkeytargets
+);

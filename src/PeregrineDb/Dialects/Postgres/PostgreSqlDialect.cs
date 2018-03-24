@@ -151,6 +151,11 @@
             return schema + "." + tableName;
         }
 
+        public override string ToString()
+        {
+            return this.Name;
+        }
+
         private static string GetColumnType(ColumnSchema column)
         {
             var nullability = column.ColumnType.AllowNull
@@ -198,10 +203,10 @@ WHERE table_type='BASE TABLE' AND table_schema <> 'information_schema' AND table
         public string MakeGetAllRelationsStatement()
         {
             return @"
-SELECT target_table.table_schema || '.' || target_table.table_name AS ReferencedTable,
-       source_table.table_schema || '.' || source_table.table_name AS ReferencingTable,
-       source_column.column_name AS ReferencingColumn,
-       source_column.is_nullable::boolean AS RelationIsOptional
+SELECT target_table.table_schema || '.' || target_table.table_name AS TargetTable,
+       source_table.table_schema || '.' || source_table.table_name AS SourceTable,
+       source_column.column_name AS SourceColumn,
+       source_column.is_nullable::boolean AS SourceColumnIsOptional
 FROM information_schema.table_constraints AS source_table
 JOIN information_schema.key_column_usage AS kcu ON source_table.constraint_name = kcu.constraint_name
 JOIN information_schema.constraint_column_usage AS target_table ON target_table.constraint_name = source_table.constraint_name

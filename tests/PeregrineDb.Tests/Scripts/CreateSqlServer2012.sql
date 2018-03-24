@@ -179,3 +179,16 @@ CREATE TABLE Other.SchemaSimpleForeignKeys
 		FOREIGN KEY (SchemaOtherId)
 		REFERENCES Other.SchemaOther(Id)
 );
+
+CREATE TABLE WipeMultipleForeignKeyTargets
+(
+	Id INT NOT NULL IDENTITY PRIMARY KEY,
+	Name NVARCHAR(MAX) NOT NULL
+);
+
+CREATE TABLE WipeMultipleForeignKeySources
+(
+	Id INT NOT NULL IDENTITY PRIMARY KEY,
+	NameId INT NOT NULL FOREIGN KEY REFERENCES WipeMultipleForeignKeyTargets(Id),
+	OptionalNameId int NULL FOREIGN KEY REFERENCES WipeMultipleForeignKeyTargets(Id)
+);

@@ -1,6 +1,5 @@
 ﻿namespace PeregrineDb.Dialects
 {
-    using System;
     using System.Collections.Immutable;
     using Pagination;
     using PeregrineDb.Schema;

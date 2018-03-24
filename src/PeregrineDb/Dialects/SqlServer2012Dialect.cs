@@ -153,10 +153,10 @@ WHERE TABLE_TYPE='BASE TABLE'";
         public string MakeGetAllRelationsStatement()
         {
             return @"
-SELECT OBJECT_SCHEMA_NAME(foreign_key.referenced_object_id) + '.' + OBJECT_NAME(foreign_key.referenced_object_id) AS ReferencedTable,
-       OBJECT_SCHEMA_NAME(foreign_key.parent_object_id) + '.' + OBJECT_NAME(foreign_key.parent_object_id) AS ReferencingTable,
-       primary_column.name AS ReferencingColumn,
-       primary_column.is_nullable AS RelationIsOptional
+SELECT OBJECT_SCHEMA_NAME(foreign_key.referenced_object_id) + '.' + OBJECT_NAME(foreign_key.referenced_object_id) AS TargetTable,
+       OBJECT_SCHEMA_NAME(foreign_key.parent_object_id) + '.' + OBJECT_NAME(foreign_key.parent_object_id) AS SourceTable,
+       primary_column.name AS SourceColumn,
+       primary_column.is_nullable AS SourceColumnIsOptional
 FROM sys.foreign_key_columns AS foreign_key
 INNER JOIN sys.columns AS primary_column ON foreign_key.parent_object_id = primary_column.[object_id] AND foreign_key.parent_column_id = primary_column.column_id
 INNER JOIN sys.columns AS foreign_column ON foreign_key.referenced_column_id = foreign_column.column_id AND foreign_key.referenced_object_id = foreign_column.[object_id]";
@@ -167,6 +167,11 @@ INNER JOIN sys.columns AS foreign_column ON foreign_key.referenced_column_id = f
             var sql = new StringBuilder("UPDATE ").Append(tableName);
             sql.AppendClause("SET ").Append(columnName).Append(" = NULL");
             return sql.ToString();
+        }
+
+        public override string ToString()
+        {
+            return this.Name;
         }
 
         private static void EnsureValidSchemaForTempTables(TableSchema tableSchema)

@@ -9,7 +9,19 @@
 
     public class DataWiper
     {
-        public static void ClearAllData(IDatabaseConnection connection, IEnumerable<string> ignoredTables = null, int? commandTimeout = null)
+        public static List<string> ClearAllData(IDatabaseConnection connection, IEnumerable<string> ignoredTables = null, int? commandTimeout = null)
+        {
+            var commands = GenerateWipeDatabaseSql(connection, ignoredTables);
+
+            foreach (var statement in commands)
+            {
+                connection.Execute(statement, commandTimeout: commandTimeout);
+            }
+
+            return commands;
+        }
+
+        public static List<string> GenerateWipeDatabaseSql(IDatabaseConnection connection, IEnumerable<string> ignoredTables = null)
         {
             if (!(connection.Config.Dialect is ISchemaQueryDialect dialect))
             {
@@ -17,7 +29,9 @@
             }
 
             var tables = connection.Query<AllTablesQueryResult>(dialect.MakeGetAllTablesStatement()).Select(t => t.Name)
-                                   .Except(ignoredTables ?? Enumerable.Empty<string>()).ToList();
+                                   .Except(ignoredTables ?? Enumerable.Empty<string>())
+                                   .OrderBy(t => t)
+                                   .ToList();
 
             var relations = connection.Query<TableRelationsQueryResult>(dialect.MakeGetAllRelationsStatement());
 
@@ -25,33 +39,33 @@
 
             foreach (var relation in relations)
             {
-                schemaRelations.AddRelationship(relation.ReferencedTable, relation.ReferencingTable, relation.ReferencingColumn, relation.RelationIsOptional);
+                schemaRelations.AddRelationship(relation.TargetTable, relation.SourceTable, relation.SourceColumn, relation.SourceColumnIsOptional);
             }
 
-            var commands = schemaRelations.GetClearDataCommands();
-
-            foreach (var command in commands)
+            var commands = new List<string>();
+            foreach (var command in schemaRelations.GetClearDataCommands())
             {
                 switch (command)
                 {
                     case ClearTableCommand c:
                     {
                         var tableSchema = new TableSchema(c.TableName, ImmutableArray<ColumnSchema>.Empty);
-
-                        var sql = dialect.MakeDeleteRangeStatement(tableSchema, null);
-                        connection.Execute(sql, commandTimeout: commandTimeout);
+                        commands.Add(dialect.MakeDeleteRangeStatement(tableSchema, null));
                         break;
                     }
+
                     case NullColumnCommand c:
                     {
-                        var sql = dialect.MakeSetColumnNullStatement(c.TableName, c.ColumnName);
-                        connection.Execute(sql, commandTimeout: commandTimeout);
+                        commands.Add(dialect.MakeSetColumnNullStatement(c.TableName, c.ColumnName));
                         break;
                     }
+
                     default:
                         throw new InvalidOperationException("Unknown sql command: " + command?.GetType());
                 }
             }
+
+            return commands;
         }
 
         private class AllTablesQueryResult
@@ -61,13 +75,13 @@
 
         private class TableRelationsQueryResult
         {
-            public string ReferencedTable { get; set; }
+            public string TargetTable { get; set; }
 
-            public string ReferencingTable { get; set; }
+            public string SourceTable { get; set; }
 
-            public string ReferencingColumn { get; set; }
+            public string SourceColumn { get; set; }
 
-            public bool RelationIsOptional { get; set; }
+            public bool SourceColumnIsOptional { get; set; }
         }
     }
 }
