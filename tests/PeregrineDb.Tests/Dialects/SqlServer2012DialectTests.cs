@@ -9,6 +9,7 @@
     using PeregrineDb;
     using PeregrineDb.Dialects;
     using PeregrineDb.Schema;
+    using PeregrineDb.SqlCommands;
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
     using Xunit;
@@ -31,7 +32,8 @@
                 var sql = this.config.Dialect.MakeCountStatement(schema, null);
 
                 // Assert
-                var expected = @"SELECT COUNT(*)
+                FormattableString expected = $@"
+SELECT COUNT(*)
 FROM [Users]";
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
@@ -44,10 +46,11 @@ FROM [Users]";
                 var schema = this.config.User();
 
                 // Act
-                var sql = this.config.Dialect.MakeCountStatement(schema, "WHERE Foo IS NOT NULL");
+                var sql = this.config.Dialect.MakeCountStatement(schema, $"WHERE Foo IS NOT NULL");
 
                 // Assert
-                var expected = @"SELECT COUNT(*)
+                FormattableString expected = $@"
+SELECT COUNT(*)
 FROM [Users]
 WHERE Foo IS NOT NULL";
 
@@ -65,12 +68,13 @@ WHERE Foo IS NOT NULL";
                 var schema = this.config.User();
 
                 // Act
-                var sql = this.config.Dialect.MakeFindStatement(schema);
+                var sql = this.config.Dialect.MakeFindStatement(schema, 5);
 
                 // Assert
-                var expected = @"SELECT [Id], [Name], [Age]
+                var expected = new SqlString(@"
+SELECT [Id], [Name], [Age]
 FROM [Users]
-WHERE [Id] = @Id";
+WHERE [Id] = {0}", 5, null, null);
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -82,12 +86,13 @@ WHERE [Id] = @Id";
                 var schema = this.config.KeyExplicit();
 
                 // Act
-                var sql = this.config.Dialect.MakeFindStatement(schema);
+                var sql = this.config.Dialect.MakeFindStatement(schema, 5);
 
                 // Assert
-                var expected = @"SELECT [Key], [Name]
+                var expected = new SqlString(@"
+SELECT [Key], [Name]
 FROM [KeyExplicit]
-WHERE [Key] = @Key";
+WHERE [Key] = {0}", 5, null);
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -99,12 +104,13 @@ WHERE [Key] = @Key";
                 var schema = this.config.CompositeKeys();
 
                 // Act
-                var sql = this.config.Dialect.MakeFindStatement(schema);
+                var sql = this.config.Dialect.MakeFindStatement(schema, new { key1 = 2, key2 = 3 });
 
                 // Assert
-                var expected = @"SELECT [Key1], [Key2], [Name]
+                var expected = new SqlString(@"
+SELECT [Key1], [Key2], [Name]
 FROM [CompositeKeys]
-WHERE [Key1] = @Key1 AND [Key2] = @Key2";
+WHERE [Key1] = {0} AND [Key2] = {1}", 2, 3, null);
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -116,12 +122,13 @@ WHERE [Key1] = @Key1 AND [Key2] = @Key2";
                 var schema = this.config.KeyAlias();
 
                 // Act
-                var sql = this.config.Dialect.MakeFindStatement(schema);
+                var sql = this.config.Dialect.MakeFindStatement(schema, 5);
 
                 // Assert
-                var expected = @"SELECT [Key] AS [Id], [Name]
+                var expected = new SqlString(@"
+SELECT [Key] AS [Id], [Name]
 FROM [KeyAlias]
-WHERE [Key] = @Id";
+WHERE [Key] = {0}", 5, null);
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -133,12 +140,13 @@ WHERE [Key] = @Id";
                 var schema = this.config.PropertyAlias();
 
                 // Act
-                var sql = this.config.Dialect.MakeFindStatement(schema);
+                var sql = this.config.Dialect.MakeFindStatement(schema, 5);
 
                 // Assert
-                var expected = @"SELECT [Id], [YearsOld] AS [Age]
+                var expected = new SqlString(@"
+SELECT [Id], [YearsOld] AS [Age]
 FROM [PropertyAlias]
-WHERE [Id] = @Id";
+WHERE [Id] = {0}", 5, null);
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -157,7 +165,8 @@ WHERE [Id] = @Id";
                 var sql = this.config.Dialect.MakeGetRangeStatement(schema, null);
 
                 // Assert
-                var expected = @"SELECT [Id], [Name], [Age]
+                FormattableString expected = $@"
+SELECT [Id], [Name], [Age]
 FROM [Users]";
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
@@ -170,12 +179,13 @@ FROM [Users]";
                 var schema = this.config.User();
 
                 // Act
-                var sql = this.config.Dialect.MakeGetRangeStatement(schema, "WHERE Age > @Age");
+                var sql = this.config.Dialect.MakeGetRangeStatement(schema, $"WHERE Age > {10}");
 
                 // Assert
-                var expected = @"SELECT [Id], [Name], [Age]
+                var expected = new SqlString(@"
+SELECT [Id], [Name], [Age]
 FROM [Users]
-WHERE Age > @Age";
+WHERE Age > {0}", 10);
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -190,7 +200,8 @@ WHERE Age > @Age";
                 var sql = this.config.Dialect.MakeGetRangeStatement(schema, null);
 
                 // Assert
-                var expected = @"SELECT [Key], [Name]
+                FormattableString expected = $@"
+SELECT [Key], [Name]
 FROM [KeyExplicit]";
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
@@ -206,7 +217,8 @@ FROM [KeyExplicit]";
                 var sql = this.config.Dialect.MakeGetRangeStatement(schema, null);
 
                 // Assert
-                var expected = @"SELECT [Key] AS [Id], [Name]
+                FormattableString expected = $@"
+SELECT [Key] AS [Id], [Name]
 FROM [KeyAlias]";
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
@@ -222,7 +234,8 @@ FROM [KeyAlias]";
                 var sql = this.config.Dialect.MakeGetRangeStatement(schema, null);
 
                 // Assert
-                var expected = @"SELECT [Id], [YearsOld] AS [Age]
+                FormattableString expected = $@"
+SELECT [Id], [YearsOld] AS [Age]
 FROM [PropertyAlias]";
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
@@ -242,9 +255,10 @@ FROM [PropertyAlias]";
                 var sql = this.config.Dialect.MakeGetTopNStatement(schema, 1, null, "Name");
 
                 // Assert
-                var expected = @"SELECT TOP 1 [Id], [Name], [Age]
+                var expected = new SqlString(@"
+SELECT TOP 1 [Id], [Name], [Age]
 FROM [Users]
-ORDER BY Name";
+ORDER BY Name");
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -256,13 +270,14 @@ ORDER BY Name";
                 var schema = this.config.User();
 
                 // Act
-                var sql = this.config.Dialect.MakeGetTopNStatement(schema, 1, "WHERE Name LIKE 'Foo%'", "Name");
+                var sql = this.config.Dialect.MakeGetTopNStatement(schema, 1, $"WHERE Name LIKE {"Foo%"}", "Name");
 
                 // Assert
-                var expected = @"SELECT TOP 1 [Id], [Name], [Age]
+                var expected = new SqlString(@"
+SELECT TOP 1 [Id], [Name], [Age]
 FROM [Users]
-WHERE Name LIKE 'Foo%'
-ORDER BY Name";
+WHERE Name LIKE {0}
+ORDER BY Name", "Foo%");
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -277,7 +292,8 @@ ORDER BY Name";
                 var sql = this.config.Dialect.MakeGetTopNStatement(schema, 1, null, "Name");
 
                 // Assert
-                var expected = @"SELECT TOP 1 [Id], [YearsOld] AS [Age]
+                FormattableString expected = $@"
+SELECT TOP 1 [Id], [YearsOld] AS [Age]
 FROM [PropertyAlias]
 ORDER BY Name";
 
@@ -297,7 +313,8 @@ ORDER BY Name";
                 var sql = this.config.Dialect.MakeGetTopNStatement(schema, 1, null, orderBy);
 
                 // Assert
-                var expected = @"SELECT TOP 1 [Id], [Name], [Age]
+                FormattableString expected = $@"
+SELECT TOP 1 [Id], [Name], [Age]
 FROM [Users]";
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
@@ -331,7 +348,8 @@ FROM [Users]";
                 var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), null, "Name");
 
                 // Assert
-                var expected = @"SELECT [Id], [Name], [Age]
+                FormattableString expected = $@"
+SELECT [Id], [Name], [Age]
 FROM [Users]
 ORDER BY Name
 OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
@@ -346,14 +364,15 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
                 var schema = this.config.User();
 
                 // Act
-                var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), "WHERE Name LIKE 'Foo%'", "Name");
+                var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), $"WHERE Name LIKE {"Foo%"}", "Name");
 
                 // Assert
-                var expected = @"SELECT [Id], [Name], [Age]
+                var expected = new SqlString(@"
+SELECT [Id], [Name], [Age]
 FROM [Users]
-WHERE Name LIKE 'Foo%'
+WHERE Name LIKE {0}
 ORDER BY Name
-OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
+OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY", "Foo%");
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -368,7 +387,8 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
                 var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), null, "Name");
 
                 // Assert
-                var expected = @"SELECT [Id], [YearsOld] AS [Age]
+                FormattableString expected = $@"
+SELECT [Id], [YearsOld] AS [Age]
 FROM [PropertyAlias]
 ORDER BY Name
 OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
@@ -386,7 +406,8 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY";
                 var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(2, 10, true, 10, 19), null, "Name");
 
                 // Assert
-                var expected = @"SELECT [Id], [Name], [Age]
+                FormattableString expected = $@"
+SELECT [Id], [Name], [Age]
 FROM [Users]
 ORDER BY Name
 OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY";
@@ -404,7 +425,8 @@ OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY";
                 var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(2, 5, true, 5, 9), null, "Name");
 
                 // Assert
-                var expected = @"SELECT [Id], [Name], [Age]
+                FormattableString expected = $@"
+SELECT [Id], [Name], [Age]
 FROM [Users]
 ORDER BY Name
 OFFSET 5 ROWS FETCH NEXT 5 ROWS ONLY";
@@ -423,11 +445,12 @@ OFFSET 5 ROWS FETCH NEXT 5 ROWS ONLY";
                 var schema = this.config.User();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertStatement(schema);
+                var sql = this.config.Dialect.MakeInsertStatement(schema, new User { Name = "Foo", Age = 10 });
 
                 // Assert
-                var expected = @"INSERT INTO [Users] ([Name], [Age])
-VALUES (@Name, @Age);";
+                var expected = new SqlString(@"
+INSERT INTO [Users] ([Name], [Age])
+VALUES ({1}, {2});", 0, "Foo", 10);
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -439,11 +462,12 @@ VALUES (@Name, @Age);";
                 var schema = this.config.KeyNotGenerated();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertStatement(schema);
+                var sql = this.config.Dialect.MakeInsertStatement(schema, new KeyNotGenerated { Id = 6, Name = "Foo" });
 
                 // Assert
-                var expected = @"INSERT INTO [KeyNotGenerated] ([Id], [Name])
-VALUES (@Id, @Name);";
+                var expected = new SqlString(@"
+INSERT INTO [KeyNotGenerated] ([Id], [Name])
+VALUES ({0}, {1});", 6, "Foo");
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -455,11 +479,12 @@ VALUES (@Id, @Name);";
                 var schema = this.config.PropertyComputed();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertStatement(schema);
+                var sql = this.config.Dialect.MakeInsertStatement(schema, new PropertyComputed { Name = "Foo" });
 
                 // Assert
-                var expected = @"INSERT INTO [PropertyComputed] ([Name])
-VALUES (@Name);";
+                var expected = new SqlString(@"
+INSERT INTO [PropertyComputed] ([Name])
+VALUES ({1});", 0, "Foo", default(DateTime));
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -471,11 +496,12 @@ VALUES (@Name);";
                 var schema = this.config.PropertyGenerated();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertStatement(schema);
+                var sql = this.config.Dialect.MakeInsertStatement(schema, new PropertyGenerated { Name = "Foo" });
 
                 // Assert
-                var expected = @"INSERT INTO [PropertyGenerated] ([Name])
-VALUES (@Name);";
+                var expected = new SqlString(@"
+INSERT INTO [PropertyGenerated] ([Name])
+VALUES ({1});", 0, "Foo", default(DateTime));
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -491,12 +517,13 @@ VALUES (@Name);";
                 var schema = this.config.User();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema);
+                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema, new User { Name = "Foo", Age = 10 });
 
                 // Assert
-                var expected = @"INSERT INTO [Users] ([Name], [Age])
-VALUES (@Name, @Age);
-SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
+                var expected = new SqlString(@"
+INSERT INTO [Users] ([Name], [Age])
+VALUES ({1}, {2});
+SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]", 0, "Foo", 10);
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -508,12 +535,13 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
                 var schema = this.config.KeyNotGenerated();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema);
+                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema, new KeyNotGenerated { Id = 10, Name = "Foo" });
 
                 // Assert
-                var expected = @"INSERT INTO [KeyNotGenerated] ([Id], [Name])
-VALUES (@Id, @Name);
-SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
+                var expected = new SqlString(@"
+INSERT INTO [KeyNotGenerated] ([Id], [Name])
+VALUES ({0}, {1});
+SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]", 10, "Foo");
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -525,12 +553,13 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
                 var schema = this.config.PropertyComputed();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema);
+                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema, new PropertyComputed { Name = "Foo" });
 
                 // Assert
-                var expected = @"INSERT INTO [PropertyComputed] ([Name])
-VALUES (@Name);
-SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
+                var expected = new SqlString(@"
+INSERT INTO [PropertyComputed] ([Name])
+VALUES ({1});
+SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]", 0, "Foo", default(DateTime));
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -542,12 +571,13 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
                 var schema = this.config.PropertyGenerated();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema);
+                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema, new PropertyGenerated { Name = "Foo" });
 
                 // Assert
-                var expected = @"INSERT INTO [PropertyGenerated] ([Name])
-VALUES (@Name);
-SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
+                var expected = new SqlString(@"
+INSERT INTO [PropertyGenerated] ([Name])
+VALUES ({1});
+SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]", 0, "Foo", default(DateTime));
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -563,12 +593,13 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
                 var schema = this.config.User();
 
                 // Act
-                var sql = this.config.Dialect.MakeUpdateStatement(schema);
+                var sql = this.config.Dialect.MakeUpdateStatement(schema, new User { Id = 5, Name = "Foo", Age = 10 });
 
                 // Assert
-                var expected = @"UPDATE [Users]
-SET [Name] = @Name, [Age] = @Age
-WHERE [Id] = @Id";
+                var expected = new SqlString(@"
+UPDATE [Users]
+SET [Name] = {1}, [Age] = {2}
+WHERE [Id] = {0}", 5, "Foo", 10);
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -580,12 +611,13 @@ WHERE [Id] = @Id";
                 var schema = this.config.CompositeKeys();
 
                 // Act
-                var sql = this.config.Dialect.MakeUpdateStatement(schema);
+                var sql = this.config.Dialect.MakeUpdateStatement(schema, new CompositeKeys { Key1 = 7, Key2 = 8, Name = "Foo" });
 
                 // Assert
-                var expected = @"UPDATE [CompositeKeys]
-SET [Name] = @Name
-WHERE [Key1] = @Key1 AND [Key2] = @Key2";
+                var expected = new SqlString(@"
+UPDATE [CompositeKeys]
+SET [Name] = {2}
+WHERE [Key1] = {0} AND [Key2] = {1}", 7, 8, "Foo");
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -597,12 +629,13 @@ WHERE [Key1] = @Key1 AND [Key2] = @Key2";
                 var schema = this.config.KeyNotGenerated();
 
                 // Act
-                var sql = this.config.Dialect.MakeUpdateStatement(schema);
+                var sql = this.config.Dialect.MakeUpdateStatement(schema, new KeyNotGenerated { Id = 7, Name = "Foo" });
 
                 // Assert
-                var expected = @"UPDATE [KeyNotGenerated]
-SET [Name] = @Name
-WHERE [Id] = @Id";
+                var expected = new SqlString(@"
+UPDATE [KeyNotGenerated]
+SET [Name] = {1}
+WHERE [Id] = {0}", 7, "Foo");
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -614,12 +647,13 @@ WHERE [Id] = @Id";
                 var schema = this.config.PropertyAlias();
 
                 // Act
-                var sql = this.config.Dialect.MakeUpdateStatement(schema);
+                var sql = this.config.Dialect.MakeUpdateStatement(schema, new PropertyAlias { Id = 5, Age = 10 });
 
                 // Assert
-                var expected = @"UPDATE [PropertyAlias]
-SET [YearsOld] = @Age
-WHERE [Id] = @Id";
+                var expected = new SqlString(@"
+UPDATE [PropertyAlias]
+SET [YearsOld] = {1}
+WHERE [Id] = {0}", 5, 10);
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -631,12 +665,13 @@ WHERE [Id] = @Id";
                 var schema = this.config.KeyAlias();
 
                 // Act
-                var sql = this.config.Dialect.MakeUpdateStatement(schema);
+                var sql = this.config.Dialect.MakeUpdateStatement(schema, new { Name = "Foo", Id = 10 });
 
                 // Assert
-                var expected = @"UPDATE [KeyAlias]
-SET [Name] = @Name
-WHERE [Key] = @Id";
+                var expected = new SqlString(@"
+UPDATE [KeyAlias]
+SET [Name] = {1}
+WHERE [Key] = {0}", 10, "Foo");
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -648,12 +683,13 @@ WHERE [Key] = @Id";
                 var schema = this.config.KeyExplicit();
 
                 // Act
-                var sql = this.config.Dialect.MakeUpdateStatement(schema);
+                var sql = this.config.Dialect.MakeUpdateStatement(schema, new KeyExplicit { Name = "Foo", Key = 10 });
 
                 // Assert
-                var expected = @"UPDATE [KeyExplicit]
-SET [Name] = @Name
-WHERE [Key] = @Key";
+                var expected = new SqlString(@"
+UPDATE [KeyExplicit]
+SET [Name] = {1}
+WHERE [Key] = {0}", 10, "Foo");
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -665,12 +701,13 @@ WHERE [Key] = @Key";
                 var schema = this.config.PropertyComputed();
 
                 // Act
-                var sql = this.config.Dialect.MakeUpdateStatement(schema);
+                var sql = this.config.Dialect.MakeUpdateStatement(schema, new PropertyComputed { Name = "Foo", Id = 10 });
 
                 // Assert
-                var expected = @"UPDATE [PropertyComputed]
-SET [Name] = @Name
-WHERE [Id] = @Id";
+                var expected = new SqlString(@"
+UPDATE [PropertyComputed]
+SET [Name] = {1}
+WHERE [Id] = {0}", 10, "Foo", default(DateTime));
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -682,12 +719,13 @@ WHERE [Id] = @Id";
                 var schema = this.config.PropertyGenerated();
 
                 // Act
-                var sql = this.config.Dialect.MakeUpdateStatement(schema);
+                var sql = this.config.Dialect.MakeUpdateStatement(schema, new PropertyGenerated { Id = 5, Name = "Foo", Created = new DateTime(2018, 4, 1) });
 
                 // Assert
-                var expected = @"UPDATE [PropertyGenerated]
-SET [Name] = @Name, [Created] = @Created
-WHERE [Id] = @Id";
+                var expected = new SqlString(@"
+UPDATE [PropertyGenerated]
+SET [Name] = {1}, [Created] = {2}
+WHERE [Id] = {0}", 5, "Foo", new DateTime(2018, 4, 1));
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -703,11 +741,12 @@ WHERE [Id] = @Id";
                 var schema = this.config.User();
 
                 // Act
-                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema);
+                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema, 5);
 
                 // Assert
-                var expected = @"DELETE FROM [Users]
-WHERE [Id] = @Id";
+                var expected = new SqlString(@"
+DELETE FROM [Users]
+WHERE [Id] = {0}", 5, null, null);
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -719,11 +758,12 @@ WHERE [Id] = @Id";
                 var schema = this.config.CompositeKeys();
 
                 // Act
-                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema);
+                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema, new CompositeKeys { Key1 = 1, Key2 = 2 });
 
                 // Assert
-                var expected = @"DELETE FROM [CompositeKeys]
-WHERE [Key1] = @Key1 AND [Key2] = @Key2";
+                var expected = new SqlString(@"
+DELETE FROM [CompositeKeys]
+WHERE [Key1] = {0} AND [Key2] = {1}", 1, 2, null as string);
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -735,11 +775,12 @@ WHERE [Key1] = @Key1 AND [Key2] = @Key2";
                 var schema = this.config.KeyNotGenerated();
 
                 // Act
-                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema);
+                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema, 5);
 
                 // Assert
-                var expected = @"DELETE FROM [KeyNotGenerated]
-WHERE [Id] = @Id";
+                var expected = new SqlString(@"
+DELETE FROM [KeyNotGenerated]
+WHERE [Id] = {0}", 5, null);
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -751,11 +792,12 @@ WHERE [Id] = @Id";
                 var schema = this.config.KeyAlias();
 
                 // Act
-                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema);
+                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema, 5);
 
                 // Assert
-                var expected = @"DELETE FROM [KeyAlias]
-WHERE [Key] = @Id";
+                var expected = new SqlString(@"
+DELETE FROM [KeyAlias]
+WHERE [Key] = {0}", 5, null);
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -767,11 +809,12 @@ WHERE [Key] = @Id";
                 var schema = this.config.KeyExplicit();
 
                 // Act
-                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema);
+                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema, 5);
 
                 // Assert
-                var expected = @"DELETE FROM [KeyExplicit]
-WHERE [Key] = @Key";
+                var expected = new SqlString(@"
+DELETE FROM [KeyExplicit]
+WHERE [Key] = {0}", 5, null);
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -787,11 +830,12 @@ WHERE [Key] = @Key";
                 var schema = this.config.User();
 
                 // Act
-                var sql = this.config.Dialect.MakeDeleteRangeStatement(schema, "WHERE [Age] > 10");
+                var sql = this.config.Dialect.MakeDeleteRangeStatement(schema, $"WHERE [Age] > {10}");
 
                 // Assert
-                var expected = @"DELETE FROM [Users]
-WHERE [Age] > 10";
+                var expected = new SqlString(@"
+DELETE FROM [Users]
+WHERE [Age] > {0}", 10);
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -811,7 +855,7 @@ WHERE [Age] > 10";
                 var sql = this.config.Dialect.MakeWhereClause(schema, conditions);
 
                 // Assert
-                var expected = string.Empty;
+                FormattableString expected = $"";
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
 
@@ -826,7 +870,7 @@ WHERE [Age] > 10";
                 var sql = this.config.Dialect.MakeWhereClause(schema, conditions);
 
                 // Assert
-                var expected = @"WHERE [Name] = @Name";
+                var expected = new SqlString("WHERE [Name] = {1}", null, "Bobby");
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -842,7 +886,7 @@ WHERE [Age] > 10";
                 var sql = this.config.Dialect.MakeWhereClause(schema, conditions);
 
                 // Assert
-                var expected = @"WHERE [Name] = @Name AND [Age] = @Age";
+                FormattableString expected = new SqlString(@"WHERE [Name] = {1} AND [Age] = {2}", null, "Bobby", 5);
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -858,7 +902,7 @@ WHERE [Age] > 10";
                 var sql = this.config.Dialect.MakeWhereClause(schema, conditions);
 
                 // Assert
-                var expected = @"WHERE [Name] IS NULL";
+                var expected = new SqlString("WHERE [Name] IS NULL", null, null);
 
                 Assert.Equal(expected, sql, SqlStringComparer.Instance);
             }
@@ -911,7 +955,8 @@ WHERE [Age] > 10";
                 var sql = this.config.Dialect.MakeCreateTempTableStatement(this.config.TempAllPossibleTypes());
 
                 // Assert
-                var expected = @"CREATE TABLE [#TempAllPossibleTypes]
+                FormattableString expected = $@"
+CREATE TABLE [#TempAllPossibleTypes]
 (
     [Id] INT NOT NULL,
     [Int16Property] SMALLINT NOT NULL,

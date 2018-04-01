@@ -7,6 +7,7 @@
     using Pagination;
     using PeregrineDb.Dialects;
     using PeregrineDb.Schema;
+    using PeregrineDb.SqlCommands;
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
     using Xunit;
@@ -68,7 +69,7 @@
                     database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var result = database.Count<User>("WHERE Age < @Age", new { Age = 11 });
+                    var result = database.Count<User>($"WHERE Age < {11}");
 
                     // Assert
                     result.Should().Be(3);
@@ -683,9 +684,8 @@
 
                     // Act
                     var user = database.GetFirstOrDefault<User>(
-                        "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                        "Name DESC",
-                        new { Search = "Some Name", Age = 10 });
+                        $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
+                        "Name DESC");
 
                     // Assert
                     user.ShouldBeEquivalentTo(new User { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
@@ -706,9 +706,8 @@
                     var database = instance.Item;
                     // Act
                     var user = database.GetFirstOrDefault<User>(
-                        "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                        "Name DESC",
-                        new { Search = "Some Name", Age = 10 });
+                        $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
+                        "Name DESC");
 
                     // Assert
                     user.Should().BeNull();
@@ -781,9 +780,8 @@
 
                     // Act
                     var user = database.GetFirst<User>(
-                        "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                        "Name DESC",
-                        new { Search = "Some Name", Age = 10 });
+                        $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
+                        "Name DESC");
 
                     // Assert
                     user.ShouldBeEquivalentTo(new User { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
@@ -802,11 +800,9 @@
                 {
                     // Arrange
                     var database = instance.Item;
+
                     // Act
-                    Action act = () => database.GetFirst<User>(
-                        "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                        "Name DESC",
-                        new { Search = "Some Name", Age = 10 });
+                    Action act = () => database.GetFirst<User>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}", "Name DESC");
 
                     // Assert
                     act.ShouldThrow<InvalidOperationException>();
@@ -876,9 +872,7 @@
                     database.Insert(new User { Name = "Some Name 2", Age = 11 });
 
                     // Act
-                    var user = database.GetSingleOrDefault<User>(
-                        "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                        new { Search = "Some Name", Age = 10 });
+                    var user = database.GetSingleOrDefault<User>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
 
                     // Assert
                     user.ShouldBeEquivalentTo(new User { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
@@ -898,9 +892,7 @@
                     // Arrange
                     var database = instance.Item;
                     // Act
-                    var user = database.GetSingleOrDefault<User>(
-                        "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                        new { Search = "Some Name", Age = 10 });
+                    var user = database.GetSingleOrDefault<User>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
 
                     // Assert
                     user.Should().BeNull();
@@ -920,7 +912,7 @@
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
 
                     // Act
-                    Action act = () => database.GetSingleOrDefault<User>("WHERE Age = @Age", new { Age = 10 });
+                    Action act = () => database.GetSingleOrDefault<User>($"WHERE Age = {10}");
 
                     // Assert
                     act.ShouldThrow<InvalidOperationException>();
@@ -1014,9 +1006,7 @@
                     database.Insert(new User { Name = "Some Name 2", Age = 11 });
 
                     // Act
-                    var user = database.GetSingle<User>(
-                        "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                        new { Search = "Some Name", Age = 10 });
+                    var user = database.GetSingle<User>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
 
                     // Assert
                     user.ShouldBeEquivalentTo(new User { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
@@ -1036,9 +1026,7 @@
                     // Arrange
                     var database = instance.Item;
                     // Act
-                    Action act = () => database.GetSingle<User>(
-                        "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                        new { Search = "Some Name", Age = 10 });
+                    Action act = () => database.GetSingle<User>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
 
                     // Assert
                     act.ShouldThrow<InvalidOperationException>();
@@ -1058,7 +1046,7 @@
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
 
                     // Act
-                    Action act = () => database.GetSingle<User>("WHERE Age = @Age", new { Age = 10 });
+                    Action act = () => database.GetSingle<User>($"WHERE Age = {10}");
 
                     // Assert
                     act.ShouldThrow<InvalidOperationException>();
@@ -1154,9 +1142,7 @@
                     database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var users = database.GetRange<User>(
-                        "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                        new { Search = "Some Name", Age = 10 });
+                    var users = database.GetRange<User>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
 
                     // Assert
                     users.Count().Should().Be(3);
@@ -1412,9 +1398,8 @@
                     // Act
                     var users = database.GetPage<User>(
                         new PageIndexPageBuilder(1, 10),
-                        "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                        "Age",
-                        new { Search = "Some Name", Age = 10 });
+                        $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
+                        "Age");
 
                     // Assert
                     users.Items.Count().Should().Be(3);
@@ -1441,9 +1426,8 @@
                     // Act
                     var users = database.GetPage<User>(
                         new PageIndexPageBuilder(1, 2),
-                        "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                        "Age DESC",
-                        new { Search = "Some Name", Age = 10 }).Items;
+                        $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
+                        "Age DESC").Items;
 
                     // Assert
                     users.Count().Should().Be(2);
@@ -1472,9 +1456,8 @@
                     // Act
                     var users = database.GetPage<User>(
                         new PageIndexPageBuilder(2, 2),
-                        "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                        "Age DESC",
-                        new { Search = "Some Name", Age = 10 }).Items;
+                        $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
+                        "Age DESC").Items;
 
                     // Assert
                     users.Count().Should().Be(1);
@@ -1502,9 +1485,8 @@
                     // Act
                     var users = database.GetPage<User>(
                         new PageIndexPageBuilder(3, 2),
-                        "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                        "Age DESC",
-                        new { Search = "Some Name", Age = 10 }).Items;
+                        $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
+                        "Age DESC").Items;
 
                     // Assert
                     users.Should().BeEmpty();
@@ -2550,7 +2532,7 @@
                             });
 
                     // Act
-                    var entities = database.GetRange<User>("WHERE Age = 10").ToList();
+                    var entities = database.GetRange<User>($"WHERE Age = 10").ToList();
                     foreach (var entity in entities)
                     {
                         entity.Name = "Other name";
@@ -2562,7 +2544,7 @@
                     // Assert
                     result.NumRowsAffected.Should().Be(2);
 
-                    var updatedEntities = database.GetRange<User>("WHERE Name = 'Other name'");
+                    var updatedEntities = database.GetRange<User>($"WHERE Name = 'Other name'");
                     updatedEntities.Count().Should().Be(2);
 
                     // Cleanup
@@ -2588,7 +2570,7 @@
                             });
 
                     // Act
-                    var entities = database.GetRange<CompositeKeys>("WHERE Name Like 'Some name%'").ToList();
+                    var entities = database.GetRange<CompositeKeys>($"WHERE Name Like 'Some name%'").ToList();
 
                     foreach (var entity in entities)
                     {
@@ -2600,7 +2582,7 @@
                     // Assert
                     result.NumRowsAffected.Should().Be(2);
 
-                    var updatedEntities = database.GetRange<CompositeKeys>("WHERE Name = 'Other name'");
+                    var updatedEntities = database.GetRange<CompositeKeys>($"WHERE Name = 'Other name'");
                     updatedEntities.Count().Should().Be(2);
 
                     // Cleanup
@@ -2742,8 +2724,10 @@
                     {
                         // Arrange
                         var database = instance.Item;
+                        var actualCondition = conditions != null ? new SqlString(conditions) : null;
+
                         // Act / Assert
-                        Assert.Throws<ArgumentException>(() => database.DeleteRange<User>(conditions));
+                        Assert.Throws<ArgumentException>(() => database.DeleteRange<User>(actualCondition));
                     }
                 }
 
@@ -2758,7 +2742,7 @@
                         // Arrange
                         var database = instance.Item;
                         // Act
-                        Action act = () => database.DeleteRange<User>(conditions);
+                        Action act = () => database.DeleteRange<User>(new SqlString(conditions));
 
                         // Assert
                         act.ShouldNotThrow();
@@ -2779,7 +2763,7 @@
                         database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                         // Act
-                        var result = database.DeleteRange<User>("WHERE Age = @Age", new { Age = 10 });
+                        var result = database.DeleteRange<User>($"WHERE Age = {10}");
 
                         // Assert
                         result.NumRowsAffected.Should().Be(3);

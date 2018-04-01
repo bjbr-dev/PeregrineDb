@@ -6,12 +6,12 @@
     using System.IO;
     using System.Linq;
     using System.Reflection;
-    using Dapper;
     using Npgsql;
     using PeregrineDb;
     using PeregrineDb.Databases;
     using PeregrineDb.Dialects;
     using PeregrineDb.Dialects.Postgres;
+    using PeregrineDb.SqlCommands;
     using PeregrineDb.Testing;
     using PeregrineDb.Tests.Utils.Pooling;
 
@@ -129,48 +129,59 @@
                 {
                     return;
                 }
-                
+
                 using (var con = new SqlConnection(TestSettings.SqlServerConnectionString))
                 {
-                    var databases = con.Query<string>("SELECT name FROM sys.databases")
-                                       .Where(s => s.StartsWith(DatabasePrefix));
-                    
-                    foreach (var databaseName in databases)
+                    con.Open();
+
+                    using (var database = new DefaultDatabase(con, PeregrineConfig.SqlServer2012))
                     {
-                        if (!ProcessHelpers.IsRunning(GetProcessIdFromDatabaseName(databaseName)))
+                        var databases = database.Query<string>($"SELECT name FROM sys.databases")
+                                                .Where(s => s.StartsWith(DatabasePrefix));
+
+                        foreach (var databaseName in databases)
                         {
-                            try
+                            if (!ProcessHelpers.IsRunning(GetProcessIdFromDatabaseName(databaseName)))
                             {
-                                con.Execute($@"USE master; DROP DATABASE {databaseName};");
-                            }
-                            catch (SqlException)
-                            {
-                                // Ignore errors since multiple processes can try to clean up the same database - only one can win
-                                // Ideally we'd use a mutex but doesnt seem necessary - if we fail to cleanup we'll try again next time (or the other process did for us!)
+                                try
+                                {
+                                    database.Execute($@"USE master; DROP DATABASE {databaseName};");
+                                }
+                                catch (SqlException)
+                                {
+                                    // Ignore errors since multiple processes can try to clean up the same database - only one can win
+                                    // Ideally we'd use a mutex but doesnt seem necessary - if we fail to cleanup we'll try again next time (or the other process did for us!)
+                                }
                             }
                         }
                     }
                 }
-                
+
                 using (var con = new NpgsqlConnection(TestSettings.PostgresServerConnectionString))
                 {
-                    var databases = con.Query<string>("SELECT datname FROM pg_database")
-                                       .Where(s => s.StartsWith(DatabasePrefix));
-                    
-                    foreach (var databaseName in databases)
+                    con.Open();
+
+                    using (var database = new DefaultDatabase(con, PeregrineConfig.Postgres))
                     {
-                        if (!ProcessHelpers.IsRunning(GetProcessIdFromDatabaseName(databaseName)))
+                        var databases = database.Query<string>($"SELECT datname FROM pg_database")
+                                                .Where(s => s.StartsWith(DatabasePrefix));
+
+                        foreach (var databaseName in databases)
                         {
-                            try
+                            if (!ProcessHelpers.IsRunning(GetProcessIdFromDatabaseName(databaseName)))
                             {
-                                con.Execute($@"DROP DATABASE {databaseName};");
-                            }
-                            catch (NpgsqlException)
-                            {
-                                // Ignore errors since multiple processes can try to clean up the same database - only one can win
-                                // Ideally we'd use a mutex but doesnt seem necessary - if we fail to cleanup we'll try again next time (or the other process did for us!)
+                                try
+                                {
+                                    database.Execute($@"DROP DATABASE {databaseName};");
+                                }
+                                catch (NpgsqlException)
+                                {
+                                    // Ignore errors since multiple processes can try to clean up the same database - only one can win
+                                    // Ideally we'd use a mutex but doesnt seem necessary - if we fail to cleanup we'll try again next time (or the other process did for us!)
+                                }
                             }
                         }
+
                     }
                 }
 
@@ -178,14 +189,17 @@
             }
         }
 
-        private static string CreateSqlServer2012Database()
+        public static string CreateSqlServer2012Database()
         {
             var databaseName = MakeRandomDatabaseName();
-            using (var database = new SqlConnection(TestSettings.SqlServerConnectionString))
+            using (var con = new SqlConnection(TestSettings.SqlServerConnectionString))
             {
-                database.Open();
+                con.Open();
 
-                database.Execute("CREATE DATABASE " + databaseName);
+                using (var database = new DefaultDatabase(con, PeregrineConfig.SqlServer2012))
+                {
+                    database.Execute(new SqlString("CREATE DATABASE " + databaseName));
+                }
             }
 
             var connectionString = new SqlConnectionStringBuilder(TestSettings.SqlServerConnectionString)
@@ -195,10 +209,15 @@
                 };
 
             var sql = GetSql("CreateSqlServer2012.sql");
-            using (var database = new SqlConnection(connectionString.ToString()))
+            using (var con = new SqlConnection(connectionString.ToString()))
             {
-                database.Execute("CREATE SCHEMA Other;");
-                database.Execute(sql);
+                con.Open();
+
+                using (var database = new DefaultDatabase(con, PeregrineConfig.SqlServer2012))
+                {
+                    database.Execute($"CREATE SCHEMA Other;");
+                    database.Execute(new SqlString(sql));
+                }
             }
 
             return connectionString.ToString();
@@ -207,9 +226,14 @@
         private static string CreatePostgreSqlDatabase()
         {
             var databaseName = MakeRandomDatabaseName();
-            using (var database = new NpgsqlConnection(TestSettings.PostgresServerConnectionString))
+            using (var con = new NpgsqlConnection(TestSettings.PostgresServerConnectionString))
             {
-                database.Execute("CREATE DATABASE " + databaseName);
+                con.Open();
+
+                using (var database = new DefaultDatabase(con, PeregrineConfig.Postgres))
+                {
+                    database.Execute(new SqlString("CREATE DATABASE " + databaseName));
+                }
             }
 
             var connectionStringBuilder = new NpgsqlConnectionStringBuilder(TestSettings.PostgresServerConnectionString)
@@ -218,9 +242,13 @@
                 };
 
             var connectionString = connectionStringBuilder.ToString();
-            using (var database = new NpgsqlConnection(connectionString))
+            using (var con = new NpgsqlConnection(connectionString))
             {
-                database.Execute(GetSql("CreatePostgreSql.sql"));
+                con.Open();
+                using (var database = new DefaultDatabase(con, PeregrineConfig.Postgres))
+                {
+                    database.Execute(new SqlString(GetSql("CreatePostgreSql.sql")));
+                }
             }
 
             return connectionString;

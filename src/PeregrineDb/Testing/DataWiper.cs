@@ -9,19 +9,19 @@
 
     public class DataWiper
     {
-        public static List<string> ClearAllData(IDatabaseConnection connection, IEnumerable<string> ignoredTables = null, int? commandTimeout = null)
+        public static List<FormattableString> ClearAllData(IDatabaseConnection connection, IEnumerable<string> ignoredTables = null, int? commandTimeout = null)
         {
             var commands = GenerateWipeDatabaseSql(connection, ignoredTables);
 
             foreach (var statement in commands)
             {
-                connection.Execute(statement, commandTimeout: commandTimeout);
+                connection.Execute(statement, commandTimeout);
             }
 
             return commands;
         }
 
-        public static List<string> GenerateWipeDatabaseSql(IDatabaseConnection connection, IEnumerable<string> ignoredTables = null)
+        public static List<FormattableString> GenerateWipeDatabaseSql(IDatabaseConnection connection, IEnumerable<string> ignoredTables = null)
         {
             if (!(connection.Config.Dialect is ISchemaQueryDialect dialect))
             {
@@ -42,7 +42,7 @@
                 schemaRelations.AddRelationship(relation.TargetTable, relation.SourceTable, relation.SourceColumn, relation.SourceColumnIsOptional);
             }
 
-            var commands = new List<string>();
+            var commands = new List<FormattableString>();
             foreach (var command in schemaRelations.GetClearDataCommands())
             {
                 switch (command)

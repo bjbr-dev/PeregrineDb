@@ -2,11 +2,12 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     public class SqlStringComparer
-        : IComparer<string>, IEqualityComparer<string>
+        : IEqualityComparer<FormattableString>
     {
-        private readonly IComparer<string> comparer;
+        private readonly StringComparer comparer;
 
         public SqlStringComparer(StringComparer comparer)
         {
@@ -15,23 +16,23 @@
 
         public static SqlStringComparer Instance { get; } = new SqlStringComparer(StringComparer.Ordinal);
 
-        public int Compare(string x, string y)
+        public bool Equals(FormattableString x, FormattableString y)
         {
-            x = x?.Replace("\r\n", "\n").Trim();
-            y = y?.Replace("\r\n", "\n").Trim();
+            var xSql = x?.Format.Replace("\r\n", "\n").Trim();
+            var ySql = y?.Format.Replace("\r\n", "\n").Trim();
 
-            return this.comparer.Compare(x, y);
+            if (!this.comparer.Equals(xSql, ySql))
+            {
+                return false;
+            }
+
+            var xArgs = x?.GetArguments() ?? new object[0];
+            var yArgs = y?.GetArguments() ?? new object[0];
+
+            return xArgs.SequenceEqual(yArgs);
         }
 
-        public bool Equals(string x, string y)
-        {
-            x = x?.Replace("\r\n", "\n").Trim();
-            y = y?.Replace("\r\n", "\n").Trim();
-
-            return ((IEqualityComparer<string>)this.comparer).Equals(x, y);
-        }
-
-        public int GetHashCode(string obj)
+        public int GetHashCode(FormattableString obj)
         {
             throw new NotSupportedException();
         }

@@ -98,7 +98,7 @@ namespace PeregrineDb.Schema
 
             var explicitKeyDefined = properties.Any(p => p.FindAttribute<KeyAttribute>() != null);
 
-            var columns = properties.Select(p => this.MakeColumnSchema(p, GetColumnUsage(explicitKeyDefined, p)));
+            var columns = properties.Select((p, i) => this.MakeColumnSchema(i, p, GetColumnUsage(explicitKeyDefined, p)));
 
             return new TableSchema(tableName, columns.ToImmutableArray());
         }
@@ -106,28 +106,12 @@ namespace PeregrineDb.Schema
         /// <summary>
         /// Creates the <see cref="ConditionColumnSchema"/> for the <paramref name="conditionsType"/>.
         /// </summary>
-        public ImmutableArray<ConditionColumnSchema> MakeConditionsSchema(Type conditionsType, TableSchema tableSchema)
+        private ImmutableArray<ConditionColumnSchema> MakeConditionsSchema(Type conditionsType, TableSchema tableSchema)
         {
             return conditionsType.GetProperties(BindingFlags.Instance | BindingFlags.Public)
                                  .Where(p => this.CouldBeColumn(p) && p.GetCustomAttribute<NotMappedAttribute>() == null && p.CanRead)
                                  .Select(p => MakeConditionSchema(tableSchema, p))
                                  .ToImmutableArray();
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="TableSchemaFactory"/> which generates table names with the <paramref name="factory"/>.
-        /// </summary>
-        public TableSchemaFactory WithTableNameFactory(ITableNameFactory factory)
-        {
-            return new TableSchemaFactory(this.dialect, factory, this.columnNameFactory, this.sqlTypeMappings);
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="TableSchemaFactory"/> which generates column names with the <paramref name="factory"/>.
-        /// </summary>
-        public TableSchemaFactory WithColumnNameFactory(IColumnNameFactory factory)
-        {
-            return new TableSchemaFactory(this.dialect, this.tableNameFactory, factory, this.sqlTypeMappings);
         }
 
         private bool CouldBeColumn(PropertyInfo property)
@@ -204,11 +188,11 @@ namespace PeregrineDb.Schema
         private static ConditionColumnSchema MakeConditionSchema(TableSchema tableSchema, PropertyInfo property)
         {
             var propertyName = property.Name;
-            var possibleColumns = tableSchema.Columns.Where(c => string.Equals(c.ParameterName, propertyName, StringComparison.OrdinalIgnoreCase)).ToList();
+            var possibleColumns = tableSchema.Columns.Where(c => string.Equals(c.PropertyName, propertyName, StringComparison.OrdinalIgnoreCase)).ToList();
 
             if (possibleColumns.Count > 1)
             {
-                possibleColumns = tableSchema.Columns.Where(c => string.Equals(c.ParameterName, propertyName, StringComparison.Ordinal)).ToList();
+                possibleColumns = tableSchema.Columns.Where(c => string.Equals(c.PropertyName, propertyName, StringComparison.Ordinal)).ToList();
 
                 if (possibleColumns.Count > 1)
                 {
@@ -224,12 +208,15 @@ namespace PeregrineDb.Schema
             return new ConditionColumnSchema(possibleColumns.Single(), property);
         }
 
-        private ColumnSchema MakeColumnSchema(PropertySchema property, ColumnUsage columnUsage)
+        private ColumnSchema MakeColumnSchema(int index, PropertySchema property, ColumnUsage columnUsage)
         {
             var propertyName = property.Name;
 
-            return new ColumnSchema(this.dialect.MakeColumnName(this.columnNameFactory.GetColumnName(property)), this.dialect.MakeColumnName(propertyName),
+            return new ColumnSchema(
+                index,
                 propertyName,
+                this.dialect.MakeColumnName(this.columnNameFactory.GetColumnName(property)),
+                this.dialect.MakeColumnName(propertyName),
                 columnUsage,
                 this.GetDbType(property));
         }

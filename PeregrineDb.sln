@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		build.cake = build.cake
 		.gitignore = .gitignore
 		semver.txt = semver.txt
+		NOTICE.md = NOTICE.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "documentation", "documentation", "{A97482DD-B797-4C98-A272-786B20C84CC6}"

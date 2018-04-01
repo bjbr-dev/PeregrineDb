@@ -8,6 +8,7 @@
     using PeregrineDb;
     using PeregrineDb.Dialects;
     using PeregrineDb.Schema;
+    using PeregrineDb.SqlCommands;
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
     using Xunit;
@@ -57,7 +58,7 @@
                     database.CreateTempTable(Enumerable.Empty<TempNoKey>());
 
                     // Assert
-                    database.Query<dynamic>($@"SELECT * FROM {schema.Name}");
+                    database.Query<dynamic>(new SqlString($@"SELECT * FROM {schema.Name}"));
 
                     // Cleanup
                     database.DropTempTable<TempNoKey>(schema.Name);

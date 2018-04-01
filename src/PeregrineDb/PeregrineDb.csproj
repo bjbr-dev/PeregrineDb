@@ -1,27 +1,42 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.3;net46</TargetFrameworks>
+    <PackageId>PeregrineDb</PackageId>
     <Authors>Berkeleybross</Authors>
     <Company>Berkeleybross</Company>
-    <Description>CRUD Extensions for Dapper.Net</Description>
+    <Title>PeregrineDb</Title>
+    <Description>A high performance Micro-ORM library supporting SQL Server and PostgreSQL.</Description>
     <Copyright>Copyright ©  2017</Copyright>
     <PackageLicenseUrl>https://github.com/berkeleybross/PeregrineDb/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/berkeleybross/PeregrineDb</PackageProjectUrl>
     <RepositoryUrl>https://github.com/berkeleybross/PeregrineDb</RepositoryUrl>
     <PackageTags>micro-orm orm CRUD sql postgresql</PackageTags>
-    <LangVersion>7.1</LangVersion>
+    <LangVersion>7.2</LangVersion>
+    <TargetFrameworks>net46;netstandard1.3</TargetFrameworks>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
-  </ItemGroup>
-  
   <ItemGroup Condition="'$(TargetFramework)' == 'net46'">
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
-  
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
+    <PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
+    <PackageReference Include="System.Collections.NonGeneric" Version="4.3.0" />
+    <PackageReference Include="System.Data.Common" Version="4.3.0" />
+    <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
+    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
+    <PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
+  </ItemGroup>
+
   <ItemGroup>
-    <PackageReference Remove="NETStandard.Library" />
     <PackageReference Include="berkeleybross.Pagination" Version="1.0.24" />
-    <PackageReference Include="Dapper" Version="1.50.2" />
+    <PackageReference Include="Dapper" Version="1.50.4" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.3.0" />
     <PackageReference Include="System.Diagnostics.Tools" Version="4.3.0" />
   </ItemGroup>

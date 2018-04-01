@@ -13,10 +13,10 @@
         /// <summary>
         /// Appends a WHERE clause which selects equality of primary keys.
         /// </summary>
-        public static void AppendWherePrimaryKeysClause(this StringBuilder sql, TableSchema tableSchema)
+        public static void AppendWherePrimaryKeysClause(this StringBuilder sql, ImmutableArray<ColumnSchema> primaryKeys)
         {
             sql.AppendClause("WHERE ")
-               .AppendColumnNamesEqualParameterNames(tableSchema.GetPrimaryKeys(), " AND ", p => true);
+               .AppendColumnNamesEqualPlaceholders(primaryKeys, " AND ", p => true);
         }
 
         /// <summary>
@@ -55,7 +55,7 @@
         /// <summary>
         /// Appends a list of properties in the form of ColumnName = @ParameterName {Seperator} ColumnName = @ParameterName ...
         /// </summary>
-        public static StringBuilder AppendColumnNamesEqualParameterNames(
+        public static StringBuilder AppendColumnNamesEqualPlaceholders(
             this StringBuilder sql,
             ImmutableArray<ColumnSchema> properties,
             string seperator,
@@ -78,7 +78,7 @@
                     sql.Append(seperator);
                 }
 
-                sql.Append(property.ColumnName).Append(" = @").Append(property.ParameterName);
+                sql.Append(property.ColumnName).Append(" = {").Append(property.Index).Append("}");
                 isFirst = false;
             }
 
@@ -86,9 +86,9 @@
         }
 
         /// <summary>
-        /// Appends a list of properties in the form of @ParameterName, @ParameterName ...
+        /// Appends a list of properties in the form of {0}, {1} ...
         /// </summary>
-        public static StringBuilder AppendParameterNames(
+        public static StringBuilder AppendParameterPlaceholders(
             this StringBuilder sql,
             ImmutableArray<ColumnSchema> properties,
             Func<ColumnSchema, bool> include)
@@ -110,7 +110,7 @@
                     sql.Append(", ");
                 }
 
-                sql.Append("@").Append(property.ParameterName);
+                sql.Append("{").Append(property.Index).Append("}");
                 isFirst = false;
             }
 
@@ -158,6 +158,19 @@
             return string.IsNullOrEmpty(clause)
                 ? sql
                 : sql.AppendLine().Append(clause);
+        }
+
+        /// <summary>
+        /// Appends an arbtitrary clause of SQL to the string. Adds a new line at the start if <paramref name="clause"/> is not empty.
+        /// </summary>
+        public static StringBuilder AppendClause(this StringBuilder sql, FormattableString clause)
+        {
+            if (string.IsNullOrEmpty(clause?.Format))
+            {
+                return sql;
+            }
+
+            return sql.AppendLine().Append(clause.Format);
         }
     }
 }

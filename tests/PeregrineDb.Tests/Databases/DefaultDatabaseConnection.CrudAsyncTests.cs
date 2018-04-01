@@ -2,12 +2,14 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Data;
     using System.Linq;
     using System.Threading.Tasks;
     using FluentAssertions;
     using Pagination;
     using PeregrineDb.Dialects;
     using PeregrineDb.Schema;
+    using PeregrineDb.SqlCommands;
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
     using Xunit;
@@ -64,9 +66,7 @@
                     database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var result = await database.CountAsync<User>(
-                        "WHERE Age < @Age",
-                        new { Age = 11 });
+                    var result = await database.CountAsync<User>($"WHERE Age < {11}");
 
                     // Assert
                     result.Should().Be(3);
@@ -679,8 +679,7 @@
 
                     // Act
                     var users = await database.GetRangeAsync<User>(
-                        "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                        new { Search = "Some Name", Age = 10 });
+                        $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
 
                     // Assert
                     users.Should().HaveCount(3);
@@ -820,6 +819,7 @@
                 {
                     // Arrange
                     var database = instance.Item;
+
                     // Act
                     Func<Task> act = async () => await database.GetRangeAsync<User>(new { Ages = 10 });
 
@@ -937,9 +937,8 @@
                     // Act
                     var users = await database.GetPageAsync<User>(
                         new PageIndexPageBuilder(1, 10),
-                        "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                        "Age",
-                        new { Search = "Some Name", Age = 10 });
+                        $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
+                        "Age");
 
                     // Assert
                     users.Items.Count().Should().Be(3);
@@ -965,9 +964,8 @@
                     // Act
                     var users = (await database.GetPageAsync<User>(
                         new PageIndexPageBuilder(1, 2),
-                        "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                        "Age DESC",
-                        new { Search = "Some Name", Age = 10 })).Items;
+                        $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
+                        "Age DESC")).Items;
 
                     // Assert
                     users.Count().Should().Be(2);
@@ -996,9 +994,8 @@
                     // Act
                     var users = (await database.GetPageAsync<User>(
                         new PageIndexPageBuilder(2, 2),
-                        "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                        "Age DESC",
-                        new { Search = "Some Name", Age = 10 })).Items;
+                        $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
+                        "Age DESC")).Items;
 
                     // Assert
                     users.Count().Should().Be(1);
@@ -1026,9 +1023,8 @@
                     // Act
                     var users = (await database.GetPageAsync<User>(
                         new PageIndexPageBuilder(3, 2),
-                        "WHERE Name LIKE CONCAT(@Search, '%') and Age = @Age",
-                        "Age DESC",
-                        new { Search = "Some Name", Age = 10 })).Items;
+                        $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
+                        "Age DESC")).Items;
 
                     // Assert
                     users.Should().BeEmpty();
@@ -1052,7 +1048,7 @@
                     database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var page = await database.GetPageAsync<User>(new PageIndexPageBuilder(2, 2), null, "Age DESC", new object());
+                    var page = await database.GetPageAsync<User>(new PageIndexPageBuilder(2, 2), null, "Age DESC");
                     var users = page.Items;
 
                     // Assert
@@ -2083,7 +2079,7 @@
                             });
 
                     // Act
-                    var entities = database.GetRange<User>("WHERE Age = 10").ToList();
+                    var entities = database.GetRange<User>($"WHERE Age = {10}").ToList();
                     foreach (var entity in entities)
                     {
                         entity.Name = "Other name";
@@ -2094,7 +2090,7 @@
                     // Assert
                     result.NumRowsAffected.Should().Be(2);
 
-                    var updatedEntities = database.GetRange<User>("WHERE Name = 'Other name'");
+                    var updatedEntities = database.GetRange<User>($"WHERE Name = {"Other name"}");
                     updatedEntities.Count().Should().Be(2);
 
                     // Cleanup
@@ -2120,7 +2116,7 @@
                             });
 
                     // Act
-                    var entities = database.GetRange<CompositeKeys>("WHERE Name Like 'Some name%'").ToList();
+                    var entities = database.GetRange<CompositeKeys>($"WHERE Name Like 'Some name%'").ToList();
 
                     foreach (var entity in entities)
                     {
@@ -2132,7 +2128,7 @@
                     // Assert
                     result.NumRowsAffected.Should().Be(2);
 
-                    var updatedEntities = database.GetRange<CompositeKeys>("WHERE Name = 'Other name'");
+                    var updatedEntities = database.GetRange<CompositeKeys>($"WHERE Name = 'Other name'");
                     updatedEntities.Count().Should().Be(2);
 
                     // Cleanup
@@ -2273,8 +2269,9 @@
                 {
                     // Arrange
                     var database = instance.Item;
+
                     // Act
-                    Func<Task> act = async () => await database.DeleteRangeAsync<User>(conditions);
+                    Func<Task> act = async () => await database.DeleteRangeAsync<User>(new SqlString(conditions));
 
                     // Assert
                     act.ShouldThrow<ArgumentException>();
@@ -2292,7 +2289,7 @@
                     // Arrange
                     var database = instance.Item;
                     // Act
-                    Func<Task> act = async () => await database.DeleteRangeAsync<User>(conditions);
+                    Func<Task> act = async () => await database.DeleteRangeAsync<User>(new SqlString(conditions));
 
                     // Assert
                     act.ShouldNotThrow();
@@ -2315,7 +2312,7 @@
                     database.Insert(new User { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var result = await database.DeleteRangeAsync<User>("WHERE Age = @Age", new { Age = 10 });
+                    var result = await database.DeleteRangeAsync<User>($"WHERE Age = {10}");
 
                     // Assert
                     result.NumRowsAffected.Should().Be(3);

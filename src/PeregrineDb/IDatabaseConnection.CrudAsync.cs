@@ -19,11 +19,7 @@
         /// ]]>
         /// </code>
         /// </example>
-        Task<int> CountAsync<TEntity>(
-            string conditions = null,
-            object parameters = null,
-            int? commandTimeout = null,
-            CancellationToken cancellationToken = default);
+        Task<int> CountAsync<TEntity>(FormattableString conditions = null, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Counts how many entities in the <typeparamref name="TEntity"/> table match the <paramref name="conditions"/>.
@@ -75,9 +71,8 @@
         /// </code>
         /// </example>
         Task<TEntity> GetFirstOrDefaultAsync<TEntity>(
-            string conditions,
+            FormattableString conditions,
             string orderBy,
-            object parameters = null,
             int? commandTimeout = null,
             CancellationToken cancellationToken = default);
 
@@ -110,9 +105,8 @@
         /// </code>
         /// </example>
         Task<TEntity> GetFirstAsync<TEntity>(
-            string conditions,
+            FormattableString conditions,
             string orderBy,
-            object parameters = null,
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
             where TEntity : class;
@@ -142,11 +136,7 @@
         /// ]]>
         /// </code>
         /// </example>
-        Task<TEntity> GetSingleOrDefaultAsync<TEntity>(
-            string conditions,
-            object parameters = null,
-            int? commandTimeout = null,
-            CancellationToken cancellationToken = default);
+        Task<TEntity> GetSingleOrDefaultAsync<TEntity>(FormattableString conditions, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets the only matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
@@ -172,11 +162,7 @@
         /// ]]>
         /// </code>
         /// </example>
-        Task<TEntity> GetSingleAsync<TEntity>(
-            string conditions,
-            object parameters = null,
-            int? commandTimeout = null,
-            CancellationToken cancellationToken = default)
+        Task<TEntity> GetSingleAsync<TEntity>(FormattableString conditions, int? commandTimeout = null, CancellationToken cancellationToken = default)
             where TEntity : class;
 
         /// <summary>
@@ -203,7 +189,10 @@
         /// ]]>
         /// </code>
         /// </example>
-        Task<IEnumerable<TEntity>> GetRangeAsync<TEntity>(string conditions, object parameters = null, int? commandTimeout = null, CancellationToken cancellationToken = default);
+        Task<IEnumerable<TEntity>> GetRangeAsync<TEntity>(
+            FormattableString conditions,
+            int? commandTimeout = null,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets a collection of entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
@@ -230,9 +219,8 @@
         /// </example>
         Task<PagedList<TEntity>> GetPageAsync<TEntity>(
             IPageBuilder pageBuilder,
-            string conditions,
+            FormattableString conditions,
             string orderBy,
-            object parameters = null,
             int? commandTimeout = null,
             CancellationToken cancellationToken = default);
 
@@ -308,10 +296,7 @@
         /// ]]>
         /// </code>
         /// </example>
-        Task<SqlCommandResult> InsertRangeAsync<TEntity>(
-            IEnumerable<TEntity> entities,
-            int? commandTimeout = null,
-            CancellationToken cancellationToken = default);
+        Task<CommandResult> InsertRangeAsync<TEntity>(IEnumerable<TEntity> entities, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// <para>
@@ -386,7 +371,7 @@
         /// </code>
         /// </example>
         /// <returns>The number of affected records.</returns>
-        Task<SqlCommandResult> UpdateRangeAsync<TEntity>(
+        Task<CommandResult> UpdateRangeAsync<TEntity>(
             IEnumerable<TEntity> entities,
             int? commandTimeout = null,
             CancellationToken cancellationToken = default);
@@ -432,11 +417,7 @@
         /// </code>
         /// </example>
         /// <returns>The number of deleted entities.</returns>
-        Task<SqlCommandResult> DeleteRangeAsync<TEntity>(
-            string conditions,
-            object parameters = null,
-            int? commandTimeout = null,
-            CancellationToken cancellationToken = default);
+        Task<CommandResult> DeleteRangeAsync<TEntity>(FormattableString conditions, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// <para>Deletes all the entities in the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.</para>
@@ -450,7 +431,7 @@
         /// </code>
         /// </example>
         /// <returns>The number of deleted entities.</returns>
-        Task<SqlCommandResult> DeleteRangeAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default);
+        Task<CommandResult> DeleteRangeAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Deletes all the entities in the <typeparamref name="TEntity"/> table.
@@ -463,6 +444,6 @@
         /// </code>
         /// </example>
         /// <returns>The number of deleted entities.</returns>
-        Task<SqlCommandResult> DeleteAllAsync<TEntity>(int? commandTimeout = null, CancellationToken cancellationToken = default);
+        Task<CommandResult> DeleteAllAsync<TEntity>(int? commandTimeout = null, CancellationToken cancellationToken = default);
     }
 }

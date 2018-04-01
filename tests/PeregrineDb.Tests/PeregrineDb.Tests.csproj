@@ -2,29 +2,47 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
   </PropertyGroup>
+
   <ItemGroup>
     <None Remove="Scripts\CreatePostgreSql.sql" />
     <None Remove="Scripts\CreateSqlServer2012.sql" />
   </ItemGroup>
+
   <ItemGroup>
     <EmbeddedResource Include="Scripts\CreatePostgreSql.sql" />
     <EmbeddedResource Include="Scripts\CreateSqlServer2012.sql" />
   </ItemGroup>
+
   <ItemGroup>
-    <PackageReference Include="berkeleybross.Pagination" Version="1.0.24" />
-    <PackageReference Include="Dapper" Version="1.50.2" />
+    <ProjectReference Include="..\..\src\PeregrineDb\PeregrineDb.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="4.19.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
     <PackageReference Include="Moq" Version="4.8.2" />
     <PackageReference Include="Npgsql" Version="3.2.0" />
-    <PackageReference Include="System.Data.Common" Version="4.1.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.1.0" />
+    <PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
+    <PackageReference Include="System.Collections.NonGeneric" Version="4.3.0" />
+    <PackageReference Include="System.Data.Common" Version="4.3.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
+    <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
+    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
+    <PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
     <PackageReference Include="xunit" Version="2.2.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
   </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\..\src\PeregrineDb\PeregrineDb.csproj" />
+    <PackageReference Include="berkeleybross.Pagination" Version="1.0.24" />
+    <PackageReference Include="Dapper" Version="1.50.4" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="4.3.0" />
+    <PackageReference Include="System.Diagnostics.Tools" Version="4.3.0" />
   </ItemGroup>
+
   <ItemGroup>
     <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
   </ItemGroup>

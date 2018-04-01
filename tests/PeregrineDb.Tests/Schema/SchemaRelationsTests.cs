@@ -370,6 +370,36 @@
                         },
                     o => o.RespectingRuntimeTypes().WithStrictOrdering());
             }
+
+            /// <summary>
+            ///   A 1-> B -> C
+            ///     2---^
+            /// </summary>
+            [Fact]
+            public void Works()
+            {
+                // Arrange
+                var sut = new SchemaRelations(new[] { "public.blob_container", "public.tenant", "public.test", "public.blob", "public.test_run" });
+                sut.AddRelationship("public.blob_container", "public.blob", "container_id", false);
+                sut.AddRelationship("public.tenant", "public.blob_container", "tenant_id", false);
+                sut.AddRelationship("public.test", "public.test_run", "test_id", false);
+                sut.AddRelationship("public.blob", "public.test_run", "artifact", true);
+                sut.AddRelationship("public.blob", "public.test_run", "artifact_diff", true);
+
+                // Assert
+                var result = sut.GetClearDataCommands();
+
+                // Assert
+                result.ShouldAllBeEquivalentTo(new object[]
+                        {
+                            new ClearTableCommand("public.test_run"),
+                            new ClearTableCommand("public.test"),
+                            new ClearTableCommand("public.blob"),
+                            new ClearTableCommand("public.blob_container"),
+                            new ClearTableCommand("public.tenant")
+                        },
+                    o => o.RespectingRuntimeTypes().WithStrictOrdering());
+            }
         }
     }
 }

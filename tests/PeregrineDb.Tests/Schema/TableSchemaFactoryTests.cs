@@ -89,7 +89,7 @@
 
                     // Assert
                     var column = result.Columns.Single();
-                    column.ParameterName.Should().Be("Id");
+                    column.Index.Should().Be(0);
                 }
 
                 private class SingleColumn
@@ -217,7 +217,7 @@
                     var result = this.PerformAct(typeof(KeyDefault));
 
                     // Assert
-                    result.PrimaryKeyColumns.Single().ParameterName.Should().Be("Id");
+                    result.PrimaryKeyColumns.Single().PropertyName.Should().Be("Id");
                 }
 
                 [Fact]
@@ -227,7 +227,7 @@
                     var result = this.PerformAct(typeof(KeyAlias));
 
                     // Assert
-                    result.PrimaryKeyColumns.Single().ParameterName.Should().Be("Key");
+                    result.PrimaryKeyColumns.Single().PropertyName.Should().Be("Key");
                 }
 
                 [Fact]
@@ -247,7 +247,7 @@
                     var result = this.PerformAct(typeof(KeyNotId));
 
                     // Assert
-                    result.PrimaryKeyColumns.Single().ParameterName.Should().Be("Key");
+                    result.PrimaryKeyColumns.Single().PropertyName.Should().Be("Key");
                 }
 
                 [Fact]
@@ -270,7 +270,7 @@
                     var result = this.PerformAct(typeof(KeyNotGenerated));
 
                     // Assert
-                    var column = result.Columns.Single(c => c.ParameterName == "Id");
+                    var column = result.Columns.Single(c => c.PropertyName == "Id");
                     column.Usage.IncludeInInsertStatements.Should().BeTrue();
                 }
 
@@ -281,7 +281,7 @@
                     var result = this.PerformAct(typeof(KeyComputed));
 
                     // Assert
-                    var column = result.Columns.Single(c => c.ParameterName == "Id");
+                    var column = result.Columns.Single(c => c.PropertyName == "Id");
                     column.Usage.IncludeInInsertStatements.Should().BeFalse();
                     column.Usage.IncludeInUpdateStatements.Should().BeFalse();
                 }
@@ -293,7 +293,7 @@
                     var result = this.PerformAct(typeof(KeyIdentity));
 
                     // Assert
-                    var column = result.Columns.Single(c => c.ParameterName == "Id");
+                    var column = result.Columns.Single(c => c.PropertyName == "Id");
                     column.Usage.IncludeInInsertStatements.Should().BeFalse();
                     column.Usage.IncludeInUpdateStatements.Should().BeFalse();
                 }
@@ -447,7 +447,7 @@
                     // Assert
                     var column = result.Single().Column;
                     column.ColumnName.Should().Be("'YearsOld'");
-                    column.ParameterName.Should().Be("Age");
+                    column.Index.Should().Be(1);
                 }
             }
 

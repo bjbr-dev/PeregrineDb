@@ -3,12 +3,12 @@
     /// <summary>
     /// Represents the result of a SQL command.
     /// </summary>
-    public struct SqlCommandResult
+    public struct CommandResult
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="SqlCommandResult"/> struct.
+        /// Initializes a new instance of the <see cref="CommandResult"/> struct.
         /// </summary>
-        public SqlCommandResult(int numRowsAffected)
+        public CommandResult(int numRowsAffected)
         {
             this.NumRowsAffected = numRowsAffected;
         }

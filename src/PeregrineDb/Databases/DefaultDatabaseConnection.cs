@@ -2,6 +2,7 @@
 {
     using System;
     using System.Data;
+    using PeregrineDb.Dialects;
     using PeregrineDb.SqlCommands;
 
     public abstract partial class DefaultDatabaseConnection
@@ -21,7 +22,7 @@
             this.leaveOpen = leaveOpen;
             this.Config = config ?? throw new ArgumentNullException(nameof(config));
 
-            this.commandFactory = new CommandFactory(config, transaction);
+            this.commandFactory = new CommandFactory(config);
         }
 
         public IDbConnection DbConnection
@@ -34,6 +35,8 @@
         }
 
         public PeregrineConfig Config { get; }
+
+        public IDialect Dialect => this.Config.Dialect;
 
         public void Dispose()
         {

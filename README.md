@@ -54,6 +54,6 @@ Don't forget, for practical examples of usage, you can also browse our extensive
 Simply add the nuget package [PeregrineDb](https://www.nuget.org/packages/PeregrineDb/) to your project.
 
 ## Licensing and Attribution
-See [License](LICENSE).
+This project can be used and distributed under the [MIT License](LICENSE).
 
-This project was written after using [Dapper.SimpleCRUD](https://github.com/ericdc1/Dapper.SimpleCRUD) by [Eric Coffman](https://github.com/ericdc1), and borrows it's excellent method conventions and API heavily. The code base is however completely rewritten.
+Please read [Notice](NOTICE.md) for licenses of other projects used by or inspirations of this projects.

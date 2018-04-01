@@ -13,11 +13,12 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// databaseConnection.Count<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// var minAge = 18;
+        /// databaseConnection.Count<UserEntity>($"WHERE Age > {minAge}");
         /// ]]>
         /// </code>
         /// </example>
-        int Count<TEntity>(string conditions = null, object parameters = null, int? commandTimeout = null);
+        int Count<TEntity>(FormattableString conditions = null, int? commandTimeout = null);
 
         /// <summary>
         /// Counts how many entities in the <typeparamref name="TEntity"/> table match the <paramref name="conditions"/>.
@@ -64,11 +65,12 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var user = databaseConnection.GetFirstOrDefault<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// var minAge = 18;
+        /// var user = databaseConnection.GetFirstOrDefault<UserEntity>($"WHERE Age > {minAge}");
         /// ]]>
         /// </code>
         /// </example>
-        TEntity GetFirstOrDefault<TEntity>(string conditions, string orderBy, object parameters = null, int? commandTimeout = null);
+        TEntity GetFirstOrDefault<TEntity>(FormattableString conditions, string orderBy, int? commandTimeout = null);
 
         /// <summary>
         /// Gets the first matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
@@ -90,11 +92,12 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var user = databaseConnection.GetFirst<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// var minAge = 18;
+        /// var user = databaseConnection.GetFirst<UserEntity>($"WHERE Age > {minAge}");
         /// ]]>
         /// </code>
         /// </example>
-        TEntity GetFirst<TEntity>(string conditions, string orderBy, object parameters = null, int? commandTimeout = null)
+        TEntity GetFirst<TEntity>(FormattableString conditions, string orderBy, int? commandTimeout = null)
             where TEntity : class;
 
         /// <summary>
@@ -118,11 +121,12 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var user = databaseConnection.GetSingleOrDefault<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// var minAge = 18;
+        /// var user = databaseConnection.GetSingleOrDefault<UserEntity>($"WHERE Age > {minAge}");
         /// ]]>
         /// </code>
         /// </example>
-        TEntity GetSingleOrDefault<TEntity>(string conditions, object parameters = null, int? commandTimeout = null);
+        TEntity GetSingleOrDefault<TEntity>(FormattableString conditions, int? commandTimeout = null);
 
         /// <summary>
         /// Gets the only matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
@@ -144,11 +148,12 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var user = databaseConnection.GetSingle<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// var minAge = 18;
+        /// var user = databaseConnection.GetSingle<UserEntity>($"WHERE Age > {minAge}");
         /// ]]>
         /// </code>
         /// </example>
-        TEntity GetSingle<TEntity>(string conditions, object parameters = null, int? commandTimeout = null)
+        TEntity GetSingle<TEntity>(FormattableString conditions, int? commandTimeout = null)
             where TEntity : class;
 
         /// <summary>
@@ -171,11 +176,12 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var users = databaseConnection.GetRange<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// var minAge = 18;
+        /// var users = databaseConnection.GetRange<UserEntity>($"WHERE Age > {minAge}");
         /// ]]>
         /// </code>
         /// </example>
-        IEnumerable<TEntity> GetRange<TEntity>(string conditions, object parameters = null, int? commandTimeout = null);
+        IEnumerable<TEntity> GetRange<TEntity>(FormattableString conditions, int? commandTimeout = null);
 
         /// <summary>
         /// Gets a collection of entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
@@ -195,12 +201,13 @@
         /// <example>
         /// <code>
         /// <![CDATA[
+        /// var minAge = 18;
         /// var pageBuilder = new PageIndexPageBuilder(3, 10);
-        /// var users = databaseConnection.GetPage<UserEntity>(pageBuilder, "WHERE Age > @MinAge", "Age DESC", new { MinAge = 18 });
+        /// var users = databaseConnection.GetPage<UserEntity>(pageBuilder, $"WHERE Age > {minAge}", "Age DESC");
         /// ]]>
         /// </code>
         /// </example>
-        PagedList<TEntity> GetPage<TEntity>(IPageBuilder pageBuilder, string conditions, string orderBy, object parameters = null, int? commandTimeout = null);
+        PagedList<TEntity> GetPage<TEntity>(IPageBuilder pageBuilder, FormattableString conditions, string orderBy, int? commandTimeout = null);
 
         /// <summary>
         /// Gets a collection of entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
@@ -269,7 +276,7 @@
         /// ]]>
         /// </code>
         /// </example>
-        SqlCommandResult InsertRange<TEntity>(IEnumerable<TEntity> entities, int? commandTimeout = null);
+        CommandResult InsertRange<TEntity>(IEnumerable<TEntity> entities, int? commandTimeout = null);
 
         /// <summary>
         /// <para>
@@ -336,7 +343,7 @@
         /// </code>
         /// </example>
         /// <returns>The number of affected records.</returns>
-        SqlCommandResult UpdateRange<TEntity>(IEnumerable<TEntity> entities, int? commandTimeout = null);
+        CommandResult UpdateRange<TEntity>(IEnumerable<TEntity> entities, int? commandTimeout = null);
 
         /// <summary>
         /// Deletes the entity in the <typeparamref name="TEntity"/> table, identified by its primary key.
@@ -370,12 +377,13 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// databaseConnection.DeleteRange<UserEntity>("WHERE Name LIKE '%Foo%'");
+        /// var searchTerm = "%Foo%";
+        /// databaseConnection.DeleteRange<UserEntity>($"WHERE Name LIKE {searchTerm}");
         /// ]]>
         /// </code>
         /// </example>
         /// <returns>The number of deleted entities.</returns>
-        SqlCommandResult DeleteRange<TEntity>(string conditions, object parameters = null, int? commandTimeout = null);
+        CommandResult DeleteRange<TEntity>(FormattableString conditions, int? commandTimeout = null);
 
         /// <summary>
         /// <para>Deletes all the entities in the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.</para>
@@ -384,12 +392,12 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// databaseConnection.DeleteRange<UserEntity>("WHERE Name LIKE '%Foo%'");
+        /// databaseConnection.DeleteRange<UserEntity>(new { Name = "Foo" });
         /// ]]>
         /// </code>
         /// </example>
         /// <returns>The number of deleted entities.</returns>
-        SqlCommandResult DeleteRange<TEntity>(object conditions, int? commandTimeout = null);
+        CommandResult DeleteRange<TEntity>(object conditions, int? commandTimeout = null);
 
         /// <summary>
         /// Deletes all the entities in the <typeparamref name="TEntity"/> table.
@@ -402,6 +410,6 @@
         /// </code>
         /// </example>
         /// <returns>The number of deleted entities.</returns>
-        SqlCommandResult DeleteAll<TEntity>(int? commandTimeout = null);
+        CommandResult DeleteAll<TEntity>(int? commandTimeout = null);
     }
 }

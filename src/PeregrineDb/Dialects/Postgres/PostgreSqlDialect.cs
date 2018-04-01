@@ -7,12 +7,14 @@
     using Pagination;
     using PeregrineDb.Schema;
     using PeregrineDb.Schema.Relations;
+    using PeregrineDb.SqlCommands;
+    using PeregrineDb.Utils;
 
     /// <summary>
     /// Implementation of <see cref="IDialect"/> for the PostgreSQL DBMS.
     /// </summary>
     public class PostgreSqlDialect
-        : BaseDialect, ISchemaQueryDialect
+        : StandardDialect, ISchemaQueryDialect
     {
         private static readonly ImmutableArray<string> ColumnTypes;
 
@@ -53,7 +55,7 @@
         }
 
         /// <inheritdoc />
-        public override string MakeInsertReturningIdentityStatement(TableSchema tableSchema)
+        public override FormattableString MakeInsertReturningIdentityStatement(TableSchema tableSchema, object entity)
         {
             Func<ColumnSchema, bool> include = p => p.Usage.IncludeInInsertStatements;
             var columns = tableSchema.Columns;
@@ -61,12 +63,12 @@
             var sql = new StringBuilder("INSERT INTO ")
                 .Append(tableSchema.Name)
                 .Append(" (").AppendColumnNames(columns, include).Append(")");
-            sql.AppendClause("VALUES (").AppendParameterNames(columns, include).Append(")");
+            sql.AppendClause("VALUES (").AppendParameterPlaceholders(columns, include).Append(")");
             sql.AppendClause("RETURNING ").AppendSelectPropertiesClause(tableSchema.PrimaryKeyColumns);
-            return sql.ToString();
+            return new SqlString(sql.ToString(), GetArguments(tableSchema.Columns, entity));
         }
 
-        public override string MakeGetTopNStatement(TableSchema tableSchema, int take, string conditions, string orderBy)
+        public override FormattableString MakeGetTopNStatement(TableSchema tableSchema, int take, FormattableString conditions, string orderBy)
         {
             var sql = new StringBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
@@ -77,11 +79,11 @@
             }
 
             sql.AppendLine().Append("LIMIT ").Append(take);
-            return sql.ToString();
+            return new SqlString(sql.ToString(), conditions?.GetArguments());
         }
 
         /// <inheritdoc />
-        public override string MakeGetPageStatement(TableSchema tableSchema, Page page, string conditions, string orderBy)
+        public override FormattableString MakeGetPageStatement(TableSchema tableSchema, Page page, FormattableString conditions, string orderBy)
         {
             if (string.IsNullOrWhiteSpace(orderBy))
             {
@@ -93,11 +95,11 @@
             sql.AppendClause(conditions);
             sql.AppendClause("ORDER BY ").Append(orderBy);
             sql.AppendLine().AppendFormat("LIMIT {1} OFFSET {0}", page.FirstItemIndex, page.PageSize);
-            return sql.ToString();
+            return new SqlString(sql.ToString(), conditions?.GetArguments());
         }
 
         /// <inheritdoc />
-        public override string MakeCreateTempTableStatement(TableSchema tableSchema)
+        public override FormattableString MakeCreateTempTableStatement(TableSchema tableSchema)
         {
             if (tableSchema.Columns.IsEmpty)
             {
@@ -124,13 +126,13 @@
 
             sql.AppendLine();
             sql.Append(")");
-            return sql.ToString();
+            return new SqlString(sql.ToString());
         }
 
         /// <inheritdoc />
-        public override string MakeDropTempTableStatement(TableSchema tableSchema)
+        public override FormattableString MakeDropTempTableStatement(TableSchema tableSchema)
         {
-            return "DROP TABLE " + tableSchema.Name;
+            return new SqlString("DROP TABLE " + tableSchema.Name);
         }
 
         /// <inheritdoc />
@@ -192,17 +194,17 @@
             }
         }
 
-        public string MakeGetAllTablesStatement()
+        public FormattableString MakeGetAllTablesStatement()
         {
-            return @"
+            return new SqlString(@"
 SELECT table_schema || '.' || table_name AS Name
 FROM information_schema.tables
-WHERE table_type='BASE TABLE' AND table_schema <> 'information_schema' AND table_schema NOT LIKE 'pg_%';";
+WHERE table_type='BASE TABLE' AND table_schema <> 'information_schema' AND table_schema NOT LIKE 'pg_%';");
         }
 
-        public string MakeGetAllRelationsStatement()
+        public FormattableString MakeGetAllRelationsStatement()
         {
-            return @"
+            return new SqlString(@"
 SELECT target_table.table_schema || '.' || target_table.table_name AS TargetTable,
        source_table.table_schema || '.' || source_table.table_name AS SourceTable,
        source_column.column_name AS SourceColumn,
@@ -211,14 +213,14 @@ FROM information_schema.table_constraints AS source_table
 JOIN information_schema.key_column_usage AS kcu ON source_table.constraint_name = kcu.constraint_name
 JOIN information_schema.constraint_column_usage AS target_table ON target_table.constraint_name = source_table.constraint_name
 JOIN information_schema.columns AS source_column ON kcu.table_name = source_column.table_name AND kcu.table_schema = source_column.table_schema AND kcu.column_name = source_column.column_name
-WHERE constraint_type = 'FOREIGN KEY';";
+WHERE constraint_type = 'FOREIGN KEY';");
         }
 
-        public string MakeSetColumnNullStatement(string tableName, string columnName)
+        public FormattableString MakeSetColumnNullStatement(string tableName, string columnName)
         {
             var sql = new StringBuilder("UPDATE ").Append(tableName);
             sql.AppendClause("SET ").Append(columnName).Append(" = NULL");
-            return sql.ToString();
+            return new SqlString(sql.ToString());
         }
     }
 }

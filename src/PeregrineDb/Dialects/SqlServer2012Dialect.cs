@@ -7,12 +7,13 @@
     using Pagination;
     using PeregrineDb.Schema;
     using PeregrineDb.Schema.Relations;
+    using PeregrineDb.SqlCommands;
 
     /// <summary>
     /// Implementation of <see cref="IDialect"/> for SQL Server 2012 and above
     /// </summary>
     public class SqlServer2012Dialect
-        : BaseDialect, ISchemaQueryDialect
+        : StandardDialect, ISchemaQueryDialect
     {
         private static readonly ImmutableArray<string> ColumnTypes;
 
@@ -53,13 +54,13 @@
         }
 
         /// <inheritdoc />
-        public override string MakeInsertReturningIdentityStatement(TableSchema tableSchema)
+        public override FormattableString MakeInsertReturningIdentityStatement(TableSchema tableSchema, object entity)
         {
-            var getIdentitySql = "SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]";
-            return this.MakeInsertStatement(tableSchema) + Environment.NewLine + getIdentitySql;
+            var sql = this.MakeInsertStatement(tableSchema, entity);
+            return new SqlString(sql.Format + Environment.NewLine + "SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]", sql.GetArguments());
         }
 
-        public override string MakeGetTopNStatement(TableSchema tableSchema, int take, string conditions, string orderBy)
+        public override FormattableString MakeGetTopNStatement(TableSchema tableSchema, int take, FormattableString conditions, string orderBy)
         {
             var sql = new StringBuilder("SELECT TOP ").Append(take).Append(" ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
@@ -69,11 +70,11 @@
                 sql.AppendClause("ORDER BY ").Append(orderBy);
             }
 
-            return sql.ToString();
+            return new SqlString(sql.ToString(), conditions?.GetArguments());
         }
 
         /// <inheritdoc />
-        public override string MakeGetPageStatement(TableSchema tableSchema, Page page, string conditions, string orderBy)
+        public override FormattableString MakeGetPageStatement(TableSchema tableSchema, Page page, FormattableString conditions, string orderBy)
         {
             if (string.IsNullOrWhiteSpace(orderBy))
             {
@@ -85,11 +86,11 @@
             sql.AppendClause(conditions);
             sql.AppendClause("ORDER BY ").Append(orderBy);
             sql.AppendLine().AppendFormat("OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY", page.FirstItemIndex, page.PageSize);
-            return sql.ToString();
+            return new SqlString(sql.ToString(), conditions?.GetArguments());
         }
 
         /// <inheritdoc />
-        public override string MakeCreateTempTableStatement(TableSchema tableSchema)
+        public override FormattableString MakeCreateTempTableStatement(TableSchema tableSchema)
         {
             EnsureValidSchemaForTempTables(tableSchema);
 
@@ -113,15 +114,15 @@
 
             sql.AppendLine();
             sql.Append(");");
-            return sql.ToString();
+            return new SqlString(sql.ToString());
         }
 
         /// <inheritdoc />
-        public override string MakeDropTempTableStatement(TableSchema tableSchema)
+        public override FormattableString MakeDropTempTableStatement(TableSchema tableSchema)
         {
             EnsureValidSchemaForTempTables(tableSchema);
 
-            return "DROP TABLE " + tableSchema.Name;
+            return new SqlString("DROP TABLE " + tableSchema.Name);
         }
 
         /// <inheritdoc />
@@ -142,31 +143,31 @@
             return "[" + schema + "].[" + tableName + "]";
         }
 
-        public string MakeGetAllTablesStatement()
+        public FormattableString MakeGetAllTablesStatement()
         {
-            return @"
+            return new SqlString(@"
 SELECT TABLE_SCHEMA + '.' + TABLE_NAME AS Name
 FROM  INFORMATION_SCHEMA.TABLES
-WHERE TABLE_TYPE='BASE TABLE'";
+WHERE TABLE_TYPE='BASE TABLE'");
         }
 
-        public string MakeGetAllRelationsStatement()
+        public FormattableString MakeGetAllRelationsStatement()
         {
-            return @"
+            return new SqlString(@"
 SELECT OBJECT_SCHEMA_NAME(foreign_key.referenced_object_id) + '.' + OBJECT_NAME(foreign_key.referenced_object_id) AS TargetTable,
        OBJECT_SCHEMA_NAME(foreign_key.parent_object_id) + '.' + OBJECT_NAME(foreign_key.parent_object_id) AS SourceTable,
        primary_column.name AS SourceColumn,
        primary_column.is_nullable AS SourceColumnIsOptional
 FROM sys.foreign_key_columns AS foreign_key
 INNER JOIN sys.columns AS primary_column ON foreign_key.parent_object_id = primary_column.[object_id] AND foreign_key.parent_column_id = primary_column.column_id
-INNER JOIN sys.columns AS foreign_column ON foreign_key.referenced_column_id = foreign_column.column_id AND foreign_key.referenced_object_id = foreign_column.[object_id]";
+INNER JOIN sys.columns AS foreign_column ON foreign_key.referenced_column_id = foreign_column.column_id AND foreign_key.referenced_object_id = foreign_column.[object_id]");
         }
 
-        public string MakeSetColumnNullStatement(string tableName, string columnName)
+        public FormattableString MakeSetColumnNullStatement(string tableName, string columnName)
         {
             var sql = new StringBuilder("UPDATE ").Append(tableName);
             sql.AppendClause("SET ").Append(columnName).Append(" = NULL");
-            return sql.ToString();
+            return new SqlString(sql.ToString());
         }
 
         public override string ToString()

@@ -14,7 +14,7 @@
     /// </summary>
     public class PeregrineConfig
     {
-        private static readonly ImmutableDictionary<Type, DbType> DefaultSqlTypeMapping = new Dictionary<Type, DbType>
+        internal static readonly ImmutableDictionary<Type, DbType> DefaultSqlTypeMapping = new Dictionary<Type, DbType>
             {
                 [typeof(byte)] = DbType.Byte,
                 [typeof(sbyte)] = DbType.SByte,
