@@ -18,7 +18,7 @@
                 // Arrange
                 var database = new Mock<IDbConnection>();
 
-                var sut = new DefaultDatabase(database.Object, PeregrineConfig.Postgres);
+                var sut = DefaultDatabase.From(database.Object, PeregrineConfig.Postgres);
 
                 // Act
                 sut.Dispose();
@@ -37,7 +37,7 @@
                 var database = new Mock<IDbConnection>();
                 database.Setup(d => d.BeginTransaction()).Returns((IDbTransaction)null);
 
-                var sut = new DefaultDatabase(database.Object, PeregrineConfig.Postgres);
+                var sut = DefaultDatabase.From(database.Object, PeregrineConfig.Postgres);
 
                 // Act
                 Action act = () => sut.StartUnitOfWork();
@@ -55,7 +55,7 @@
                 var transaction = new Mock<IDbTransaction>();
                 database.Setup(d => d.BeginTransaction()).Returns(transaction.Object);
 
-                var sut = new DefaultDatabase(database.Object, PeregrineConfig.Postgres);
+                var sut = DefaultDatabase.From(database.Object, PeregrineConfig.Postgres);
 
                 // Act
                 var result = sut.StartUnitOfWork();
@@ -72,7 +72,7 @@
                 var transaction = new Mock<IDbTransaction>();
                 database.Setup(d => d.BeginTransaction()).Returns(transaction.Object);
 
-                var sut = new DefaultDatabase(database.Object, PeregrineConfig.Postgres);
+                var sut = DefaultDatabase.From(database.Object, PeregrineConfig.Postgres);
 
                 // Act
                 using (sut.StartUnitOfWork())
@@ -92,7 +92,7 @@
                 // Arrange
                 var database = new Mock<IDbConnection>();
 
-                var sut = new DefaultDatabase(database.Object, PeregrineConfig.Postgres);
+                var sut = DefaultDatabase.From(database.Object, PeregrineConfig.Postgres);
 
                 // Act
                 Action act = () => sut.StartUnitOfWork(IsolationLevel.ReadCommitted);
@@ -110,7 +110,7 @@
                 var transaction = new Mock<IDbTransaction>();
                 database.Setup(d => d.BeginTransaction(IsolationLevel.ReadCommitted)).Returns(transaction.Object);
 
-                var sut = new DefaultDatabase(database.Object, PeregrineConfig.Postgres);
+                var sut = DefaultDatabase.From(database.Object, PeregrineConfig.Postgres);
 
                 // Act
                 var result = sut.StartUnitOfWork(IsolationLevel.ReadCommitted);
@@ -127,7 +127,7 @@
                 var transaction = new Mock<IDbTransaction>();
                 database.Setup(d => d.BeginTransaction(IsolationLevel.ReadCommitted)).Returns(transaction.Object);
 
-                var sut = new DefaultDatabase(database.Object, PeregrineConfig.Postgres);
+                var sut = DefaultDatabase.From(database.Object, PeregrineConfig.Postgres);
 
                 // Act
                 using (sut.StartUnitOfWork(IsolationLevel.ReadCommitted))

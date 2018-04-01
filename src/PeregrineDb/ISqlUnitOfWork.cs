@@ -2,10 +2,12 @@
 {
     using System.Data;
 
-    public interface ISqlUnitOfWork
-        : ISqlConnection
+    public interface ISqlUnitOfWork<out TConnection, out TTransaction>
+        : ISqlConnection<TConnection>
+        where TConnection : IDbConnection
+        where TTransaction : IDbTransaction
     {
-        IDbTransaction Transaction { get; }
+        TTransaction Transaction { get; }
 
         void SaveChanges();
 

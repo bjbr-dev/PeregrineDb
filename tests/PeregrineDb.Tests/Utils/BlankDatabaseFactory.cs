@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Concurrent;
+    using System.Data;
     using System.Data.SqlClient;
     using System.IO;
     using System.Linq;
@@ -25,12 +26,12 @@
         private static readonly object Sync = new object();
         private static bool cleanedUp;
 
-        public static PooledInstance<IDatabase> MakeDatabase(IDialect dialect)
+        public static PooledInstance<IDatabase<IDbConnection>> MakeDatabase(IDialect dialect)
         {
             return MakeDatabase(PeregrineConfig.SqlServer2012.WithDialect(dialect));
         }
 
-        public static PooledInstance<IDatabase> MakeDatabase(PeregrineConfig config)
+        public static PooledInstance<IDatabase<IDbConnection>> MakeDatabase(PeregrineConfig config)
         {
             CleanUp();
             
@@ -42,13 +43,13 @@
             {
                 pooledConnectionString = dialectPool.Acquire();
 
-                IDatabase database = null;
+                IDatabase<IDbConnection> database = null;
                 try
                 {
                     database = OpenDatabase(pooledConnectionString.Item);
                     DataWiper.ClearAllData(database);
 
-                    return new PooledInstance<IDatabase>(database, d =>
+                    return new PooledInstance<IDatabase<IDbConnection>>(database, d =>
                     {
                         d.Item.Dispose();
                         pooledConnectionString.Dispose();
@@ -79,7 +80,7 @@
                 }
             }
 
-            IDatabase OpenDatabase(string connectionString)
+            IDatabase<IDbConnection> OpenDatabase(string connectionString)
             {
                 switch (dialect)
                 {
@@ -90,7 +91,7 @@
                         {
                             dbConnection = new SqlConnection(connectionString);
                             dbConnection.Open();
-                            return new DefaultDatabase(dbConnection, config);
+                            return new DefaultDatabase<SqlConnection>(dbConnection, config);
                         }
                         catch
                         {
@@ -106,7 +107,7 @@
                         {
                             dbConnection = new NpgsqlConnection(connectionString);
                             dbConnection.Open();
-                            return new DefaultDatabase(dbConnection, config);
+                            return new DefaultDatabase<NpgsqlConnection>(dbConnection, config);
                         }
                         catch
                         {
@@ -134,7 +135,7 @@
                 {
                     con.Open();
 
-                    using (var database = new DefaultDatabase(con, PeregrineConfig.SqlServer2012))
+                    using (var database = DefaultDatabase.From(con, PeregrineConfig.SqlServer2012))
                     {
                         var databases = database.Query<string>($"SELECT name FROM sys.databases")
                                                 .Where(s => s.StartsWith(DatabasePrefix));
@@ -161,7 +162,7 @@
                 {
                     con.Open();
 
-                    using (var database = new DefaultDatabase(con, PeregrineConfig.Postgres))
+                    using (var database = DefaultDatabase.From(con, PeregrineConfig.Postgres))
                     {
                         var databases = database.Query<string>($"SELECT datname FROM pg_database")
                                                 .Where(s => s.StartsWith(DatabasePrefix));
@@ -196,7 +197,7 @@
             {
                 con.Open();
 
-                using (var database = new DefaultDatabase(con, PeregrineConfig.SqlServer2012))
+                using (var database = DefaultDatabase.From(con, PeregrineConfig.SqlServer2012))
                 {
                     database.Execute(new SqlString("CREATE DATABASE " + databaseName));
                 }
@@ -213,7 +214,7 @@
             {
                 con.Open();
 
-                using (var database = new DefaultDatabase(con, PeregrineConfig.SqlServer2012))
+                using (var database = DefaultDatabase.From(con, PeregrineConfig.SqlServer2012))
                 {
                     database.Execute($"CREATE SCHEMA Other;");
                     database.Execute(new SqlString(sql));
@@ -230,7 +231,7 @@
             {
                 con.Open();
 
-                using (var database = new DefaultDatabase(con, PeregrineConfig.Postgres))
+                using (var database = DefaultDatabase.From(con, PeregrineConfig.Postgres))
                 {
                     database.Execute(new SqlString("CREATE DATABASE " + databaseName));
                 }
@@ -245,7 +246,7 @@
             using (var con = new NpgsqlConnection(connectionString))
             {
                 con.Open();
-                using (var database = new DefaultDatabase(con, PeregrineConfig.Postgres))
+                using (var database = DefaultDatabase.From(con, PeregrineConfig.Postgres))
                 {
                     database.Execute(new SqlString(GetSql("CreatePostgreSql.sql")));
                 }
