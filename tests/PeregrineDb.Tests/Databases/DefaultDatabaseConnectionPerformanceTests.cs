@@ -13,10 +13,8 @@
     {
         private long PerformInsert(IDialect dialect)
         {
-            using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+            using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
             {
-                var database = instance.Item;
-
                 // Arrange
                 var entities = Enumerable.Range(0, 30000).Select(i => new SimpleBenchmarkEntity
                     {
@@ -48,10 +46,9 @@
 
         private long PerformInsertRange(IDialect dialect)
         {
-            using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+            using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
             {
                 // Arrange
-                var database = instance.Item;
                 var entities = Enumerable.Range(0, 30000).Select(i => new SimpleBenchmarkEntity
                     {
                         FirstName = $"First Name {i}",

@@ -15,12 +15,6 @@
                 new[] { Dialect.PostgreSql }
             };
 
-        public static IEnumerable<object[]> TestDialectsWithData(string data) => new[]
-            {
-                new object[] { Dialect.SqlServer2012, data },
-                new object[] { Dialect.PostgreSql, data }
-            };
-
         public class Execute
             : DefaultDatabaseConnectionStatementsTests
         {
@@ -28,10 +22,8 @@
             [MemberData(nameof(TestDialects))]
             public void Can_execute_inside_a_transaction(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    var database = instance.Item;
-
                     // Act
                     using (var unitOfWork = database.StartUnitOfWork())
                     {

@@ -26,11 +26,9 @@
             [MemberData(nameof(TestDialects))]
             public void Deletes_data_from_simple_table(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
-
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 3", Age = 10 });
@@ -48,10 +46,9 @@
             [MemberData(nameof(TestDialects))]
             public void Ignores_specified_tables(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
 
                     string tableName;
@@ -79,10 +76,9 @@
             [MemberData(nameof(TestDialects))]
             public void Deletes_data_from_foreign_keyed_tables(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var userId = database.Insert<int>(new User { Name = "Some Name 1", Age = 10 });
 
                     database.Insert(new SimpleForeignKey { Name = "Some Name 1", UserId = userId });
@@ -100,10 +96,9 @@
             [MemberData(nameof(TestDialects))]
             public void Errors_when_an_ignored_table_references_an_unignored_one(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var userId = database.Insert<int>(new User { Name = "Some Name 1", Age = 10 });
 
                     database.Insert(new SimpleForeignKey { Name = "Some Name 1", UserId = userId });
@@ -136,10 +131,9 @@
             [MemberData(nameof(TestDialects))]
             public void Deletes_data_from_self_referenced_foreign_keyed_tables(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = database.Insert<int>(new SelfReferenceForeignKey());
                     database.Insert(new SelfReferenceForeignKey { ForeignId = id });
 
@@ -155,10 +149,9 @@
             [MemberData(nameof(TestDialects))]
             public void Deletes_data_from_cyclic_foreign_keyed_tables(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var a = new CyclicForeignKeyA();
                     a.Id = database.Insert<int>(a);
 
@@ -185,10 +178,9 @@
             [MemberData(nameof(TestDialects))]
             public void Deletes_data_from_tables_in_other_schemas(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var otherId = database.Insert<int>(new SchemaOther { Name = "Other" });
                     database.Insert(new SchemaSimpleForeignKeys { SchemaOtherId = otherId });
 
@@ -205,10 +197,9 @@
             [MemberData(nameof(TestDialects))]
             public void Ignores_tables_in_other_schemas(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new SchemaOther { Name = "Other" });
                     string name;
                     switch (dialect)
@@ -235,10 +226,9 @@
             [MemberData(nameof(TestDialects))]
             public void Can_delete_tables_which_reference_another_twice(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = database.Insert<int>(new WipeMultipleForeignKeyTarget { Name = "Other" });
                     database.Insert(new WipeMultipleForeignKeySource { NameId = id, OptionalNameId = id });
 

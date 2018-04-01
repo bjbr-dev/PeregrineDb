@@ -48,10 +48,9 @@
             [MemberData(nameof(TestDialects))]
             public void Creates_a_temp_table(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(PeregrineConfig.SqlServer2012.WithTableNameFactory(this.tableNameFactory.Object)))
+                using (var database = BlankDatabaseFactory.MakeDatabase(PeregrineConfig.SqlServer2012.WithTableNameFactory(this.tableNameFactory.Object)))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var schema = database.Config.MakeSchema<TempNoKey>();
 
                     // Act
@@ -69,10 +68,9 @@
             [MemberData(nameof(TestDialects))]
             public void Adds_entities_to_temp_table(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(PeregrineConfig.SqlServer2012.WithTableNameFactory(this.tableNameFactory.Object)))
+                using (var database = BlankDatabaseFactory.MakeDatabase(PeregrineConfig.SqlServer2012.WithTableNameFactory(this.tableNameFactory.Object)))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entities = new[]
                         {
                             new TempNoKey { Name = "Bobby", Age = 4 },
@@ -110,10 +108,9 @@
             [MemberData(nameof(TestDialects), MemberType = typeof(DefaultDatabaseConnectionTempTableTests))]
             public void Throws_exception_if_names_do_not_match(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(PeregrineConfig.SqlServer2012.WithTableNameFactory(this.tableNameFactory.Object)))
+                using (var database = BlankDatabaseFactory.MakeDatabase(PeregrineConfig.SqlServer2012.WithTableNameFactory(this.tableNameFactory.Object)))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var schema = database.Config.MakeSchema<TempNoKey>();
                     database.CreateTempTable(Enumerable.Empty<TempNoKey>());
 
@@ -132,10 +129,9 @@
             [MemberData(nameof(TestDialects), MemberType = typeof(DefaultDatabaseConnectionTempTableTests))]
             public void Drops_temporary_table(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(PeregrineConfig.SqlServer2012.WithTableNameFactory(this.tableNameFactory.Object)))
+                using (var database = BlankDatabaseFactory.MakeDatabase(PeregrineConfig.SqlServer2012.WithTableNameFactory(this.tableNameFactory.Object)))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var schema = database.Config.MakeSchema<TempNoKey>();
                     database.CreateTempTable(Enumerable.Empty<TempNoKey>());
 

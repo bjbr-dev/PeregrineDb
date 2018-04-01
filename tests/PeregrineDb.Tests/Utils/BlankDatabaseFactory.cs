@@ -26,12 +26,12 @@
         private static readonly object Sync = new object();
         private static bool cleanedUp;
 
-        public static PooledInstance<IDatabase<IDbConnection>> MakeDatabase(IDialect dialect)
+        public static IDatabase<IDbConnection> MakeDatabase(IDialect dialect)
         {
             return MakeDatabase(PeregrineConfig.SqlServer2012.WithDialect(dialect));
         }
 
-        public static PooledInstance<IDatabase<IDbConnection>> MakeDatabase(PeregrineConfig config)
+        public static IDatabase<IDbConnection> MakeDatabase(PeregrineConfig config)
         {
             CleanUp();
             
@@ -43,21 +43,20 @@
             {
                 pooledConnectionString = dialectPool.Acquire();
 
-                IDatabase<IDbConnection> database = null;
+                IDbConnection connection = null;
                 try
                 {
-                    database = OpenDatabase(pooledConnectionString.Item);
+                    connection = OpenDatabase(pooledConnectionString.Item);
+                    var pooledConnection = new PooledConnection<IDbConnection>(pooledConnectionString, connection);
+                    var database = DefaultDatabase.From(pooledConnection, config);
+
                     DataWiper.ClearAllData(database);
 
-                    return new PooledInstance<IDatabase<IDbConnection>>(database, d =>
-                    {
-                        d.Item.Dispose();
-                        pooledConnectionString.Dispose();
-                    });
+                    return database;
                 }
                 catch
                 {
-                    database?.Dispose();
+                    connection?.Dispose();
                     throw;
                 }
             }
@@ -80,7 +79,7 @@
                 }
             }
 
-            IDatabase<IDbConnection> OpenDatabase(string connectionString)
+            IDbConnection OpenDatabase(string connectionString)
             {
                 switch (dialect)
                 {
@@ -91,7 +90,7 @@
                         {
                             dbConnection = new SqlConnection(connectionString);
                             dbConnection.Open();
-                            return new DefaultDatabase<SqlConnection>(dbConnection, config);
+                            return dbConnection;
                         }
                         catch
                         {
@@ -107,7 +106,7 @@
                         {
                             dbConnection = new NpgsqlConnection(connectionString);
                             dbConnection.Open();
-                            return new DefaultDatabase<NpgsqlConnection>(dbConnection, config);
+                            return dbConnection;
                         }
                         catch
                         {

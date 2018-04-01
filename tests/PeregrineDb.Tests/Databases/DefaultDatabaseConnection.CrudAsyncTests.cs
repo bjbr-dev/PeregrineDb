@@ -34,10 +34,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Counts_entities(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 3", Age = 10 });
@@ -55,10 +54,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Counts_entities_matching_conditions(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 3", Age = 10 });
@@ -80,10 +78,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Counts_entities_in_alternate_schema(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert<int>(new SchemaOther { Name = "Some Name" });
                     database.Insert<int>(new SchemaOther { Name = "Some Name" });
                     database.Insert<int>(new SchemaOther { Name = "Some Name" });
@@ -108,10 +105,8 @@
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_when_conditions_is_null(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
                     // Act
                     Func<Task> act = async () => await database.CountAsync<User>((object)null);
 
@@ -125,10 +120,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Counts_all_entities_when_conditions_is_empty(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 3", Age = 10 });
@@ -150,10 +144,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Counts_entities_matching_conditions(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 3", Age = 10 });
@@ -178,10 +171,9 @@
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_when_entity_has_no_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new NoKey { Name = "Some Name", Age = 1 });
 
                     // Act
@@ -197,10 +189,8 @@
             [MemberData(nameof(TestDialects))]
             public async Task Returns_null_when_entity_is_not_found(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
                     // Act
                     var entity = await database.FindAsync<KeyInt32>(12);
 
@@ -214,10 +204,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Finds_entity_by_Int32_primary_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = database.Insert<int>(new KeyInt32 { Name = "Some Name" });
 
                     // Act
@@ -236,10 +225,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Finds_entity_by_Int64_primary_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = database.Insert<long>(new KeyInt64 { Name = "Some Name" });
 
                     // Act
@@ -258,10 +246,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Finds_entity_by_string_primary_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new KeyString { Name = "Some Name", Age = 42 });
 
                     // Act
@@ -280,10 +267,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Finds_entity_by_guid_primary_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = Guid.NewGuid();
                     database.Insert(new KeyGuid { Id = id, Name = "Some Name" });
 
@@ -303,10 +289,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Finds_entity_by_composite_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new CompositeKeys { Key1 = 1, Key2 = 1, Name = "Some Name" });
                     var id = new { Key1 = 1, Key2 = 1 };
 
@@ -326,10 +311,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Finds_entities_in_alternate_schema(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = database.Insert<int>(new SchemaOther { Name = "Some Name" });
 
                     // Act
@@ -348,10 +332,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Finds_entities_with_enum_property(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = database.Insert<int>(new PropertyEnum { FavoriteColor = Color.Green });
 
                     // Act
@@ -370,10 +353,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Finds_entities_with_all_possible_types(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = database.Insert<int>(
                         new PropertyAllPossibleTypes
                             {
@@ -442,10 +424,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Ignores_columns_which_are_not_mapped(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = database.Insert<int>(new PropertyNotMapped { Firstname = "Bobby", LastName = "DropTables", Age = 10 });
 
                     // Act
@@ -470,10 +451,9 @@
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_when_entity_has_no_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new NoKey { Name = "Some Name", Age = 1 });
 
                     // Act
@@ -489,10 +469,9 @@
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_when_entity_is_not_found(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     Func<Task> act = async () => await database.GetAsync<KeyInt32>(5);
 
                     // Assert
@@ -505,10 +484,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Finds_entity_by_Int32_primary_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = database.Insert<int>(new KeyInt32 { Name = "Some Name" });
 
                     // Act
@@ -527,10 +505,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Finds_entity_by_Int64_primary_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = database.Insert<long>(new KeyInt64 { Name = "Some Name" });
 
                     // Act
@@ -549,10 +526,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Finds_entity_by_string_primary_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new KeyString { Name = "Some Name", Age = 42 });
 
                     // Act
@@ -571,10 +547,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Finds_entity_by_guid_primary_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = Guid.NewGuid();
                     database.Insert(new KeyGuid { Id = id, Name = "Some Name" });
 
@@ -594,10 +569,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Finds_entity_by_composite_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new CompositeKeys { Key1 = 1, Key2 = 1, Name = "Some Name" });
                     var id = new { Key1 = 1, Key2 = 1 };
 
@@ -617,10 +591,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Finds_entities_in_alternate_schema(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = database.Insert<int>(new SchemaOther { Name = "Some Name" });
 
                     // Act
@@ -639,10 +612,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Ignores_columns_which_are_not_mapped(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = database.Insert<int>(new PropertyNotMapped { Firstname = "Bobby", LastName = "DropTables", Age = 10 });
 
                     // Act
@@ -667,10 +639,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Filters_result_by_conditions(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 3", Age = 10 });
@@ -692,10 +663,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Returns_everything_when_conditions_is_null(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 3", Age = 10 });
@@ -720,10 +690,8 @@
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_when_conditions_is_null(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
                     // Act
                     Func<Task> act = async () => await database.GetRangeAsync<User>((object)null);
 
@@ -737,10 +705,8 @@
             [MemberData(nameof(TestDialects))]
             public async Task Returns_all_when_conditions_is_empty(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
                     // Arrange
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
@@ -763,10 +729,8 @@
             [MemberData(nameof(TestDialects))]
             public async Task Filters_result_by_conditions(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
                     // Arrange
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
@@ -789,10 +753,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Matches_column_name_case_insensitively(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 3", Age = 10 });
@@ -814,11 +777,8 @@
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_when_column_not_found(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
-
                     // Act
                     Func<Task> act = async () => await database.GetRangeAsync<User>(new { Ages = 10 });
 
@@ -832,10 +792,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task When_value_is_not_null_does_not_find_nulls(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new PropertyNullable { Name = null });
                     database.Insert(new PropertyNullable { Name = "Some Name 3" });
                     database.Insert(new PropertyNullable { Name = null });
@@ -856,10 +815,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task When_value_is_null_finds_nulls(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new PropertyNullable { Name = null });
                     database.Insert(new PropertyNullable { Name = "Some Name 3" });
                     database.Insert(new PropertyNullable { Name = null });
@@ -880,10 +838,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Filters_on_multiple_properties(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 12 });
@@ -907,10 +864,8 @@
             [MemberData(nameof(TestDialects))]
             public async Task Returns_empty_list_when_there_are_no_entities(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
                     // Act
                     var pageBuilder = new PageIndexPageBuilder(1, 10);
                     var users = await database.GetPageAsync<User>(pageBuilder, null, "Age");
@@ -924,10 +879,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Filters_result_by_conditions(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 3", Age = 10 });
@@ -951,10 +905,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Gets_first_page(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 3", Age = 10 });
@@ -981,10 +934,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Gets_second_page(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 3", Age = 10 });
@@ -1010,10 +962,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Returns_empty_set_past_last_page(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 3", Age = 10 });
@@ -1037,10 +988,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Returns_page_from_everything_when_conditions_is_null(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 3", Age = 10 });
@@ -1066,11 +1016,8 @@
             [MemberData(nameof(TestDialects))]
             public async Task Returns_empty_list_when_there_are_no_entities(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
-
                     // Act
                     var pageBuilder = new PageIndexPageBuilder(1, 10);
                     var users = await database.GetPageAsync<User>(pageBuilder, new { Age = 10 }, "Age");
@@ -1085,10 +1032,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Filters_result_by_conditions(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 3", Age = 10 });
@@ -1111,10 +1057,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Gets_first_page(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 3", Age = 10 });
@@ -1139,10 +1084,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Gets_second_page(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 3", Age = 10 });
@@ -1167,10 +1111,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Returns_empty_set_past_last_page(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 3", Age = 10 });
@@ -1197,10 +1140,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Gets_all(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 3", Age = 10 });
@@ -1225,10 +1167,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Inserts_entity_with_int32_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entity = new KeyInt32 { Name = "Some Name" };
 
                     // Act
@@ -1247,10 +1188,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Inserts_entity_with_int64_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entity = new KeyInt64 { Name = "Some Name" };
 
                     // Act
@@ -1269,10 +1209,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Inserts_entities_with_composite_keys(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entity = new CompositeKeys { Key1 = 2, Key2 = 3, Name = "Some Name" };
 
                     // Act
@@ -1291,10 +1230,9 @@
             [MemberData(nameof(TestDialects))]
             public void Does_not_allow_part_of_composite_key_to_be_null(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entity = new CompositeKeys { Key1 = null, Key2 = 5, Name = "Some Name" };
 
                     // Act
@@ -1310,10 +1248,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Inserts_entities_with_string_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entity = new KeyString { Name = "Some Name", Age = 10 };
 
                     // Act
@@ -1332,10 +1269,9 @@
             [MemberData(nameof(TestDialects))]
             public void Does_not_allow_string_key_to_be_null(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entity = new KeyString { Name = null, Age = 10 };
 
                     // Act
@@ -1351,10 +1287,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Inserts_entities_with_guid_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entity = new KeyGuid { Id = Guid.NewGuid(), Name = "Some Name" };
 
                     // Act
@@ -1373,10 +1308,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Uses_key_attribute_to_determine_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entity = new KeyAlias { Name = "Some Name" };
 
                     // Act
@@ -1395,10 +1329,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Inserts_into_other_schemas(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entity = new SchemaOther { Name = "Some name" };
 
                     // Act
@@ -1417,10 +1350,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Ignores_columns_which_are_not_mapped(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entity = new PropertyNotMapped { Firstname = "Bobby", LastName = "DropTables", Age = 10 };
 
                     // Act
@@ -1442,10 +1374,8 @@
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_when_entity_has_no_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
                     // Act
                     Func<Task> act = async () => await database.InsertAsync<int>(new NoKey());
 
@@ -1459,10 +1389,8 @@
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_when_entity_has_composite_keys(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
                     // Act
                     Func<Task> act = async () => await database.InsertAsync<int>(new CompositeKeys());
 
@@ -1476,10 +1404,9 @@
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_for_string_keys(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entity = new KeyString { Name = "Some Name", Age = 10 };
 
                     // Act
@@ -1495,10 +1422,9 @@
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_for_guid_keys(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entity = new KeyGuid { Id = Guid.NewGuid(), Name = "Some Name" };
 
                     // Act
@@ -1514,10 +1440,8 @@
             [MemberData(nameof(TestDialects))]
             public async Task Inserts_entity_with_int32_primary_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
                     // Act
                     var id = await database.InsertAsync<int>(new KeyInt32 { Name = "Some Name" });
 
@@ -1534,10 +1458,8 @@
             [MemberData(nameof(TestDialects))]
             public async Task Inserts_entity_with_int64_primary_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
                     // Act
                     var id = await database.InsertAsync<int>(new KeyInt64 { Name = "Some Name" });
 
@@ -1554,10 +1476,8 @@
             [MemberData(nameof(TestDialects))]
             public async Task Uses_key_attribute_to_determine_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
                     // Act
                     var id = await database.InsertAsync<int>(new KeyAlias { Name = "Some Name" });
 
@@ -1574,10 +1494,8 @@
             [MemberData(nameof(TestDialects))]
             public async Task Inserts_into_other_schemas(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
                     // Act
                     var id = await database.InsertAsync<int>(new SchemaOther { Name = "Some name" });
 
@@ -1597,10 +1515,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Inserts_entity_with_int32_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entities = new[]
                         {
                             new KeyInt32 { Name = "Some Name" },
@@ -1623,10 +1540,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Inserts_entity_with_int64_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entities = new[]
                         {
                             new KeyInt64 { Name = "Some Name" },
@@ -1649,10 +1565,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Inserts_entities_with_composite_keys(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entities = new[]
                         {
                             new CompositeKeys { Key1 = 2, Key2 = 3, Name = "Some Name1" },
@@ -1675,10 +1590,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Inserts_entities_with_string_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entities = new[]
                         {
                             new KeyString { Name = "Some Name", Age = 10 },
@@ -1701,10 +1615,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Inserts_entities_with_guid_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entities = new[]
                         {
                             new KeyGuid { Id = Guid.NewGuid(), Name = "Some Name" },
@@ -1727,10 +1640,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Uses_key_attribute_to_determine_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entities = new[]
                         {
                             new KeyAlias { Name = "Some Name" },
@@ -1753,10 +1665,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Inserts_into_other_schemas(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entities = new[]
                         {
                             new SchemaOther { Name = "Some Name" },
@@ -1782,10 +1693,9 @@
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_when_entity_has_no_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entities = new[]
                         {
                             new NoKey()
@@ -1804,10 +1714,9 @@
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_when_entity_has_composite_keys(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entities = new[]
                         {
                             new CompositeKeys()
@@ -1826,10 +1735,9 @@
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_for_string_keys(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entities = new[]
                         {
                             new KeyString { Name = "Some Name", Age = 10 }
@@ -1848,10 +1756,9 @@
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_for_guid_keys(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entities = new[]
                         {
                             new KeyGuid { Id = Guid.NewGuid(), Name = "Some Name" }
@@ -1870,10 +1777,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Inserts_entity_with_int32_primary_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entities = new[]
                         {
                             new KeyInt32 { Name = "Some Name" },
@@ -1899,10 +1805,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Inserts_entity_with_int64_primary_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entities = new[]
                         {
                             new KeyInt64 { Name = "Some Name" },
@@ -1928,10 +1833,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Uses_key_attribute_to_determine_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entities = new[]
                         {
                             new KeyExplicit { Name = "Some Name" }
@@ -1953,10 +1857,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Inserts_into_other_schemas(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entities = new[]
                         {
                             new SchemaOther { Name = "Some Name" },
@@ -1985,10 +1888,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Updates_the_entity(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = database.Insert<int>(new User { Name = "Some name", Age = 10 });
 
                     // Act
@@ -2010,10 +1912,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Ignores_columns_which_are_not_mapped(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entity = new PropertyNotMapped { Firstname = "Bobby", LastName = "DropTables", Age = 10 };
                     entity.Id = database.Insert<int>(entity);
 
@@ -2035,10 +1936,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Updates_entities_with_composite_keys(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var entity = new CompositeKeys { Key1 = 5, Key2 = 20, Name = "Some name" };
                     database.Insert(entity);
 
@@ -2065,10 +1965,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Updates_the_entity(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.InsertRange(
                         new[]
                             {
@@ -2102,10 +2001,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Updates_entities_with_composite_keys(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.InsertRange(
                         new[]
                             {
@@ -2143,10 +2041,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Deletes_the_entity_with_the_specified_id(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = database.Insert<int>(new User { Name = "Some name", Age = 10 });
 
                     // Act
@@ -2162,10 +2059,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Deletes_entity_with_string_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new KeyString { Name = "Some Name", Age = 10 });
 
                     // Act
@@ -2178,10 +2074,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Deletes_entity_with_guid_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = Guid.NewGuid();
                     database.Insert(new KeyGuid { Id = id, Name = "Some Name" });
 
@@ -2195,10 +2090,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Deletes_entity_with_composite_keys(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = new { Key1 = 5, Key2 = 20 };
                     var entity = new CompositeKeys { Key1 = 5, Key2 = 20, Name = "Some Name" };
                     database.Insert(entity);
@@ -2216,10 +2110,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Deletes_entity_with_matching_key(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = database.Insert<int>(new User { Name = "Some name", Age = 10 });
 
                     // Act
@@ -2236,10 +2129,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Deletes_entity_with_composite_keys(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     var id = new { Key1 = 5, Key2 = 20 };
                     var entity = new CompositeKeys { Key1 = 5, Key2 = 20, Name = "Some Name" };
                     database.Insert(entity);
@@ -2264,11 +2156,8 @@
             [MemberData(nameof(TestDialectsWithData), "WHERE")]
             public void Throws_exception_if_conditions_does_not_contain_where_clause(IDialect dialect, string conditions)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
-
                     // Act
                     Func<Task> act = async () => await database.DeleteRangeAsync<User>(new SqlString(conditions));
 
@@ -2283,10 +2172,8 @@
             [MemberData(nameof(TestDialectsWithData), "WHERE Age = 10")]
             public void Allows_any_capitalization_of_where_clause(IDialect dialect, string conditions)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
                     // Act
                     Func<Task> act = async () => await database.DeleteRangeAsync<User>(new SqlString(conditions));
 
@@ -2300,10 +2187,8 @@
             [MemberData(nameof(TestDialects))]
             public async Task Deletes_all_matching_entities(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
                     // Arrange
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
@@ -2330,10 +2215,8 @@
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_if_conditions_is_null(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
                     // Act
                     Func<Task> act = async () => await database.DeleteRangeAsync<User>((object)null);
 
@@ -2347,10 +2230,8 @@
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_if_conditions_is_empty(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
                     // Act
                     Func<Task> act = async () => await database.DeleteRangeAsync<User>(new { });
 
@@ -2364,10 +2245,8 @@
             [MemberData(nameof(TestDialects))]
             public async Task Deletes_all_matching_entities(IDialect dialect)
             {
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var database = instance.Item;
                     // Arrange
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
@@ -2394,11 +2273,9 @@
             [MemberData(nameof(TestDialects))]
             public async Task Deletes_all_entities(IDialect dialect)
             {
-                // Arrange
-                using (var instance = BlankDatabaseFactory.MakeDatabase(dialect))
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var database = instance.Item;
                     database.Insert(new User { Name = "Some Name 1", Age = 10 });
                     database.Insert(new User { Name = "Some Name 2", Age = 10 });
                     database.Insert(new User { Name = "Some Name 3", Age = 10 });
