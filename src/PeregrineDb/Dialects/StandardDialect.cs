@@ -5,7 +5,6 @@
     using System.Collections.Immutable;
     using System.Linq;
     using System.Reflection;
-    using System.Runtime.InteropServices.ComTypes;
     using System.Text;
     using Pagination;
     using PeregrineDb.Schema;

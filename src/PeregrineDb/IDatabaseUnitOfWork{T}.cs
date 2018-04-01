@@ -2,8 +2,8 @@
 {
     using System.Data;
 
-    public interface IDatabaseUnitOfWork<out TConnection, out TTransaction>
-        : IDatabaseUnitOfWork, IDatabaseConnection<TConnection>
+    public interface ISqlUnitOfWork<out TConnection, out TTransaction>
+        : ISqlUnitOfWork, ISqlConnection<TConnection>
         where TConnection : IDbConnection
         where TTransaction : IDbTransaction
     {

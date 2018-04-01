@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using PeregrineDb.SqlCommands;
 
-    public partial interface IDatabaseConnection
+    public partial interface ISqlConnection
     {
         /// <summary>
         /// Executes a query, returning the data typed as <typeparamref name="T"/>.

@@ -5,8 +5,8 @@
     using PeregrineDb.Dialects;
     using PeregrineDb.SqlCommands;
 
-    public abstract partial class DefaultDatabaseConnection
-        : IDatabaseConnection
+    public abstract partial class DefaultSqlConnection
+        : ISqlConnection
     {
         private readonly IDbConnection connection;
         private readonly bool leaveOpen;
@@ -15,7 +15,7 @@
         private readonly CommandFactory commandFactory;
         private bool disposed;
 
-        protected DefaultDatabaseConnection(IDbConnection connection, IDbTransaction transaction, PeregrineConfig config, bool leaveOpen)
+        protected DefaultSqlConnection(IDbConnection connection, IDbTransaction transaction, PeregrineConfig config, bool leaveOpen)
         {
             this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
             this.transaction = transaction;

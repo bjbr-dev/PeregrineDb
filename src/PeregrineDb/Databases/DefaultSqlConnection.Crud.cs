@@ -7,7 +7,7 @@
     using PeregrineDb.SqlCommands;
     using PeregrineDb.Utils;
 
-    public partial class DefaultDatabaseConnection
+    public partial class DefaultSqlConnection
     {
         public int Count<TEntity>(FormattableString conditions = null, int? commandTimeout = null)
         {

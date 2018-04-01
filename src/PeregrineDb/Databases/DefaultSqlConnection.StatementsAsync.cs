@@ -8,7 +8,7 @@
     using Dapper;
     using PeregrineDb.SqlCommands;
 
-    public partial class DefaultDatabaseConnection
+    public partial class DefaultSqlConnection
     {
         public Task<IEnumerable<T>> QueryAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {

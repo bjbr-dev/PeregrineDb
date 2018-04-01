@@ -2,8 +2,8 @@
 {
     using System.Data;
 
-    public interface IDatabaseConnection<out TConnection>
-        : IDatabaseConnection
+    public interface ISqlConnection<out TConnection>
+        : ISqlConnection
         where TConnection: IDbConnection
     {
         new TConnection DbConnection { get; }

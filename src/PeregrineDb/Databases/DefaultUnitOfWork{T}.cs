@@ -3,7 +3,7 @@
     using System.Data;
 
     public class DefaultUnitOfWork<TConnection, TTransaction>
-        : DefaultUnitOfWork, IDatabaseUnitOfWork<TConnection, TTransaction>
+        : DefaultUnitOfWork, ISqlUnitOfWork<TConnection, TTransaction>
         where TConnection : IDbConnection
         where TTransaction : IDbTransaction
     {

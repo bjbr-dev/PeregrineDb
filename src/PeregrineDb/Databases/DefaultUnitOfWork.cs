@@ -4,7 +4,7 @@
     using PeregrineDb.Utils;
 
     public class DefaultUnitOfWork
-        : DefaultDatabaseConnection, IDatabaseUnitOfWork
+        : DefaultSqlConnection, ISqlUnitOfWork
     {
         /// <summary>
         /// Create a new, dynamic instance of <see cref="DefaultUnitOfWork{TConnection,TTransaction}"/>. This method is a light weight wrapper for generic inference.

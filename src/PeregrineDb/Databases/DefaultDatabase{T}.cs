@@ -14,7 +14,7 @@
 
         public new TConnection DbConnection { get; }
 
-        public IDatabaseUnitOfWork<TConnection, TTransaction> StartUnitOfWork<TTransaction>(bool leaveOpen = true)
+        public ISqlUnitOfWork<TConnection, TTransaction> StartUnitOfWork<TTransaction>(bool leaveOpen = true)
             where TTransaction : class, IDbTransaction
         {
             TTransaction transaction = null;
@@ -30,7 +30,7 @@
             }
         }
 
-        public IDatabaseUnitOfWork<TConnection, TTransaction> StartUnitOfWork<TTransaction>(IsolationLevel isolationLevel, bool leaveOpen = true)
+        public ISqlUnitOfWork<TConnection, TTransaction> StartUnitOfWork<TTransaction>(IsolationLevel isolationLevel, bool leaveOpen = true)
             where TTransaction : class, IDbTransaction
         {
             TTransaction transaction = null;

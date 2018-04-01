@@ -7,7 +7,7 @@
     using Pagination;
     using PeregrineDb.SqlCommands;
 
-    public partial interface IDatabaseConnection
+    public partial interface ISqlConnection
     {
         /// <summary>
         /// Counts how many entities in the <typeparamref name="TEntity"/> table match the <paramref name="conditions"/>.

@@ -2,7 +2,7 @@
 {
     using System.Collections.Generic;
 
-    public partial class DefaultDatabaseConnection
+    public partial class DefaultSqlConnection
     {
         public void CreateTempTable<TEntity>(IEnumerable<TEntity> entities, int? commandTimeout = null)
         {

@@ -2,7 +2,7 @@
 {
     using System.Collections.Generic;
 
-    public partial interface IDatabaseConnection
+    public partial interface ISqlConnection
     {
         /// <summary>
         /// <para>Creates a temporary table and inserts the <paramref name="entities"/>.</para>

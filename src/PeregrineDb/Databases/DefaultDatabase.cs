@@ -3,7 +3,7 @@
     using System.Data;
 
     public class DefaultDatabase
-        : DefaultDatabaseConnection, IDatabase
+        : DefaultSqlConnection, IDatabase
     {
         /// <summary>
         /// Create a new, dynamic instance of <see cref="DefaultDatabase{T}"/>. This method is a light weight wrapper for generic inference.
@@ -19,7 +19,7 @@
         {
         }
 
-        public IDatabaseUnitOfWork StartUnitOfWork(bool leaveOpen = true)
+        public ISqlUnitOfWork StartUnitOfWork(bool leaveOpen = true)
         {
             IDbTransaction transaction = null;
             try
@@ -34,7 +34,7 @@
             }
         }
 
-        public IDatabaseUnitOfWork StartUnitOfWork(IsolationLevel isolationLevel, bool leaveOpen = true)
+        public ISqlUnitOfWork StartUnitOfWork(IsolationLevel isolationLevel, bool leaveOpen = true)
         {
             IDbTransaction transaction = null;
             try

@@ -1,10 +1,8 @@
 ﻿namespace PeregrineDb.Tests.Databases
 {
     using System.Collections.Generic;
-    using System.Data.SqlClient;
     using FluentAssertions;
     using PeregrineDb.Dialects;
-    using PeregrineDb.SqlCommands;
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
     using Xunit;

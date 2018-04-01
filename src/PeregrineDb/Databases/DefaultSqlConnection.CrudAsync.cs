@@ -3,14 +3,13 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Pagination;
     using PeregrineDb.SqlCommands;
     using PeregrineDb.Utils;
 
-    public partial class DefaultDatabaseConnection
+    public partial class DefaultSqlConnection
     {
         public Task<int> CountAsync<TEntity>(FormattableString conditions = null, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {

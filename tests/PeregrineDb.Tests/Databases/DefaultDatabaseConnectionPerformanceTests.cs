@@ -87,10 +87,10 @@
             }
 
             [Fact]
-            public void Takes_less_than_5_seconds_to_InsertRange_30000_rows()
+            public void Takes_less_than_6_seconds_to_InsertRange_30000_rows()
             {
                 var timeTaken = this.PerformInsertRange(Dialect.SqlServer2012);
-                timeTaken.Should().BeLessThan(5000);
+                timeTaken.Should().BeLessThan(6000);
             }
         }
 
@@ -105,10 +105,10 @@
             }
 
             [Fact]
-            public void Takes_less_than_5_seconds_to_InsertRange_30000_rows()
+            public void Takes_less_than_6_seconds_to_InsertRange_30000_rows()
             {
                 var timeTaken = this.PerformInsertRange(Dialect.PostgreSql);
-                timeTaken.Should().BeLessThan(5000);
+                timeTaken.Should().BeLessThan(6000);
             }
         }
     }

@@ -8,7 +8,6 @@
     using PeregrineDb.Schema;
     using PeregrineDb.Schema.Relations;
     using PeregrineDb.SqlCommands;
-    using PeregrineDb.Utils;
 
     /// <summary>
     /// Implementation of <see cref="IDialect"/> for the PostgreSQL DBMS.

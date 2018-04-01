@@ -2,8 +2,8 @@
 {
     using System.Data;
 
-    public interface IDatabaseUnitOfWork
-        : IDatabaseConnection
+    public interface ISqlUnitOfWork
+        : ISqlConnection
     {
         IDbTransaction Transaction { get; }
 

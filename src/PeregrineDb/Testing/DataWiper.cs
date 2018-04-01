@@ -9,7 +9,7 @@
 
     public class DataWiper
     {
-        public static List<FormattableString> ClearAllData(IDatabaseConnection connection, IEnumerable<string> ignoredTables = null, int? commandTimeout = null)
+        public static List<FormattableString> ClearAllData(ISqlConnection connection, IEnumerable<string> ignoredTables = null, int? commandTimeout = null)
         {
             var commands = GenerateWipeDatabaseSql(connection, ignoredTables);
 
@@ -21,7 +21,7 @@
             return commands;
         }
 
-        public static List<FormattableString> GenerateWipeDatabaseSql(IDatabaseConnection connection, IEnumerable<string> ignoredTables = null)
+        public static List<FormattableString> GenerateWipeDatabaseSql(ISqlConnection connection, IEnumerable<string> ignoredTables = null)
         {
             if (!(connection.Config.Dialect is ISchemaQueryDialect dialect))
             {
