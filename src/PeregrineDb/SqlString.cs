@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.SqlCommands
+﻿namespace PeregrineDb
 {
     using System;
     using System.Linq;

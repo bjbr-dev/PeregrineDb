@@ -21,7 +21,6 @@
             this.transaction = transaction;
             this.leaveOpen = leaveOpen;
             this.Config = config ?? throw new ArgumentNullException(nameof(config));
-
             this.commandFactory = new CommandFactory(config);
         }
 

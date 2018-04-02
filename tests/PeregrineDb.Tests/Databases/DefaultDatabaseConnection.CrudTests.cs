@@ -7,7 +7,6 @@
     using Pagination;
     using PeregrineDb.Dialects;
     using PeregrineDb.Schema;
-    using PeregrineDb.SqlCommands;
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
     using Xunit;
@@ -2022,7 +2021,6 @@
         public class InsertRange
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Inserts_entity_with_int32_key(IDialect dialect)

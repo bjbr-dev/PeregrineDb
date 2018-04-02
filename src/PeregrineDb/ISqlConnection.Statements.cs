@@ -6,6 +6,8 @@
 
     public partial interface ISqlConnection
     {
+        IEnumerable<T> Query<T>(in SqlCommand command, int? commandTimeout = null);
+
         /// <summary>
         /// Executes a query, returning the data typed as <typeparamref name="T"/>.
         /// </summary>
@@ -18,15 +20,27 @@
         /// </returns>
         IEnumerable<T> Query<T>(FormattableString sql, int? commandTimeout = null);
 
+        T QueryFirst<T>(in SqlCommand command, int? commandTimeout = null);
+
         T QueryFirst<T>(FormattableString sql, int? commandTimeout = null);
+
+        T QueryFirstOrDefault<T>(in SqlCommand command, int? commandTimeout = null);
 
         T QueryFirstOrDefault<T>(FormattableString sql, int? commandTimeout = null);
 
+        T QuerySingle<T>(in SqlCommand command, int? commandTimeout = null);
+
         T QuerySingle<T>(FormattableString sql, int? commandTimeout = null);
+
+        T QuerySingleOrDefault<T>(in SqlCommand command, int? commandTimeout = null);
 
         T QuerySingleOrDefault<T>(FormattableString sql, int? commandTimeout = null);
 
+        CommandResult Execute(in SqlCommand command, int? commandTimeout = null);
+
         CommandResult Execute(FormattableString sql, int? commandTimeout = null);
+
+        T ExecuteScalar<T>(in SqlCommand command, int? commandTimeout = null);
 
         T ExecuteScalar<T>(FormattableString sql, int? commandTimeout = null);
     }
