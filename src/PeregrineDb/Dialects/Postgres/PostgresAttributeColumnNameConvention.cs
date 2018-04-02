@@ -8,12 +8,17 @@
     /// If property has <see cref="ColumnAttribute"/> then it returns <see cref="ColumnAttribute.Name"/> without manipulating it.
     ///  Otherwise it converts the property name into snake_case
     /// </summary>
-    public class PostgresAttributeColumnNameFactory
-        : AttributeColumnNameFactory
+    public class PostgresAttributeColumnNameConvention
+        : AttributeColumnNameConvention
     {
+        public PostgresAttributeColumnNameConvention(ISqlNameEscaper nameEscaper)
+            : base(nameEscaper)
+        {
+        }
+
         protected override string GetColumnNameFromType(PropertySchema property)
         {
-            return ToSnakeCase(property.Name);
+            return this.NameEscaper.EscapeColumnName(ToSnakeCase(property.Name));
         }
 
         internal static string ToSnakeCase(string pascalCaseString)

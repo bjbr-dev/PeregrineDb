@@ -2,7 +2,6 @@
 {
     using System.ComponentModel.DataAnnotations.Schema;
     using FluentAssertions;
-    using PeregrineDb.Dialects;
     using PeregrineDb.Schema;
     using PeregrineDb.Tests.Utils;
     using Xunit;
@@ -12,14 +11,13 @@
         public class GetTableName
             : DefaultTableNameFactoryTests
         {
-            private readonly AtttributeTableNameFactory sut = new AtttributeTableNameFactory();
-            private readonly IDialect dialect = new TestDialect();
+            private readonly AtttributeTableNameConvention sut = new AtttributeTableNameConvention(new TestSqlNameEscaper());
 
             [Fact]
             public void Returns_name_in_TableAttribute()
             {
                 // Act
-                var result = this.sut.GetTableName(typeof(TableWtihAttribute), this.dialect);
+                var result = this.sut.GetTableName(typeof(TableWtihAttribute));
 
                 // Assert
                 result.Should().Be("'Tables'");
@@ -29,7 +27,7 @@
             public void Returns_name_and_schema_in_TableAttribute()
             {
                 // Act
-                var result = this.sut.GetTableName(typeof(TableWtihSchema), this.dialect);
+                var result = this.sut.GetTableName(typeof(TableWtihSchema));
 
                 // Assert
                 result.Should().Be("'Schema'.'Tables'");
@@ -39,7 +37,7 @@
             public void Pluralizes_name_of_table()
             {
                 // Act
-                var result = this.sut.GetTableName(typeof(SimpleTable), this.dialect);
+                var result = this.sut.GetTableName(typeof(SimpleTable));
 
                 // Assert
                 result.Should().Be("'SimpleTables'");

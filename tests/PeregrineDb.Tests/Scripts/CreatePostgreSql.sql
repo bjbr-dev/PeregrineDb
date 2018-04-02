@@ -62,49 +62,49 @@ CREATE TABLE NoKey
 	Age int NOT NULL
 );
 
-CREATE TABLE PropertyAllPossibleTypes
+CREATE TABLE Property_All_Possible_Types
 (
 	Id serial NOT NULL PRIMARY KEY,
-	Int16Property smallint NOT NULL,
-	NullableInt16Property smallint NULL,
-	Int32Property int NOT NULL,
-	NullableInt32Property int NULL,
-	Int64Property bigint NOT NULL,
-	NullableInt64Property bigint NULL,
-	SingleProperty real NOT NULL,
-	NullableSingleProperty real NULL,
-	DoubleProperty double precision NOT NULL,
-	NullableDoubleProperty double precision NULL,
-	DecimalProperty numeric NOT NULL,
-	NullableDecimalProperty numeric NULL,
-	BoolProperty bool NOT NULL,
-	NullableBoolProperty bool NULL,
-	StringProperty text NOT NULL,
-	CharProperty text NOT NULL,
-	NullableCharProperty text NULL,
-	GuidProperty uuid NOT NULL,
-	NullableGuidProperty uuid NULL,
-	DateTimeProperty timestamp NOT NULL,
-	NullableDateTimeProperty timestamp NULL,
-	DateTimeOffsetProperty timestamp with time zone NOT NULL,
-	NullableDateTimeOffsetProperty timestamp with time zone NULL,
-	ByteArrayProperty bytea NOT NULL
+	Int16_Property smallint NOT NULL,
+	Nullable_Int16_Property smallint NULL,
+	Int32_Property int NOT NULL,
+	Nullable_Int32_Property int NULL,
+	Int64_Property bigint NOT NULL,
+	Nullable_Int64_Property bigint NULL,
+	Single_Property real NOT NULL,
+	Nullable_Single_Property real NULL,
+	Double_Property double precision NOT NULL,
+	Nullable_Double_Property double precision NULL,
+	Decimal_Property numeric NOT NULL,
+	Nullable_Decimal_Property numeric NULL,
+	Bool_Property bool NOT NULL,
+	Nullable_Bool_Property bool NULL,
+	String_Property text NOT NULL,
+	Char_Property text NOT NULL,
+	Nullable_Char_Property text NULL,
+	Guid_Property uuid NOT NULL,
+	Nullable_Guid_Property uuid NULL,
+	Date_Time_Property timestamp NOT NULL,
+	Nullable_Date_Time_Property timestamp NULL,
+	Date_Time_Offset_Property timestamp with time zone NOT NULL,
+	Nullable_Date_Time_Offset_Property timestamp with time zone NULL,
+	Byte_Array_Property bytea NOT NULL
 );
 
 CREATE TABLE PropertyEnum
 (
 	Id serial NOT NULL PRIMARY KEY,
-	FavoriteColor int NULL
+	Favorite_Color int NULL
 );
 
 CREATE TABLE PropertyNotMapped
 (
 	Id serial NOT NULL PRIMARY KEY,
-	FirstName text NOT NULL,
-	LastName text NOT NULL
+	First_Name text NOT NULL,
+	Last_Name text NOT NULL
 );
 
-CREATE TABLE PropertyNullables
+CREATE TABLE Property_Nullable
 (
 	Id serial NOT NULL PRIMARY KEY,
 	Name text NULL
@@ -113,69 +113,69 @@ CREATE TABLE PropertyNullables
 CREATE TABLE SimpleBenchmarkEntities
 (
 	Id serial NOT NULL PRIMARY KEY,
-	FirstName text NOT NULL,
-	LastName text NOT NULL,
-	DateOfBirth timestamp NOT NULL
+	First_Name text NOT NULL,
+	Last_Name text NOT NULL,
+	Date_Of_Birth timestamp NOT NULL
 );
 
-CREATE TABLE Users
+CREATE TABLE dog
 (
 	Id serial NOT NULL PRIMARY KEY,
 	Name text NOT NULL,
 	Age int NOT NULL
 );
 
-CREATE TABLE SimpleForeignKeys
+CREATE TABLE Simple_Foreign_Key
 (
 	Id serial NOT NULL PRIMARY KEY,
 	Name text NOT NULL,
-	UserId int NOT NULL REFERENCES Users
+	dog_id int NOT NULL REFERENCES dog
 );
 
-CREATE TABLE SelfReferenceForeignKeys
+CREATE TABLE Self_Reference_Foreign_Key
 (
 	Id serial NOT NULL PRIMARY KEY,
-	ForeignId int NULL REFERENCES SelfReferenceForeignKeys(Id)
+	Foreign_Id int NULL REFERENCES Self_Reference_Foreign_Key(Id)
 );
 
 CREATE TABLE CyclicForeignKeyA
 (
 	Id serial NOT NULL PRIMARY KEY,
-	ForeignId int NULL
+	Foreign_Id int NULL
 );
 
 CREATE TABLE CyclicForeignKeyB
 (
 	Id serial NOT NULL PRIMARY KEY,
-	ForeignId int NOT NULL REFERENCES CyclicForeignKeyA
+	Foreign_Id int NOT NULL REFERENCES CyclicForeignKeyA
 );
 
 CREATE TABLE CyclicForeignKeyC
 (
 	Id serial NOT NULL PRIMARY KEY,
-	ForeignId int NOT NULL REFERENCES CyclicForeignKeyB
+	Foreign_Id int NOT NULL REFERENCES CyclicForeignKeyB
 );
 
 ALTER TABLE CyclicForeignKeyA
 ADD CONSTRAINT CyclicForeignKeyA_ForeignId_fkey
-	FOREIGN KEY (ForeignId)
+	FOREIGN KEY (Foreign_Id)
 	REFERENCES CyclicForeignKeyC(Id);
 
 CREATE TABLE Other.SchemaSimpleForeignKeys 
 (
 	Id serial NOT NULL PRIMARY KEY,
-	SchemaOtherId int NOT NULL REFERENCES Other.SchemaOther(Id)
+	schema_other_id int NOT NULL REFERENCES Other.SchemaOther(Id)
 );
 
-CREATE TABLE wipemultipleforeignkeytargets
+CREATE TABLE wipe_multiple_foreign_key_target
 (
 	id serial NOT NULL PRIMARY KEY,
 	name text NOT NULL
 );
 
-CREATE TABLE wipemultipleforeignkeysources
+CREATE TABLE wipe_multiple_foreign_key_source
 (
 	id serial NOT NULL PRIMARY KEY,
-	nameid int NOT NULL REFERENCES wipemultipleforeignkeytargets,
-	optionalnameid int NULL REFERENCES wipemultipleforeignkeytargets
+	name_id int NOT NULL REFERENCES wipe_multiple_foreign_key_target,
+	optional_name_id int NULL REFERENCES wipe_multiple_foreign_key_target
 );

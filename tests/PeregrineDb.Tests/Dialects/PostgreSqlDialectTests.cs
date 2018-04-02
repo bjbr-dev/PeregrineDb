@@ -24,7 +24,7 @@
             public void Selects_from_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeCountStatement(schema, null);
@@ -32,7 +32,7 @@
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT COUNT(*)
-FROM user");
+FROM dog");
 
                 Assert.Equal(expected, sql, SqlCommandComparer.Instance);
             }
@@ -41,7 +41,7 @@ FROM user");
             public void Adds_conditions()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeCountStatement(schema, $"WHERE Foo IS NOT NULL");
@@ -49,7 +49,7 @@ FROM user");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT COUNT(*)
-FROM user
+FROM dog
 WHERE Foo IS NOT NULL");
 
                 Assert.Equal(expected, sql, SqlCommandComparer.Instance);
@@ -63,7 +63,7 @@ WHERE Foo IS NOT NULL");
             public void Selects_from_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeFindStatement(schema, 5);
@@ -71,7 +71,7 @@ WHERE Foo IS NOT NULL");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, name, age
-FROM user
+FROM dog
 WHERE id = @Id",
                     new Dictionary<string, object>
                         {
@@ -178,7 +178,7 @@ WHERE id = @Id",
             public void Selects_from_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeGetRangeStatement(schema, null);
@@ -186,7 +186,7 @@ WHERE id = @Id",
                 // Assert
                 var expected = new SqlCommand($@"
 SELECT id, name, age
-FROM user");
+FROM dog");
 
                 Assert.Equal(expected, sql, SqlCommandComparer.Instance);
             }
@@ -195,7 +195,7 @@ FROM user");
             public void Adds_conditions_clause()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeGetRangeStatement(schema, $"WHERE Age > {10}");
@@ -203,7 +203,7 @@ FROM user");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, name, age
-FROM user
+FROM dog
 WHERE Age > @p0",
                     new Dictionary<string, object>
                         {
@@ -272,7 +272,7 @@ FROM PropertyAlias");
             public void Selects_from_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeGetTopNStatement(schema, 1, null, "Name");
@@ -280,7 +280,7 @@ FROM PropertyAlias");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, name, age
-FROM user
+FROM dog
 ORDER BY Name
 LIMIT 1");
 
@@ -291,7 +291,7 @@ LIMIT 1");
             public void Adds_conditions_clause()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeGetTopNStatement(schema, 1, $"WHERE Name LIKE {"Foo%"}", "Name");
@@ -299,7 +299,7 @@ LIMIT 1");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, name, age
-FROM user
+FROM dog
 WHERE Name LIKE @p0
 ORDER BY Name
 LIMIT 1",
@@ -337,7 +337,7 @@ LIMIT 1");
             public void Does_not_order_when_no_orderby_given(string orderBy)
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeGetTopNStatement(schema, 1, null, orderBy);
@@ -345,7 +345,7 @@ LIMIT 1");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, name, age
-FROM user
+FROM dog
 LIMIT 1");
 
                 Assert.Equal(expected, sql, SqlCommandComparer.Instance);
@@ -362,7 +362,7 @@ LIMIT 1");
             public void Throws_exception_when_order_by_is_empty(string orderBy)
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act / Assert
                 Assert.Throws<ArgumentException>(
@@ -373,7 +373,7 @@ LIMIT 1");
             public void Selects_from_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), null, "Name");
@@ -381,7 +381,7 @@ LIMIT 1");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, name, age
-FROM user
+FROM dog
 ORDER BY Name
 LIMIT 10 OFFSET 0");
 
@@ -392,7 +392,7 @@ LIMIT 10 OFFSET 0");
             public void Adds_conditions_clause()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), $"WHERE Name LIKE {"Foo%"}", "Name");
@@ -400,7 +400,7 @@ LIMIT 10 OFFSET 0");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, name, age
-FROM user
+FROM dog
 WHERE Name LIKE @p0
 ORDER BY Name
 LIMIT 10 OFFSET 0",
@@ -435,7 +435,7 @@ LIMIT 10 OFFSET 0");
             public void Selects_second_page()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(2, 10, true, 10, 19), null, "Name");
@@ -443,7 +443,7 @@ LIMIT 10 OFFSET 0");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, name, age
-FROM user
+FROM dog
 ORDER BY Name
 LIMIT 10 OFFSET 10");
 
@@ -454,7 +454,7 @@ LIMIT 10 OFFSET 10");
             public void Selects_appropriate_number_of_rows()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(2, 5, true, 5, 9), null, "Name");
@@ -462,7 +462,7 @@ LIMIT 10 OFFSET 10");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, name, age
-FROM user
+FROM dog
 ORDER BY Name
 LIMIT 5 OFFSET 5");
 
@@ -477,14 +477,14 @@ LIMIT 5 OFFSET 5");
             public void Inserts_into_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertStatement(schema, new User { Name = "Foo", Age = 10 });
+                var sql = this.config.Dialect.MakeInsertStatement(schema, new Dog { Name = "Foo", Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
-INSERT INTO user (name, age)
+INSERT INTO dog (name, age)
 VALUES (@Name, @Age);",
                     new Dictionary<string, object>
                         {
@@ -572,14 +572,14 @@ VALUES (@Name);",
             public void Inserts_into_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema, new User { Name = "Foo", Age = 10 });
+                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema, new Dog { Name = "Foo", Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
-INSERT INTO user (name, age)
+INSERT INTO dog (name, age)
 VALUES (@Name, @Age)
 RETURNING id",
                     new Dictionary<string, object>
@@ -671,14 +671,14 @@ RETURNING id",
             public void Updates_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeUpdateStatement(schema, new User { Id = 5, Name = "Foo", Age = 10 });
+                var sql = this.config.Dialect.MakeUpdateStatement(schema, new Dog { Id = 5, Name = "Foo", Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
-UPDATE user
+UPDATE dog
 SET name = @Name, age = @Age
 WHERE id = @Id",
                     new Dictionary<string, object>
@@ -863,14 +863,14 @@ WHERE id = @Id",
             public void Deletes_from_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema, 5);
 
                 // Assert
                 var expected = new SqlCommand(@"
-DELETE FROM user
+DELETE FROM dog
 WHERE id = @Id",
                     new Dictionary<string, object>
                         {
@@ -974,14 +974,14 @@ WHERE key = @Key",
             public void Deletes_from_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeDeleteRangeStatement(schema, $"WHERE [Age] > {10}");
 
                 // Assert
                 var expected = new SqlCommand(@"
-DELETE FROM user
+DELETE FROM dog
 WHERE [Age] > @p0",
                     new Dictionary<string, object>
                         {
@@ -1000,7 +1000,7 @@ WHERE [Age] > @p0",
             {
                 // Arrange
                 var conditions = new { };
-                var schema = this.GetConditionsSchema<User>(conditions);
+                var schema = this.GetConditionsSchema<Dog>(conditions);
 
                 // Act
                 var sql = this.config.Dialect.MakeWhereClause(schema, conditions);
@@ -1015,7 +1015,7 @@ WHERE [Age] > @p0",
             {
                 // Arrange
                 var conditions = new { Name = "Bobby" };
-                var schema = this.GetConditionsSchema<User>(conditions);
+                var schema = this.GetConditionsSchema<Dog>(conditions);
 
                 // Act
                 var sql = this.config.Dialect.MakeWhereClause(schema, conditions);
@@ -1031,7 +1031,7 @@ WHERE [Age] > @p0",
             {
                 // Arrange
                 var conditions = new { Name = "Bobby", Age = 5 };
-                var schema = this.GetConditionsSchema<User>(conditions);
+                var schema = this.GetConditionsSchema<Dog>(conditions);
 
                 // Act
                 var sql = this.config.Dialect.MakeWhereClause(schema, conditions);
@@ -1047,7 +1047,7 @@ WHERE [Age] > @p0",
             {
                 // Arrange
                 var conditions = new { Name = (string)null };
-                var schema = this.GetConditionsSchema<User>(conditions);
+                var schema = this.GetConditionsSchema<Dog>(conditions);
 
                 // Act
                 var sql = this.config.Dialect.MakeWhereClause(schema, conditions);
@@ -1131,13 +1131,13 @@ WHERE [Age] > @p0",
             public void Drops_temporary_tables()
             {
                 // Arrange
-                var tableSchema = this.config.MakeSchema<User>();
+                var tableSchema = this.config.MakeSchema<Dog>();
 
                 // Act
                 var sql = this.config.Dialect.MakeDropTempTableStatement(tableSchema);
 
                 // Assert
-                var expected = new SqlCommand(@"DROP TABLE user");
+                var expected = new SqlCommand(@"DROP TABLE dog");
 
                 Assert.Equal(expected, sql, SqlCommandComparer.Instance);
             }

@@ -60,7 +60,7 @@ CREATE TABLE NoKey
 	Age INT NOT NULL
 );
 
-CREATE TABLE PropertyAllPossibleTypes
+CREATE TABLE PropertyAllPossibleTypess
 (
 	Id INT NOT NULL IDENTITY PRIMARY KEY,
 	Int16Property smallint NOT NULL,
@@ -116,7 +116,7 @@ CREATE TABLE SimpleBenchmarkEntities
 	DateOfBirth DATETIME2(7) NOT NULL
 );
 
-CREATE TABLE Users
+CREATE TABLE Dogs
 (
 	Id INT NOT NULL IDENTITY PRIMARY KEY,
 	Name NVARCHAR(MAX) NOT NULL,
@@ -127,10 +127,10 @@ CREATE TABLE SimpleForeignKeys
 (
 	Id INT NOT NULL IDENTITY PRIMARY KEY,
 	Name NVARCHAR(MAX) NOT NULL,
-	UserId INT NOT NULL,
-	CONSTRAINT FK_SimpleForeignKeys_Users
-		FOREIGN KEY (UserId)
-		REFERENCES Users(Id)
+	DogId INT NOT NULL,
+	CONSTRAINT FK_SimpleForeignKeys_Dogs
+		FOREIGN KEY (DogId)
+		REFERENCES Dogs(Id)
 );
 
 CREATE TABLE SelfReferenceForeignKeys

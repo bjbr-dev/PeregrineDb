@@ -5,6 +5,7 @@
     using System.Reflection;
     using FluentAssertions;
     using PeregrineDb.Schema;
+    using PeregrineDb.Tests.Utils;
     using Xunit;
 
     public class DefaultColumnNameFactoryTests
@@ -12,7 +13,7 @@
         public class GetColumnName
             : DefaultColumnNameFactoryTests
         {
-            private readonly AttributeColumnNameFactory sut = new AttributeColumnNameFactory();
+            private readonly AttributeColumnNameConvention sut = new AttributeColumnNameConvention(new TestSqlNameEscaper());
 
             [Fact]
             public void Returns_name_of_property()
@@ -24,7 +25,7 @@
                 var result = this.sut.GetColumnName(makePropertySchema);
 
                 // Assert
-                result.Should().Be("Property");
+                result.Should().Be("'Property'");
             }
 
             [Fact]
@@ -39,7 +40,7 @@
                 var result = this.sut.GetColumnName(makePropertySchema);
 
                 // Assert
-                result.Should().Be("ActualProperty");
+                result.Should().Be("'ActualProperty'");
             }
 
             private static PropertySchema MakePropertySchema(Type type, string propertyName)

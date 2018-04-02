@@ -8,7 +8,7 @@
     using Moq;
     using Pagination;
     using PeregrineDb;
-    using PeregrineDb.Dialects;
+    using PeregrineDb.Dialects.SqlServer2012;
     using PeregrineDb.Schema;
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
@@ -26,7 +26,7 @@
             public void Selects_from_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeCountStatement(schema, null);
@@ -34,7 +34,7 @@
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT COUNT(*)
-FROM [Users]");
+FROM [Dogs]");
 
                 Assert.Equal(expected, sql, SqlCommandComparer.Instance);
             }
@@ -43,7 +43,7 @@ FROM [Users]");
             public void Adds_conditions()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeCountStatement(schema, $"WHERE Foo IS NOT NULL");
@@ -51,7 +51,7 @@ FROM [Users]");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT COUNT(*)
-FROM [Users]
+FROM [Dogs]
 WHERE Foo IS NOT NULL");
 
                 Assert.Equal(expected, sql, SqlCommandComparer.Instance);
@@ -65,7 +65,7 @@ WHERE Foo IS NOT NULL");
             public void Selects_from_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeFindStatement(schema, 5);
@@ -73,7 +73,7 @@ WHERE Foo IS NOT NULL");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT [Id], [Name], [Age]
-FROM [Users]
+FROM [Dogs]
 WHERE [Id] = @Id",
                     new Dictionary<string, object>
                         {
@@ -180,7 +180,7 @@ WHERE [Id] = @Id",
             public void Selects_from_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeGetRangeStatement(schema, null);
@@ -188,7 +188,7 @@ WHERE [Id] = @Id",
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT [Id], [Name], [Age]
-FROM [Users]");
+FROM [Dogs]");
 
                 Assert.Equal(expected, sql, SqlCommandComparer.Instance);
             }
@@ -197,7 +197,7 @@ FROM [Users]");
             public void Adds_conditions_clause()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeGetRangeStatement(schema, $"WHERE Age > {10}");
@@ -205,7 +205,7 @@ FROM [Users]");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT [Id], [Name], [Age]
-FROM [Users]
+FROM [Dogs]
 WHERE Age > @p0",
                     new Dictionary<string, object>
                         {
@@ -274,7 +274,7 @@ FROM [PropertyAlias]");
             public void Selects_from_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeGetTopNStatement(schema, 1, null, "Name");
@@ -282,7 +282,7 @@ FROM [PropertyAlias]");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT TOP 1 [Id], [Name], [Age]
-FROM [Users]
+FROM [Dogs]
 ORDER BY Name");
 
                 Assert.Equal(expected, sql, SqlCommandComparer.Instance);
@@ -292,7 +292,7 @@ ORDER BY Name");
             public void Adds_conditions_clause()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeGetTopNStatement(schema, 1, $"WHERE Name LIKE {"Foo%"}", "Name");
@@ -300,7 +300,7 @@ ORDER BY Name");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT TOP 1 [Id], [Name], [Age]
-FROM [Users]
+FROM [Dogs]
 WHERE Name LIKE @p0
 ORDER BY Name",
                     new Dictionary<string, object>
@@ -336,7 +336,7 @@ ORDER BY Name");
             public void Does_not_order_when_no_orderby_given(string orderBy)
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeGetTopNStatement(schema, 1, null, orderBy);
@@ -344,7 +344,7 @@ ORDER BY Name");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT TOP 1 [Id], [Name], [Age]
-FROM [Users]");
+FROM [Dogs]");
 
                 Assert.Equal(expected, sql, SqlCommandComparer.Instance);
             }
@@ -360,7 +360,7 @@ FROM [Users]");
             public void Throws_exception_when_order_by_is_empty(string orderBy)
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act / Assert
                 Assert.Throws<ArgumentException>(
@@ -371,7 +371,7 @@ FROM [Users]");
             public void Selects_from_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), null, "Name");
@@ -379,7 +379,7 @@ FROM [Users]");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT [Id], [Name], [Age]
-FROM [Users]
+FROM [Dogs]
 ORDER BY Name
 OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY");
 
@@ -390,7 +390,7 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY");
             public void Adds_conditions_clause()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), $"WHERE Name LIKE {"Foo%"}", "Name");
@@ -398,7 +398,7 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT [Id], [Name], [Age]
-FROM [Users]
+FROM [Dogs]
 WHERE Name LIKE @p0
 ORDER BY Name
 OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY",
@@ -433,7 +433,7 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY");
             public void Selects_second_page()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(2, 10, true, 10, 19), null, "Name");
@@ -441,7 +441,7 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT [Id], [Name], [Age]
-FROM [Users]
+FROM [Dogs]
 ORDER BY Name
 OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY");
 
@@ -452,7 +452,7 @@ OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY");
             public void Selects_appropriate_number_of_rows()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(2, 5, true, 5, 9), null, "Name");
@@ -460,7 +460,7 @@ OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY");
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT [Id], [Name], [Age]
-FROM [Users]
+FROM [Dogs]
 ORDER BY Name
 OFFSET 5 ROWS FETCH NEXT 5 ROWS ONLY");
 
@@ -475,14 +475,14 @@ OFFSET 5 ROWS FETCH NEXT 5 ROWS ONLY");
             public void Inserts_into_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertStatement(schema, new User { Name = "Foo", Age = 10 });
+                var sql = this.config.Dialect.MakeInsertStatement(schema, new Dog { Name = "Foo", Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
-INSERT INTO [Users] ([Name], [Age])
+INSERT INTO [Dogs] ([Name], [Age])
 VALUES (@Name, @Age);",
                     new Dictionary<string, object>
                         {
@@ -570,14 +570,14 @@ VALUES (@Name);",
             public void Inserts_into_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema, new User { Name = "Foo", Age = 10 });
+                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema, new Dog { Name = "Foo", Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
-INSERT INTO [Users] ([Name], [Age])
+INSERT INTO [Dogs] ([Name], [Age])
 VALUES (@Name, @Age);
 SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]",
                     new Dictionary<string, object>
@@ -669,14 +669,14 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]",
             public void Updates_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeUpdateStatement(schema, new User { Id = 5, Name = "Foo", Age = 10 });
+                var sql = this.config.Dialect.MakeUpdateStatement(schema, new Dog { Id = 5, Name = "Foo", Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
-UPDATE [Users]
+UPDATE [Dogs]
 SET [Name] = @Name, [Age] = @Age
 WHERE [Id] = @Id",
                     new Dictionary<string, object>
@@ -861,14 +861,14 @@ WHERE [Id] = @Id",
             public void Deletes_from_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema, 5);
 
                 // Assert
                 var expected = new SqlCommand(@"
-DELETE FROM [Users]
+DELETE FROM [Dogs]
 WHERE [Id] = @Id",
                     new Dictionary<string, object>
                         {
@@ -972,14 +972,14 @@ WHERE [Key] = @Key",
             public void Deletes_from_given_table()
             {
                 // Arrange
-                var schema = this.config.User();
+                var schema = this.config.Dog();
 
                 // Act
                 var sql = this.config.Dialect.MakeDeleteRangeStatement(schema, $"WHERE [Age] > {10}");
 
                 // Assert
                 var expected = new SqlCommand(@"
-DELETE FROM [Users]
+DELETE FROM [Dogs]
 WHERE [Age] > @p0",
                     new Dictionary<string, object>
                         {
@@ -998,7 +998,7 @@ WHERE [Age] > @p0",
             {
                 // Arrange
                 var conditions = new { };
-                var schema = this.GetConditionsSchema<User>(conditions);
+                var schema = this.GetConditionsSchema<Dog>(conditions);
 
                 // Act
                 var sql = this.config.Dialect.MakeWhereClause(schema, conditions);
@@ -1013,7 +1013,7 @@ WHERE [Age] > @p0",
             {
                 // Arrange
                 var conditions = new { Name = "Bobby" };
-                var schema = this.GetConditionsSchema<User>(conditions);
+                var schema = this.GetConditionsSchema<Dog>(conditions);
 
                 // Act
                 var sql = this.config.Dialect.MakeWhereClause(schema, conditions);
@@ -1029,7 +1029,7 @@ WHERE [Age] > @p0",
             {
                 // Arrange
                 var conditions = new { Name = "Bobby", Age = 5 };
-                var schema = this.GetConditionsSchema<User>(conditions);
+                var schema = this.GetConditionsSchema<Dog>(conditions);
 
                 // Act
                 var sql = this.config.Dialect.MakeWhereClause(schema, conditions);
@@ -1045,7 +1045,7 @@ WHERE [Age] > @p0",
             {
                 // Arrange
                 var conditions = new { Name = (string)null };
-                var schema = this.GetConditionsSchema<User>(conditions);
+                var schema = this.GetConditionsSchema<Dog>(conditions);
 
                 // Act
                 var sql = this.config.Dialect.MakeWhereClause(schema, conditions);
@@ -1066,28 +1066,28 @@ WHERE [Age] > @p0",
         public class MakeCreateTempTableStatement
             : SqlServer2012DialectTests
         {
-            private readonly Mock<ITableNameFactory> tableNameFactory;
+            private readonly Mock<ITableNameConvention> tableNameFactory;
 
             public MakeCreateTempTableStatement()
             {
-                this.tableNameFactory = new Mock<ITableNameFactory>();
+                this.tableNameFactory = new Mock<ITableNameConvention>();
 
-                var defaultTableNameFactory = new AtttributeTableNameFactory();
-                this.tableNameFactory.Setup(f => f.GetTableName(It.IsAny<Type>(), It.IsAny<IDialect>()))
-                    .Returns((Type type, IDialect d) => "[#" + defaultTableNameFactory.GetTableName(type, d).Substring(1));
+                var defaultTableNameFactory = new AtttributeTableNameConvention(new SqlServer2012NameEscaper());
+                this.tableNameFactory.Setup(f => f.GetTableName(It.IsAny<Type>()))
+                    .Returns((Type type) => "[#" + defaultTableNameFactory.GetTableName(type).Substring(1));
 
-                this.config = this.config.AddSqlTypeMapping(typeof(DateTime), DbType.DateTime2).WithTableNameFactory(this.tableNameFactory.Object);
+                this.config = this.config.AddSqlTypeMapping(typeof(DateTime), DbType.DateTime2).WithTableNameConvention(this.tableNameFactory.Object);
             }
 
             [Fact]
             public void Throws_exception_when_tablename_doesnt_begin_with_a_hash()
             {
                 // Arrange
-                this.tableNameFactory.Setup(f => f.GetTableName(It.IsAny<Type>(), It.IsAny<IDialect>()))
-                    .Returns((Type type, IDialect d) => "table");
+                this.tableNameFactory.Setup(f => f.GetTableName(It.IsAny<Type>()))
+                    .Returns((Type type) => "table");
 
                 // Act
-                Assert.Throws<ArgumentException>(() => this.config.Dialect.MakeCreateTempTableStatement(this.config.User()));
+                Assert.Throws<ArgumentException>(() => this.config.Dialect.MakeCreateTempTableStatement(this.config.Dog()));
             }
 
             [Fact]

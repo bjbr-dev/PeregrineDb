@@ -80,20 +80,5 @@
         /// Generates a SQL statement which drops a temporary table.
         /// </summary>
         SqlCommand MakeDropTempTableStatement(TableSchema tableSchema);
-
-        /// <summary>
-        /// Escapes the column name so it can be used in SQL
-        /// </summary>
-        string MakeColumnName(string name);
-
-        /// <summary>
-        /// Escapes the table name so it can be used in SQL
-        /// </summary>
-        string MakeTableName(string tableName);
-
-        /// <summary>
-        /// Escapes the table and schema names, and then combines them so they can be used in SQL
-        /// </summary>
-        string MakeTableName(string schema, string tableName);
     }
 }

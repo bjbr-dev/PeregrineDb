@@ -9,13 +9,12 @@ namespace PeregrineDb.Schema
     using System.Data;
     using System.Linq;
     using System.Reflection;
-    using PeregrineDb.Dialects;
     using PeregrineDb.Utils;
 
     /// <summary>
     /// Methods to create an instance of a <see cref="TableSchema"/>.
     /// </summary>
-    internal class TableSchemaFactory
+    public class TableSchemaFactory
     {
         private readonly ConcurrentDictionary<TableSchemaCacheIdentity, TableSchema> schemas =
             new ConcurrentDictionary<TableSchemaCacheIdentity, TableSchema>();
@@ -23,27 +22,27 @@ namespace PeregrineDb.Schema
         private readonly ConcurrentDictionary<ConditionsColumnCacheIdentity, ImmutableArray<ConditionColumnSchema>> conditionColumns =
             new ConcurrentDictionary<ConditionsColumnCacheIdentity, ImmutableArray<ConditionColumnSchema>>();
 
-        private readonly IDialect dialect;
-        private readonly ITableNameFactory tableNameFactory;
-        private readonly IColumnNameFactory columnNameFactory;
+        private readonly ISqlNameEscaper nameEscaper;
+        private readonly ITableNameConvention tableNameConvention;
+        private readonly IColumnNameConvention columnNameConvention;
         private readonly Dictionary<Type, DbType> sqlTypeMappings;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TableSchemaFactory"/> class.
         /// </summary>
         public TableSchemaFactory(
-            IDialect dialect,
-            ITableNameFactory tableNameFactory,
-            IColumnNameFactory columnNameFactory,
+            ISqlNameEscaper nameEscaper,
+            ITableNameConvention tableNameConvention,
+            IColumnNameConvention columnNameConvention,
             Dictionary<Type, DbType> sqlTypeMappings)
         {
-            Ensure.NotNull(dialect, nameof(dialect));
-            Ensure.NotNull(tableNameFactory, nameof(tableNameFactory));
-            Ensure.NotNull(columnNameFactory, nameof(columnNameFactory));
+            Ensure.NotNull(nameEscaper, nameof(nameEscaper));
+            Ensure.NotNull(tableNameConvention, nameof(tableNameConvention));
+            Ensure.NotNull(columnNameConvention, nameof(columnNameConvention));
 
-            this.dialect = dialect;
-            this.tableNameFactory = tableNameFactory;
-            this.columnNameFactory = columnNameFactory;
+            this.nameEscaper = nameEscaper;
+            this.tableNameConvention = tableNameConvention;
+            this.columnNameConvention = columnNameConvention;
             this.sqlTypeMappings = sqlTypeMappings;
         }
 
@@ -89,7 +88,7 @@ namespace PeregrineDb.Schema
         /// </summary>
         public TableSchema MakeTableSchema(Type entityType)
         {
-            var tableName = this.tableNameFactory.GetTableName(entityType, this.dialect);
+            var tableName = this.tableNameConvention.GetTableName(entityType);
             var properties = entityType.GetProperties(BindingFlags.Instance | BindingFlags.Public)
                                        .Where(this.CouldBeColumn)
                                        .Select(PropertySchema.MakePropertySchema)
@@ -215,8 +214,8 @@ namespace PeregrineDb.Schema
             return new ColumnSchema(
                 index,
                 propertyName,
-                this.dialect.MakeColumnName(this.columnNameFactory.GetColumnName(property)),
-                this.dialect.MakeColumnName(propertyName),
+                this.columnNameConvention.GetColumnName(property),
+                this.nameEscaper.EscapeColumnName(propertyName),
                 propertyName,
                 columnUsage,
                 this.GetDbType(property));

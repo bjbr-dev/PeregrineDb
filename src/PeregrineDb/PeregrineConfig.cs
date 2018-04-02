@@ -7,6 +7,7 @@
     using System.Linq;
     using PeregrineDb.Dialects;
     using PeregrineDb.Dialects.Postgres;
+    using PeregrineDb.Dialects.SqlServer2012;
     using PeregrineDb.Schema;
 
     /// <summary>
@@ -55,32 +56,51 @@
                 [typeof(object)] = DbType.Object
             }.ToImmutableDictionary();
 
-        public static PeregrineConfig SqlServer2012 => new PeregrineConfig(
-            PeregrineDb.Dialect.SqlServer2012, new AtttributeTableNameFactory(), new AttributeColumnNameFactory(), true, DefaultSqlTypeMapping);
+        public static PeregrineConfig SqlServer2012
+        {
+            get
+            {
+                var nameEscaper = new SqlServer2012NameEscaper();
+                return new PeregrineConfig(
+                    PeregrineDb.Dialect.SqlServer2012, nameEscaper, new AtttributeTableNameConvention(nameEscaper),
+                    new AttributeColumnNameConvention(nameEscaper), true, DefaultSqlTypeMapping);
+            }
+        }
 
-        public static PeregrineConfig Postgres => new PeregrineConfig(
-            PeregrineDb.Dialect.PostgreSql, new PostgresAttributeTableNameFactory(), new PostgresAttributeColumnNameFactory(), true, DefaultSqlTypeMapping);
+        public static PeregrineConfig Postgres
+        {
+            get
+            {
+                var nameEscaper = new PostgresNameEscaper();
+                return new PeregrineConfig(
+                    PeregrineDb.Dialect.PostgreSql, nameEscaper, new PostgresAttributeTableNameConvention(nameEscaper),
+                    new PostgresAttributeColumnNameConvention(nameEscaper), true, DefaultSqlTypeMapping);
+            }
+        }
 
         private readonly TableSchemaFactory tableSchemaFactory;
+        private readonly ISqlNameEscaper sqlNameEscaper;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PeregrineConfig"/> class.
         /// </summary>
         public PeregrineConfig(
             IDialect dialect,
-            ITableNameFactory tableNameFactory,
-            IColumnNameFactory columnNameFactory,
+            ISqlNameEscaper sqlNameEscaper,
+            ITableNameConvention tableNameConvention,
+            IColumnNameConvention columnNameConvention,
             bool verifyAffectedRowCount,
             ImmutableDictionary<Type, DbType> sqlTypeMappings)
         {
             this.Dialect = dialect ?? throw new ArgumentNullException(nameof(dialect));
-            this.TableNameFactory = tableNameFactory ?? throw new ArgumentNullException(nameof(tableNameFactory));
-            this.ColumnNameFactory = columnNameFactory ?? throw new ArgumentNullException(nameof(columnNameFactory));
+            this.TableNameConvention = tableNameConvention ?? throw new ArgumentNullException(nameof(tableNameConvention));
+            this.ColumnNameConvention = columnNameConvention ?? throw new ArgumentNullException(nameof(columnNameConvention));
             this.VerifyAffectedRowCount = verifyAffectedRowCount;
             this.SqlTypeMappings = sqlTypeMappings ?? throw new ArgumentNullException(nameof(sqlTypeMappings));
+            this.sqlNameEscaper = sqlNameEscaper ?? throw new ArgumentNullException(nameof(sqlNameEscaper));
 
             var fastMappings = sqlTypeMappings.ToDictionary(k => k.Key, v => v.Value);
-            this.tableSchemaFactory = new TableSchemaFactory(dialect, tableNameFactory, columnNameFactory, fastMappings);
+            this.tableSchemaFactory = new TableSchemaFactory(sqlNameEscaper, tableNameConvention, columnNameConvention, fastMappings);
         }
 
         /// <summary>
@@ -88,9 +108,9 @@
         /// </summary>
         public IDialect Dialect { get; }
 
-        public ITableNameFactory TableNameFactory { get; }
+        public ITableNameConvention TableNameConvention { get; }
 
-        public IColumnNameFactory ColumnNameFactory { get; }
+        public IColumnNameConvention ColumnNameConvention { get; }
 
         public ImmutableDictionary<Type, DbType> SqlTypeMappings { get; }
 
@@ -109,28 +129,28 @@
         /// </summary>
         public PeregrineConfig WithDialect(IDialect dialect)
         {
-            return new PeregrineConfig(dialect, this.TableNameFactory, this.ColumnNameFactory, this.VerifyAffectedRowCount, this.SqlTypeMappings);
+            return new PeregrineConfig(dialect, this.sqlNameEscaper, this.TableNameConvention, this.ColumnNameConvention, this.VerifyAffectedRowCount, this.SqlTypeMappings);
         }
 
-        public PeregrineConfig WithTableNameFactory(ITableNameFactory factory)
+        public PeregrineConfig WithTableNameConvention(ITableNameConvention convention)
         {
-            return new PeregrineConfig(this.Dialect, factory, this.ColumnNameFactory, this.VerifyAffectedRowCount, this.SqlTypeMappings);
+            return new PeregrineConfig(this.Dialect, this.sqlNameEscaper, convention, this.ColumnNameConvention, this.VerifyAffectedRowCount, this.SqlTypeMappings);
         }
 
-        public PeregrineConfig WithColumnNameFactory(IColumnNameFactory factory)
+        public PeregrineConfig WithColumnNameConvention(IColumnNameConvention convention)
         {
-            return new PeregrineConfig(this.Dialect, this.TableNameFactory, factory, this.VerifyAffectedRowCount, this.SqlTypeMappings);
+            return new PeregrineConfig(this.Dialect, this.sqlNameEscaper, this.TableNameConvention, convention, this.VerifyAffectedRowCount, this.SqlTypeMappings);
         }
 
         public PeregrineConfig WithVerifyAffectedRowCount(bool verify)
         {
-            return new PeregrineConfig(this.Dialect, this.TableNameFactory, this.ColumnNameFactory, verify, this.SqlTypeMappings);
+            return new PeregrineConfig(this.Dialect, this.sqlNameEscaper, this.TableNameConvention, this.ColumnNameConvention, verify, this.SqlTypeMappings);
         }
 
         public PeregrineConfig AddSqlTypeMapping(Type type, DbType dbType)
         {
             var mappings = this.SqlTypeMappings.SetItem(type, dbType);
-            return new PeregrineConfig(this.Dialect, this.TableNameFactory, this.ColumnNameFactory, this.VerifyAffectedRowCount, mappings);
+            return new PeregrineConfig(this.Dialect, this.sqlNameEscaper, this.TableNameConvention, this.ColumnNameConvention, this.VerifyAffectedRowCount, mappings);
         }
 
         public TableSchema GetTableSchema(Type entityType)

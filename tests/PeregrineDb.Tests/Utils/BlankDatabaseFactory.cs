@@ -11,7 +11,6 @@
     using PeregrineDb;
     using PeregrineDb.Databases;
     using PeregrineDb.Dialects;
-    using PeregrineDb.Dialects.Postgres;
     using PeregrineDb.Testing;
     using PeregrineDb.Tests.Utils.Pooling;
 
@@ -27,7 +26,15 @@
 
         public static IDatabase<IDbConnection> MakeDatabase(IDialect dialect)
         {
-            return MakeDatabase(PeregrineConfig.SqlServer2012.WithDialect(dialect));
+            switch (dialect)
+            {
+                case PostgreSqlDialect _:
+                    return MakeDatabase(PeregrineConfig.Postgres);
+                case SqlServer2012Dialect _:
+                    return MakeDatabase(PeregrineConfig.SqlServer2012);
+                default:
+                    throw new NotSupportedException("Unknown dialect: " + dialect.GetType().Name);
+            }
         }
 
         public static IDatabase<IDbConnection> MakeDatabase(PeregrineConfig config)

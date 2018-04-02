@@ -37,19 +37,19 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var result = database.Count<User>();
+                    var result = database.Count<Dog>();
 
                     // Assert
                     result.Should().Be(4);
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -62,19 +62,19 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var result = database.Count<User>($"WHERE Age < {11}");
+                    var result = database.Count<Dog>($"WHERE Age < {11}");
 
                     // Assert
                     result.Should().Be(3);
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -116,7 +116,7 @@
                     // Arrange
                     
                     // Act
-                    Assert.Throws<ArgumentNullException>(() => database.Count<User>((object)null));
+                    Assert.Throws<ArgumentNullException>(() => database.Count<Dog>((object)null));
                 }
             }
 
@@ -129,19 +129,19 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var result = database.Count<User>(new { });
+                    var result = database.Count<Dog>(new { });
 
                     // Assert
                     result.Should().Be(4);
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -154,19 +154,19 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var result = database.Count<User>(new { Age = 10 });
+                    var result = database.Count<Dog>(new { Age = 10 });
 
                     // Assert
                     result.Should().Be(3);
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -241,10 +241,10 @@
                     var id = database.Insert<long>(new KeyInt64 { Name = "Some Name" });
 
                     // Act
-                    var user = database.Find<KeyInt64>(id);
+                    var entity = database.Find<KeyInt64>(id);
 
                     // Assert
-                    user.Name.Should().Be("Some Name");
+                    entity.Name.Should().Be("Some Name");
 
                     // Cleanup
                     database.Delete<KeyInt64>(id);
@@ -451,13 +451,13 @@
                 {
                     // Arrange
                     
-                    var id = database.Insert<int>(new PropertyNotMapped { Firstname = "Bobby", LastName = "DropTables", Age = 10 });
+                    var id = database.Insert<int>(new PropertyNotMapped { FirstName = "Bobby", LastName = "DropTables", Age = 10 });
 
                     // Act
                     var entity = database.Find<PropertyNotMapped>(id);
 
                     // Assert
-                    entity.Firstname.Should().Be("Bobby");
+                    entity.FirstName.Should().Be("Bobby");
                     entity.LastName.Should().Be("DropTables");
                     entity.FullName.Should().Be("Bobby DropTables");
                     entity.Age.Should().Be(0);
@@ -537,10 +537,10 @@
                     var id = database.Insert<long>(new KeyInt64 { Name = "Some Name" });
 
                     // Act
-                    var user = database.Get<KeyInt64>(id);
+                    var entity = database.Get<KeyInt64>(id);
 
                     // Assert
-                    user.Name.Should().Be("Some Name");
+                    entity.Name.Should().Be("Some Name");
 
                     // Cleanup
                     database.Delete<KeyInt64>(id);
@@ -646,13 +646,13 @@
                 {
                     // Arrange
                     
-                    var id = database.Insert<int>(new PropertyNotMapped { Firstname = "Bobby", LastName = "DropTables", Age = 10 });
+                    var id = database.Insert<int>(new PropertyNotMapped { FirstName = "Bobby", LastName = "DropTables", Age = 10 });
 
                     // Act
                     var entity = database.Get<PropertyNotMapped>(id);
 
                     // Assert
-                    entity.Firstname.Should().Be("Bobby");
+                    entity.FirstName.Should().Be("Bobby");
                     entity.LastName.Should().Be("DropTables");
                     entity.FullName.Should().Be("Bobby DropTables");
                     entity.Age.Should().Be(0);
@@ -675,21 +675,21 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var user = database.GetFirstOrDefault<User>(
+                    var entity = database.GetFirstOrDefault<Dog>(
                         $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
                         "Name DESC");
 
                     // Assert
-                    user.ShouldBeEquivalentTo(new User { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
+                    entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -703,12 +703,12 @@
                     // Arrange
                     
                     // Act
-                    var user = database.GetFirstOrDefault<User>(
+                    var entity = database.GetFirstOrDefault<Dog>(
                         $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
                         "Name DESC");
 
                     // Assert
-                    user.Should().BeNull();
+                    entity.Should().BeNull();
                 }
             }
         }
@@ -725,19 +725,19 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var user = database.GetFirstOrDefault<User>(new { Age = 10 }, "Name DESC");
+                    var entity = database.GetFirstOrDefault<Dog>(new { Age = 10 }, "Name DESC");
 
                     // Assert
-                    user.ShouldBeEquivalentTo(new User { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
+                    entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -751,10 +751,10 @@
                     // Arrange
                     
                     // Act
-                    var user = database.GetFirstOrDefault<User>(new { Age = 10 }, "Name DESC");
+                    var entity = database.GetFirstOrDefault<Dog>(new { Age = 10 }, "Name DESC");
 
                     // Assert
-                    user.Should().BeNull();
+                    entity.Should().BeNull();
                 }
             }
         }
@@ -771,21 +771,21 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var user = database.GetFirst<User>(
+                    var entity = database.GetFirst<Dog>(
                         $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
                         "Name DESC");
 
                     // Assert
-                    user.ShouldBeEquivalentTo(new User { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
+                    entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -797,7 +797,7 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Act
-                    Action act = () => database.GetFirst<User>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}", "Name DESC");
+                    Action act = () => database.GetFirst<Dog>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}", "Name DESC");
 
                     // Assert
                     act.ShouldThrow<InvalidOperationException>();
@@ -817,19 +817,19 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var user = database.GetFirst<User>(new { Age = 10 }, "Name DESC");
+                    var entity = database.GetFirst<Dog>(new { Age = 10 }, "Name DESC");
 
                     // Assert
-                    user.ShouldBeEquivalentTo(new User { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
+                    entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -841,7 +841,7 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Act
-                    Action act = () => database.GetFirst<User>(new { Age = 10 }, "Name DESC");
+                    Action act = () => database.GetFirst<Dog>(new { Age = 10 }, "Name DESC");
 
                     // Assert
                     act.ShouldThrow<InvalidOperationException>();
@@ -860,17 +860,17 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 11 });
 
                     // Act
-                    var user = database.GetSingleOrDefault<User>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
+                    var entity = database.GetSingleOrDefault<Dog>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
 
                     // Assert
-                    user.ShouldBeEquivalentTo(new User { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
+                    entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -882,10 +882,10 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Act
-                    var user = database.GetSingleOrDefault<User>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
+                    var entity = database.GetSingleOrDefault<Dog>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
 
                     // Assert
-                    user.Should().BeNull();
+                    entity.Should().BeNull();
                 }
             }
 
@@ -897,17 +897,17 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
 
                     // Act
-                    Action act = () => database.GetSingleOrDefault<User>($"WHERE Age = {10}");
+                    Action act = () => database.GetSingleOrDefault<Dog>($"WHERE Age = {10}");
 
                     // Assert
                     act.ShouldThrow<InvalidOperationException>();
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -923,17 +923,17 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 11 });
 
                     // Act
-                    var user = database.GetSingleOrDefault<User>(new { Age = 10 });
+                    var entity = database.GetSingleOrDefault<Dog>(new { Age = 10 });
 
                     // Assert
-                    user.ShouldBeEquivalentTo(new User { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
+                    entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -945,10 +945,10 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Act
-                    var user = database.GetSingleOrDefault<User>(new { Age = 10 });
+                    var entity = database.GetSingleOrDefault<Dog>(new { Age = 10 });
 
                     // Assert
-                    user.Should().BeNull();
+                    entity.Should().BeNull();
                 }
             }
 
@@ -960,17 +960,17 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
 
                     // Act
-                    Action act = () => database.GetSingleOrDefault<User>(new { Age = 10 });
+                    Action act = () => database.GetSingleOrDefault<Dog>(new { Age = 10 });
 
                     // Assert
                     act.ShouldThrow<InvalidOperationException>();
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -986,17 +986,17 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 11 });
 
                     // Act
-                    var user = database.GetSingle<User>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
+                    var entity = database.GetSingle<Dog>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
 
                     // Assert
-                    user.ShouldBeEquivalentTo(new User { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
+                    entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -1008,7 +1008,7 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Act
-                    Action act = () => database.GetSingle<User>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
+                    Action act = () => database.GetSingle<Dog>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
 
                     // Assert
                     act.ShouldThrow<InvalidOperationException>();
@@ -1023,17 +1023,17 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
 
                     // Act
-                    Action act = () => database.GetSingle<User>($"WHERE Age = {10}");
+                    Action act = () => database.GetSingle<Dog>($"WHERE Age = {10}");
 
                     // Assert
                     act.ShouldThrow<InvalidOperationException>();
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -1049,17 +1049,17 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 11 });
 
                     // Act
-                    var user = database.GetSingle<User>(new { Age = 10 });
+                    var entity = database.GetSingle<Dog>(new { Age = 10 });
 
                     // Assert
-                    user.ShouldBeEquivalentTo(new User { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
+                    entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -1071,7 +1071,7 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Act
-                    Action act = () => database.GetSingle<User>(new { Age = 10 });
+                    Action act = () => database.GetSingle<Dog>(new { Age = 10 });
 
                     // Assert
                     act.ShouldThrow<InvalidOperationException>();
@@ -1086,17 +1086,17 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
 
                     // Act
-                    Action act = () => database.GetSingle<User>(new { Age = 10 });
+                    Action act = () => database.GetSingle<Dog>(new { Age = 10 });
 
                     // Assert
                     act.ShouldThrow<InvalidOperationException>();
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -1112,19 +1112,19 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var users = database.GetRange<User>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
+                    var entities = database.GetRange<Dog>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
 
                     // Assert
-                    users.Count().Should().Be(3);
+                    entities.Count().Should().Be(3);
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -1136,19 +1136,19 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var users = database.GetRange<User>(null);
+                    var entities = database.GetRange<Dog>(null);
 
                     // Assert
-                    users.Count().Should().Be(4);
+                    entities.Count().Should().Be(4);
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -1164,7 +1164,7 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Act
-                    Assert.Throws<ArgumentNullException>(() => database.GetRange<User>((object)null));
+                    Assert.Throws<ArgumentNullException>(() => database.GetRange<Dog>((object)null));
                 }
             }
 
@@ -1176,19 +1176,19 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var users = database.GetRange<User>(new { });
+                    var entities = database.GetRange<Dog>(new { });
 
                     // Assert
-                    users.Count().Should().Be(4);
+                    entities.Count().Should().Be(4);
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -1201,19 +1201,19 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var users = database.GetRange<User>(new { Age = 10 });
+                    var entities = database.GetRange<Dog>(new { Age = 10 });
 
                     // Assert
-                    users.Count().Should().Be(3);
+                    entities.Count().Should().Be(3);
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -1226,19 +1226,19 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var users = database.GetRange<User>(new { age = 10 });
+                    var entities = database.GetRange<Dog>(new { age = 10 });
 
                     // Assert
-                    users.Count().Should().Be(3);
+                    entities.Count().Should().Be(3);
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -1252,7 +1252,7 @@
                     // Arrange
                     
                     // Act
-                    Action act = () => database.GetRange<User>(new { Ages = 10 });
+                    Action act = () => database.GetRange<Dog>(new { Ages = 10 });
 
                     // Assert
                     act.ShouldThrow<InvalidConditionSchemaException>();
@@ -1273,10 +1273,10 @@
                     database.Insert(new PropertyNullable { Name = null });
 
                     // Act
-                    var users = database.GetRange<PropertyNullable>(new { Name = "Some Name 3" });
+                    var entities = database.GetRange<PropertyNullable>(new { Name = "Some Name 3" });
 
                     // Assert
-                    users.Count().Should().Be(1);
+                    entities.Count().Should().Be(1);
 
                     // Cleanup
                     database.DeleteAll<PropertyNullable>();
@@ -1297,10 +1297,10 @@
                     database.Insert(new PropertyNullable { Name = null });
 
                     // Act
-                    var users = database.GetRange<PropertyNullable>(new { Name = (string)null });
+                    var entities = database.GetRange<PropertyNullable>(new { Name = (string)null });
 
                     // Assert
-                    users.Count().Should().Be(2);
+                    entities.Count().Should().Be(2);
 
                     // Cleanup
                     database.DeleteAll<PropertyNullable>();
@@ -1316,18 +1316,18 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 12 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 12 });
 
                     // Act
-                    var users = database.GetRange<User>(new { Name = "Some Name 2", Age = 10 });
+                    var entities = database.GetRange<Dog>(new { Name = "Some Name 2", Age = 10 });
 
                     // Assert
-                    users.Count().Should().Be(1);
+                    entities.Count().Should().Be(1);
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -1346,10 +1346,10 @@
                     
                     // Act
                     var pageBuilder = new PageIndexPageBuilder(1, 10);
-                    var users = database.GetPage<User>(pageBuilder, null, "Age");
+                    var entities = database.GetPage<Dog>(pageBuilder, null, "Age");
 
                     // Assert
-                    users.Items.Count().Should().Be(0);
+                    entities.Items.Count().Should().Be(0);
                 }
             }
 
@@ -1362,22 +1362,22 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var users = database.GetPage<User>(
+                    var entities = database.GetPage<Dog>(
                         new PageIndexPageBuilder(1, 10),
                         $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
                         "Age");
 
                     // Assert
-                    users.Items.Count().Should().Be(3);
+                    entities.Items.Count().Should().Be(3);
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -1390,24 +1390,24 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var users = database.GetPage<User>(
+                    var entities = database.GetPage<Dog>(
                         new PageIndexPageBuilder(1, 2),
                         $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
                         "Age DESC").Items;
 
                     // Assert
-                    users.Count().Should().Be(2);
-                    users[0].Name.Should().Be("Some Name 1");
-                    users[1].Name.Should().Be("Some Name 2");
+                    entities.Count().Should().Be(2);
+                    entities[0].Name.Should().Be("Some Name 1");
+                    entities[1].Name.Should().Be("Some Name 2");
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -1420,23 +1420,23 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var users = database.GetPage<User>(
+                    var entities = database.GetPage<Dog>(
                         new PageIndexPageBuilder(2, 2),
                         $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
                         "Age DESC").Items;
 
                     // Assert
-                    users.Count().Should().Be(1);
-                    users[0].Name.Should().Be("Some Name 3");
+                    entities.Count().Should().Be(1);
+                    entities[0].Name.Should().Be("Some Name 3");
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -1449,22 +1449,22 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var users = database.GetPage<User>(
+                    var entities = database.GetPage<Dog>(
                         new PageIndexPageBuilder(3, 2),
                         $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
                         "Age DESC").Items;
 
                     // Assert
-                    users.Should().BeEmpty();
+                    entities.Should().BeEmpty();
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -1477,19 +1477,19 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var users = database.GetPage<User>(new PageIndexPageBuilder(2, 2), null, "Age DESC").Items;
+                    var entities = database.GetPage<Dog>(new PageIndexPageBuilder(2, 2), null, "Age DESC").Items;
 
                     // Assert
-                    users.Count().Should().Be(2);
+                    entities.Count().Should().Be(2);
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -1508,10 +1508,10 @@
                     
                     // Act
                     var pageBuilder = new PageIndexPageBuilder(1, 10);
-                    var users = database.GetPage<User>(pageBuilder, new { Age = 10 }, "Age");
+                    var entities = database.GetPage<Dog>(pageBuilder, new { Age = 10 }, "Age");
 
                     // Assert
-                    users.Items.Should().BeEmpty();
+                    entities.Items.Should().BeEmpty();
                 }
             }
 
@@ -1524,20 +1524,20 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
                     var pageBuilder = new PageIndexPageBuilder(1, 10);
-                    var users = database.GetPage<User>(pageBuilder, new { Age = 10 }, "Age");
+                    var entities = database.GetPage<Dog>(pageBuilder, new { Age = 10 }, "Age");
 
                     // Assert
-                    users.Items.Count().Should().Be(3);
+                    entities.Items.Count().Should().Be(3);
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -1550,23 +1550,23 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
                     var pageBuilder = new PageIndexPageBuilder(1, 2);
-                    var page = database.GetPage<User>(pageBuilder, new { Age = 10 }, "Age");
-                    var users = page.Items;
+                    var page = database.GetPage<Dog>(pageBuilder, new { Age = 10 }, "Age");
+                    var entities = page.Items;
 
                     // Assert
-                    users.Count().Should().Be(2);
-                    users[0].Name.Should().Be("Some Name 1");
-                    users[1].Name.Should().Be("Some Name 2");
+                    entities.Count().Should().Be(2);
+                    entities[0].Name.Should().Be("Some Name 1");
+                    entities[1].Name.Should().Be("Some Name 2");
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -1579,22 +1579,22 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
                     var pageBuilder = new PageIndexPageBuilder(2, 2);
-                    var page = database.GetPage<User>(pageBuilder, new { Age = 10 }, "Age");
-                    var users = page.Items;
+                    var page = database.GetPage<Dog>(pageBuilder, new { Age = 10 }, "Age");
+                    var entities = page.Items;
 
                     // Assert
-                    users.Count().Should().Be(1);
-                    users[0].Name.Should().Be("Some Name 3");
+                    entities.Count().Should().Be(1);
+                    entities[0].Name.Should().Be("Some Name 3");
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -1607,21 +1607,21 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
                     var pageBuilder = new PageIndexPageBuilder(3, 2);
-                    var page = database.GetPage<User>(pageBuilder, new { Age = 10 }, "Age");
-                    var users = page.Items;
+                    var page = database.GetPage<Dog>(pageBuilder, new { Age = 10 }, "Age");
+                    var entities = page.Items;
 
                     // Assert
-                    users.Should().BeEmpty();
+                    entities.Should().BeEmpty();
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -1639,19 +1639,19 @@
                 {
                     // Arrange
                     
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var users = database.GetAll<User>();
+                    var entities = database.GetAll<Dog>();
 
                     // Assert
-                    users.Count().Should().Be(4);
+                    entities.Count().Should().Be(4);
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -1859,7 +1859,7 @@
                 {
                     // Arrange
                     
-                    var entity = new PropertyNotMapped { Firstname = "Bobby", LastName = "DropTables", Age = 10 };
+                    var entity = new PropertyNotMapped { FirstName = "Bobby", LastName = "DropTables", Age = 10 };
 
                     // Act
                     database.Insert(entity);
@@ -2412,19 +2412,19 @@
                 {
                     // Arrange
                     
-                    var id = database.Insert<int>(new User { Name = "Some name", Age = 10 });
+                    var id = database.Insert<int>(new Dog { Name = "Some name", Age = 10 });
 
                     // Act
-                    var entity = database.Find<User>(id);
+                    var entity = database.Find<Dog>(id);
                     entity.Name = "Other name";
                     database.Update(entity);
 
                     // Assert
-                    var updatedEntity = database.Find<User>(id);
+                    var updatedEntity = database.Find<Dog>(id);
                     updatedEntity.Name.Should().Be("Other name");
 
                     // Cleanup
-                    database.Delete<User>(id);
+                    database.Delete<Dog>(id);
                 }
             }
 
@@ -2437,7 +2437,7 @@
                 {
                     // Arrange
                     
-                    var entity = new PropertyNotMapped { Firstname = "Bobby", LastName = "DropTables", Age = 10 };
+                    var entity = new PropertyNotMapped { FirstName = "Bobby", LastName = "DropTables", Age = 10 };
                     entity.Id = database.Insert<int>(entity);
 
                     // Act
@@ -2494,13 +2494,13 @@
                     database.InsertRange(
                         new[]
                             {
-                                new User { Name = "Some name1", Age = 10 },
-                                new User { Name = "Some name2", Age = 10 },
-                                new User { Name = "Some name2", Age = 11 }
+                                new Dog { Name = "Some name1", Age = 10 },
+                                new Dog { Name = "Some name2", Age = 10 },
+                                new Dog { Name = "Some name2", Age = 11 }
                             });
 
                     // Act
-                    var entities = database.GetRange<User>($"WHERE Age = 10").ToList();
+                    var entities = database.GetRange<Dog>($"WHERE Age = 10").ToList();
                     foreach (var entity in entities)
                     {
                         entity.Name = "Other name";
@@ -2512,11 +2512,11 @@
                     // Assert
                     result.NumRowsAffected.Should().Be(2);
 
-                    var updatedEntities = database.GetRange<User>($"WHERE Name = 'Other name'");
+                    var updatedEntities = database.GetRange<Dog>($"WHERE Name = 'Other name'");
                     updatedEntities.Count().Should().Be(2);
 
                     // Cleanup
-                    database.DeleteAll<User>();
+                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -2569,13 +2569,13 @@
                     {
                         // Arrange
                         
-                        var id = database.Insert<int>(new User { Name = "Some name", Age = 10 });
+                        var id = database.Insert<int>(new Dog { Name = "Some name", Age = 10 });
 
                         // Act
-                        database.Delete<User>(id);
+                        database.Delete<Dog>(id);
 
                         // Assert
-                        database.Find<User>(id).Should().BeNull();
+                        database.Find<Dog>(id).Should().BeNull();
                     }
                 }
 
@@ -2643,14 +2643,14 @@
                     {
                         // Arrange
                         
-                        var id = database.Insert<int>(new User { Name = "Some name", Age = 10 });
+                        var id = database.Insert<int>(new Dog { Name = "Some name", Age = 10 });
 
                         // Act
-                        var entity = database.Find<User>(id);
+                        var entity = database.Find<Dog>(id);
                         database.Delete(entity);
 
                         // Assert
-                        database.Find<User>(id).Should().BeNull();
+                        database.Find<Dog>(id).Should().BeNull();
                     }
                 }
 
@@ -2694,7 +2694,7 @@
                         var actualCondition = conditions != null ? new SqlString(conditions) : null;
 
                         // Act / Assert
-                        Assert.Throws<ArgumentException>(() => database.DeleteRange<User>(actualCondition));
+                        Assert.Throws<ArgumentException>(() => database.DeleteRange<Dog>(actualCondition));
                     }
                 }
 
@@ -2709,7 +2709,7 @@
                         // Arrange
                         
                         // Act
-                        Action act = () => database.DeleteRange<User>(new SqlString(conditions));
+                        Action act = () => database.DeleteRange<Dog>(new SqlString(conditions));
 
                         // Assert
                         act.ShouldNotThrow();
@@ -2724,20 +2724,20 @@
                     {
                         // Arrange
                         
-                        database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                        database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                        database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                        database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                        database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                        database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                        database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                        database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                         // Act
-                        var result = database.DeleteRange<User>($"WHERE Age = {10}");
+                        var result = database.DeleteRange<Dog>($"WHERE Age = {10}");
 
                         // Assert
                         result.NumRowsAffected.Should().Be(3);
-                        database.Count<User>().Should().Be(1);
+                        database.Count<Dog>().Should().Be(1);
 
                         // Cleanup
-                        database.DeleteAll<User>();
+                        database.DeleteAll<Dog>();
                     }
                 }
             }
@@ -2756,7 +2756,7 @@
                         // Arrange
                         
                         // Act / Assert
-                        Assert.Throws<ArgumentNullException>(() => database.DeleteRange<User>((object)null));
+                        Assert.Throws<ArgumentNullException>(() => database.DeleteRange<Dog>((object)null));
                     }
                 }
 
@@ -2770,7 +2770,7 @@
                         // Arrange
                         
                         // Act / Assert
-                        Assert.Throws<ArgumentException>(() => database.DeleteRange<User>(new { }));
+                        Assert.Throws<ArgumentException>(() => database.DeleteRange<Dog>(new { }));
                     }
                 }
 
@@ -2783,20 +2783,20 @@
                     {
                         // Arrange
                         
-                        database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                        database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                        database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                        database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                        database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                        database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                        database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                        database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                         // Act
-                        var result = database.DeleteRange<User>(new { Age = 10 });
+                        var result = database.DeleteRange<Dog>(new { Age = 10 });
 
                         // Assert
                         result.NumRowsAffected.Should().Be(3);
-                        database.Count<User>().Should().Be(1);
+                        database.Count<Dog>().Should().Be(1);
 
                         // Cleanup
-                        database.DeleteAll<User>();
+                        database.DeleteAll<Dog>();
                     }
                 }
             }
@@ -2812,17 +2812,17 @@
                     {
                         // Arrange
                         
-                        database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                        database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                        database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                        database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                        database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                        database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                        database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                        database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                         // Act
-                        var result = database.DeleteAll<User>();
+                        var result = database.DeleteAll<Dog>();
 
                         // Assert
                         result.NumRowsAffected.Should().Be(4);
-                        database.Count<User>().Should().Be(0);
+                        database.Count<Dog>().Should().Be(0);
                     }
                 }
             }

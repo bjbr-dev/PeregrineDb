@@ -5,7 +5,6 @@
     using FluentAssertions;
     using PeregrineDb;
     using PeregrineDb.Dialects;
-    using PeregrineDb.Dialects.Postgres;
     using PeregrineDb.Testing;
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
@@ -29,16 +28,16 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 2", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 3", Age = 10 });
-                    database.Insert(new User { Name = "Some Name 4", Age = 11 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
                     DataWiper.ClearAllData(database);
 
                     // Assert
-                    database.Count<User>().Should().Be(0);
+                    database.Count<Dog>().Should().Be(0);
                 }
             }
 
@@ -49,16 +48,16 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    database.Insert(new User { Name = "Some Name 1", Age = 10 });
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
 
                     string tableName;
                     switch (dialect)
                     {
                         case SqlServer2012Dialect _:
-                            tableName = "dbo.Users";
+                            tableName = "dbo.Dogs";
                             break;
                         case PostgreSqlDialect _:
-                            tableName = "public.users";
+                            tableName = "public.dog";
                             break;
                         default:
                             throw new NotSupportedException("Unknown dialect: " + dialect.GetType().Name);
@@ -68,7 +67,7 @@
                     DataWiper.ClearAllData(database, new HashSet<string> { tableName });
 
                     // Assert
-                    database.Count<User>().Should().Be(1);
+                    database.Count<Dog>().Should().Be(1);
                 }
             }
 
@@ -79,15 +78,15 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var userId = database.Insert<int>(new User { Name = "Some Name 1", Age = 10 });
+                    var dogId = database.Insert<int>(new Dog { Name = "Some Name 1", Age = 10 });
 
-                    database.Insert(new SimpleForeignKey { Name = "Some Name 1", UserId = userId });
+                    database.Insert(new SimpleForeignKey { Name = "Some Name 1", DogId = dogId });
 
                     // Act
                     DataWiper.ClearAllData(database);
 
                     // Assert
-                    database.Count<User>().Should().Be(0);
+                    database.Count<Dog>().Should().Be(0);
                     database.Count<SimpleForeignKey>().Should().Be(0);
                 }
             }
@@ -99,9 +98,9 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    var userId = database.Insert<int>(new User { Name = "Some Name 1", Age = 10 });
+                    var dogId = database.Insert<int>(new Dog { Name = "Some Name 1", Age = 10 });
 
-                    database.Insert(new SimpleForeignKey { Name = "Some Name 1", UserId = userId });
+                    database.Insert(new SimpleForeignKey { Name = "Some Name 1", DogId = dogId });
 
                     string tableName;
                     switch (dialect)
@@ -110,7 +109,7 @@
                             tableName = "dbo.SimpleForeignKeys";
                             break;
                         case PostgreSqlDialect _:
-                            tableName = "public.simpleforeignkeys";
+                            tableName = "public.simple_foreign_key";
                             break;
                         default:
                             throw new NotSupportedException("Unknown dialect: " + dialect.GetType().Name);

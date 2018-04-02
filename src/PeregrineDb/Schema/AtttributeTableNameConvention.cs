@@ -3,31 +3,33 @@ namespace PeregrineDb.Schema
     using System;
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Reflection;
-    using PeregrineDb.Dialects;
 
     /// <summary>
     /// If class has <see cref="TableAttribute"/> then it returns <see cref="TableAttribute.Name"/> without manipulating it. Otherwise;
-    /// - Removes the specified suffix, if any (so classes can be called e.g. UserEntity)
+    /// - Removes the specified suffix, if any (so classes can be called e.g. DogEntity)
     /// - Converts the class name into snake_case
     /// </summary>
-    public class AtttributeTableNameFactory
-        : ITableNameFactory
+    public class AtttributeTableNameConvention
+        : ITableNameConvention
     {
         protected const string DefaultSuffix = "Entity";
         private readonly string suffix;
 
-        public AtttributeTableNameFactory(string suffix = DefaultSuffix)
+        public AtttributeTableNameConvention(ISqlNameEscaper nameEscaper, string suffix = DefaultSuffix)
         {
+            this.NameEscaper = nameEscaper;
             this.suffix = suffix;
         }
 
+        public ISqlNameEscaper NameEscaper { get; }
+
         /// <inheritdoc/>
-        public string GetTableName(Type type, IDialect dialect)
+        public string GetTableName(Type type)
         {
             var tableAttribute = type.GetTypeInfo().GetCustomAttribute<TableAttribute>(false);
             return tableAttribute != null
-                ? GetTableNameFromAttribute(dialect, tableAttribute)
-                : dialect.MakeTableName(this.GetTableNameFromType(type));
+                ? GetTableNameFromAttribute(tableAttribute, this.NameEscaper)
+                : this.GetTableNameFromType(type);
         }
 
         /// <summary>
@@ -36,14 +38,14 @@ namespace PeregrineDb.Schema
         /// </summary>
         protected virtual string GetTableNameFromType(Type type)
         {
-            return type.Name + "s";
+            return this.NameEscaper.EscapeTableName(type.Name + "s");
         }
 
-        private static string GetTableNameFromAttribute(IDialect dialect, TableAttribute tableAttribute)
+        private static string GetTableNameFromAttribute(TableAttribute tableAttribute, ISqlNameEscaper nameEscaper)
         {
             return string.IsNullOrEmpty(tableAttribute.Schema)
-                ? dialect.MakeTableName(tableAttribute.Name)
-                : dialect.MakeTableName(tableAttribute.Schema, tableAttribute.Name);
+                ? nameEscaper.EscapeTableName(tableAttribute.Name)
+                : nameEscaper.EscapeTableName(tableAttribute.Schema, tableAttribute.Name);
         }
 
         protected string RemoveSuffix(string value)

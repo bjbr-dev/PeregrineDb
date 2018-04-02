@@ -8,7 +8,6 @@
     using System.Linq;
     using FluentAssertions;
     using Moq;
-    using PeregrineDb.Dialects;
     using PeregrineDb.Schema;
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
@@ -20,8 +19,14 @@
     [SuppressMessage("ReSharper", "UnassignedGetOnlyAutoProperty")]
     public class TableSchemaFactoryTests
     {
-        private readonly IDialect dialect = new TestDialect();
-        private PeregrineConfig sut = PeregrineConfig.SqlServer2012.WithDialect(new TestDialect());
+        private PeregrineConfig sut;
+
+        public TableSchemaFactoryTests()
+        {
+            var sqlNameEscaper = new TestSqlNameEscaper();
+            this.sut = new PeregrineConfig(new TestDialect(), sqlNameEscaper, new AtttributeTableNameConvention(sqlNameEscaper),
+                new AttributeColumnNameConvention(sqlNameEscaper), true, PeregrineConfig.DefaultSqlTypeMapping);
+        }
 
         public class MakeTableSchema
             : TableSchemaFactoryTests
@@ -38,10 +43,10 @@
                 public void Uses_table_name_resolver_to_get_table_name()
                 {
                     // Arrange
-                    var tableNameFactory = new Mock<ITableNameFactory>();
-                    tableNameFactory.Setup(f => f.GetTableName(typeof(SingleColumn), this.dialect))
+                    var tableNameFactory = new Mock<ITableNameConvention>();
+                    tableNameFactory.Setup(f => f.GetTableName(typeof(SingleColumn)))
                                     .Returns("'SingleColumn'");
-                    this.sut = this.sut.WithTableNameFactory(tableNameFactory.Object);
+                    this.sut = this.sut.WithTableNameConvention(tableNameFactory.Object);
 
                     // Act
                     var result = this.PerformAct(typeof(SingleColumn));
@@ -54,13 +59,13 @@
                 public void Uses_column_name_resolver_to_get_column_name()
                 {
                     // Arrange
-                    var columnNameFactory = new Mock<IColumnNameFactory>();
+                    var columnNameFactory = new Mock<IColumnNameConvention>();
                     columnNameFactory.Setup(
                                          f => f.GetColumnName(
                                              It.Is<PropertySchema>(p => p.Name == "Id")))
-                                     .Returns("Id");
+                                     .Returns("'Id'");
 
-                    this.sut = this.sut.WithColumnNameFactory(columnNameFactory.Object);
+                    this.sut = this.sut.WithColumnNameConvention(columnNameFactory.Object);
 
                     // Act
                     var result = this.PerformAct(typeof(SingleColumn));
@@ -194,9 +199,10 @@
 
                 private class Method
                 {
+                    [SuppressMessage("ReSharper", "UnusedParameter.Local")]
                     public string Value(string value)
                     {
-                        throw new NotImplementedException();
+                        throw new NotSupportedException();
                     }
                 }
 
@@ -393,7 +399,7 @@
                 {
                     public int Id()
                     {
-                        throw new NotImplementedException();
+                        throw new NotSupportedException();
                     }
                 }
 
@@ -410,10 +416,11 @@
 
                 private class Indexer
                 {
+                    [SuppressMessage("ReSharper", "UnusedParameter.Local")]
                     public string this[int i]
                     {
-                        get => throw new NotImplementedException();
-                        set => throw new NotImplementedException();
+                        get => throw new NotSupportedException();
+                        set => throw new NotSupportedException();
                     }
                 }
             }
@@ -422,6 +429,7 @@
         public class MakeConditionsSchema
             : TableSchemaFactoryTests
         {
+            [SuppressMessage("ReSharper", "UnusedParameter.Local")]
             private ImmutableArray<ConditionColumnSchema> PerformAct<T>(T conditions, TableSchema schema)
             {
                 return this.sut.GetConditionsSchema(typeof(T), schema, typeof(T));
@@ -495,9 +503,10 @@
 
                 private class Method
                 {
+                    [SuppressMessage("ReSharper", "UnusedParameter.Local")]
                     public string Value(string value)
                     {
-                        throw new NotImplementedException();
+                        throw new NotSupportedException();
                     }
                 }
 
@@ -509,6 +518,7 @@
 
                 private class PropertyNotReadable
                 {
+                    [SuppressMessage("ReSharper", "NotAccessedField.Local")]
                     private string name;
 
                     public string Name

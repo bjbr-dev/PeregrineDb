@@ -15,7 +15,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// await databaseConnection.CountAsync<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// await databaseConnection.CountAsync<DogEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -27,7 +27,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// await databaseConnection.CountAsync<UserEntity>(new { Age = 18 });
+        /// await databaseConnection.CountAsync<DogEntity>(new { Age = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -39,7 +39,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var entity = await databaseConnection.FindAsync<UserEntity>(12);
+        /// var entity = await databaseConnection.FindAsync<DogEntity>(12);
         /// ]]>
         /// </code>
         /// </example>
@@ -51,7 +51,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var entity = await databaseConnection.GetAsync<UserEntity>(12);
+        /// var entity = await databaseConnection.GetAsync<DogEntity>(12);
         /// ]]>
         /// </code>
         /// </example>
@@ -66,7 +66,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var user = await databaseConnection.GetFirstOrDefaultAsync<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// var dog = await databaseConnection.GetFirstOrDefaultAsync<DogEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -83,7 +83,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var user = await databaseConnection.GetFirstOrDefaultAsync<UserEntity>(new { Age = 18 });
+        /// var dog = await databaseConnection.GetFirstOrDefaultAsync<DogEntity>(new { Age = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -100,7 +100,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var user = await databaseConnection.GetFirstAsync<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// var dog = await databaseConnection.GetFirstAsync<DogEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -118,7 +118,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var user = await databaseConnection.GetFirstAsync<UserEntity>(new { Age = 18 });
+        /// var dog = await databaseConnection.GetFirstAsync<DogEntity>(new { Age = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -132,7 +132,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var user = await databaseConnection.GetSingleOrDefaultAsync<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// var dog = await databaseConnection.GetSingleOrDefaultAsync<DogEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -145,7 +145,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var user = await databaseConnection.GetSingleOrDefaultAsync<UserEntity>(new { Age = 18 });
+        /// var dog = await databaseConnection.GetSingleOrDefaultAsync<DogEntity>(new { Age = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -158,7 +158,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var user = await databaseConnection.GetSingleAsync<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// var dog = await databaseConnection.GetSingleAsync<DogEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -172,7 +172,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var user = await databaseConnection.GetSingleAsync<UserEntity>(new { Age = 18 });
+        /// var dog = await databaseConnection.GetSingleAsync<DogEntity>(new { Age = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -185,7 +185,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var users = await databaseConnection.GetRangeAsync<UserEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
+        /// var dogs = await databaseConnection.GetRangeAsync<DogEntity>("WHERE Age > @MinAge", new { MinAge = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -200,7 +200,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var users = await databaseConnection.GetRangeAsync<UserEntity>(new { Age = 18 });
+        /// var dogs = await databaseConnection.GetRangeAsync<DogEntity>(new { Age = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -213,7 +213,7 @@
         /// <code>
         /// <![CDATA[
         /// var pageBuilder = new PageIndexPageBuilder(3, 10);
-        /// var users = await databaseConnection.GetPageAsync<UserEntity>(pageBuilder, "WHERE Age > @MinAge", "Age DESC", new { MinAge = 18 });
+        /// var dogs = await databaseConnection.GetPageAsync<DogEntity>(pageBuilder, "WHERE Age > @MinAge", "Age DESC", new { MinAge = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -232,7 +232,7 @@
         /// <![CDATA[
         /// ...
         /// var pageBuilder = new PageIndexPageBuilder(3, 10);
-        /// var users = await databaseConnection.GetPageAsync<UserEntity>(pageBuilder, new { Age = 10 }, "Age DESC");
+        /// var dogs = await databaseConnection.GetPageAsync<DogEntity>(pageBuilder, new { Age = 10 }, "Age DESC");
         /// ]]>
         /// </code>
         /// </example>
@@ -254,7 +254,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var entity = new User { Name = "Little bobby tables" };
+        /// var entity = new dog { Name = "Little bobby tables" };
         /// await databaseConnection.InsertAsync(entity);
         /// ]]>
         /// </code>
@@ -267,7 +267,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var entity = new User { Name = "Little bobby tables" };
+        /// var entity = new dog { Name = "Little bobby tables" };
         /// entity.Id = await databaseConnection.InsertAsync<int>(entity);
         /// ]]>
         /// </code>
@@ -283,8 +283,8 @@
         /// <![CDATA[
         /// var entities = new []
         ///     {
-        ///         new User { Name = "Little bobby tables" },
-        ///         new User { Name = "Jimmy" };
+        ///         new dog { Name = "Little bobby tables" },
+        ///         new dog { Name = "Jimmy" };
         ///     };
         ///
         /// using (var databaseConnection = databaseProvider.StartUnitOfWork())
@@ -310,13 +310,13 @@
         /// <![CDATA[
         /// var entities = new []
         ///     {
-        ///         new User { Name = "Little bobby tables" },
-        ///         new User { Name = "Jimmy" };
+        ///         new dog { Name = "Little bobby tables" },
+        ///         new dog { Name = "Jimmy" };
         ///     };
         ///
         /// using (var databaseConnection = databaseProvider.StartUnitOfWork())
         /// {
-        ///     await databaseConnection.InsertRangeAsync<User, int>(entities, (e, k) => { e.Id = k; });
+        ///     await databaseConnection.InsertRangeAsync<dog, int>(entities, (e, k) => { e.Id = k; });
         ///
         ///     databaseConnection.SaveChanges();
         /// }
@@ -335,7 +335,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var entity = databaseConnection.Get<UserEntity>(5);
+        /// var entity = databaseConnection.Get<DogEntity>(5);
         /// entity.Name = "Little bobby tables";
         /// await databaseConnection.UpdateAsync(entity);
         /// ]]>
@@ -357,7 +357,7 @@
         /// <![CDATA[
         /// using (var databaseConnection = databaseProvider.StartUnitOfWork())
         /// {
-        ///     var entities = databaseConnection.GetRange<UserEntity>("WHERE @Age = 10");
+        ///     var entities = databaseConnection.GetRange<DogEntity>("WHERE @Age = 10");
         ///
         ///     foreach (var entity in entities)
         ///     {
@@ -382,7 +382,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var entity = databaseConnection.Get<UserEntity>(5);
+        /// var entity = databaseConnection.Get<DogEntity>(5);
         /// await databaseConnection.DeleteAsync(entity);
         /// ]]>
         /// </code>
@@ -412,7 +412,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// await databaseConnection.DeleteRangeAsync<UserEntity>("WHERE Name LIKE '%Foo%'");
+        /// await databaseConnection.DeleteRangeAsync<DogEntity>("WHERE Name LIKE '%Foo%'");
         /// ]]>
         /// </code>
         /// </example>
@@ -426,7 +426,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// await databaseConnection.DeleteRangeAsync<UserEntity>("WHERE Name LIKE '%Foo%'");
+        /// await databaseConnection.DeleteRangeAsync<DogEntity>("WHERE Name LIKE '%Foo%'");
         /// ]]>
         /// </code>
         /// </example>
@@ -439,7 +439,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// await databaseConnection.DeleteAllAsync<UserEntity>();
+        /// await databaseConnection.DeleteAllAsync<DogEntity>();
         /// ]]>
         /// </code>
         /// </example>

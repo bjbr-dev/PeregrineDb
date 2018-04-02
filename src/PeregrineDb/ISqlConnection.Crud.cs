@@ -14,7 +14,7 @@
         /// <code>
         /// <![CDATA[
         /// var minAge = 18;
-        /// databaseConnection.Count<UserEntity>($"WHERE Age > {minAge}");
+        /// databaseConnection.Count<DogEntity>($"WHERE Age > {minAge}");
         /// ]]>
         /// </code>
         /// </example>
@@ -26,7 +26,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// databaseConnection.Count<UserEntity>(new { Age = 18 });
+        /// databaseConnection.Count<DogEntity>(new { Age = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -38,7 +38,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var entity = databaseConnection.Find<UserEntity>(12);
+        /// var entity = databaseConnection.Find<DogEntity>(12);
         /// ]]>
         /// </code>
         /// </example>
@@ -50,7 +50,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var entity = databaseConnection.Get<UserEntity>(12);
+        /// var entity = databaseConnection.Get<DogEntity>(12);
         /// ]]>
         /// </code>
         /// </example>
@@ -66,7 +66,7 @@
         /// <code>
         /// <![CDATA[
         /// var minAge = 18;
-        /// var user = databaseConnection.GetFirstOrDefault<UserEntity>($"WHERE Age > {minAge}");
+        /// var dog = databaseConnection.GetFirstOrDefault<DogEntity>($"WHERE Age > {minAge}");
         /// ]]>
         /// </code>
         /// </example>
@@ -79,7 +79,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var user = databaseConnection.GetFirstOrDefault<UserEntity>(new { Age = 18 });
+        /// var dog = databaseConnection.GetFirstOrDefault<DogEntity>(new { Age = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -93,7 +93,7 @@
         /// <code>
         /// <![CDATA[
         /// var minAge = 18;
-        /// var user = databaseConnection.GetFirst<UserEntity>($"WHERE Age > {minAge}");
+        /// var dog = databaseConnection.GetFirst<DogEntity>($"WHERE Age > {minAge}");
         /// ]]>
         /// </code>
         /// </example>
@@ -107,7 +107,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var user = databaseConnection.GetFirst<UserEntity>(new { Age = 18 });
+        /// var dog = databaseConnection.GetFirst<DogEntity>(new { Age = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -122,7 +122,7 @@
         /// <code>
         /// <![CDATA[
         /// var minAge = 18;
-        /// var user = databaseConnection.GetSingleOrDefault<UserEntity>($"WHERE Age > {minAge}");
+        /// var dog = databaseConnection.GetSingleOrDefault<DogEntity>($"WHERE Age > {minAge}");
         /// ]]>
         /// </code>
         /// </example>
@@ -135,7 +135,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var user = databaseConnection.GetSingleOrDefault<UserEntity>(new { Age = 18 });
+        /// var dog = databaseConnection.GetSingleOrDefault<DogEntity>(new { Age = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -149,7 +149,7 @@
         /// <code>
         /// <![CDATA[
         /// var minAge = 18;
-        /// var user = databaseConnection.GetSingle<UserEntity>($"WHERE Age > {minAge}");
+        /// var dog = databaseConnection.GetSingle<DogEntity>($"WHERE Age > {minAge}");
         /// ]]>
         /// </code>
         /// </example>
@@ -163,7 +163,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var user = databaseConnection.GetSingle<UserEntity>(new { Age = 18 });
+        /// var dog = databaseConnection.GetSingle<DogEntity>(new { Age = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -177,7 +177,7 @@
         /// <code>
         /// <![CDATA[
         /// var minAge = 18;
-        /// var users = databaseConnection.GetRange<UserEntity>($"WHERE Age > {minAge}");
+        /// var dogs = databaseConnection.GetRange<DogEntity>($"WHERE Age > {minAge}");
         /// ]]>
         /// </code>
         /// </example>
@@ -189,7 +189,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var users = databaseConnection.GetRange<UserEntity>(new { Age = 18 });
+        /// var dogs = databaseConnection.GetRange<DogEntity>(new { Age = 18 });
         /// ]]>
         /// </code>
         /// </example>
@@ -203,7 +203,7 @@
         /// <![CDATA[
         /// var minAge = 18;
         /// var pageBuilder = new PageIndexPageBuilder(3, 10);
-        /// var users = databaseConnection.GetPage<UserEntity>(pageBuilder, $"WHERE Age > {minAge}", "Age DESC");
+        /// var dogs = databaseConnection.GetPage<DogEntity>(pageBuilder, $"WHERE Age > {minAge}", "Age DESC");
         /// ]]>
         /// </code>
         /// </example>
@@ -217,7 +217,7 @@
         /// <![CDATA[
         /// ...
         /// var pageBuilder = new PageIndexPageBuilder(3, 10);
-        /// var users = databaseConnection.GetPage<UserEntity>(pageBuilder, new { Age = 10 }, "Age DESC");
+        /// var dogs = databaseConnection.GetPage<DogEntity>(pageBuilder, new { Age = 10 }, "Age DESC");
         /// ]]>
         /// </code>
         /// </example>
@@ -234,7 +234,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var entity = new User { Name = "Little bobby tables" };
+        /// var entity = new dog { Name = "Little bobby tables" };
         /// databaseConnection.Insert(entity);
         /// ]]>
         /// </code>
@@ -247,7 +247,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var entity = new User { Name = "Little bobby tables" };
+        /// var entity = new dog { Name = "Little bobby tables" };
         /// entity.Id = databaseConnection.Insert<int>(entity);
         /// ]]>
         /// </code>
@@ -263,8 +263,8 @@
         /// <![CDATA[
         /// var entities = new []
         ///     {
-        ///         new User { Name = "Little bobby tables" },
-        ///         new User { Name = "Jimmy" };
+        ///         new dog { Name = "Little bobby tables" },
+        ///         new dog { Name = "Jimmy" };
         ///     };
         ///
         /// using (var databaseConnection = databaseProvider.StartUnitOfWork())
@@ -290,13 +290,13 @@
         /// <![CDATA[
         /// var entities = new []
         ///     {
-        ///         new User { Name = "Little bobby tables" },
-        ///         new User { Name = "Jimmy" };
+        ///         new dog { Name = "Little bobby tables" },
+        ///         new dog { Name = "Jimmy" };
         ///     };
         ///
         /// using (var databaseConnection = databaseProvider.StartUnitOfWork())
         /// {
-        ///     databaseConnection.InsertRange<User, int>(entities, (e, k) => { e.Id = k; });
+        ///     databaseConnection.InsertRange<dog, int>(entities, (e, k) => { e.Id = k; });
         ///
         ///     databaseConnection.SaveChanges();
         /// }
@@ -311,7 +311,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var entity = databaseConnection.Get<UserEntity>(5);
+        /// var entity = databaseConnection.Get<DogEntity>(5);
         /// entity.Name = "Little bobby tables";
         /// databaseConnection.Update(entity);
         /// ]]>
@@ -329,7 +329,7 @@
         /// <![CDATA[
         /// using (var databaseConnection = databaseProvider.StartUnitOfWork())
         /// {
-        ///     var entities = databaseConnection.GetRange<UserEntity>("WHERE @Age = 10");
+        ///     var entities = databaseConnection.GetRange<DogEntity>("WHERE @Age = 10");
         ///
         ///     foreach (var entity in entities)
         ///     {
@@ -351,7 +351,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// var entity = databaseConnection.Get<UserEntity>(5);
+        /// var entity = databaseConnection.Get<DogEntity>(5);
         /// databaseConnection.Delete(entity);
         /// ]]>
         /// </code>
@@ -378,7 +378,7 @@
         /// <code>
         /// <![CDATA[
         /// var searchTerm = "%Foo%";
-        /// databaseConnection.DeleteRange<UserEntity>($"WHERE Name LIKE {searchTerm}");
+        /// databaseConnection.DeleteRange<DogEntity>($"WHERE Name LIKE {searchTerm}");
         /// ]]>
         /// </code>
         /// </example>
@@ -392,7 +392,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// databaseConnection.DeleteRange<UserEntity>(new { Name = "Foo" });
+        /// databaseConnection.DeleteRange<DogEntity>(new { Name = "Foo" });
         /// ]]>
         /// </code>
         /// </example>
@@ -405,7 +405,7 @@
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// databaseConnection.DeleteAll<UserEntity>();
+        /// databaseConnection.DeleteAll<DogEntity>();
         /// ]]>
         /// </code>
         /// </example>

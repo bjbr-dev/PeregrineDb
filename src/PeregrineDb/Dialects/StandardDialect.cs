@@ -146,15 +146,6 @@
         /// <inheritdoc />
         public abstract SqlCommand MakeDropTempTableStatement(TableSchema tableSchema);
 
-        /// <inheritdoc />
-        public abstract string MakeColumnName(string name);
-
-        /// <inheritdoc />
-        public abstract string MakeTableName(string tableName);
-
-        /// <inheritdoc />
-        public abstract string MakeTableName(string schema, string tableName);
-
         public override bool Equals(object obj)
         {
             return this.Equals(obj as StandardDialect);

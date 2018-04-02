@@ -44,9 +44,9 @@
             return config.MakeSchema<PropertyGenerated>();
         }
 
-        public static TableSchema User(this PeregrineConfig config)
+        public static TableSchema Dog(this PeregrineConfig config)
         {
-            return config.MakeSchema<User>();
+            return config.MakeSchema<Dog>();
         }
 
         public static TableSchema NoColumns(this PeregrineConfig config)

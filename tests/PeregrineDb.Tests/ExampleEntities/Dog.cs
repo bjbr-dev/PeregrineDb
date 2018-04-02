@@ -1,6 +1,6 @@
 ﻿namespace PeregrineDb.Tests.ExampleEntities
 {
-    public class User
+    public class Dog
     {
         public int Id { get; set; }
 

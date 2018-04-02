@@ -124,24 +124,6 @@
             return new SqlCommand("DROP TABLE " + tableSchema.Name);
         }
 
-        /// <inheritdoc />
-        public override string MakeColumnName(string name)
-        {
-            return name;
-        }
-
-        /// <inheritdoc />
-        public override string MakeTableName(string tableName)
-        {
-            return tableName;
-        }
-
-        /// <inheritdoc />
-        public override string MakeTableName(string schema, string tableName)
-        {
-            return schema + "." + tableName;
-        }
-
         private static string GetColumnType(ColumnSchema column)
         {
             var nullability = column.ColumnType.AllowNull

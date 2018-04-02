@@ -1,53 +1,22 @@
 ﻿namespace PeregrineDb.Tests.Databases
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using FluentAssertions;
-    using Moq;
     using PeregrineDb;
-    using PeregrineDb.Dialects;
-    using PeregrineDb.Schema;
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
     using Xunit;
 
     public abstract class DefaultDatabaseConnectionTempTableTests
     {
-        public static IEnumerable<object[]> TestDialects() => new[]
-            {
-                new[] { Dialect.SqlServer2012 },
-                new[] { Dialect.PostgreSql }
-            };
-
-        private static string GetTableName(AtttributeTableNameFactory atttributeFactory, Type type, IDialect dialect)
-        {
-            var tableName = atttributeFactory.GetTableName(type, dialect);
-
-            return dialect is SqlServer2012Dialect
-                ? "[#" + tableName.Substring(1)
-                : tableName;
-        }
-
         public class CreateTempTableAndInsert
             : DefaultDatabaseConnectionTempTableTests
         {
-            private readonly Mock<ITableNameFactory> tableNameFactory;
-
-            public CreateTempTableAndInsert()
+            [Fact]
+            public void Creates_a_temp_table()
             {
-                var defaultFactory = new AtttributeTableNameFactory();
-
-                this.tableNameFactory = new Mock<ITableNameFactory>();
-                this.tableNameFactory.Setup(f => f.GetTableName(It.IsAny<Type>(), It.IsAny<IDialect>()))
-                    .Returns((Type t, IDialect d) => GetTableName(defaultFactory, t, d));
-            }
-
-            [Theory]
-            [MemberData(nameof(TestDialects))]
-            public void Creates_a_temp_table(IDialect dialect)
-            {
-                using (var database = BlankDatabaseFactory.MakeDatabase(PeregrineConfig.SqlServer2012.WithTableNameFactory(this.tableNameFactory.Object)))
+                using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
                 {
                     // Arrange
                     var schema = database.Config.MakeSchema<TempNoKey>();
@@ -63,11 +32,10 @@
                 }
             }
 
-            [Theory]
-            [MemberData(nameof(TestDialects))]
-            public void Adds_entities_to_temp_table(IDialect dialect)
+            [Fact]
+            public void Adds_entities_to_temp_table()
             {
-                using (var database = BlankDatabaseFactory.MakeDatabase(PeregrineConfig.SqlServer2012.WithTableNameFactory(this.tableNameFactory.Object)))
+                using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
                 {
                     // Arrange
                     var entities = new[]
@@ -92,22 +60,10 @@
         public class DropTempTable
             : DefaultDatabaseConnectionTempTableTests
         {
-            private readonly Mock<ITableNameFactory> tableNameFactory;
-
-            public DropTempTable()
+            [Fact]
+            public void Throws_exception_if_names_do_not_match()
             {
-                var defaultFactory = new AtttributeTableNameFactory();
-
-                this.tableNameFactory = new Mock<ITableNameFactory>();
-                this.tableNameFactory.Setup(f => f.GetTableName(It.IsAny<Type>(), It.IsAny<IDialect>()))
-                    .Returns((Type t, IDialect d) => GetTableName(defaultFactory, t, d));
-            }
-
-            [Theory]
-            [MemberData(nameof(TestDialects), MemberType = typeof(DefaultDatabaseConnectionTempTableTests))]
-            public void Throws_exception_if_names_do_not_match(IDialect dialect)
-            {
-                using (var database = BlankDatabaseFactory.MakeDatabase(PeregrineConfig.SqlServer2012.WithTableNameFactory(this.tableNameFactory.Object)))
+                using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
                 {
                     // Arrange
                     var schema = database.Config.MakeSchema<TempNoKey>();
@@ -124,11 +80,10 @@
                 }
             }
 
-            [Theory]
-            [MemberData(nameof(TestDialects), MemberType = typeof(DefaultDatabaseConnectionTempTableTests))]
-            public void Drops_temporary_table(IDialect dialect)
+            [Fact]
+            public void Drops_temporary_table()
             {
-                using (var database = BlankDatabaseFactory.MakeDatabase(PeregrineConfig.SqlServer2012.WithTableNameFactory(this.tableNameFactory.Object)))
+                using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
                 {
                     // Arrange
                     var schema = database.Config.MakeSchema<TempNoKey>();

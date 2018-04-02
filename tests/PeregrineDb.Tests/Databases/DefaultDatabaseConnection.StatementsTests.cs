@@ -27,15 +27,15 @@
                     // Act
                     using (var unitOfWork = database.StartUnitOfWork())
                     {
-                        var schema = database.Config.MakeSchema<User>();
-                        var command = dialect.MakeInsertStatement(schema, new User { Name = "Foo", Age = 4 });
+                        var schema = database.Config.MakeSchema<Dog>();
+                        var command = dialect.MakeInsertStatement(schema, new Dog { Name = "Foo", Age = 4 });
                         unitOfWork.Execute(in command);
 
                         unitOfWork.SaveChanges();
                     }
 
                     // Assert
-                    database.Count<User>().Should().Be(1);
+                    database.Count<Dog>().Should().Be(1);
                 }
             }
         }
