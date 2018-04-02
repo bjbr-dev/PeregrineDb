@@ -53,7 +53,7 @@
                     case ClearTableCommand c:
                     {
                         var tableSchema = new TableSchema(c.TableName, ImmutableArray<ColumnSchema>.Empty);
-                        commands.Add(dialect.MakeDeleteRangeStatement(tableSchema, null));
+                        commands.Add(dialect.MakeDeleteRangeCommand(tableSchema, null));
                         break;
                     }
 

@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Immutable;
     using System.Data;
-    using System.Text;
     using Pagination;
     using PeregrineDb.Schema;
     using PeregrineDb.Schema.Relations;
@@ -45,7 +44,7 @@
         }
 
         /// <inheritdoc />
-        public override SqlCommand MakeInsertReturningIdentityStatement(TableSchema tableSchema, object entity)
+        public override SqlCommand MakeInsertReturningIdentityCommand(TableSchema tableSchema, object entity)
         {
             Func<ColumnSchema, bool> include = p => p.Usage.IncludeInInsertStatements;
             var columns = tableSchema.Columns;
@@ -57,7 +56,7 @@
             return sql.ToCommand();
         }
 
-        public override SqlCommand MakeGetTopNStatement(TableSchema tableSchema, int take, FormattableString conditions, string orderBy)
+        public override SqlCommand MakeGetTopNCommand(TableSchema tableSchema, int take, FormattableString conditions, string orderBy)
         {
             var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
@@ -72,7 +71,7 @@
         }
 
         /// <inheritdoc />
-        public override SqlCommand MakeGetPageStatement(TableSchema tableSchema, Page page, FormattableString conditions, string orderBy)
+        public override SqlCommand MakeGetPageCommand(TableSchema tableSchema, Page page, FormattableString conditions, string orderBy)
         {
             if (string.IsNullOrWhiteSpace(orderBy))
             {
@@ -88,7 +87,7 @@
         }
 
         /// <inheritdoc />
-        public override SqlCommand MakeCreateTempTableStatement(TableSchema tableSchema)
+        public override SqlCommand MakeCreateTempTableCommand(TableSchema tableSchema)
         {
             if (tableSchema.Columns.IsEmpty)
             {
@@ -119,7 +118,7 @@
         }
 
         /// <inheritdoc />
-        public override SqlCommand MakeDropTempTableStatement(TableSchema tableSchema)
+        public override SqlCommand MakeDropTempTableCommand(TableSchema tableSchema)
         {
             return new SqlCommand("DROP TABLE " + tableSchema.Name);
         }

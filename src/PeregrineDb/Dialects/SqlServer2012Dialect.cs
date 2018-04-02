@@ -44,13 +44,13 @@
         }
 
         /// <inheritdoc />
-        public override SqlCommand MakeInsertReturningIdentityStatement(TableSchema tableSchema, object entity)
+        public override SqlCommand MakeInsertReturningIdentityCommand(TableSchema tableSchema, object entity)
         {
-            var sql = this.MakeInsertStatement(tableSchema, entity);
+            var sql = this.MakeInsertCommand(tableSchema, entity);
             return new SqlCommand(sql.Text + Environment.NewLine + "SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]", sql.Parameters);
         }
 
-        public override SqlCommand MakeGetTopNStatement(TableSchema tableSchema, int take, FormattableString conditions, string orderBy)
+        public override SqlCommand MakeGetTopNCommand(TableSchema tableSchema, int take, FormattableString conditions, string orderBy)
         {
             var sql = new SqlCommandBuilder("SELECT TOP ").Append(take).Append(" ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
@@ -64,7 +64,7 @@
         }
 
         /// <inheritdoc />
-        public override SqlCommand MakeGetPageStatement(TableSchema tableSchema, Page page, FormattableString conditions, string orderBy)
+        public override SqlCommand MakeGetPageCommand(TableSchema tableSchema, Page page, FormattableString conditions, string orderBy)
         {
             if (string.IsNullOrWhiteSpace(orderBy))
             {
@@ -80,7 +80,7 @@
         }
 
         /// <inheritdoc />
-        public override SqlCommand MakeCreateTempTableStatement(TableSchema tableSchema)
+        public override SqlCommand MakeCreateTempTableCommand(TableSchema tableSchema)
         {
             EnsureValidSchemaForTempTables(tableSchema);
 
@@ -108,7 +108,7 @@
         }
 
         /// <inheritdoc />
-        public override SqlCommand MakeDropTempTableStatement(TableSchema tableSchema)
+        public override SqlCommand MakeDropTempTableCommand(TableSchema tableSchema)
         {
             EnsureValidSchemaForTempTables(tableSchema);
 

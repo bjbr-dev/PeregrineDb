@@ -15,7 +15,7 @@
         public override SqlCommand MakeInsertReturningIdentityStatement(TableSchema tableSchema, object entity)
         {
             var getIdentitySql = "GET IDENTITY";
-            return new SqlCommand(this.MakeInsertStatement(tableSchema, entity) + Environment.NewLine + getIdentitySql);
+            return new SqlCommand(this.MakeInsertCommand(tableSchema, entity) + Environment.NewLine + getIdentitySql);
         }
 
         public override SqlCommand MakeGetTopNStatement(TableSchema tableSchema, int take, FormattableString conditions, string orderBy)

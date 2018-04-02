@@ -25,7 +25,7 @@ namespace PeregrineDb.SqlCommands
         public SqlCommand MakeCountCommand<TEntity>(FormattableString conditions)
         {
             var tableSchema = this.config.GetTableSchema(typeof(TEntity));
-            return this.config.Dialect.MakeCountStatement(tableSchema, conditions);
+            return this.config.Dialect.MakeCountCommand(tableSchema, conditions);
         }
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace PeregrineDb.SqlCommands
             var entityType = typeof(TEntity);
             var tableSchema = this.config.GetTableSchema(entityType);
             var conditionsSchema = this.config.GetConditionsSchema(entityType, tableSchema, conditions.GetType());
-            return this.config.Dialect.MakeCountStatement(tableSchema, this.config.Dialect.MakeWhereClause(conditionsSchema, conditions));
+            return this.config.Dialect.MakeCountCommand(tableSchema, this.config.Dialect.MakeWhereClause(conditionsSchema, conditions));
         }
 
         /// <summary>
@@ -49,25 +49,25 @@ namespace PeregrineDb.SqlCommands
             Ensure.NotNull(id, nameof(id));
 
             var tableSchema = this.config.GetTableSchema(typeof(TEntity));
-            return this.config.Dialect.MakeFindStatement(tableSchema, id);
+            return this.config.Dialect.MakeFindCommand(tableSchema, id);
         }
 
         /// <summary>
         /// Creates a command which will get the top N entities which match the condition
         /// </summary>
-        public SqlCommand MakeGetTopNStatement<TEntity>(int take, FormattableString conditions, string orderBy)
+        public SqlCommand MakeGetTopNCommand<TEntity>(int take, FormattableString conditions, string orderBy)
         {
             Ensure.NotNull(conditions, nameof(conditions));
 
             var entityType = typeof(TEntity);
             var tableSchema = this.config.GetTableSchema(entityType);
-            return this.config.Dialect.MakeGetTopNStatement(tableSchema, take, conditions, orderBy);
+            return this.config.Dialect.MakeGetTopNCommand(tableSchema, take, conditions, orderBy);
         }
 
         /// <summary>
         /// Creates a command which will get the top N entities which match the condition
         /// </summary>
-        public SqlCommand MakeGetTopNStatement<TEntity>(int take, object conditions, string orderBy)
+        public SqlCommand MakeGetTopNCommand<TEntity>(int take, object conditions, string orderBy)
         {
 
             Ensure.NotNull(conditions, nameof(conditions));
@@ -76,77 +76,77 @@ namespace PeregrineDb.SqlCommands
             var tableSchema = this.config.GetTableSchema(entityType);
             var conditionsSchema = this.config.GetConditionsSchema(entityType, tableSchema, conditions.GetType());
             var whereClause = this.config.Dialect.MakeWhereClause(conditionsSchema, conditions);
-            return this.config.Dialect.MakeGetTopNStatement(tableSchema, take, whereClause, orderBy);
+            return this.config.Dialect.MakeGetTopNCommand(tableSchema, take, whereClause, orderBy);
         }
 
         /// <summary>
         /// Creates a command which will get all the entities matching the <paramref name="conditions"/>.
         /// </summary>
-        public SqlCommand MakeGetRangeStatement<TEntity>(FormattableString conditions)
+        public SqlCommand MakeGetRangeCommand<TEntity>(FormattableString conditions)
         {
             var tableSchema = this.config.GetTableSchema(typeof(TEntity));
-            return this.config.Dialect.MakeGetRangeStatement(tableSchema, conditions);
+            return this.config.Dialect.MakeGetRangeCommand(tableSchema, conditions);
         }
 
         /// <summary>
         /// Creates a command which will get all the entities matching the <paramref name="conditions"/>.
         /// </summary>
-        public SqlCommand MakeGetRangeStatement<TEntity>(object conditions)
+        public SqlCommand MakeGetRangeCommand<TEntity>(object conditions)
         {
             Ensure.NotNull(conditions, nameof(conditions));
 
             var entityType = typeof(TEntity);
             var tableSchema = this.config.GetTableSchema(typeof(TEntity));
             var conditionsSchema = this.config.GetConditionsSchema(entityType, tableSchema, conditions.GetType());
-            return this.config.Dialect.MakeGetRangeStatement(tableSchema, this.config.Dialect.MakeWhereClause(conditionsSchema, conditions));
+            return this.config.Dialect.MakeGetRangeCommand(tableSchema, this.config.Dialect.MakeWhereClause(conditionsSchema, conditions));
         }
 
         /// <summary>
         /// Creates a command which will get a page of entities matching the <paramref name="conditions"/>.
         /// </summary>
-        public SqlCommand MakeGetPageStatement<TEntity>(Page page, FormattableString conditions, string orderBy)
+        public SqlCommand MakeGetPageCommand<TEntity>(Page page, FormattableString conditions, string orderBy)
         {
             var tableSchema = this.config.GetTableSchema(typeof(TEntity));
-            return this.config.Dialect.MakeGetPageStatement(tableSchema, page, conditions, orderBy);
+            return this.config.Dialect.MakeGetPageCommand(tableSchema, page, conditions, orderBy);
         }
 
         /// <summary>
         /// Creates a command which will get a page of entities matching the <paramref name="conditions"/>.
         /// </summary>
-        public SqlCommand MakeGetPageStatement<TEntity>(Page page, object conditions, string orderBy)
+        public SqlCommand MakeGetPageCommand<TEntity>(Page page, object conditions, string orderBy)
         {
             Ensure.NotNull(conditions, nameof(conditions));
 
             var entityType = typeof(TEntity);
             var tableSchema = this.config.GetTableSchema(entityType);
             var conditionsSchema = this.config.GetConditionsSchema(entityType, tableSchema, conditions.GetType());
-            return this.config.Dialect.MakeGetPageStatement(tableSchema, page, this.config.Dialect.MakeWhereClause(conditionsSchema, conditions), orderBy);
+            return this.config.Dialect.MakeGetPageCommand(tableSchema, page, this.config.Dialect.MakeWhereClause(conditionsSchema, conditions), orderBy);
         }
 
         /// <summary>
         /// Creates a command which will get all the entities
         /// </summary>
-        public SqlCommand MakeGetAllStatement<TEntity>()
+        public SqlCommand MakeGetAllCommand<TEntity>()
         {
             var tableSchema = this.config.GetTableSchema(typeof(TEntity));
-            return this.config.Dialect.MakeGetRangeStatement(tableSchema, null);
+            return this.config.Dialect.MakeGetRangeCommand(tableSchema, null);
         }
 
         /// <summary>
         /// Creates a command which will insert an entity, not returning anything.
         /// </summary>
-        public SqlCommand MakeInsertStatement(object entity)
+        public SqlCommand MakeInsertCommand(object entity)
         {
             Ensure.NotNull(entity, nameof(entity));
 
             var tableSchema = this.config.GetTableSchema(entity.GetType());
-            return this.config.Dialect.MakeInsertStatement(tableSchema, entity);
+            return this.config.Dialect.MakeInsertCommand(tableSchema, entity);
         }
 
         /// <summary>
         /// Creates a command which will insert an entity, returning the primary key.
         /// </summary>
-        public SqlCommand MakeInsertReturningPrimaryKeyStatement<TPrimaryKey>(object entity)
+        public SqlCommand MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(object entity)
         {
             Ensure.NotNull(entity, nameof(entity));
 
@@ -158,24 +158,24 @@ namespace PeregrineDb.SqlCommands
                     "Insert<TPrimaryKey>() can only be used for Int32 and Int64 primary keys. Use Insert() for other types of primary keys.");
             }
 
-            return this.config.Dialect.MakeInsertReturningIdentityStatement(tableSchema, entity);
+            return this.config.Dialect.MakeInsertReturningIdentityCommand(tableSchema, entity);
         }
 
         /// <summary>
         /// Creates a command which will insert a range of entities, not returning anything.
         /// </summary>
-        public SqlCommand MakeInsertRangeStatement<TEntity>(IEnumerable<TEntity> entities)
+        public SqlCommand MakeInsertRangeCommand<TEntity>(IEnumerable<TEntity> entities)
         {
             Ensure.NotNull(entities, nameof(entities));
 
             var tableSchema = this.config.GetTableSchema(typeof(TEntity));
-            return this.config.Dialect.MakeInsertStatement(tableSchema, entities.First());
+            return this.config.Dialect.MakeInsertCommand(tableSchema, entities.First());
         }
 
         /// <summary>
         /// Creates a command factory which can be used to create entities for multiple inserts each returning the primary key.
         /// </summary>
-        public SqlCommand MakeInsertRangeStatement<TEntity, TPrimaryKey>(IEnumerable<TEntity> entities)
+        public SqlCommand MakeInsertRangeCommand<TEntity, TPrimaryKey>(IEnumerable<TEntity> entities)
         {
             var tableSchema = this.config.GetTableSchema(typeof(TEntity));
 
@@ -185,57 +185,57 @@ namespace PeregrineDb.SqlCommands
                     "InsertRange<TEntity, TPrimaryKey>() can only be used for Int32 and Int64 primary keys. Use InsertRange<TEntity>() for other types of primary keys.");
             }
 
-            return this.config.Dialect.MakeInsertReturningIdentityStatement(tableSchema, entities.First());
+            return this.config.Dialect.MakeInsertReturningIdentityCommand(tableSchema, entities.First());
         }
 
         /// <summary>
         /// Creates a command which will insert update an entity by using its primary key.
         /// </summary>
-        public SqlCommand MakeUpdateStatement<TEntity>(object entity)
+        public SqlCommand MakeUpdateCommand<TEntity>(object entity)
         {
             Ensure.NotNull(entity, nameof(entity));
 
             var tableSchema = this.config.GetTableSchema(typeof(TEntity));
-            return this.config.Dialect.MakeUpdateStatement(tableSchema, entity);
+            return this.config.Dialect.MakeUpdateCommand(tableSchema, entity);
         }
 
         /// <summary>
         /// Creates a command which will update many entities
         /// </summary>
-        public SqlCommand MakeUpdateRangeStatement<TEntity>(IEnumerable<TEntity> entities)
+        public SqlCommand MakeUpdateRangeCommand<TEntity>(IEnumerable<TEntity> entities)
         {
             Ensure.NotNull(entities, nameof(entities));
 
             var tableSchema = this.config.GetTableSchema(typeof(TEntity));
-            return this.config.Dialect.MakeUpdateStatement(tableSchema, entities.First());
+            return this.config.Dialect.MakeUpdateCommand(tableSchema, entities.First());
         }
 
         /// <summary>
         /// Creates a command which will delete an entity by usings it's primary key.
         /// </summary>
-        public SqlCommand MakeDeleteStatement<TEntity>(object entity)
+        public SqlCommand MakeDeleteCommand<TEntity>(object entity)
         {
             Ensure.NotNull(entity, nameof(entity));
 
             var tableSchema = this.config.GetTableSchema(typeof(TEntity));
-            return this.config.Dialect.MakeDeleteEntityStatement(tableSchema, entity);
+            return this.config.Dialect.MakeDeleteEntityCommand(tableSchema, entity);
         }
 
         /// <summary>
         /// Creates a command which will insert an entity, returning the primary key.
         /// </summary>
-        public SqlCommand MakeDeleteByPrimaryKeyStatement<TEntity>(object id)
+        public SqlCommand MakeDeleteByPrimaryKeyCommand<TEntity>(object id)
         {
             Ensure.NotNull(id, nameof(id));
 
             var tableSchema = this.config.GetTableSchema(typeof(TEntity));
-            return this.config.Dialect.MakeDeleteByPrimaryKeyStatement(tableSchema, id);
+            return this.config.Dialect.MakeDeleteByPrimaryKeyCommand(tableSchema, id);
         }
 
         /// <summary>
         /// Creates a command which will delete a range of entities, validating that the conditions contains a WHERE clause.
         /// </summary>
-        public SqlCommand MakeDeleteRangeStatement<TEntity>(FormattableString conditions)
+        public SqlCommand MakeDeleteRangeCommand<TEntity>(FormattableString conditions)
         {
             if (conditions == null || conditions.Format.IndexOf("WHERE ", StringComparison.OrdinalIgnoreCase) < 0)
             {
@@ -244,13 +244,13 @@ namespace PeregrineDb.SqlCommands
             }
 
             var tableSchema = this.config.GetTableSchema(typeof(TEntity));
-            return this.config.Dialect.MakeDeleteRangeStatement(tableSchema, conditions);
+            return this.config.Dialect.MakeDeleteRangeCommand(tableSchema, conditions);
         }
 
         /// <summary>
         /// Creates a command which will delete a range of entities, validating that the conditions has at least one property
         /// </summary>
-        public SqlCommand MakeDeleteRangeStatement<TEntity>(object conditions)
+        public SqlCommand MakeDeleteRangeCommand<TEntity>(object conditions)
         {
             Ensure.NotNull(conditions, nameof(conditions));
 
@@ -262,31 +262,31 @@ namespace PeregrineDb.SqlCommands
                 throw new ArgumentException("DeleteRange<TEntity> requires at least one condition, use DeleteAll<TEntity> to delete everything.");
             }
 
-            return this.config.Dialect.MakeDeleteRangeStatement(tableSchema, this.config.Dialect.MakeWhereClause(conditionsSchema, conditions));
+            return this.config.Dialect.MakeDeleteRangeCommand(tableSchema, this.config.Dialect.MakeWhereClause(conditionsSchema, conditions));
         }
 
         /// <summary>
         /// Creates a command which will delete all entities
         /// </summary>
-        public SqlCommand MakeDeleteAllStatement<TEntity>()
+        public SqlCommand MakeDeleteAllCommand<TEntity>()
         {
             var tableSchema = this.config.GetTableSchema(typeof(TEntity));
-            return this.config.Dialect.MakeDeleteRangeStatement(tableSchema, null);
+            return this.config.Dialect.MakeDeleteRangeCommand(tableSchema, null);
         }
 
         /// <summary>
         /// Creates a command which will delete all entities
         /// </summary>
-        public SqlCommand MakeCreateTempTableStatement<TEntity>()
+        public SqlCommand MakeCreateTempTableCommand<TEntity>()
         {
             var tableSchema = this.config.GetTableSchema(typeof(TEntity));
-            return this.config.Dialect.MakeCreateTempTableStatement(tableSchema);
+            return this.config.Dialect.MakeCreateTempTableCommand(tableSchema);
         }
 
         /// <summary>
         /// Creates a command which will delete all entities
         /// </summary>
-        public SqlCommand MakeDropTempTableStatement<TEntity>(string tableName)
+        public SqlCommand MakeDropTempTableCommand<TEntity>(string tableName)
         {
             var tableSchema = this.config.GetTableSchema(typeof(TEntity));
             if (tableSchema.Name != tableName)
@@ -294,7 +294,7 @@ namespace PeregrineDb.SqlCommands
                 throw new ArgumentException($"Attempting to drop table '{tableSchema.Name}', but said table name should be '{tableName}'");
             }
 
-            return this.config.Dialect.MakeDropTempTableStatement(tableSchema);
+            return this.config.Dialect.MakeDropTempTableCommand(tableSchema);
         }
     }
 }

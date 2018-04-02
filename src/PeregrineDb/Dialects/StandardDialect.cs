@@ -16,7 +16,7 @@
         : IDialect, IEquatable<StandardDialect>
     {
         /// <inheritdoc />
-        public SqlCommand MakeCountStatement(TableSchema schema, FormattableString conditions)
+        public SqlCommand MakeCountCommand(TableSchema schema, FormattableString conditions)
         {
             var sql = new SqlCommandBuilder("SELECT COUNT(*)");
             sql.AppendClause("FROM ").Append(schema.Name);
@@ -25,7 +25,7 @@
         }
 
         /// <inheritdoc />
-        public SqlCommand MakeFindStatement(TableSchema schema, object id)
+        public SqlCommand MakeFindCommand(TableSchema schema, object id)
         {
             var primaryKeys = schema.GetPrimaryKeys();
 
@@ -37,10 +37,10 @@
         }
 
         /// <inheritdoc />
-        public abstract SqlCommand MakeGetTopNStatement(TableSchema schema, int take, FormattableString conditions, string orderBy);
+        public abstract SqlCommand MakeGetTopNCommand(TableSchema schema, int take, FormattableString conditions, string orderBy);
 
         /// <inheritdoc />
-        public SqlCommand MakeGetRangeStatement(TableSchema tableSchema, FormattableString conditions)
+        public SqlCommand MakeGetRangeCommand(TableSchema tableSchema, FormattableString conditions)
         {
             var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
@@ -49,10 +49,10 @@
         }
 
         /// <inheritdoc />
-        public abstract SqlCommand MakeGetPageStatement(TableSchema tableSchema, Page page, FormattableString conditions, string orderBy);
+        public abstract SqlCommand MakeGetPageCommand(TableSchema tableSchema, Page page, FormattableString conditions, string orderBy);
 
         /// <inheritdoc />
-        public SqlCommand MakeInsertStatement(TableSchema tableSchema, object entity)
+        public SqlCommand MakeInsertCommand(TableSchema tableSchema, object entity)
         {
             bool Include(ColumnSchema p) => p.Usage.IncludeInInsertStatements;
             var columns = tableSchema.Columns;
@@ -64,10 +64,10 @@
         }
 
         /// <inheritdoc />
-        public abstract SqlCommand MakeInsertReturningIdentityStatement(TableSchema tableSchema, object entity);
+        public abstract SqlCommand MakeInsertReturningIdentityCommand(TableSchema tableSchema, object entity);
 
         /// <inheritdoc />
-        public SqlCommand MakeUpdateStatement(TableSchema tableSchema, object entity)
+        public SqlCommand MakeUpdateCommand(TableSchema tableSchema, object entity)
         {
             bool Include(ColumnSchema p) => p.Usage.IncludeInUpdateStatements;
 
@@ -79,7 +79,7 @@
         }
 
         /// <inheritdoc />
-        public SqlCommand MakeDeleteEntityStatement(TableSchema tableSchema, object entity)
+        public SqlCommand MakeDeleteEntityCommand(TableSchema tableSchema, object entity)
         {
             var sql = new SqlCommandBuilder("DELETE FROM ").Append(tableSchema.Name);
             sql.AppendWherePrimaryKeysClause(tableSchema.GetPrimaryKeys());
@@ -88,7 +88,7 @@
         }
 
         /// <inheritdoc />
-        public SqlCommand MakeDeleteByPrimaryKeyStatement(TableSchema schema, object id)
+        public SqlCommand MakeDeleteByPrimaryKeyCommand(TableSchema schema, object id)
         {
             var sql = new SqlCommandBuilder("DELETE FROM ").Append(schema.Name);
             var primaryKeys = schema.GetPrimaryKeys();
@@ -100,7 +100,7 @@
         /// <summary>
         /// Generates a SQL Delete statement which chooses which row to delete by the <paramref name="conditions"/>.
         /// </summary>
-        public SqlCommand MakeDeleteRangeStatement(TableSchema tableSchema, FormattableString conditions)
+        public SqlCommand MakeDeleteRangeCommand(TableSchema tableSchema, FormattableString conditions)
         {
             var sql = new SqlCommandBuilder("DELETE FROM ").Append(tableSchema.Name);
             sql.AppendClause(conditions);
@@ -141,10 +141,10 @@
         }
 
         /// <inheritdoc />
-        public abstract SqlCommand MakeCreateTempTableStatement(TableSchema tableSchema);
+        public abstract SqlCommand MakeCreateTempTableCommand(TableSchema tableSchema);
 
         /// <inheritdoc />
-        public abstract SqlCommand MakeDropTempTableStatement(TableSchema tableSchema);
+        public abstract SqlCommand MakeDropTempTableCommand(TableSchema tableSchema);
 
         public override bool Equals(object obj)
         {

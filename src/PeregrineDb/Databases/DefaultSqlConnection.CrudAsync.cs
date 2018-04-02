@@ -40,7 +40,7 @@
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
-            var sql = this.commandFactory.MakeGetTopNStatement<TEntity>(1, conditions, orderBy);
+            var sql = this.commandFactory.MakeGetTopNCommand<TEntity>(1, conditions, orderBy);
             return this.QueryFirstOrDefaultAsync<TEntity>(sql, commandTimeout, cancellationToken);
         }
 
@@ -50,7 +50,7 @@
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
-            var command = this.commandFactory.MakeGetTopNStatement<TEntity>(1, conditions, orderBy);
+            var command = this.commandFactory.MakeGetTopNCommand<TEntity>(1, conditions, orderBy);
             return this.QueryFirstOrDefaultAsync<TEntity>(command, commandTimeout, cancellationToken);
         }
 
@@ -61,7 +61,7 @@
             CancellationToken cancellationToken = default)
             where TEntity : class
         {
-            var command = this.commandFactory.MakeGetTopNStatement<TEntity>(1, conditions, orderBy);
+            var command = this.commandFactory.MakeGetTopNCommand<TEntity>(1, conditions, orderBy);
             return this.QueryFirstAsync<TEntity>(command, commandTimeout, cancellationToken);
         }
 
@@ -72,7 +72,7 @@
             CancellationToken cancellationToken = default)
             where TEntity : class
         {
-            var command = this.commandFactory.MakeGetTopNStatement<TEntity>(1, conditions, orderBy);
+            var command = this.commandFactory.MakeGetTopNCommand<TEntity>(1, conditions, orderBy);
             return this.QueryFirstAsync<TEntity>(command, commandTimeout, cancellationToken);
         }
 
@@ -81,7 +81,7 @@
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
-            var command = this.commandFactory.MakeGetTopNStatement<TEntity>(2, conditions, null);
+            var command = this.commandFactory.MakeGetTopNCommand<TEntity>(2, conditions, null);
             return this.QuerySingleOrDefaultAsync<TEntity>(command, commandTimeout, cancellationToken);
         }
 
@@ -90,7 +90,7 @@
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
-            var command = this.commandFactory.MakeGetTopNStatement<TEntity>(2, conditions, null);
+            var command = this.commandFactory.MakeGetTopNCommand<TEntity>(2, conditions, null);
             return this.QuerySingleOrDefaultAsync<TEntity>(command, commandTimeout, cancellationToken);
         }
 
@@ -116,13 +116,13 @@
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
-            var command = this.commandFactory.MakeGetRangeStatement<TEntity>(conditions);
+            var command = this.commandFactory.MakeGetRangeCommand<TEntity>(conditions);
             return this.QueryAsync<TEntity>(command, commandTimeout, cancellationToken);
         }
 
         public Task<IEnumerable<TEntity>> GetRangeAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.commandFactory.MakeGetRangeStatement<TEntity>(conditions);
+            var command = this.commandFactory.MakeGetRangeCommand<TEntity>(conditions);
             return this.QueryAsync<TEntity>(command, commandTimeout, cancellationToken);
         }
 
@@ -140,7 +140,7 @@
                 return PagedList<TEntity>.Empty(totalNumberOfItems, page);
             }
 
-            var itemsCommand = this.commandFactory.MakeGetPageStatement<TEntity>(page, conditions, orderBy);
+            var itemsCommand = this.commandFactory.MakeGetPageCommand<TEntity>(page, conditions, orderBy);
             var items = await this.QueryAsync<TEntity>(itemsCommand, commandTimeout, cancellationToken).ConfigureAwait(false);
             return PagedList<TEntity>.Create(totalNumberOfItems, page, items);
         }
@@ -159,14 +159,14 @@
                 return PagedList<TEntity>.Empty(totalNumberOfItems, page);
             }
 
-            var itemsCommand = this.commandFactory.MakeGetPageStatement<TEntity>(page, conditions, orderBy);
+            var itemsCommand = this.commandFactory.MakeGetPageCommand<TEntity>(page, conditions, orderBy);
             var items = await this.QueryAsync<TEntity>(itemsCommand, commandTimeout, cancellationToken).ConfigureAwait(false);
             return PagedList<TEntity>.Create(totalNumberOfItems, page, items);
         }
 
         public Task<IEnumerable<TEntity>> GetAllAsync<TEntity>(int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.QueryAsync<TEntity>(this.commandFactory.MakeGetAllStatement<TEntity>(), commandTimeout, cancellationToken);
+            return this.QueryAsync<TEntity>(this.commandFactory.MakeGetAllCommand<TEntity>(), commandTimeout, cancellationToken);
         }
 
         public async Task InsertAsync(
@@ -175,7 +175,7 @@
             bool? verifyAffectedRowCount = null,
             CancellationToken cancellationToken = default)
         {
-            var command = this.commandFactory.MakeInsertStatement(entity);
+            var command = this.commandFactory.MakeInsertCommand(entity);
 
             var result = await this.ExecuteAsync(command, commandTimeout, cancellationToken).ConfigureAwait(false);
             if (this.Config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
@@ -186,7 +186,7 @@
 
         public Task<TPrimaryKey> InsertAsync<TPrimaryKey>(object entity, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.commandFactory.MakeInsertReturningPrimaryKeyStatement<TPrimaryKey>(entity);
+            var command = this.commandFactory.MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(entity);
             return this.ExecuteScalarAsync<TPrimaryKey>(command, commandTimeout, cancellationToken);
         }
 
@@ -217,7 +217,7 @@
 
             foreach (var entity in entities)
             {
-                var sql = this.commandFactory.MakeInsertReturningPrimaryKeyStatement<TPrimaryKey>(entity);
+                var sql = this.commandFactory.MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(entity);
                 var id = await this.ExecuteScalarAsync<TPrimaryKey>(sql, commandTimeout, cancellationToken).ConfigureAwait(false);
                 setPrimaryKey(entity, id);
             }
@@ -229,7 +229,7 @@
             bool? verifyAffectedRowCount = null,
             CancellationToken cancellationToken = default)
         {
-            var result = await this.ExecuteAsync(this.commandFactory.MakeUpdateStatement<TEntity>(entity), commandTimeout, cancellationToken)
+            var result = await this.ExecuteAsync(this.commandFactory.MakeUpdateCommand<TEntity>(entity), commandTimeout, cancellationToken)
                                    .ConfigureAwait(false);
 
             if (this.Config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
@@ -246,7 +246,7 @@
             var num = 0;
             foreach (var entity in entities)
             {
-                await this.ExecuteAsync(this.commandFactory.MakeUpdateStatement<TEntity>(entity), commandTimeout, cancellationToken).ConfigureAwait(false);
+                await this.ExecuteAsync(this.commandFactory.MakeUpdateCommand<TEntity>(entity), commandTimeout, cancellationToken).ConfigureAwait(false);
                 num++;
             }
 
@@ -259,7 +259,7 @@
             bool? verifyAffectedRowCount = null,
             CancellationToken cancellationToken = default)
         {
-            var result = await this.ExecuteAsync(this.commandFactory.MakeDeleteStatement<TEntity>(entity), commandTimeout, cancellationToken)
+            var result = await this.ExecuteAsync(this.commandFactory.MakeDeleteCommand<TEntity>(entity), commandTimeout, cancellationToken)
                                    .ConfigureAwait(false);
 
             if (this.Config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
@@ -274,7 +274,7 @@
             bool? verifyAffectedRowCount = null,
             CancellationToken cancellationToken = default)
         {
-            var result = await this.ExecuteAsync(this.commandFactory.MakeDeleteByPrimaryKeyStatement<TEntity>(id), commandTimeout, cancellationToken)
+            var result = await this.ExecuteAsync(this.commandFactory.MakeDeleteByPrimaryKeyCommand<TEntity>(id), commandTimeout, cancellationToken)
                                    .ConfigureAwait(false);
 
             if (this.Config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
@@ -288,17 +288,17 @@
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
-            return this.ExecuteAsync(this.commandFactory.MakeDeleteRangeStatement<TEntity>(conditions), commandTimeout, cancellationToken);
+            return this.ExecuteAsync(this.commandFactory.MakeDeleteRangeCommand<TEntity>(conditions), commandTimeout, cancellationToken);
         }
 
         public Task<CommandResult> DeleteRangeAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.ExecuteAsync(this.commandFactory.MakeDeleteRangeStatement<TEntity>(conditions), commandTimeout, cancellationToken);
+            return this.ExecuteAsync(this.commandFactory.MakeDeleteRangeCommand<TEntity>(conditions), commandTimeout, cancellationToken);
         }
 
         public Task<CommandResult> DeleteAllAsync<TEntity>(int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.ExecuteAsync(this.commandFactory.MakeDeleteAllStatement<TEntity>(), commandTimeout, cancellationToken);
+            return this.ExecuteAsync(this.commandFactory.MakeDeleteAllCommand<TEntity>(), commandTimeout, cancellationToken);
         }
     }
 }

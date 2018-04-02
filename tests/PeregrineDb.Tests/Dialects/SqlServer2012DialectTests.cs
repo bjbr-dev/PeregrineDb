@@ -29,7 +29,7 @@
                 var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeCountStatement(schema, null);
+                var sql = this.config.Dialect.MakeCountCommand(schema, null);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -46,7 +46,7 @@ FROM [Dogs]");
                 var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeCountStatement(schema, $"WHERE Foo IS NOT NULL");
+                var sql = this.config.Dialect.MakeCountCommand(schema, $"WHERE Foo IS NOT NULL");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -68,7 +68,7 @@ WHERE Foo IS NOT NULL");
                 var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeFindStatement(schema, 5);
+                var sql = this.config.Dialect.MakeFindCommand(schema, 5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -90,7 +90,7 @@ WHERE [Id] = @Id",
                 var schema = this.config.KeyExplicit();
 
                 // Act
-                var sql = this.config.Dialect.MakeFindStatement(schema, 5);
+                var sql = this.config.Dialect.MakeFindCommand(schema, 5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -112,7 +112,7 @@ WHERE [Key] = @Key",
                 var schema = this.config.CompositeKeys();
 
                 // Act
-                var sql = this.config.Dialect.MakeFindStatement(schema, new { key1 = 2, key2 = 3 });
+                var sql = this.config.Dialect.MakeFindCommand(schema, new { key1 = 2, key2 = 3 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -135,7 +135,7 @@ WHERE [Key1] = @Key1 AND [Key2] = @Key2",
                 var schema = this.config.KeyAlias();
 
                 // Act
-                var sql = this.config.Dialect.MakeFindStatement(schema, 5);
+                var sql = this.config.Dialect.MakeFindCommand(schema, 5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -157,7 +157,7 @@ WHERE [Key] = @Id",
                 var schema = this.config.PropertyAlias();
 
                 // Act
-                var sql = this.config.Dialect.MakeFindStatement(schema, 5);
+                var sql = this.config.Dialect.MakeFindCommand(schema, 5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -183,7 +183,7 @@ WHERE [Id] = @Id",
                 var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeGetRangeStatement(schema, null);
+                var sql = this.config.Dialect.MakeGetRangeCommand(schema, null);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -200,7 +200,7 @@ FROM [Dogs]");
                 var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeGetRangeStatement(schema, $"WHERE Age > {10}");
+                var sql = this.config.Dialect.MakeGetRangeCommand(schema, $"WHERE Age > {10}");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -222,7 +222,7 @@ WHERE Age > @p0",
                 var schema = this.config.KeyExplicit();
 
                 // Act
-                var sql = this.config.Dialect.MakeGetRangeStatement(schema, null);
+                var sql = this.config.Dialect.MakeGetRangeCommand(schema, null);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -239,7 +239,7 @@ FROM [KeyExplicit]");
                 var schema = this.config.KeyAlias();
 
                 // Act
-                var sql = this.config.Dialect.MakeGetRangeStatement(schema, null);
+                var sql = this.config.Dialect.MakeGetRangeCommand(schema, null);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -256,7 +256,7 @@ FROM [KeyAlias]");
                 var schema = this.config.PropertyAlias();
 
                 // Act
-                var sql = this.config.Dialect.MakeGetRangeStatement(schema, null);
+                var sql = this.config.Dialect.MakeGetRangeCommand(schema, null);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -277,7 +277,7 @@ FROM [PropertyAlias]");
                 var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeGetTopNStatement(schema, 1, null, "Name");
+                var sql = this.config.Dialect.MakeGetTopNCommand(schema, 1, null, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -295,7 +295,7 @@ ORDER BY Name");
                 var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeGetTopNStatement(schema, 1, $"WHERE Name LIKE {"Foo%"}", "Name");
+                var sql = this.config.Dialect.MakeGetTopNCommand(schema, 1, $"WHERE Name LIKE {"Foo%"}", "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -318,7 +318,7 @@ ORDER BY Name",
                 var schema = this.config.PropertyAlias();
 
                 // Act
-                var sql = this.config.Dialect.MakeGetTopNStatement(schema, 1, null, "Name");
+                var sql = this.config.Dialect.MakeGetTopNCommand(schema, 1, null, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -339,7 +339,7 @@ ORDER BY Name");
                 var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeGetTopNStatement(schema, 1, null, orderBy);
+                var sql = this.config.Dialect.MakeGetTopNCommand(schema, 1, null, orderBy);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -364,7 +364,7 @@ FROM [Dogs]");
 
                 // Act / Assert
                 Assert.Throws<ArgumentException>(
-                    () => this.config.Dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), null, orderBy));
+                    () => this.config.Dialect.MakeGetPageCommand(schema, new Page(1, 10, true, 0, 9), null, orderBy));
             }
 
             [Fact]
@@ -374,7 +374,7 @@ FROM [Dogs]");
                 var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), null, "Name");
+                var sql = this.config.Dialect.MakeGetPageCommand(schema, new Page(1, 10, true, 0, 9), null, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -393,7 +393,7 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY");
                 var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), $"WHERE Name LIKE {"Foo%"}", "Name");
+                var sql = this.config.Dialect.MakeGetPageCommand(schema, new Page(1, 10, true, 0, 9), $"WHERE Name LIKE {"Foo%"}", "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -417,7 +417,7 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY",
                 var schema = this.config.PropertyAlias();
 
                 // Act
-                var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(1, 10, true, 0, 9), null, "Name");
+                var sql = this.config.Dialect.MakeGetPageCommand(schema, new Page(1, 10, true, 0, 9), null, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -436,7 +436,7 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY");
                 var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(2, 10, true, 10, 19), null, "Name");
+                var sql = this.config.Dialect.MakeGetPageCommand(schema, new Page(2, 10, true, 10, 19), null, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -455,7 +455,7 @@ OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY");
                 var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeGetPageStatement(schema, new Page(2, 5, true, 5, 9), null, "Name");
+                var sql = this.config.Dialect.MakeGetPageCommand(schema, new Page(2, 5, true, 5, 9), null, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -478,7 +478,7 @@ OFFSET 5 ROWS FETCH NEXT 5 ROWS ONLY");
                 var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertStatement(schema, new Dog { Name = "Foo", Age = 10 });
+                var sql = this.config.Dialect.MakeInsertCommand(schema, new Dog { Name = "Foo", Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -501,7 +501,7 @@ VALUES (@Name, @Age);",
                 var schema = this.config.KeyNotGenerated();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertStatement(schema, new KeyNotGenerated { Id = 6, Name = "Foo" });
+                var sql = this.config.Dialect.MakeInsertCommand(schema, new KeyNotGenerated { Id = 6, Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -523,7 +523,7 @@ VALUES (@Id, @Name);",
                 var schema = this.config.PropertyComputed();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertStatement(schema, new PropertyComputed { Name = "Foo" });
+                var sql = this.config.Dialect.MakeInsertCommand(schema, new PropertyComputed { Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -546,7 +546,7 @@ VALUES (@Name);",
                 var schema = this.config.PropertyGenerated();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertStatement(schema, new PropertyGenerated { Name = "Foo" });
+                var sql = this.config.Dialect.MakeInsertCommand(schema, new PropertyGenerated { Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -573,7 +573,7 @@ VALUES (@Name);",
                 var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema, new Dog { Name = "Foo", Age = 10 });
+                var sql = this.config.Dialect.MakeInsertReturningIdentityCommand(schema, new Dog { Name = "Foo", Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -597,7 +597,7 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]",
                 var schema = this.config.KeyNotGenerated();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema, new KeyNotGenerated { Id = 10, Name = "Foo" });
+                var sql = this.config.Dialect.MakeInsertReturningIdentityCommand(schema, new KeyNotGenerated { Id = 10, Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -620,7 +620,7 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]",
                 var schema = this.config.PropertyComputed();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema, new PropertyComputed { Name = "Foo" });
+                var sql = this.config.Dialect.MakeInsertReturningIdentityCommand(schema, new PropertyComputed { Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -644,7 +644,7 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]",
                 var schema = this.config.PropertyGenerated();
 
                 // Act
-                var sql = this.config.Dialect.MakeInsertReturningIdentityStatement(schema, new PropertyGenerated { Name = "Foo" });
+                var sql = this.config.Dialect.MakeInsertReturningIdentityCommand(schema, new PropertyGenerated { Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -672,7 +672,7 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]",
                 var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeUpdateStatement(schema, new Dog { Id = 5, Name = "Foo", Age = 10 });
+                var sql = this.config.Dialect.MakeUpdateCommand(schema, new Dog { Id = 5, Name = "Foo", Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -696,7 +696,7 @@ WHERE [Id] = @Id",
                 var schema = this.config.CompositeKeys();
 
                 // Act
-                var sql = this.config.Dialect.MakeUpdateStatement(schema, new CompositeKeys { Key1 = 7, Key2 = 8, Name = "Foo" });
+                var sql = this.config.Dialect.MakeUpdateCommand(schema, new CompositeKeys { Key1 = 7, Key2 = 8, Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -720,7 +720,7 @@ WHERE [Key1] = @Key1 AND [Key2] = @Key2",
                 var schema = this.config.KeyNotGenerated();
 
                 // Act
-                var sql = this.config.Dialect.MakeUpdateStatement(schema, new KeyNotGenerated { Id = 7, Name = "Foo" });
+                var sql = this.config.Dialect.MakeUpdateCommand(schema, new KeyNotGenerated { Id = 7, Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -743,7 +743,7 @@ WHERE [Id] = @Id",
                 var schema = this.config.PropertyAlias();
 
                 // Act
-                var sql = this.config.Dialect.MakeUpdateStatement(schema, new PropertyAlias { Id = 5, Age = 10 });
+                var sql = this.config.Dialect.MakeUpdateCommand(schema, new PropertyAlias { Id = 5, Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -766,7 +766,7 @@ WHERE [Id] = @Id",
                 var schema = this.config.KeyAlias();
 
                 // Act
-                var sql = this.config.Dialect.MakeUpdateStatement(schema, new KeyAlias { Name = "Foo", Id = 10 });
+                var sql = this.config.Dialect.MakeUpdateCommand(schema, new KeyAlias { Name = "Foo", Id = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -789,7 +789,7 @@ WHERE [Key] = @Id",
                 var schema = this.config.KeyExplicit();
 
                 // Act
-                var sql = this.config.Dialect.MakeUpdateStatement(schema, new KeyExplicit { Name = "Foo", Key = 10 });
+                var sql = this.config.Dialect.MakeUpdateCommand(schema, new KeyExplicit { Name = "Foo", Key = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -812,7 +812,7 @@ WHERE [Key] = @Key",
                 var schema = this.config.PropertyComputed();
 
                 // Act
-                var sql = this.config.Dialect.MakeUpdateStatement(schema, new PropertyComputed { Name = "Foo", Id = 10 });
+                var sql = this.config.Dialect.MakeUpdateCommand(schema, new PropertyComputed { Name = "Foo", Id = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -836,7 +836,7 @@ WHERE [Id] = @Id",
                 var schema = this.config.PropertyGenerated();
 
                 // Act
-                var sql = this.config.Dialect.MakeUpdateStatement(schema, new PropertyGenerated { Id = 5, Name = "Foo", Created = new DateTime(2018, 4, 1) });
+                var sql = this.config.Dialect.MakeUpdateCommand(schema, new PropertyGenerated { Id = 5, Name = "Foo", Created = new DateTime(2018, 4, 1) });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -864,7 +864,7 @@ WHERE [Id] = @Id",
                 var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema, 5);
+                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyCommand(schema, 5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -885,7 +885,7 @@ WHERE [Id] = @Id",
                 var schema = this.config.CompositeKeys();
 
                 // Act
-                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema, new CompositeKeys { Key1 = 1, Key2 = 2 });
+                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyCommand(schema, new CompositeKeys { Key1 = 1, Key2 = 2 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -908,7 +908,7 @@ WHERE [Key1] = @Key1 AND [Key2] = @Key2",
                 var schema = this.config.KeyNotGenerated();
 
                 // Act
-                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema, 5);
+                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyCommand(schema, 5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -929,7 +929,7 @@ WHERE [Id] = @Id",
                 var schema = this.config.KeyAlias();
 
                 // Act
-                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema, 5);
+                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyCommand(schema, 5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -950,7 +950,7 @@ WHERE [Key] = @Id",
                 var schema = this.config.KeyExplicit();
 
                 // Act
-                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyStatement(schema, 5);
+                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyCommand(schema, 5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -975,7 +975,7 @@ WHERE [Key] = @Key",
                 var schema = this.config.Dog();
 
                 // Act
-                var sql = this.config.Dialect.MakeDeleteRangeStatement(schema, $"WHERE [Age] > {10}");
+                var sql = this.config.Dialect.MakeDeleteRangeCommand(schema, $"WHERE [Age] > {10}");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -1087,21 +1087,21 @@ WHERE [Age] > @p0",
                     .Returns((Type type) => "table");
 
                 // Act
-                Assert.Throws<ArgumentException>(() => this.config.Dialect.MakeCreateTempTableStatement(this.config.Dog()));
+                Assert.Throws<ArgumentException>(() => this.config.Dialect.MakeCreateTempTableCommand(this.config.Dog()));
             }
 
             [Fact]
             public void Throws_exception_if_there_are_no_columns()
             {
                 // Act
-                Assert.Throws<ArgumentException>(() => this.config.Dialect.MakeCreateTempTableStatement(this.config.NoColumns()));
+                Assert.Throws<ArgumentException>(() => this.config.Dialect.MakeCreateTempTableCommand(this.config.NoColumns()));
             }
 
             [Fact]
             public void Creates_table_with_all_possible_types()
             {
                 // Act
-                var sql = this.config.Dialect.MakeCreateTempTableStatement(this.config.TempAllPossibleTypes());
+                var sql = this.config.Dialect.MakeCreateTempTableCommand(this.config.TempAllPossibleTypes());
 
                 // Assert
                 var expected = new SqlCommand(@"
