@@ -24,7 +24,7 @@
         public TableSchemaFactoryTests()
         {
             var sqlNameEscaper = new TestSqlNameEscaper();
-            this.sut = new PeregrineConfig(new TestDialect(), sqlNameEscaper, new AtttributeTableNameConvention(sqlNameEscaper),
+            this.sut = new PeregrineConfig(TestDialect.Instance, sqlNameEscaper, new AtttributeTableNameConvention(sqlNameEscaper),
                 new AttributeColumnNameConvention(sqlNameEscaper), true, PeregrineConfig.DefaultSqlTypeMapping);
         }
 
@@ -33,7 +33,10 @@
         {
             private TableSchema PerformAct(Type entityType)
             {
-                return this.sut.GetTableSchema(entityType);
+                var sqlNameEscaper = new TestSqlNameEscaper();
+                var schemaFactory = new TableSchemaFactory(sqlNameEscaper, this.sut.TableNameConvention, this.sut.ColumnNameConvention,
+                    PeregrineConfig.DefaultSqlTypeMapping);
+                return schemaFactory.GetTableSchema(entityType);
             }
 
             public class Naming
@@ -432,12 +435,18 @@
             [SuppressMessage("ReSharper", "UnusedParameter.Local")]
             private ImmutableArray<ConditionColumnSchema> PerformAct<T>(T conditions, TableSchema schema)
             {
-                return this.sut.GetConditionsSchema(typeof(T), schema, typeof(T));
+                var sqlNameEscaper = new TestSqlNameEscaper();
+                var schemaFactory = new TableSchemaFactory(sqlNameEscaper, new AtttributeTableNameConvention(sqlNameEscaper),
+                    new AttributeColumnNameConvention(sqlNameEscaper), PeregrineConfig.DefaultSqlTypeMapping);
+                return schemaFactory.GetConditionsSchema(typeof(T), schema, typeof(T));
             }
 
             private TableSchema GetTableSchema<T>()
             {
-                return this.sut.GetTableSchema(typeof(T));
+                var sqlNameEscaper = new TestSqlNameEscaper();
+                var schemaFactory = new TableSchemaFactory(sqlNameEscaper, new AtttributeTableNameConvention(sqlNameEscaper),
+                    new AttributeColumnNameConvention(sqlNameEscaper), PeregrineConfig.DefaultSqlTypeMapping);
+                return schemaFactory.GetTableSchema(typeof(T));
             }
 
             public class Naming

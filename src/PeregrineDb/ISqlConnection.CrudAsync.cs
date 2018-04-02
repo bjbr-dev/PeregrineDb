@@ -346,7 +346,8 @@
             TEntity entity,
             int? commandTimeout = null,
             bool? verifyAffectedRowCount = null,
-            CancellationToken cancellationToken = default);
+            CancellationToken cancellationToken = default)
+            where TEntity : class;
 
         /// <summary>
         /// <para>Efficiently updates multiple <paramref name="entities"/> in the databaseConnection.</para>
@@ -374,7 +375,8 @@
         Task<CommandResult> UpdateRangeAsync<TEntity>(
             IEnumerable<TEntity> entities,
             int? commandTimeout = null,
-            CancellationToken cancellationToken = default);
+            CancellationToken cancellationToken = default)
+            where TEntity : class;
 
         /// <summary>
         /// Deletes the entity in the <typeparamref name="TEntity"/> table, identified by its primary key.
@@ -392,7 +394,8 @@
             TEntity entity,
             int? commandTimeout = null,
             bool? verifyAffectedRowCount = null,
-            CancellationToken cancellationToken = default);
+            CancellationToken cancellationToken = default)
+            where TEntity : class;
 
         /// <summary>
         /// Deletes the entity in the <typeparamref name="TEntity"/> table which has the <paramref name="id"/>.

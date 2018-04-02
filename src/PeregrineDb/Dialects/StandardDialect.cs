@@ -8,6 +8,7 @@
     using System.Text;
     using Pagination;
     using PeregrineDb.Schema;
+    using PeregrineDb.Utils;
 
     /// <summary>
     /// Simple implementation of a SQL dialect which performs most SQL generation.
@@ -15,9 +16,18 @@
     public abstract class StandardDialect
         : IDialect, IEquatable<StandardDialect>
     {
-        /// <inheritdoc />
-        public SqlCommand MakeCountCommand(TableSchema schema, FormattableString conditions)
+        private readonly TableSchemaFactory tableSchemaFactory;
+
+        protected StandardDialect(TableSchemaFactory tableSchemaFactory)
         {
+            this.tableSchemaFactory = tableSchemaFactory;
+        }
+
+        /// <inheritdoc />
+        public SqlCommand MakeCountCommand<TEntity>(FormattableString conditions)
+        {
+            var schema = this.GetTableSchema(typeof(TEntity));
+
             var sql = new SqlCommandBuilder("SELECT COUNT(*)");
             sql.AppendClause("FROM ").Append(schema.Name);
             sql.AppendClause(conditions);
@@ -25,8 +35,25 @@
         }
 
         /// <inheritdoc />
-        public SqlCommand MakeFindCommand(TableSchema schema, object id)
+        public SqlCommand MakeCountCommand<TEntity>(object conditions)
         {
+            Ensure.NotNull(conditions, nameof(conditions));
+
+            var entityType = typeof(TEntity);
+            var tableSchema = this.GetTableSchema(entityType);
+            var conditionsSchema = this.GetConditionsSchema(entityType, tableSchema, conditions.GetType());
+
+            var sql = new SqlCommandBuilder("SELECT COUNT(*)");
+            sql.AppendClause("FROM ").Append(tableSchema.Name);
+            sql.AppendClause(this.MakeWhereClause(conditionsSchema, conditions));
+            return sql.ToCommand();
+        }
+
+        /// <inheritdoc />
+        public SqlCommand MakeFindCommand<TEntity>(object id)
+        {
+            Ensure.NotNull(id, nameof(id));
+            var schema = this.GetTableSchema(typeof(TEntity));
             var primaryKeys = schema.GetPrimaryKeys();
 
             var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(schema.Columns);
@@ -37,11 +64,16 @@
         }
 
         /// <inheritdoc />
-        public abstract SqlCommand MakeGetTopNCommand(TableSchema schema, int take, FormattableString conditions, string orderBy);
+        public abstract SqlCommand MakeGetFirstNCommand<TEntity>(int take, FormattableString conditions, string orderBy);
 
         /// <inheritdoc />
-        public SqlCommand MakeGetRangeCommand(TableSchema tableSchema, FormattableString conditions)
+        public abstract SqlCommand MakeGetFirstNCommand<TEntity>(int take, object conditions, string orderBy);
+
+        /// <inheritdoc />
+        public SqlCommand MakeGetRangeCommand<TEntity>(FormattableString conditions)
         {
+            var tableSchema = this.GetTableSchema(typeof(TEntity));
+
             var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
             sql.AppendClause(conditions);
@@ -49,11 +81,32 @@
         }
 
         /// <inheritdoc />
-        public abstract SqlCommand MakeGetPageCommand(TableSchema tableSchema, Page page, FormattableString conditions, string orderBy);
+        public SqlCommand MakeGetRangeCommand<TEntity>(object conditions)
+        {
+            Ensure.NotNull(conditions, nameof(conditions));
+
+            var entityType = typeof(TEntity);
+            var tableSchema = this.GetTableSchema(typeof(TEntity));
+            var conditionsSchema = this.GetConditionsSchema(entityType, tableSchema, conditions.GetType());
+
+            var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
+            sql.AppendClause("FROM ").Append(tableSchema.Name);
+            sql.AppendClause(this.MakeWhereClause(conditionsSchema, conditions));
+            return sql.ToCommand();
+        }
 
         /// <inheritdoc />
-        public SqlCommand MakeInsertCommand(TableSchema tableSchema, object entity)
+        public abstract SqlCommand MakeGetPageCommand<TEntity>(Page page, FormattableString conditions, string orderBy);
+
+        /// <inheritdoc />
+        public abstract SqlCommand MakeGetPageCommand<TEntity>(Page page, object conditions, string orderBy);
+
+        /// <inheritdoc />
+        public SqlCommand MakeInsertCommand(object entity)
         {
+            Ensure.NotNull(entity, nameof(entity));
+
+            var tableSchema = this.GetTableSchema(entity.GetType());
             bool Include(ColumnSchema p) => p.Usage.IncludeInInsertStatements;
             var columns = tableSchema.Columns;
 
@@ -64,11 +117,37 @@
         }
 
         /// <inheritdoc />
-        public abstract SqlCommand MakeInsertReturningIdentityCommand(TableSchema tableSchema, object entity);
+        public abstract SqlCommand MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(object entity);
 
         /// <inheritdoc />
-        public SqlCommand MakeUpdateCommand(TableSchema tableSchema, object entity)
+        public SqlCommand MakeInsertRangeCommand<TEntity, TPrimaryKey>(IEnumerable<TEntity> entities)
         {
+            Ensure.NotNull(entities, nameof(entities));
+            var tableSchema = this.GetTableSchema(typeof(TEntity));
+
+            if (!tableSchema.CanGeneratePrimaryKey(typeof(TPrimaryKey)))
+            {
+                throw new InvalidPrimaryKeyException(
+                    "InsertRange<TEntity, TPrimaryKey>() can only be used for Int32 and Int64 primary keys. Use InsertRange<TEntity>() for other types of primary keys.");
+            }
+
+            bool Include(ColumnSchema p) => p.Usage.IncludeInInsertStatements;
+            var columns = tableSchema.Columns;
+
+            var sql = new SqlCommandBuilder("INSERT INTO ").Append(tableSchema.Name).Append(" (").AppendColumnNames(columns, Include).Append(")");
+            sql.AppendClause("VALUES (").AppendParameterNames(columns, Include).Append(");");
+            sql.AddParameters(entities.First());
+            return sql.ToCommand();
+        }
+
+        /// <inheritdoc />
+        public SqlCommand MakeUpdateCommand<TEntity>(TEntity entity)
+            where TEntity : class
+        {
+            Ensure.NotNull(entity, nameof(entity));
+
+            var tableSchema = this.GetTableSchema(typeof(TEntity));
+
             bool Include(ColumnSchema p) => p.Usage.IncludeInUpdateStatements;
 
             var sql = new SqlCommandBuilder("UPDATE ").Append(tableSchema.Name);
@@ -78,9 +157,20 @@
             return sql.ToCommand();
         }
 
-        /// <inheritdoc />
-        public SqlCommand MakeDeleteEntityCommand(TableSchema tableSchema, object entity)
+        public SqlCommand MakeUpdateRangeCommand<TEntity>(IEnumerable<TEntity> entities)
+            where TEntity : class
         {
+            return this.MakeUpdateCommand(entities.First());
+        }
+
+        /// <inheritdoc />
+        public SqlCommand MakeDeleteCommand<TEntity>(TEntity entity)
+            where TEntity : class
+        {
+            Ensure.NotNull(entity, nameof(entity));
+
+            var tableSchema = this.GetTableSchema(typeof(TEntity));
+
             var sql = new SqlCommandBuilder("DELETE FROM ").Append(tableSchema.Name);
             sql.AppendWherePrimaryKeysClause(tableSchema.GetPrimaryKeys());
             sql.AddParameters(entity);
@@ -88,8 +178,10 @@
         }
 
         /// <inheritdoc />
-        public SqlCommand MakeDeleteByPrimaryKeyCommand(TableSchema schema, object id)
+        public SqlCommand MakeDeleteByPrimaryKeyCommand<TEntity>(object id)
         {
+            var schema = this.GetTableSchema(typeof(TEntity));
+
             var sql = new SqlCommandBuilder("DELETE FROM ").Append(schema.Name);
             var primaryKeys = schema.GetPrimaryKeys();
             sql.AppendWherePrimaryKeysClause(primaryKeys);
@@ -100,10 +192,45 @@
         /// <summary>
         /// Generates a SQL Delete statement which chooses which row to delete by the <paramref name="conditions"/>.
         /// </summary>
-        public SqlCommand MakeDeleteRangeCommand(TableSchema tableSchema, FormattableString conditions)
+        public SqlCommand MakeDeleteRangeCommand<TEntity>(FormattableString conditions)
         {
+            if (conditions == null || conditions.Format.IndexOf("WHERE ", StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                throw new ArgumentException(
+                    "DeleteRange<TEntity> requires a WHERE clause, use DeleteAll<TEntity> to delete everything.");
+            }
+
+            var tableSchema = this.GetTableSchema(typeof(TEntity));
+
             var sql = new SqlCommandBuilder("DELETE FROM ").Append(tableSchema.Name);
             sql.AppendClause(conditions);
+            return sql.ToCommand();
+        }
+
+        public SqlCommand MakeDeleteAllCommand<TEntity>()
+        {
+            var tableSchema = this.GetTableSchema(typeof(TEntity));
+
+            return new SqlCommand("DELETE FROM " + tableSchema.Name);
+        }
+
+        /// <summary>
+        /// Generates a SQL Delete statement which chooses which row to delete by the <paramref name="conditions"/>.
+        /// </summary>
+        public SqlCommand MakeDeleteRangeCommand<TEntity>(object conditions)
+        {
+            Ensure.NotNull(conditions, nameof(conditions));
+
+            var entityType = typeof(TEntity);
+            var tableSchema = this.GetTableSchema(entityType);
+            var conditionsSchema = this.GetConditionsSchema(entityType, tableSchema, conditions.GetType());
+            if (conditionsSchema.IsEmpty)
+            {
+                throw new ArgumentException("DeleteRange<TEntity> requires at least one condition, use DeleteAll<TEntity> to delete everything.");
+            }
+
+            var sql = new SqlCommandBuilder("DELETE FROM ").Append(tableSchema.Name);
+            sql.AppendClause(this.MakeWhereClause(conditionsSchema, conditions));
             return sql.ToCommand();
         }
 
@@ -141,10 +268,10 @@
         }
 
         /// <inheritdoc />
-        public abstract SqlCommand MakeCreateTempTableCommand(TableSchema tableSchema);
+        public abstract SqlCommand MakeCreateTempTableCommand<TEntity>();
 
         /// <inheritdoc />
-        public abstract SqlCommand MakeDropTempTableCommand(TableSchema tableSchema);
+        public abstract SqlCommand MakeDropTempTableCommand<TEntity>();
 
         public override bool Equals(object obj)
         {
@@ -171,7 +298,7 @@
             return this.GetType().Name.GetHashCode();
         }
 
-        protected static object[] GetArguments(IReadOnlyCollection<ColumnSchema> columns, object entity)
+        private static object[] GetArguments(IReadOnlyCollection<ColumnSchema> columns, object entity)
         {
             var properties = entity.GetType().GetTypeInfo().DeclaredProperties;
             var arguments = new object[columns.Max(c => c.Index) + 1];
@@ -196,6 +323,19 @@
             }
 
             return arguments;
+        }
+
+        protected TableSchema GetTableSchema(Type entityType)
+        {
+            return this.tableSchemaFactory.GetTableSchema(entityType);
+        }
+
+        protected ImmutableArray<ConditionColumnSchema> GetConditionsSchema(
+            Type entityType,
+            TableSchema tableSchema,
+            Type conditionsType)
+        {
+            return this.tableSchemaFactory.GetConditionsSchema(entityType, tableSchema, conditionsType);
         }
     }
 }

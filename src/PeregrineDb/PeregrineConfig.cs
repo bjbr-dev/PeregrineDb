@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Data;
-    using System.Linq;
     using PeregrineDb.Dialects;
     using PeregrineDb.Dialects.Postgres;
     using PeregrineDb.Dialects.SqlServer2012;
@@ -78,7 +77,6 @@
             }
         }
 
-        private readonly TableSchemaFactory tableSchemaFactory;
         private readonly ISqlNameEscaper sqlNameEscaper;
 
         /// <summary>
@@ -98,9 +96,6 @@
             this.VerifyAffectedRowCount = verifyAffectedRowCount;
             this.SqlTypeMappings = sqlTypeMappings ?? throw new ArgumentNullException(nameof(sqlTypeMappings));
             this.sqlNameEscaper = sqlNameEscaper ?? throw new ArgumentNullException(nameof(sqlNameEscaper));
-
-            var fastMappings = sqlTypeMappings.ToDictionary(k => k.Key, v => v.Value);
-            this.tableSchemaFactory = new TableSchemaFactory(sqlNameEscaper, tableNameConvention, columnNameConvention, fastMappings);
         }
 
         /// <summary>
@@ -151,19 +146,6 @@
         {
             var mappings = this.SqlTypeMappings.SetItem(type, dbType);
             return new PeregrineConfig(this.Dialect, this.sqlNameEscaper, this.TableNameConvention, this.ColumnNameConvention, this.VerifyAffectedRowCount, mappings);
-        }
-
-        public TableSchema GetTableSchema(Type entityType)
-        {
-            return this.tableSchemaFactory.GetTableSchema(entityType);
-        }
-
-        public ImmutableArray<ConditionColumnSchema> GetConditionsSchema(
-            Type entityType,
-            TableSchema tableSchema,
-            Type conditionsType)
-        {
-            return this.tableSchemaFactory.GetConditionsSchema(entityType, tableSchema, conditionsType);
         }
     }
 }

@@ -318,7 +318,8 @@
         /// </code>
         /// </example>
         /// <exception cref="AffectedRowCountException">The update command didn't change any record, or changed multiple records.</exception>
-        void Update<TEntity>(TEntity entity, int? commandTimeout = null, bool? verifyAffectedRowCount = null);
+        void Update<TEntity>(TEntity entity, int? commandTimeout = null, bool? verifyAffectedRowCount = null)
+            where TEntity : class;
 
         /// <summary>
         /// <para>Efficiently updates multiple <paramref name="entities"/> in the databaseConnection.</para>
@@ -343,7 +344,8 @@
         /// </code>
         /// </example>
         /// <returns>The number of affected records.</returns>
-        CommandResult UpdateRange<TEntity>(IEnumerable<TEntity> entities, int? commandTimeout = null);
+        CommandResult UpdateRange<TEntity>(IEnumerable<TEntity> entities, int? commandTimeout = null)
+            where TEntity : class;
 
         /// <summary>
         /// Deletes the entity in the <typeparamref name="TEntity"/> table, identified by its primary key.
@@ -357,7 +359,8 @@
         /// </code>
         /// </example>
         /// <exception cref="AffectedRowCountException">The delete command didn't delete anything, or deleted multiple records.</exception>
-        void Delete<TEntity>(TEntity entity, int? commandTimeout = null, bool? verifyAffectedRowCount = null);
+        void Delete<TEntity>(TEntity entity, int? commandTimeout = null, bool? verifyAffectedRowCount = null)
+            where TEntity : class;
 
         /// <summary>
         /// Deletes the entity in the <typeparamref name="TEntity"/> table which has the <paramref name="id"/>.

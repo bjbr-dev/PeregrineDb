@@ -2,9 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Collections.Immutable;
     using System.Linq;
-    using PeregrineDb.Schema;
     using PeregrineDb.Schema.Relations;
 
     public class DataWiper
@@ -52,8 +50,7 @@
                 {
                     case ClearTableCommand c:
                     {
-                        var tableSchema = new TableSchema(c.TableName, ImmutableArray<ColumnSchema>.Empty);
-                        commands.Add(dialect.MakeDeleteRangeCommand(tableSchema, null));
+                        commands.Add(dialect.MakeDeleteAllCommand(c.TableName));
                         break;
                     }
 

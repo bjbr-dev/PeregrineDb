@@ -28,16 +28,16 @@
         void CreateTempTable<TEntity>(IEnumerable<TEntity> entities, int? commandTimeout = null);
 
         /// <summary>
-        /// <para>Drops the temporary table with the given <paramref name="tableName"/>.</para>
-        /// <para>USE WITH CAUTION! In some dialects, this can drop a non-temporary table! Make sure you specify the right entity and tablename.</para>
+        /// <para>Drops the temporary table defined by the <typeparam name="TEntity"></typeparam>.</para>
+        /// <para>USE WITH CAUTION! In some dialects, this can drop a non-temporary table! Make sure you specify the right entity.</para>
         /// </summary>
         /// <example>
         /// <code>
         /// <![CDATA[
-        /// databaseConnection.DropTempTable<TempUser>("[TempUsers]");
+        /// databaseConnection.DropTempTable<TempUser>();
         /// ]]>
         /// </code>
         /// </example>
-        void DropTempTable<TEntity>(string tableName, int? commandTimeout = null);
+        void DropTempTable<TEntity>(int? commandTimeout = null);
     }
 }

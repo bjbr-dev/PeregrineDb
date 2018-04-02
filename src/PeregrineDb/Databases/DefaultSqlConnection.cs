@@ -3,7 +3,6 @@
     using System;
     using System.Data;
     using PeregrineDb.Dialects;
-    using PeregrineDb.SqlCommands;
 
     public abstract partial class DefaultSqlConnection
         : ISqlConnection
@@ -12,7 +11,6 @@
         private readonly bool leaveOpen;
         
         private readonly IDbTransaction transaction;
-        private readonly CommandFactory commandFactory;
         private bool disposed;
 
         protected DefaultSqlConnection(IDbConnection connection, IDbTransaction transaction, PeregrineConfig config, bool leaveOpen)
@@ -21,7 +19,6 @@
             this.transaction = transaction;
             this.leaveOpen = leaveOpen;
             this.Config = config ?? throw new ArgumentNullException(nameof(config));
-            this.commandFactory = new CommandFactory(config);
         }
 
         public IDbConnection DbConnection

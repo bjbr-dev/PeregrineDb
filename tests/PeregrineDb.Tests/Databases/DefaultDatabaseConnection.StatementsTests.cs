@@ -27,8 +27,7 @@
                     // Act
                     using (var unitOfWork = database.StartUnitOfWork())
                     {
-                        var schema = database.Config.MakeSchema<Dog>();
-                        var command = dialect.MakeInsertCommand(schema, new Dog { Name = "Foo", Age = 4 });
+                        var command = dialect.MakeInsertCommand(new Dog { Name = "Foo", Age = 4 });
                         unitOfWork.Execute(in command);
 
                         unitOfWork.SaveChanges();

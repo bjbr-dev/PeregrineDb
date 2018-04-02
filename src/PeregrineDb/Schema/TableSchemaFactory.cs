@@ -34,7 +34,7 @@ namespace PeregrineDb.Schema
             ISqlNameEscaper nameEscaper,
             ITableNameConvention tableNameConvention,
             IColumnNameConvention columnNameConvention,
-            Dictionary<Type, DbType> sqlTypeMappings)
+            ImmutableDictionary<Type, DbType> sqlTypeMappings)
         {
             Ensure.NotNull(nameEscaper, nameof(nameEscaper));
             Ensure.NotNull(tableNameConvention, nameof(tableNameConvention));
@@ -43,7 +43,7 @@ namespace PeregrineDb.Schema
             this.nameEscaper = nameEscaper;
             this.tableNameConvention = tableNameConvention;
             this.columnNameConvention = columnNameConvention;
-            this.sqlTypeMappings = sqlTypeMappings;
+            this.sqlTypeMappings = sqlTypeMappings.ToDictionary(k => k.Key, v => v.Value);
         }
 
         /// <summary>

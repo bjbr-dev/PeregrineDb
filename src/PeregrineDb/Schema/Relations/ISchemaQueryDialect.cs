@@ -25,5 +25,7 @@
         /// Generates a SQL UPDATE statement which sets a specified column to NULL for all rows in the table.
         /// </summary>
         SqlCommand MakeSetColumnNullStatement(string tableName, string columnName);
+
+        SqlCommand MakeDeleteAllCommand(string tableName);
     }
 }
