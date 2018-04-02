@@ -26,10 +26,16 @@
                 return false;
             }
 
-            var xArgs = x.Parameters ?? new Dictionary<string, object>();
-            var yArgs = y.Parameters ?? new Dictionary<string, object>();
-            
-            return xArgs.OrderBy(z => z.Key).SequenceEqual(yArgs.OrderBy(z => z.Key));
+            switch (x.Parameters)
+            {
+                case Dictionary<string, object> xParams when y.Parameters is Dictionary<string, object> yParams:
+                {
+                    return xParams.OrderBy(kvp => kvp.Key).SequenceEqual(yParams.OrderBy(kvp => kvp.Key));
+                }
+
+                default:
+                    return Equals(x.Parameters, y.Parameters);
+            }
         }
 
         public int GetHashCode(SqlCommand obj)
