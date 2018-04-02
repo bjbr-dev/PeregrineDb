@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Immutable;
     using System.Data;
-    using System.Text;
     using Pagination;
     using PeregrineDb.Schema;
     using PeregrineDb.Schema.Relations;
@@ -44,24 +43,16 @@
             ColumnTypes = types.ToImmutableArray();
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SqlServer2012Dialect"/> class.
-        /// </summary>
-        public SqlServer2012Dialect()
-            : base()
-        {
-        }
-
         /// <inheritdoc />
-        public override FormattableString MakeInsertReturningIdentityStatement(TableSchema tableSchema, object entity)
+        public override SqlCommand MakeInsertReturningIdentityStatement(TableSchema tableSchema, object entity)
         {
             var sql = this.MakeInsertStatement(tableSchema, entity);
-            return new SqlString(sql.Format + Environment.NewLine + "SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]", sql.GetArguments());
+            return new SqlCommand(sql.Text + Environment.NewLine + "SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]", sql.Parameters);
         }
 
-        public override FormattableString MakeGetTopNStatement(TableSchema tableSchema, int take, FormattableString conditions, string orderBy)
+        public override SqlCommand MakeGetTopNStatement(TableSchema tableSchema, int take, FormattableString conditions, string orderBy)
         {
-            var sql = new StringBuilder("SELECT TOP ").Append(take).Append(" ").AppendSelectPropertiesClause(tableSchema.Columns);
+            var sql = new SqlCommandBuilder("SELECT TOP ").Append(take).Append(" ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
             sql.AppendClause(conditions);
             if (!string.IsNullOrWhiteSpace(orderBy))
@@ -69,31 +60,31 @@
                 sql.AppendClause("ORDER BY ").Append(orderBy);
             }
 
-            return new SqlString(sql.ToString(), conditions?.GetArguments());
+            return sql.ToCommand();
         }
 
         /// <inheritdoc />
-        public override FormattableString MakeGetPageStatement(TableSchema tableSchema, Page page, FormattableString conditions, string orderBy)
+        public override SqlCommand MakeGetPageStatement(TableSchema tableSchema, Page page, FormattableString conditions, string orderBy)
         {
             if (string.IsNullOrWhiteSpace(orderBy))
             {
                 throw new ArgumentException("orderBy cannot be empty");
             }
 
-            var sql = new StringBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
+            var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
             sql.AppendClause(conditions);
             sql.AppendClause("ORDER BY ").Append(orderBy);
             sql.AppendLine().AppendFormat("OFFSET {0} ROWS FETCH NEXT {1} ROWS ONLY", page.FirstItemIndex, page.PageSize);
-            return new SqlString(sql.ToString(), conditions?.GetArguments());
+            return sql.ToCommand();
         }
 
         /// <inheritdoc />
-        public override FormattableString MakeCreateTempTableStatement(TableSchema tableSchema)
+        public override SqlCommand MakeCreateTempTableStatement(TableSchema tableSchema)
         {
             EnsureValidSchemaForTempTables(tableSchema);
 
-            var sql = new StringBuilder("CREATE TABLE ").Append(tableSchema.Name).AppendLine();
+            var sql = new SqlCommandBuilder("CREATE TABLE ").Append(tableSchema.Name).AppendLine();
             sql.AppendLine("(");
 
             var isFirst = true;
@@ -113,15 +104,15 @@
 
             sql.AppendLine();
             sql.Append(");");
-            return new SqlString(sql.ToString());
+            return sql.ToCommand();
         }
 
         /// <inheritdoc />
-        public override FormattableString MakeDropTempTableStatement(TableSchema tableSchema)
+        public override SqlCommand MakeDropTempTableStatement(TableSchema tableSchema)
         {
             EnsureValidSchemaForTempTables(tableSchema);
 
-            return new SqlString("DROP TABLE " + tableSchema.Name);
+            return new SqlCommand("DROP TABLE " + tableSchema.Name);
         }
 
         /// <inheritdoc />
@@ -142,17 +133,17 @@
             return "[" + schema + "].[" + tableName + "]";
         }
 
-        public FormattableString MakeGetAllTablesStatement()
+        public SqlCommand MakeGetAllTablesStatement()
         {
-            return new SqlString(@"
+            return new SqlCommand(@"
 SELECT TABLE_SCHEMA + '.' + TABLE_NAME AS Name
 FROM  INFORMATION_SCHEMA.TABLES
 WHERE TABLE_TYPE='BASE TABLE'");
         }
 
-        public FormattableString MakeGetAllRelationsStatement()
+        public SqlCommand MakeGetAllRelationsStatement()
         {
-            return new SqlString(@"
+            return new SqlCommand(@"
 SELECT OBJECT_SCHEMA_NAME(foreign_key.referenced_object_id) + '.' + OBJECT_NAME(foreign_key.referenced_object_id) AS TargetTable,
        OBJECT_SCHEMA_NAME(foreign_key.parent_object_id) + '.' + OBJECT_NAME(foreign_key.parent_object_id) AS SourceTable,
        primary_column.name AS SourceColumn,
@@ -162,11 +153,11 @@ INNER JOIN sys.columns AS primary_column ON foreign_key.parent_object_id = prima
 INNER JOIN sys.columns AS foreign_column ON foreign_key.referenced_column_id = foreign_column.column_id AND foreign_key.referenced_object_id = foreign_column.[object_id]");
         }
 
-        public FormattableString MakeSetColumnNullStatement(string tableName, string columnName)
+        public SqlCommand MakeSetColumnNullStatement(string tableName, string columnName)
         {
-            var sql = new StringBuilder("UPDATE ").Append(tableName);
+            var sql = new SqlCommandBuilder("UPDATE ").Append(tableName);
             sql.AppendClause("SET ").Append(columnName).Append(" = NULL");
-            return new SqlString(sql.ToString());
+            return sql.ToCommand();
         }
 
         private static void EnsureValidSchemaForTempTables(TableSchema tableSchema)

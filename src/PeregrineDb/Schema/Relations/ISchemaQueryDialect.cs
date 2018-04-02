@@ -1,6 +1,5 @@
 ﻿namespace PeregrineDb.Schema.Relations
 {
-    using System;
     using PeregrineDb.Dialects;
 
     public interface ISchemaQueryDialect
@@ -10,7 +9,7 @@
         /// Generates a SQL SELECT statement which returns the name of all tables in the current databaseConnection.
         /// The result should have a single string field called 'Name', which is the name of a table (including its schema).
         /// </summary>
-        FormattableString MakeGetAllTablesStatement();
+        SqlCommand MakeGetAllTablesStatement();
 
         /// <summary>
         /// Generates a SQL SELECT statement which returns the relations between two tables in the current databaseConnection.
@@ -20,11 +19,11 @@
         /// - SourceColumn, System.String: The name of the column with the foreign key.
         /// - SourceIsOptional, System.Boolean: Whether the column is nullable (and therefore whether the relation is optional).
         /// </summary>
-        FormattableString MakeGetAllRelationsStatement();
+        SqlCommand MakeGetAllRelationsStatement();
 
         /// <summary>
         /// Generates a SQL UPDATE statement which sets a specified column to NULL for all rows in the table.
         /// </summary>
-        FormattableString MakeSetColumnNullStatement(string tableName, string columnName);
+        SqlCommand MakeSetColumnNullStatement(string tableName, string columnName);
     }
 }

@@ -16,117 +16,95 @@
         : IDialect, IEquatable<StandardDialect>
     {
         /// <inheritdoc />
-        public FormattableString MakeCountStatement(TableSchema schema, FormattableString conditions)
+        public SqlCommand MakeCountStatement(TableSchema schema, FormattableString conditions)
         {
-            var sql = new StringBuilder("SELECT COUNT(*)");
+            var sql = new SqlCommandBuilder("SELECT COUNT(*)");
             sql.AppendClause("FROM ").Append(schema.Name);
             sql.AppendClause(conditions);
-            return new SqlString(sql.ToString(), conditions?.GetArguments());
+            return sql.ToCommand();
         }
 
         /// <inheritdoc />
-        public FormattableString MakeFindStatement(TableSchema schema, object id)
+        public SqlCommand MakeFindStatement(TableSchema schema, object id)
         {
             var primaryKeys = schema.GetPrimaryKeys();
 
-            var sql = new StringBuilder("SELECT ").AppendSelectPropertiesClause(schema.Columns);
+            var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(schema.Columns);
             sql.AppendClause("FROM ").Append(schema.Name);
             sql.AppendWherePrimaryKeysClause(primaryKeys);
-
-            object[] arguments;
-            if (primaryKeys.Length == 1)
-            {
-                arguments = new object[schema.Columns.Length];
-                arguments[primaryKeys.Single().Index] = id;
-            }
-            else
-            {
-                arguments = GetArguments(schema.Columns, id);
-            }
-
-            return new SqlString(sql.ToString(), arguments);
+            sql.AddPrimaryKeyParameter(schema, id);
+            return sql.ToCommand();
         }
 
         /// <inheritdoc />
-        public abstract FormattableString MakeGetTopNStatement(TableSchema schema, int take, FormattableString conditions, string orderBy);
+        public abstract SqlCommand MakeGetTopNStatement(TableSchema schema, int take, FormattableString conditions, string orderBy);
 
         /// <inheritdoc />
-        public FormattableString MakeGetRangeStatement(TableSchema tableSchema, FormattableString conditions)
+        public SqlCommand MakeGetRangeStatement(TableSchema tableSchema, FormattableString conditions)
         {
-            var sql = new StringBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
+            var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
             sql.AppendClause(conditions);
-            return new SqlString(sql.ToString(), conditions?.GetArguments());
+            return sql.ToCommand();
         }
 
         /// <inheritdoc />
-        public abstract FormattableString MakeGetPageStatement(TableSchema tableSchema, Page page, FormattableString conditions, string orderBy);
+        public abstract SqlCommand MakeGetPageStatement(TableSchema tableSchema, Page page, FormattableString conditions, string orderBy);
 
         /// <inheritdoc />
-        public FormattableString MakeInsertStatement(TableSchema tableSchema, object entity)
+        public SqlCommand MakeInsertStatement(TableSchema tableSchema, object entity)
         {
             bool Include(ColumnSchema p) => p.Usage.IncludeInInsertStatements;
             var columns = tableSchema.Columns;
 
-            var sql = new StringBuilder("INSERT INTO ").Append(tableSchema.Name).Append(" (").AppendColumnNames(columns, Include).Append(")");
-            sql.AppendClause("VALUES (").AppendParameterPlaceholders(columns, Include).Append(");");
-
-            var arguments = GetArguments(tableSchema.Columns, entity);
-
-            return new SqlString(sql.ToString(), arguments);
+            var sql = new SqlCommandBuilder("INSERT INTO ").Append(tableSchema.Name).Append(" (").AppendColumnNames(columns, Include).Append(")");
+            sql.AppendClause("VALUES (").AppendParameterNames(columns, Include).Append(");");
+            sql.AddParameters(entity);
+            return sql.ToCommand();
         }
 
         /// <inheritdoc />
-        public abstract FormattableString MakeInsertReturningIdentityStatement(TableSchema tableSchema, object entity);
+        public abstract SqlCommand MakeInsertReturningIdentityStatement(TableSchema tableSchema, object entity);
 
         /// <inheritdoc />
-        public FormattableString MakeUpdateStatement(TableSchema tableSchema, object entity)
+        public SqlCommand MakeUpdateStatement(TableSchema tableSchema, object entity)
         {
             bool Include(ColumnSchema p) => p.Usage.IncludeInUpdateStatements;
 
-            var sql = new StringBuilder("UPDATE ").Append(tableSchema.Name);
-            sql.AppendClause("SET ").AppendColumnNamesEqualPlaceholders(tableSchema.Columns, ", ", Include);
+            var sql = new SqlCommandBuilder("UPDATE ").Append(tableSchema.Name);
+            sql.AppendClause("SET ").AppendColumnNamesEqualParameters(tableSchema.Columns, ", ", Include);
             sql.AppendWherePrimaryKeysClause(tableSchema.GetPrimaryKeys());
-            return new SqlString(sql.ToString(), GetArguments(tableSchema.Columns, entity));
+            sql.AddParameters(entity);
+            return sql.ToCommand();
         }
 
         /// <inheritdoc />
-        public FormattableString MakeDeleteEntityStatement(TableSchema tableSchema, object entity)
+        public SqlCommand MakeDeleteEntityStatement(TableSchema tableSchema, object entity)
         {
-            var sql = new StringBuilder("DELETE FROM ").Append(tableSchema.Name);
+            var sql = new SqlCommandBuilder("DELETE FROM ").Append(tableSchema.Name);
             sql.AppendWherePrimaryKeysClause(tableSchema.GetPrimaryKeys());
-            return new SqlString(sql.ToString(), GetArguments(tableSchema.Columns, entity));
+            sql.AddParameters(entity);
+            return sql.ToCommand();
         }
 
         /// <inheritdoc />
-        public FormattableString MakeDeleteByPrimaryKeyStatement(TableSchema schema, object id)
+        public SqlCommand MakeDeleteByPrimaryKeyStatement(TableSchema schema, object id)
         {
-            var sql = new StringBuilder("DELETE FROM ").Append(schema.Name);
+            var sql = new SqlCommandBuilder("DELETE FROM ").Append(schema.Name);
             var primaryKeys = schema.GetPrimaryKeys();
             sql.AppendWherePrimaryKeysClause(primaryKeys);
-
-            object[] arguments;
-            if (primaryKeys.Length == 1)
-            {
-                arguments = new object[schema.Columns.Length];
-                arguments[primaryKeys.Single().Index] = id;
-            }
-            else
-            {
-                arguments = GetArguments(schema.Columns, id);
-            }
-
-            return new SqlString(sql.ToString(), arguments);
+            sql.AddPrimaryKeyParameter(schema, id);
+            return sql.ToCommand();
         }
 
         /// <summary>
         /// Generates a SQL Delete statement which chooses which row to delete by the <paramref name="conditions"/>.
         /// </summary>
-        public FormattableString MakeDeleteRangeStatement(TableSchema tableSchema, FormattableString conditions)
+        public SqlCommand MakeDeleteRangeStatement(TableSchema tableSchema, FormattableString conditions)
         {
-            var sql = new StringBuilder("DELETE FROM ").Append(tableSchema.Name);
+            var sql = new SqlCommandBuilder("DELETE FROM ").Append(tableSchema.Name);
             sql.AppendClause(conditions);
-            return new SqlString(sql.ToString(), conditions?.GetArguments());
+            return sql.ToCommand();
         }
 
         /// <inheritdoc />
@@ -163,10 +141,10 @@
         }
 
         /// <inheritdoc />
-        public abstract FormattableString MakeCreateTempTableStatement(TableSchema tableSchema);
+        public abstract SqlCommand MakeCreateTempTableStatement(TableSchema tableSchema);
 
         /// <inheritdoc />
-        public abstract FormattableString MakeDropTempTableStatement(TableSchema tableSchema);
+        public abstract SqlCommand MakeDropTempTableStatement(TableSchema tableSchema);
 
         /// <inheritdoc />
         public abstract string MakeColumnName(string name);

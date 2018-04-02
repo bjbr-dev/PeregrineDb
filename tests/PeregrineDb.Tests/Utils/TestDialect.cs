@@ -1,7 +1,6 @@
 ﻿namespace PeregrineDb.Tests.Utils
 {
     using System;
-    using System.Text;
     using Pagination;
     using PeregrineDb.Dialects;
     using PeregrineDb.Schema;
@@ -12,24 +11,16 @@
     public class TestDialect
         : StandardDialect
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TestDialect"/> class.
-        /// </summary>
-        public TestDialect()
-            : base()
-        {
-        }
-
         /// <inheritdoc />
-        public override FormattableString MakeInsertReturningIdentityStatement(TableSchema tableSchema, object entity)
+        public override SqlCommand MakeInsertReturningIdentityStatement(TableSchema tableSchema, object entity)
         {
             var getIdentitySql = "GET IDENTITY";
-            return new SqlString(this.MakeInsertStatement(tableSchema, entity) + Environment.NewLine + getIdentitySql);
+            return new SqlCommand(this.MakeInsertStatement(tableSchema, entity) + Environment.NewLine + getIdentitySql);
         }
 
-        public override FormattableString MakeGetTopNStatement(TableSchema tableSchema, int take, FormattableString conditions, string orderBy)
+        public override SqlCommand MakeGetTopNStatement(TableSchema tableSchema, int take, FormattableString conditions, string orderBy)
         {
-            var sql = new StringBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
+            var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
             sql.AppendClause(conditions);
             if (!string.IsNullOrWhiteSpace(orderBy))
@@ -38,33 +29,33 @@
             }
 
             sql.AppendLine().AppendFormat("TAKE {0}", take);
-            return new SqlString(sql.ToString());
+            return new SqlCommand(sql.ToString());
         }
 
         /// <inheritdoc />
-        public override FormattableString MakeGetPageStatement(TableSchema tableSchema, Page page, FormattableString conditions, string orderBy)
+        public override SqlCommand MakeGetPageStatement(TableSchema tableSchema, Page page, FormattableString conditions, string orderBy)
         {
             if (string.IsNullOrWhiteSpace(orderBy))
             {
                 throw new ArgumentException("orderBy cannot be empty");
             }
 
-            var sql = new StringBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
+            var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
             sql.AppendClause(conditions);
             sql.AppendClause("ORDER BY ").Append(orderBy);
             sql.AppendLine().AppendFormat("SKIP {0} TAKE {1}", page.FirstItemIndex, page.PageSize);
-            return new SqlString(sql.ToString(), conditions.GetArguments());
+            return sql.ToCommand();
         }
 
-        public override FormattableString MakeCreateTempTableStatement(TableSchema tableSchema)
+        public override SqlCommand MakeCreateTempTableStatement(TableSchema tableSchema)
         {
-            return new SqlString("CREATE TEMP TABLE " + tableSchema.Name);
+            return new SqlCommand("CREATE TEMP TABLE " + tableSchema.Name);
         }
 
-        public override FormattableString MakeDropTempTableStatement(TableSchema tableSchema)
+        public override SqlCommand MakeDropTempTableStatement(TableSchema tableSchema)
         {
-            return new SqlString("DROP TABLE " + tableSchema.Name);
+            return new SqlCommand("DROP TABLE " + tableSchema.Name);
         }
 
         /// <inheritdoc />

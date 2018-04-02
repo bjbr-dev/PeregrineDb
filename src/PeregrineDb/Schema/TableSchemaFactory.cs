@@ -217,6 +217,7 @@ namespace PeregrineDb.Schema
                 propertyName,
                 this.dialect.MakeColumnName(this.columnNameFactory.GetColumnName(property)),
                 this.dialect.MakeColumnName(propertyName),
+                propertyName,
                 columnUsage,
                 this.GetDbType(property));
         }

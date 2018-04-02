@@ -44,31 +44,22 @@
             ColumnTypes = types.ToImmutableArray();
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PostgreSqlDialect"/> class.
-        /// </summary>
-        public PostgreSqlDialect()
-            : base()
-        {
-        }
-
         /// <inheritdoc />
-        public override FormattableString MakeInsertReturningIdentityStatement(TableSchema tableSchema, object entity)
+        public override SqlCommand MakeInsertReturningIdentityStatement(TableSchema tableSchema, object entity)
         {
             Func<ColumnSchema, bool> include = p => p.Usage.IncludeInInsertStatements;
             var columns = tableSchema.Columns;
 
-            var sql = new StringBuilder("INSERT INTO ")
-                .Append(tableSchema.Name)
-                .Append(" (").AppendColumnNames(columns, include).Append(")");
-            sql.AppendClause("VALUES (").AppendParameterPlaceholders(columns, include).Append(")");
+            var sql = new SqlCommandBuilder("INSERT INTO ").Append(tableSchema.Name).Append(" (").AppendColumnNames(columns, include).Append(")");
+            sql.AppendClause("VALUES (").AppendParameterNames(columns, include).Append(")");
             sql.AppendClause("RETURNING ").AppendSelectPropertiesClause(tableSchema.PrimaryKeyColumns);
-            return new SqlString(sql.ToString(), GetArguments(tableSchema.Columns, entity));
+            sql.AddParameters(entity);
+            return sql.ToCommand();
         }
 
-        public override FormattableString MakeGetTopNStatement(TableSchema tableSchema, int take, FormattableString conditions, string orderBy)
+        public override SqlCommand MakeGetTopNStatement(TableSchema tableSchema, int take, FormattableString conditions, string orderBy)
         {
-            var sql = new StringBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
+            var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
             sql.AppendClause(conditions);
             if (!string.IsNullOrWhiteSpace(orderBy))
@@ -77,34 +68,34 @@
             }
 
             sql.AppendLine().Append("LIMIT ").Append(take);
-            return new SqlString(sql.ToString(), conditions?.GetArguments());
+            return sql.ToCommand();
         }
 
         /// <inheritdoc />
-        public override FormattableString MakeGetPageStatement(TableSchema tableSchema, Page page, FormattableString conditions, string orderBy)
+        public override SqlCommand MakeGetPageStatement(TableSchema tableSchema, Page page, FormattableString conditions, string orderBy)
         {
             if (string.IsNullOrWhiteSpace(orderBy))
             {
                 throw new ArgumentException("orderBy cannot be empty");
             }
 
-            var sql = new StringBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
+            var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
             sql.AppendClause(conditions);
             sql.AppendClause("ORDER BY ").Append(orderBy);
             sql.AppendLine().AppendFormat("LIMIT {1} OFFSET {0}", page.FirstItemIndex, page.PageSize);
-            return new SqlString(sql.ToString(), conditions?.GetArguments());
+            return sql.ToCommand();
         }
 
         /// <inheritdoc />
-        public override FormattableString MakeCreateTempTableStatement(TableSchema tableSchema)
+        public override SqlCommand MakeCreateTempTableStatement(TableSchema tableSchema)
         {
             if (tableSchema.Columns.IsEmpty)
             {
                 throw new ArgumentException("Temporary tables must have columns");
             }
 
-            var sql = new StringBuilder("CREATE TEMP TABLE ").Append(tableSchema.Name).AppendLine();
+            var sql = new SqlCommandBuilder("CREATE TEMP TABLE ").Append(tableSchema.Name).AppendLine();
             sql.AppendLine("(");
 
             var isFirst = true;
@@ -124,13 +115,13 @@
 
             sql.AppendLine();
             sql.Append(")");
-            return new SqlString(sql.ToString());
+            return sql.ToCommand();
         }
 
         /// <inheritdoc />
-        public override FormattableString MakeDropTempTableStatement(TableSchema tableSchema)
+        public override SqlCommand MakeDropTempTableStatement(TableSchema tableSchema)
         {
-            return new SqlString("DROP TABLE " + tableSchema.Name);
+            return new SqlCommand("DROP TABLE " + tableSchema.Name);
         }
 
         /// <inheritdoc />
@@ -187,17 +178,17 @@
             }
         }
 
-        public FormattableString MakeGetAllTablesStatement()
+        public SqlCommand MakeGetAllTablesStatement()
         {
-            return new SqlString(@"
+            return new SqlCommand(@"
 SELECT table_schema || '.' || table_name AS Name
 FROM information_schema.tables
 WHERE table_type='BASE TABLE' AND table_schema <> 'information_schema' AND table_schema NOT LIKE 'pg_%';");
         }
 
-        public FormattableString MakeGetAllRelationsStatement()
+        public SqlCommand MakeGetAllRelationsStatement()
         {
-            return new SqlString(@"
+            return new SqlCommand(@"
 SELECT target_table.table_schema || '.' || target_table.table_name AS TargetTable,
        source_table.table_schema || '.' || source_table.table_name AS SourceTable,
        source_column.column_name AS SourceColumn,
@@ -209,11 +200,11 @@ JOIN information_schema.columns AS source_column ON kcu.table_name = source_colu
 WHERE constraint_type = 'FOREIGN KEY';");
         }
 
-        public FormattableString MakeSetColumnNullStatement(string tableName, string columnName)
+        public SqlCommand MakeSetColumnNullStatement(string tableName, string columnName)
         {
-            var sql = new StringBuilder("UPDATE ").Append(tableName);
+            var sql = new SqlCommandBuilder("UPDATE ").Append(tableName);
             sql.AppendClause("SET ").Append(columnName).Append(" = NULL");
-            return new SqlString(sql.ToString());
+            return sql.ToCommand();
         }
     }
 }

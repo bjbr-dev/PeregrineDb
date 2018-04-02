@@ -28,8 +28,8 @@
                     using (var unitOfWork = database.StartUnitOfWork())
                     {
                         var schema = database.Config.MakeSchema<User>();
-                        var sql = dialect.MakeInsertStatement(schema, new User { Name = "Foo", Age = 4 });
-                        unitOfWork.Execute(sql);
+                        var command = dialect.MakeInsertStatement(schema, new User { Name = "Foo", Age = 4 });
+                        unitOfWork.Execute(in command);
 
                         unitOfWork.SaveChanges();
                     }

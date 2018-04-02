@@ -93,7 +93,7 @@
                 parameters.Add("@p" + i, arguments[i]);
             }
 
-            return new SqlCommand(SqlString.ParameterizePlaceholders(sql), parameters);
+            return SqlCommandBuilder.MakeCommand(sql);
         }
     }
 }

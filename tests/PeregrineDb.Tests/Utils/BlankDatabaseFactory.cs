@@ -144,9 +144,9 @@
                             {
                                 try
                                 {
-                                    database.Execute($@"USE master; DROP DATABASE {databaseName};");
+                                    database.Execute(new SqlString($@"USE master; DROP DATABASE {databaseName};"));
                                 }
-                                catch (SqlException)
+                                catch (SqlException ex)
                                 {
                                     // Ignore errors since multiple processes can try to clean up the same database - only one can win
                                     // Ideally we'd use a mutex but doesnt seem necessary - if we fail to cleanup we'll try again next time (or the other process did for us!)
@@ -171,9 +171,9 @@
                             {
                                 try
                                 {
-                                    database.Execute($@"DROP DATABASE {databaseName};");
+                                    database.Execute(new SqlString($@"DROP DATABASE {databaseName};"));
                                 }
-                                catch (NpgsqlException)
+                                catch (NpgsqlException ex)
                                 {
                                     // Ignore errors since multiple processes can try to clean up the same database - only one can win
                                     // Ideally we'd use a mutex but doesnt seem necessary - if we fail to cleanup we'll try again next time (or the other process did for us!)

@@ -1,10 +1,12 @@
 ﻿namespace PeregrineDb
 {
+    using System.Collections.Generic;
     using System.Data;
+    using System.Linq;
 
     public struct SqlCommand
     {
-        public SqlCommand(string text, object parameters = null, CommandType? type = null)
+        public SqlCommand(string text, Dictionary<string, object> parameters = null, CommandType? type = null)
         {
             this.Text = text;
             this.Parameters = parameters;
@@ -13,8 +15,13 @@
 
         public string Text { get; }
 
-        public object Parameters { get; }
+        public Dictionary<string, object> Parameters { get; }
 
         public CommandType? Type { get; }
+
+        public override string ToString()
+        {
+            return this.Text + "\n\n" + string.Join("\n", this.Parameters.Select(kvp => $"[{kvp.Key}] = {kvp.Value}"));
+        }
     }
 }

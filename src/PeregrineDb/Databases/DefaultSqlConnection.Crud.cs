@@ -11,17 +11,20 @@
     {
         public int Count<TEntity>(FormattableString conditions = null, int? commandTimeout = null)
         {
-            return this.ExecuteScalar<int>(this.commandFactory.MakeCountCommand<TEntity>(conditions), commandTimeout);
+            var command = this.commandFactory.MakeCountCommand<TEntity>(conditions);
+            return this.ExecuteScalar<int>(in command, commandTimeout);
         }
 
         public int Count<TEntity>(object conditions, int? commandTimeout = null)
         {
-            return this.ExecuteScalar<int>(this.commandFactory.MakeCountCommand<TEntity>(conditions), commandTimeout);
+            var command = this.commandFactory.MakeCountCommand<TEntity>(conditions);
+            return this.ExecuteScalar<int>(in command, commandTimeout);
         }
 
         public TEntity Find<TEntity>(object id, int? commandTimeout = null)
         {
-            return this.QueryFirstOrDefault<TEntity>(this.commandFactory.MakeFindCommand<TEntity>(id), commandTimeout);
+            var command = this.commandFactory.MakeFindCommand<TEntity>(id);
+            return this.QueryFirstOrDefault<TEntity>(in command, commandTimeout);
         }
 
         public TEntity Get<TEntity>(object id, int? commandTimeout = null)
@@ -32,12 +35,14 @@
 
         public TEntity GetFirstOrDefault<TEntity>(FormattableString conditions, string orderBy, int? commandTimeout = null)
         {
-            return this.QueryFirstOrDefault<TEntity>(this.commandFactory.MakeGetTopNStatement<TEntity>(1, conditions, orderBy), commandTimeout);
+            var command = this.commandFactory.MakeGetTopNStatement<TEntity>(1, conditions, orderBy);
+            return this.QueryFirstOrDefault<TEntity>(in command, commandTimeout);
         }
 
         public TEntity GetFirstOrDefault<TEntity>(object conditions, string orderBy, int? commandTimeout = null)
         {
-            return this.QueryFirstOrDefault<TEntity>(this.commandFactory.MakeGetTopNStatement<TEntity>(1, conditions, orderBy), commandTimeout);
+            var command = this.commandFactory.MakeGetTopNStatement<TEntity>(1, conditions, orderBy);
+            return this.QueryFirstOrDefault<TEntity>(in command, commandTimeout);
         }
 
         public TEntity GetFirst<TEntity>(FormattableString conditions, string orderBy, int? commandTimeout = null)
@@ -50,77 +55,88 @@
         public TEntity GetFirst<TEntity>(object conditions, string orderBy, int? commandTimeout = null)
             where TEntity : class
         {
-            return this.QueryFirst<TEntity>(this.commandFactory.MakeGetTopNStatement<TEntity>(1, conditions, orderBy), commandTimeout);
+            var command = this.commandFactory.MakeGetTopNStatement<TEntity>(1, conditions, orderBy);
+            return this.QueryFirst<TEntity>(in command, commandTimeout);
         }
 
         public TEntity GetSingleOrDefault<TEntity>(FormattableString conditions, int? commandTimeout = null)
         {
-            return this.QuerySingleOrDefault<TEntity>(this.commandFactory.MakeGetTopNStatement<TEntity>(2, conditions, null), commandTimeout);
+            var command = this.commandFactory.MakeGetTopNStatement<TEntity>(2, conditions, null);
+            return this.QuerySingleOrDefault<TEntity>(in command, commandTimeout);
         }
 
         public TEntity GetSingleOrDefault<TEntity>(object conditions, int? commandTimeout = null)
         {
-            return this.QuerySingleOrDefault<TEntity>(this.commandFactory.MakeGetTopNStatement<TEntity>(2, conditions, null), commandTimeout);
+            var command = this.commandFactory.MakeGetTopNStatement<TEntity>(2, conditions, null);
+            return this.QuerySingleOrDefault<TEntity>(in command, commandTimeout);
         }
 
         public TEntity GetSingle<TEntity>(FormattableString conditions, int? commandTimeout = null)
             where TEntity : class
         {
-            return this.QuerySingle<TEntity>(this.commandFactory.MakeGetTopNStatement<TEntity>(2, conditions, null), commandTimeout);
+            var command = this.commandFactory.MakeGetTopNStatement<TEntity>(2, conditions, null);
+            return this.QuerySingle<TEntity>(in command, commandTimeout);
         }
 
         public TEntity GetSingle<TEntity>(object conditions, int? commandTimeout = null)
             where TEntity : class
         {
-            return this.QuerySingle<TEntity>(this.commandFactory.MakeGetTopNStatement<TEntity>(2, conditions, null), commandTimeout);
+            var command = this.commandFactory.MakeGetTopNStatement<TEntity>(2, conditions, null);
+            return this.QuerySingle<TEntity>(in command, commandTimeout);
         }
 
         public IEnumerable<TEntity> GetRange<TEntity>(FormattableString conditions, int? commandTimeout = null)
         {
-            return this.Query<TEntity>(this.commandFactory.MakeGetRangeStatement<TEntity>(conditions), commandTimeout);
+            var command = this.commandFactory.MakeGetRangeStatement<TEntity>(conditions);
+            return this.Query<TEntity>(in command, commandTimeout);
         }
 
         public IEnumerable<TEntity> GetRange<TEntity>(object conditions, int? commandTimeout = null)
         {
-            return this.Query<TEntity>(this.commandFactory.MakeGetRangeStatement<TEntity>(conditions), commandTimeout);
+            var command = this.commandFactory.MakeGetRangeStatement<TEntity>(conditions);
+            return this.Query<TEntity>(in command, commandTimeout);
         }
 
         public PagedList<TEntity> GetPage<TEntity>(IPageBuilder pageBuilder, FormattableString conditions, string orderBy, int? commandTimeout = null)
         {
-            var totalNumberOfItems = this.Count<TEntity>(conditions, commandTimeout);
+            var countCommand = this.commandFactory.MakeCountCommand<TEntity>(conditions);
+            var totalNumberOfItems = this.ExecuteScalar<int>(in countCommand, commandTimeout);
             var page = pageBuilder.GetCurrentPage(totalNumberOfItems);
             if (page.IsEmpty)
             {
                 return PagedList<TEntity>.Empty(totalNumberOfItems, page);
             }
 
-            var pageSql = this.commandFactory.MakeGetPageStatement<TEntity>(page, conditions, orderBy);
-            var items = this.Query<TEntity>(pageSql, commandTimeout);
+            var pageCommand = this.commandFactory.MakeGetPageStatement<TEntity>(page, conditions, orderBy);
+            var items = this.Query<TEntity>(in pageCommand, commandTimeout);
             return PagedList<TEntity>.Create(totalNumberOfItems, page, items);
         }
 
         public PagedList<TEntity> GetPage<TEntity>(IPageBuilder pageBuilder, object conditions, string orderBy, int? commandTimeout = null)
         {
-            var totalNumberOfItems = this.Count<TEntity>(conditions, commandTimeout);
+            var countCommand = this.commandFactory.MakeCountCommand<TEntity>(conditions);
+            var totalNumberOfItems = this.ExecuteScalar<int>(in countCommand, commandTimeout);
             var page = pageBuilder.GetCurrentPage(totalNumberOfItems);
             if (page.IsEmpty)
             {
                 return PagedList<TEntity>.Empty(totalNumberOfItems, page);
             }
 
-            var pageSql = this.commandFactory.MakeGetPageStatement<TEntity>(page, conditions, orderBy);
-            var items = this.Query<TEntity>(pageSql, commandTimeout);
+            var pageCommand = this.commandFactory.MakeGetPageStatement<TEntity>(page, conditions, orderBy);
+            var items = this.Query<TEntity>(in pageCommand, commandTimeout);
             return PagedList<TEntity>.Create(totalNumberOfItems, page, items);
         }
 
         public IEnumerable<TEntity> GetAll<TEntity>(int? commandTimeout = null)
         {
-            return this.Query<TEntity>(this.commandFactory.MakeGetAllStatement<TEntity>(), commandTimeout);
+            var command = this.commandFactory.MakeGetAllStatement<TEntity>();
+            return this.Query<TEntity>(in command, commandTimeout);
         }
 
         public void Insert(object entity, int? commandTimeout = null, bool? verifyAffectedRowCount = null)
         {
-            var result = this.Execute(this.commandFactory.MakeInsertStatement(entity), commandTimeout);
+            var command = this.commandFactory.MakeInsertStatement(entity);
+            var result = this.Execute(in command, commandTimeout);
             if (this.Config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
             {
                 result.ExpectingAffectedRowCountToBe(1);
@@ -129,7 +145,8 @@
 
         public TPrimaryKey Insert<TPrimaryKey>(object entity, int? commandTimeout = null)
         {
-            return this.ExecuteScalar<TPrimaryKey>(this.commandFactory.MakeInsertReturningPrimaryKeyStatement<TPrimaryKey>(entity), commandTimeout);
+            var command = this.commandFactory.MakeInsertReturningPrimaryKeyStatement<TPrimaryKey>(entity);
+            return this.ExecuteScalar<TPrimaryKey>(in command, commandTimeout);
         }
 
         public CommandResult InsertRange<TEntity>(IEnumerable<TEntity> entities, int? commandTimeout = null)
@@ -152,15 +169,16 @@
 
             foreach (var entity in entities)
             {
-                var sql = this.commandFactory.MakeInsertReturningPrimaryKeyStatement<TPrimaryKey>(entity);
-                var id = this.ExecuteScalar<TPrimaryKey>(sql, commandTimeout);
+                var command = this.commandFactory.MakeInsertReturningPrimaryKeyStatement<TPrimaryKey>(entity);
+                var id = this.ExecuteScalar<TPrimaryKey>(in command, commandTimeout);
                 setPrimaryKey(entity, id);
             }
         }
 
         public void Update<TEntity>(TEntity entity, int? commandTimeout = null, bool? verifyAffectedRowCount = null)
         {
-            var result = this.Execute(this.commandFactory.MakeUpdateStatement<TEntity>(entity), commandTimeout);
+            var command = this.commandFactory.MakeUpdateStatement<TEntity>(entity);
+            var result = this.Execute(in command, commandTimeout);
 
             if (this.Config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
             {
@@ -182,7 +200,8 @@
 
         public void Delete<TEntity>(TEntity entity, int? commandTimeout = null, bool? verifyAffectedRowCount = null)
         {
-            var result = this.Execute(this.commandFactory.MakeDeleteStatement<TEntity>(entity), commandTimeout);
+            var command = this.commandFactory.MakeDeleteStatement<TEntity>(entity);
+            var result = this.Execute(in command, commandTimeout);
 
             if (this.Config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
             {
@@ -192,7 +211,8 @@
 
         public void Delete<TEntity>(object id, int? commandTimeout = null, bool? verifyAffectedRowCount = null)
         {
-            var result = this.Execute(this.commandFactory.MakeDeleteByPrimaryKeyStatement<TEntity>(id), commandTimeout);
+            var command = this.commandFactory.MakeDeleteByPrimaryKeyStatement<TEntity>(id);
+            var result = this.Execute(in command, commandTimeout);
 
             if (this.Config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
             {
@@ -202,17 +222,20 @@
 
         public CommandResult DeleteRange<TEntity>(FormattableString conditions, int? commandTimeout = null)
         {
-            return this.Execute(this.commandFactory.MakeDeleteRangeStatement<TEntity>(conditions), commandTimeout);
+            var command = this.commandFactory.MakeDeleteRangeStatement<TEntity>(conditions);
+            return this.Execute(in command, commandTimeout);
         }
 
         public CommandResult DeleteRange<TEntity>(object conditions, int? commandTimeout = null)
         {
-            return this.Execute(this.commandFactory.MakeDeleteRangeStatement<TEntity>(conditions), commandTimeout);
+            var command = this.commandFactory.MakeDeleteRangeStatement<TEntity>(conditions);
+            return this.Execute(in command, commandTimeout);
         }
 
         public CommandResult DeleteAll<TEntity>(int? commandTimeout = null)
         {
-            return this.Execute(this.commandFactory.MakeDeleteAllStatement<TEntity>(), commandTimeout);
+            var command = this.commandFactory.MakeDeleteAllStatement<TEntity>();
+            return this.Execute(in command, commandTimeout);
         }
     }
 }
