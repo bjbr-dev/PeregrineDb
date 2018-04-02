@@ -8,7 +8,6 @@
     using System.Text;
     using Pagination;
     using PeregrineDb.Schema;
-    using PeregrineDb.SqlCommands;
 
     /// <summary>
     /// Simple implementation of a SQL dialect which performs most SQL generation.
@@ -16,20 +15,6 @@
     public abstract class StandardDialect
         : IDialect, IEquatable<StandardDialect>
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="StandardDialect"/> class.
-        /// </summary>
-        /// <param name="name"></param>
-        protected StandardDialect(string name)
-        {
-            this.Name = name;
-        }
-
-        /// <summary>
-        /// Gets the name of the dialect
-        /// </summary>
-        public string Name { get; }
-
         /// <inheritdoc />
         public FormattableString MakeCountStatement(TableSchema schema, FormattableString conditions)
         {
@@ -209,18 +194,12 @@
                 return true;
             }
 
-            return string.Equals(this.Name, other.Name);
+            return this.GetType() == other.GetType();
         }
 
         public override int GetHashCode()
         {
-            return this.Name.GetHashCode();
-        }
-        
-        /// <inheritdoc />
-        public override string ToString()
-        {
-            return "Dialect " + this.Name;
+            return this.GetType().Name.GetHashCode();
         }
 
         protected static object[] GetArguments(IReadOnlyCollection<ColumnSchema> columns, object entity)

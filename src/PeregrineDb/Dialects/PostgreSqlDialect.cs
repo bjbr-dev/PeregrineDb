@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Dialects.Postgres
+﻿namespace PeregrineDb.Dialects
 {
     using System;
     using System.Collections.Immutable;
@@ -7,7 +7,6 @@
     using Pagination;
     using PeregrineDb.Schema;
     using PeregrineDb.Schema.Relations;
-    using PeregrineDb.SqlCommands;
 
     /// <summary>
     /// Implementation of <see cref="IDialect"/> for the PostgreSQL DBMS.
@@ -49,7 +48,7 @@
         /// Initializes a new instance of the <see cref="PostgreSqlDialect"/> class.
         /// </summary>
         public PostgreSqlDialect()
-            : base("PostgreSql")
+            : base()
         {
         }
 
@@ -150,11 +149,6 @@
         public override string MakeTableName(string schema, string tableName)
         {
             return schema + "." + tableName;
-        }
-
-        public override string ToString()
-        {
-            return this.Name;
         }
 
         private static string GetColumnType(ColumnSchema column)

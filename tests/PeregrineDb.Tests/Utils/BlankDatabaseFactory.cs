@@ -12,7 +12,6 @@
     using PeregrineDb.Databases;
     using PeregrineDb.Dialects;
     using PeregrineDb.Dialects.Postgres;
-    using PeregrineDb.SqlCommands;
     using PeregrineDb.Testing;
     using PeregrineDb.Tests.Utils.Pooling;
 
@@ -68,11 +67,11 @@
 
             string CreateDatabase()
             {
-                switch (dialect.Name)
+                switch (dialect)
                 {
-                    case nameof(Dialect.SqlServer2012):
+                    case SqlServer2012Dialect _:
                         return CreateSqlServer2012Database();
-                    case nameof(Dialect.PostgreSql):
+                    case PostgreSqlDialect _:
                         return CreatePostgreSqlDatabase();
                     default:
                         throw new InvalidOperationException();

@@ -7,7 +7,6 @@
     using Pagination;
     using PeregrineDb;
     using PeregrineDb.Schema;
-    using PeregrineDb.SqlCommands;
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
     using Xunit;

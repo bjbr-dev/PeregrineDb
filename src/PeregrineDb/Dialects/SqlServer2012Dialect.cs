@@ -7,7 +7,6 @@
     using Pagination;
     using PeregrineDb.Schema;
     using PeregrineDb.Schema.Relations;
-    using PeregrineDb.SqlCommands;
 
     /// <summary>
     /// Implementation of <see cref="IDialect"/> for SQL Server 2012 and above
@@ -49,7 +48,7 @@
         /// Initializes a new instance of the <see cref="SqlServer2012Dialect"/> class.
         /// </summary>
         public SqlServer2012Dialect()
-            : base("SqlServer2012")
+            : base()
         {
         }
 
@@ -168,11 +167,6 @@ INNER JOIN sys.columns AS foreign_column ON foreign_key.referenced_column_id = f
             var sql = new StringBuilder("UPDATE ").Append(tableName);
             sql.AppendClause("SET ").Append(columnName).Append(" = NULL");
             return new SqlString(sql.ToString());
-        }
-
-        public override string ToString()
-        {
-            return this.Name;
         }
 
         private static void EnsureValidSchemaForTempTables(TableSchema tableSchema)

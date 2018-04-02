@@ -61,7 +61,7 @@
                             tableName = "public.users";
                             break;
                         default:
-                            throw new NotSupportedException("Unknown dialect: " + dialect.Name);
+                            throw new NotSupportedException("Unknown dialect: " + dialect.GetType().Name);
                     }
 
                     // Act
@@ -113,7 +113,7 @@
                             tableName = "public.simpleforeignkeys";
                             break;
                         default:
-                            throw new NotSupportedException("Unknown dialect: " + dialect.Name);
+                            throw new NotSupportedException("Unknown dialect: " + dialect.GetType().Name);
                     }
 
                     // Act
@@ -211,7 +211,7 @@
                             name = "other.schemaother";
                             break;
                         default:
-                            throw new NotSupportedException("Unknown dialect: " + dialect.Name);
+                            throw new NotSupportedException("Unknown dialect: " + dialect.GetType().Name);
                     }
 
                     // Act

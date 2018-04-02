@@ -25,7 +25,7 @@
         {
             if (!(connection.Config.Dialect is ISchemaQueryDialect dialect))
             {
-                throw new ArgumentException($"The dialect '{connection.Config.Dialect.Name}' does not support querying the schema");
+                throw new ArgumentException($"The dialect '{connection.Config.Dialect.GetType().Name}' does not support querying the schema");
             }
 
             var tables = connection.Query<AllTablesQueryResult>(dialect.MakeGetAllTablesStatement()).Select(t => t.Name)

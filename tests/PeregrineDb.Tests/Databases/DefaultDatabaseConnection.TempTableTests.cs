@@ -8,7 +8,6 @@
     using PeregrineDb;
     using PeregrineDb.Dialects;
     using PeregrineDb.Schema;
-    using PeregrineDb.SqlCommands;
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
     using Xunit;
@@ -25,7 +24,7 @@
         {
             var tableName = atttributeFactory.GetTableName(type, dialect);
 
-            return dialect.Name == nameof(Dialect.SqlServer2012)
+            return dialect is SqlServer2012Dialect
                 ? "[#" + tableName.Substring(1)
                 : tableName;
         }

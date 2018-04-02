@@ -2,7 +2,6 @@
 {
     using System;
     using FluentAssertions;
-    using PeregrineDb.SqlCommands;
     using Xunit;
 
     public class SqlStringTests

@@ -5,7 +5,6 @@
     using Pagination;
     using PeregrineDb.Dialects;
     using PeregrineDb.Schema;
-    using PeregrineDb.SqlCommands;
 
     /// <summary>
     /// Implementation of <see cref="IDialect"/> for testers
@@ -17,7 +16,7 @@
         /// Initializes a new instance of the <see cref="TestDialect"/> class.
         /// </summary>
         public TestDialect()
-            : base("Test")
+            : base()
         {
         }
 

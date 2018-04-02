@@ -11,11 +11,6 @@
     public interface IDialect
     {
         /// <summary>
-        /// Gets the name of the dialect
-        /// </summary>
-        string Name { get; }
-
-        /// <summary>
         /// Generates a SQL Select statement which counts how many rows match the <paramref name="conditions"/>.
         /// The statement should return an Int32 Scalar.
         /// </summary>
