@@ -66,7 +66,7 @@
         /// </summary>
         SqlCommand MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(object entity);
 
-        SqlCommand MakeInsertRangeCommand<TEntity, TPrimaryKey>(IEnumerable<TEntity> entities);
+        SqlCommand MakeInsertRangeCommand<TEntity>(IEnumerable<TEntity> entities);
 
         /// <summary>
         /// Generates a SQL Update statement which chooses which row to update by its PrimaryKey.

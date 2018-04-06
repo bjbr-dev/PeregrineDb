@@ -153,6 +153,16 @@
             return new SqlCommand(this.builder.ToString(), this.parameters);
         }
 
+        public SqlCommand ToCommand(object commandParameters)
+        {
+            if (this.parameters != null)
+            {
+                throw new NotImplementedException();
+            }
+
+            return new SqlCommand(this.builder.ToString(), commandParameters);
+        }
+
         public static SqlCommand MakeCommand(FormattableString sql)
         {
             var commandParameters = new Dictionary<string, object>();

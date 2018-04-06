@@ -190,19 +190,13 @@
             return this.ExecuteScalarAsync<TPrimaryKey>(command, commandTimeout, cancellationToken);
         }
 
-        public async Task<CommandResult> InsertRangeAsync<TEntity>(
+        public Task<CommandResult> InsertRangeAsync<TEntity>(
             IEnumerable<TEntity> entities,
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
-            var num = 0;
-            foreach (var entity in entities)
-            {
-                await this.InsertAsync(entity, commandTimeout, false, cancellationToken).ConfigureAwait(false);
-                num++;
-            }
-
-            return new CommandResult(num);
+            var command = this.Dialect.MakeInsertRangeCommand(entities);
+            return this.ExecuteAsync(command, commandTimeout, cancellationToken);
         }
 
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
@@ -239,20 +233,14 @@
             }
         }
 
-        public async Task<CommandResult> UpdateRangeAsync<TEntity>(
+        public Task<CommandResult> UpdateRangeAsync<TEntity>(
             IEnumerable<TEntity> entities,
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
             where TEntity : class
         {
-            var num = 0;
-            foreach (var entity in entities)
-            {
-                await this.ExecuteAsync(this.Dialect.MakeUpdateCommand(entity), commandTimeout, cancellationToken).ConfigureAwait(false);
-                num++;
-            }
-
-            return new CommandResult(num);
+            var command = this.Dialect.MakeUpdateRangeCommand(entities);
+            return this.ExecuteAsync(command, commandTimeout, cancellationToken);
         }
 
         public async Task DeleteAsync<TEntity>(

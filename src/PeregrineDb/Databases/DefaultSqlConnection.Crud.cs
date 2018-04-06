@@ -151,14 +151,8 @@
 
         public CommandResult InsertRange<TEntity>(IEnumerable<TEntity> entities, int? commandTimeout = null)
         {
-            var num = 0;
-            foreach (var entity in entities)
-            {
-                this.Insert(entity, commandTimeout, false);
-                num++;
-            }
-
-            return new CommandResult(num);
+            var command = this.Dialect.MakeInsertRangeCommand(entities);
+            return this.Execute(in command, commandTimeout);
         }
 
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration", Justification = "Ensure doesn't enumerate")]
@@ -190,14 +184,8 @@
         public CommandResult UpdateRange<TEntity>(IEnumerable<TEntity> entities, int? commandTimeout = null)
             where TEntity : class
         {
-            var num = 0;
-            foreach (var entity in entities)
-            {
-                this.Update(entity, commandTimeout, false);
-                num++;
-            }
-
-            return new CommandResult(num);
+            var command = this.Dialect.MakeUpdateRangeCommand(entities);
+            return this.Execute(in command, commandTimeout);
         }
 
         public void Delete<TEntity>(TEntity entity, int? commandTimeout = null, bool? verifyAffectedRowCount = null)

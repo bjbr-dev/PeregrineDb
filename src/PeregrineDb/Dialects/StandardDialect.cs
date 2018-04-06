@@ -120,24 +120,17 @@
         public abstract SqlCommand MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(object entity);
 
         /// <inheritdoc />
-        public SqlCommand MakeInsertRangeCommand<TEntity, TPrimaryKey>(IEnumerable<TEntity> entities)
+        public SqlCommand MakeInsertRangeCommand<TEntity>(IEnumerable<TEntity> entities)
         {
             Ensure.NotNull(entities, nameof(entities));
             var tableSchema = this.GetTableSchema(typeof(TEntity));
-
-            if (!tableSchema.CanGeneratePrimaryKey(typeof(TPrimaryKey)))
-            {
-                throw new InvalidPrimaryKeyException(
-                    "InsertRange<TEntity, TPrimaryKey>() can only be used for Int32 and Int64 primary keys. Use InsertRange<TEntity>() for other types of primary keys.");
-            }
 
             bool Include(ColumnSchema p) => p.Usage.IncludeInInsertStatements;
             var columns = tableSchema.Columns;
 
             var sql = new SqlCommandBuilder("INSERT INTO ").Append(tableSchema.Name).Append(" (").AppendColumnNames(columns, Include).Append(")");
             sql.AppendClause("VALUES (").AppendParameterNames(columns, Include).Append(");");
-            sql.AddParameters(entities.First());
-            return sql.ToCommand();
+            return sql.ToCommand(entities);
         }
 
         /// <inheritdoc />
@@ -160,7 +153,16 @@
         public SqlCommand MakeUpdateRangeCommand<TEntity>(IEnumerable<TEntity> entities)
             where TEntity : class
         {
-            return this.MakeUpdateCommand(entities.First());
+            Ensure.NotNull(entities, nameof(entities));
+
+            var tableSchema = this.GetTableSchema(typeof(TEntity));
+
+            bool Include(ColumnSchema p) => p.Usage.IncludeInUpdateStatements;
+
+            var sql = new SqlCommandBuilder("UPDATE ").Append(tableSchema.Name);
+            sql.AppendClause("SET ").AppendColumnNamesEqualParameters(tableSchema.Columns, ", ", Include);
+            sql.AppendWherePrimaryKeysClause(tableSchema.GetPrimaryKeys());
+            return sql.ToCommand(entities);
         }
 
         /// <inheritdoc />

@@ -22,7 +22,7 @@
                     database.CreateTempTable(Enumerable.Empty<TempNoKey>());
 
                     // Assert
-                    database.Query<dynamic>(new SqlString($@"SELECT * FROM TempNoKey"));
+                    database.GetAll<TempNoKey>();
 
                     // Cleanup
                     database.DropTempTable<TempNoKey>();
@@ -68,7 +68,7 @@
                     database.DropTempTable<TempNoKey>();
 
                     // Assert
-                    Action act = () => database.Query<dynamic>($"SELECT * FROM TempNoKey");
+                    Action act = () => database.GetAll<TempNoKey>();
                     act.ShouldThrow<Exception>();
                 }
             }
