@@ -18,8 +18,8 @@
 
         public bool Equals(SqlCommand x, SqlCommand y)
         {
-            var xSql = x.Text.Replace("\r\n", "\n").Trim();
-            var ySql = y.Text.Replace("\r\n", "\n").Trim();
+            var xSql = x.CommandText.Replace("\r\n", "\n").Trim();
+            var ySql = y.CommandText.Replace("\r\n", "\n").Trim();
 
             if (!this.comparer.Equals(xSql, ySql))
             {

@@ -11,7 +11,7 @@
     {
         public Task<IEnumerable<T>> QueryAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.connection.QueryAsync<T>(command.Text, command.Parameters, this.transaction, commandTimeout, command.Type);
+            return this.connection.QueryAsync<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
         }
 
         public Task<IEnumerable<T>> QueryAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
@@ -22,7 +22,7 @@
 
         public Task<T> QueryFirstAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.connection.QueryFirstAsync<T>(command.Text, command.Parameters, this.transaction, commandTimeout, command.Type);
+            return this.connection.QueryFirstAsync<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
         }
 
         public Task<T> QueryFirstAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
@@ -33,7 +33,7 @@
 
         public Task<T> QueryFirstOrDefaultAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.connection.QueryFirstOrDefaultAsync<T>(command.Text, command.Parameters, this.transaction, commandTimeout, command.Type);
+            return this.connection.QueryFirstOrDefaultAsync<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
         }
 
         public Task<T> QueryFirstOrDefaultAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
@@ -44,7 +44,7 @@
 
         public Task<T> QuerySingleAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.connection.QuerySingleAsync<T>(command.Text, command.Parameters, this.transaction, commandTimeout, command.Type);
+            return this.connection.QuerySingleAsync<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
         }
 
         public Task<T> QuerySingleAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
@@ -55,7 +55,7 @@
 
         public Task<T> QuerySingleOrDefaultAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.connection.QuerySingleOrDefaultAsync<T>(command.Text, command.Parameters, this.transaction, commandTimeout, command.Type);
+            return this.connection.QuerySingleOrDefaultAsync<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
         }
 
         public Task<T> QuerySingleOrDefaultAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
@@ -66,7 +66,7 @@
 
         public async Task<CommandResult> ExecuteAsync(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var numRows = await this.connection.ExecuteAsync(command.Text, command.Parameters, this.transaction, commandTimeout, command.Type)
+            var numRows = await this.connection.ExecuteAsync(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType)
                                     .ConfigureAwait(false);
             return new CommandResult(numRows);
         }
@@ -79,7 +79,7 @@
 
         public Task<T> ExecuteScalarAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.connection.ExecuteScalarAsync<T>(command.Text, command.Parameters, this.transaction, commandTimeout, command.Type);
+            return this.connection.ExecuteScalarAsync<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
         }
 
         public Task<T> ExecuteScalarAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)

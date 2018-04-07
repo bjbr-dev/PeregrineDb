@@ -4,17 +4,17 @@
 
     public struct SqlCommand
     {
-        public SqlCommand(string text, object parameters = null, CommandType? type = null)
+        public SqlCommand(string commandText, object parameters = null, CommandType? commandType = null)
         {
-            this.Text = text;
+            this.CommandText = commandText;
             this.Parameters = parameters;
-            this.Type = type;
+            this.CommandType = commandType;
         }
 
-        public string Text { get; }
+        public string CommandText { get; }
         
         public object Parameters { get; }
 
-        public CommandType? Type { get; }
+        public CommandType? CommandType { get; }
     }
 }

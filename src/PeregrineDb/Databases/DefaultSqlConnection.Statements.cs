@@ -9,7 +9,7 @@
     {
         public IEnumerable<T> Query<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            return this.connection.Query<T>(command.Text, command.Parameters, this.transaction, true, commandTimeout, command.Type);
+            return this.connection.Query<T>(command.CommandText, command.Parameters, this.transaction, true, commandTimeout, command.CommandType);
         }
 
         public IEnumerable<T> Query<T>(FormattableString sql, int? commandTimeout = null)
@@ -20,7 +20,7 @@
 
         public T QueryFirst<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            return this.connection.QueryFirst<T>(command.Text, command.Parameters, this.transaction, commandTimeout, command.Type);
+            return this.connection.QueryFirst<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
         }
 
         public T QueryFirst<T>(FormattableString sql, int? commandTimeout = null)
@@ -31,7 +31,7 @@
 
         public T QueryFirstOrDefault<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            return this.connection.QueryFirstOrDefault<T>(command.Text, command.Parameters, this.transaction, commandTimeout, command.Type);
+            return this.connection.QueryFirstOrDefault<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
         }
 
         public T QueryFirstOrDefault<T>(FormattableString sql, int? commandTimeout = null)
@@ -42,7 +42,7 @@
 
         public T QuerySingle<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            return this.connection.QuerySingle<T>(command.Text, command.Parameters, this.transaction, commandTimeout, command.Type);
+            return this.connection.QuerySingle<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
         }
 
         public T QuerySingle<T>(FormattableString sql, int? commandTimeout = null)
@@ -53,7 +53,7 @@
 
         public T QuerySingleOrDefault<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            return this.connection.QuerySingleOrDefault<T>(command.Text, command.Parameters, this.transaction, commandTimeout, command.Type);
+            return this.connection.QuerySingleOrDefault<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
         }
 
         public T QuerySingleOrDefault<T>(FormattableString sql, int? commandTimeout = null)
@@ -64,7 +64,7 @@
 
         public CommandResult Execute(in SqlCommand command, int? commandTimeout = null)
         {
-            return new CommandResult(this.connection.Execute(command.Text, command.Parameters, this.transaction, commandTimeout, command.Type));
+            return new CommandResult(this.connection.Execute(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType));
         }
 
         public CommandResult Execute(FormattableString sql, int? commandTimeout = null)
@@ -75,7 +75,7 @@
 
         public T ExecuteScalar<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            return this.connection.ExecuteScalar<T>(command.Text, command.Parameters, this.transaction, commandTimeout, command.Type);
+            return this.connection.ExecuteScalar<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
         }
 
         public T ExecuteScalar<T>(FormattableString sql, int? commandTimeout = null)

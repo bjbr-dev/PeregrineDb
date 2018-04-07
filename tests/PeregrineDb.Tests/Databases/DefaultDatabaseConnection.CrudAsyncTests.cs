@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Threading.Tasks;
     using FluentAssertions;
@@ -12,14 +13,17 @@
     using PeregrineDb.Tests.Utils;
     using Xunit;
 
+    [SuppressMessage("ReSharper", "StringLiteralAsInterpolationArgument")]
     public abstract class DefaultDatabaseConnectionCrudAsyncTests
     {
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
         public static IEnumerable<object[]> TestDialects => new[]
             {
                 new[] { Dialect.SqlServer2012 },
                 new[] { Dialect.PostgreSql }
             };
 
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
         public static IEnumerable<object[]> TestDialectsWithData(string data) => new[]
             {
                 new object[] { Dialect.SqlServer2012, data },
@@ -66,9 +70,6 @@
 
                     // Assert
                     result.Should().Be(3);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -90,9 +91,6 @@
 
                     // Assert
                     result.Should().Be(4);
-
-                    // Cleanup
-                    database.DeleteAll<SchemaOther>();
                 }
             }
         }
@@ -132,9 +130,6 @@
 
                     // Assert
                     result.Should().Be(4);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -156,9 +151,6 @@
 
                     // Assert
                     result.Should().Be(3);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -213,9 +205,6 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.Delete<KeyInt32>(id);
                 }
             }
 
@@ -234,9 +223,6 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.Delete<KeyInt64>(id);
                 }
             }
 
@@ -255,9 +241,6 @@
 
                     // Assert
                     entity.Age.Should().Be(42);
-
-                    // Cleanup
-                    database.Delete(entity);
                 }
             }
 
@@ -277,9 +260,6 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.Delete(entity);
                 }
             }
 
@@ -299,9 +279,6 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.DeleteAll<CompositeKeys>();
                 }
             }
 
@@ -320,9 +297,6 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.Delete<SchemaOther>(id);
                 }
             }
 
@@ -341,9 +315,6 @@
 
                     // Assert
                     entity.FavoriteColor.Should().Be(Color.Green);
-
-                    // Cleanup
-                    database.Delete<PropertyEnum>(id);
                 }
             }
 
@@ -412,12 +383,8 @@
                     entity.DateTimeOffsetProperty.Should().Be(new DateTimeOffset(new DateTime(2016, 12, 31), new TimeSpan(0, 1, 0, 0)));
                     entity.NullableDateTimeOffsetProperty.Should().Be(new DateTimeOffset(new DateTime(2016, 12, 31), new TimeSpan(0, 1, 0, 0)));
                     entity.ByteArrayProperty.ShouldAllBeEquivalentTo(new byte[] { 1, 2, 3 }, o => o.WithStrictOrdering());
-
-                    // Cleanup
-                    database.Delete<PropertyAllPossibleTypes>(id);
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -436,9 +403,6 @@
                     entity.LastName.Should().Be("DropTables");
                     entity.FullName.Should().Be("Bobby DropTables");
                     entity.Age.Should().Be(0);
-
-                    // Cleanup
-                    database.DeleteAll<PropertyNotMapped>();
                 }
             }
         }
@@ -493,9 +457,6 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.Delete<KeyInt32>(id);
                 }
             }
 
@@ -514,9 +475,6 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.Delete<KeyInt64>(id);
                 }
             }
 
@@ -535,9 +493,6 @@
 
                     // Assert
                     entity.Age.Should().Be(42);
-
-                    // Cleanup
-                    database.Delete(entity);
                 }
             }
 
@@ -557,9 +512,6 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.Delete(entity);
                 }
             }
 
@@ -579,9 +531,6 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.DeleteAll<CompositeKeys>();
                 }
             }
 
@@ -600,9 +549,6 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.Delete<SchemaOther>(id);
                 }
             }
 
@@ -624,9 +570,6 @@
                     entity.LastName.Should().Be("DropTables");
                     entity.FullName.Should().Be("Bobby DropTables");
                     entity.Age.Should().Be(0);
-
-                    // Cleanup
-                    database.DeleteAll<PropertyNotMapped>();
                 }
             }
         }
@@ -652,9 +595,6 @@
 
                     // Assert
                     dogs.Should().HaveCount(3);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -675,9 +615,6 @@
 
                     // Assert
                     entities.Count().Should().Be(4);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -717,9 +654,6 @@
 
                     // Assert
                     entities.Count().Should().Be(4);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -741,9 +675,6 @@
 
                     // Assert
                     entities.Count().Should().Be(3);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -765,15 +696,13 @@
 
                     // Assert
                     entities.Count().Should().Be(3);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
 
             [Theory]
             [MemberData(nameof(TestDialects))]
+            [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
             public void Throws_exception_when_column_not_found(IDialect dialect)
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
@@ -803,9 +732,6 @@
 
                     // Assert
                     entities.Count().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<PropertyNullable>();
                 }
             }
 
@@ -826,9 +752,6 @@
 
                     // Assert
                     entities.Count().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<PropertyNullable>();
                 }
             }
 
@@ -849,9 +772,6 @@
 
                     // Assert
                     entities.Count().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -894,9 +814,6 @@
 
                     // Assert
                     entities.Items.Count().Should().Be(3);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -922,9 +839,6 @@
                     entities.Count().Should().Be(2);
                     entities[0].Name.Should().Be("Some Name 1");
                     entities[1].Name.Should().Be("Some Name 2");
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -950,9 +864,6 @@
                     // Assert
                     entities.Count().Should().Be(1);
                     entities[0].Name.Should().Be("Some Name 3");
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -977,9 +888,6 @@
 
                     // Assert
                     entities.Should().BeEmpty();
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -1001,9 +909,6 @@
 
                     // Assert
                     entities.Count().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -1045,9 +950,6 @@
 
                     // Assert
                     entities.Items.Count().Should().Be(3);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -1073,9 +975,6 @@
                     entities.Count().Should().Be(2);
                     entities[0].Name.Should().Be("Some Name 1");
                     entities[1].Name.Should().Be("Some Name 2");
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -1099,9 +998,6 @@
                     // Assert
                     entities.Count().Should().Be(1);
                     entities[0].Name.Should().Be("Some Name 3");
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -1125,9 +1021,6 @@
 
                     // Assert
                     entities.Should().BeEmpty();
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -1152,9 +1045,6 @@
 
                     // Assert
                     entities.Count().Should().Be(4);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -1176,9 +1066,6 @@
 
                     // Assert
                     database.Count<KeyInt32>().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<KeyInt32>();
                 }
             }
 
@@ -1197,9 +1084,6 @@
 
                     // Assert
                     database.Count<KeyInt64>().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<KeyInt64>();
                 }
             }
 
@@ -1218,9 +1102,6 @@
 
                     // Assert
                     database.Count<CompositeKeys>().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<CompositeKeys>();
                 }
             }
 
@@ -1257,9 +1138,6 @@
 
                     // Assert
                     database.Count<KeyString>().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<KeyString>();
                 }
             }
 
@@ -1296,9 +1174,6 @@
 
                     // Assert
                     database.Count<KeyGuid>().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<KeyGuid>();
                 }
             }
 
@@ -1317,9 +1192,6 @@
 
                     // Assert
                     database.Count<KeyAlias>().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<KeyAlias>();
                 }
             }
 
@@ -1338,9 +1210,6 @@
 
                     // Assert
                     database.Count<SchemaOther>().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<SchemaOther>();
                 }
             }
 
@@ -1359,9 +1228,6 @@
 
                     // Assert
                     database.Count<PropertyNotMapped>().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<PropertyNotMapped>();
                 }
             }
         }
@@ -1446,9 +1312,6 @@
 
                     // Assert
                     id.Should().BeGreaterThan(0);
-
-                    // Cleanup
-                    database.Delete<KeyInt32>(id);
                 }
             }
 
@@ -1464,9 +1327,6 @@
 
                     // Assert
                     id.Should().BeGreaterThan(0);
-
-                    // Cleanup
-                    database.Delete<KeyInt64>(id);
                 }
             }
 
@@ -1482,9 +1342,6 @@
 
                     // Assert
                     id.Should().BeGreaterThan(0);
-
-                    // Cleanup
-                    database.Delete<KeyAlias>(id);
                 }
             }
 
@@ -1500,9 +1357,6 @@
 
                     // Assert
                     id.Should().BeGreaterThan(0);
-
-                    // Cleanup
-                    database.Delete<SchemaOther>(id);
                 }
             }
         }
@@ -1528,9 +1382,6 @@
 
                     // Assert
                     database.Count<KeyInt32>().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<KeyInt32>();
                 }
             }
 
@@ -1553,9 +1404,6 @@
 
                     // Assert
                     database.Count<KeyInt64>().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<KeyInt64>();
                 }
             }
 
@@ -1578,9 +1426,6 @@
 
                     // Assert
                     database.Count<CompositeKeys>().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<CompositeKeys>();
                 }
             }
 
@@ -1603,9 +1448,6 @@
 
                     // Assert
                     database.Count<KeyString>().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<KeyString>();
                 }
             }
 
@@ -1628,9 +1470,6 @@
 
                     // Assert
                     database.Count<KeyGuid>().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<KeyGuid>();
                 }
             }
 
@@ -1653,9 +1492,6 @@
 
                     // Assert
                     database.Count<KeyAlias>().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<KeyAlias>();
                 }
             }
 
@@ -1678,9 +1514,6 @@
 
                     // Assert
                     database.Count<SchemaOther>().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<SchemaOther>();
                 }
             }
         }
@@ -1793,9 +1626,6 @@
                     entities[0].Id.Should().BeGreaterThan(0);
                     entities[1].Id.Should().BeGreaterThan(entities[0].Id);
                     entities[2].Id.Should().BeGreaterThan(entities[1].Id);
-
-                    // Cleanup
-                    database.DeleteAll<KeyInt32>();
                 }
             }
 
@@ -1821,9 +1651,6 @@
                     entities[0].Id.Should().BeGreaterThan(0);
                     entities[1].Id.Should().BeGreaterThan(entities[0].Id);
                     entities[2].Id.Should().BeGreaterThan(entities[1].Id);
-
-                    // Cleanup
-                    database.DeleteAll<KeyInt64>();
                 }
             }
 
@@ -1845,9 +1672,6 @@
 
                     // Assert
                     entities[0].Key.Should().BeGreaterThan(0);
-
-                    // Cleanup
-                    database.DeleteAll<KeyAlias>();
                 }
             }
 
@@ -1873,9 +1697,6 @@
                     entities[0].Id.Should().BeGreaterThan(0);
                     entities[1].Id.Should().BeGreaterThan(entities[0].Id);
                     entities[2].Id.Should().BeGreaterThan(entities[1].Id);
-
-                    // Cleanup
-                    database.DeleteAll<SchemaOther>();
                 }
             }
         }
@@ -1900,9 +1721,6 @@
                     // Assert
                     var updatedEntity = database.Find<Dog>(id);
                     updatedEntity.Name.Should().Be("Other name");
-
-                    // Cleanup
-                    database.Delete<Dog>(id);
                 }
             }
 
@@ -1924,9 +1742,6 @@
                     // Assert
                     var updatedEntity = database.Find<PropertyNotMapped>(entity.Id);
                     updatedEntity.LastName.Should().Be("Other name");
-
-                    // Cleanup
-                    database.DeleteAll<PropertyNotMapped>();
                 }
             }
 
@@ -1950,9 +1765,6 @@
                     var updatedEntity = database.Find<CompositeKeys>(id);
 
                     updatedEntity.Name.Should().Be("Other name");
-
-                    // Cleanup
-                    database.DeleteAll<CompositeKeys>();
                 }
             }
         }
@@ -1989,9 +1801,6 @@
 
                     var updatedEntities = database.GetRange<Dog>($"WHERE Name = {"Other name"}");
                     updatedEntities.Count().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -2026,9 +1835,6 @@
 
                     var updatedEntities = database.GetRange<CompositeKeys>($"WHERE Name = 'Other name'");
                     updatedEntities.Count().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<CompositeKeys>();
                 }
             }
         }
@@ -2200,9 +2006,6 @@
                     // Assert
                     result.NumRowsAffected.Should().Be(3);
                     database.Count<Dog>().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -2258,9 +2061,6 @@
                     // Assert
                     result.NumRowsAffected.Should().Be(3);
                     database.Count<Dog>().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
         }

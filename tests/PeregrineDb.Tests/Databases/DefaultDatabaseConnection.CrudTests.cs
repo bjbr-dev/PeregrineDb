@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using FluentAssertions;
     using Pagination;
@@ -11,14 +12,17 @@
     using PeregrineDb.Tests.Utils;
     using Xunit;
 
+    [SuppressMessage("ReSharper", "StringLiteralAsInterpolationArgument")]
     public abstract class DefaultDatabaseConnectionCrudTests
     {
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
         public static IEnumerable<object[]> TestDialects => new[]
             {
                 new[] { Dialect.SqlServer2012 },
                 new[] { Dialect.PostgreSql }
             };
 
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
         public static IEnumerable<object[]> TestDialectsWithData(string data) => new[]
             {
                 new object[] { Dialect.SqlServer2012, data },
@@ -36,7 +40,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -47,9 +50,6 @@
 
                     // Assert
                     result.Should().Be(4);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -61,7 +61,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -72,9 +71,6 @@
 
                     // Assert
                     result.Should().Be(3);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -85,7 +81,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert<int>(new SchemaOther { Name = "Some Name" });
                     database.Insert<int>(new SchemaOther { Name = "Some Name" });
                     database.Insert<int>(new SchemaOther { Name = "Some Name" });
@@ -96,9 +91,6 @@
 
                     // Assert
                     result.Should().Be(4);
-
-                    // Cleanup
-                    database.DeleteAll<SchemaOther>();
                 }
             }
         }
@@ -113,10 +105,11 @@
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    
                     // Act
-                    Assert.Throws<ArgumentNullException>(() => database.Count<Dog>((object)null));
+                    Action act = () => database.Count<Dog>((object)null);
+
+                    // Assert
+                    act.ShouldThrow<ArgumentNullException>();
                 }
             }
 
@@ -128,7 +121,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -139,9 +131,6 @@
 
                     // Assert
                     result.Should().Be(4);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -153,7 +142,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -164,9 +152,6 @@
 
                     // Assert
                     result.Should().Be(3);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -182,11 +167,13 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new NoKey { Name = "Some Name", Age = 1 });
 
                     // Act
-                    Assert.Throws<InvalidPrimaryKeyException>(() => database.Find<NoKey>("Some Name"));
+                    Action act = () => database.Find<NoKey>("Some Name");
+
+                    // Assert
+                    act.ShouldThrow<InvalidPrimaryKeyException>();
                 }
             }
 
@@ -197,8 +184,6 @@
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    
                     // Act
                     var entity = database.Find<KeyInt32>(12);
 
@@ -215,7 +200,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var id = database.Insert<int>(new KeyInt32 { Name = "Some Name" });
 
                     // Act
@@ -223,9 +207,6 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.Delete<KeyInt32>(id);
                 }
             }
 
@@ -237,7 +218,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var id = database.Insert<long>(new KeyInt64 { Name = "Some Name" });
 
                     // Act
@@ -245,9 +225,6 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.Delete<KeyInt64>(id);
                 }
             }
 
@@ -259,7 +236,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new KeyString { Name = "Some Name", Age = 42 });
 
                     // Act
@@ -267,9 +243,6 @@
 
                     // Assert
                     entity.Age.Should().Be(42);
-
-                    // Cleanup
-                    database.Delete(entity);
                 }
             }
 
@@ -281,7 +254,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var id = Guid.NewGuid();
                     database.Insert(new KeyGuid { Id = id, Name = "Some Name" });
 
@@ -290,9 +262,6 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.Delete(entity);
                 }
             }
 
@@ -304,7 +273,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new CompositeKeys { Key1 = 1, Key2 = 1, Name = "Some Name" });
                     var id = new { Key1 = 1, Key2 = 1 };
 
@@ -313,9 +281,6 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.DeleteAll<CompositeKeys>();
                 }
             }
 
@@ -327,7 +292,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var id = database.Insert<int>(new SchemaOther { Name = "Some Name" });
 
                     // Act
@@ -335,9 +299,6 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.Delete<SchemaOther>(id);
                 }
             }
 
@@ -349,7 +310,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var id = database.Insert<int>(new PropertyEnum { FavoriteColor = Color.Green });
 
                     // Act
@@ -357,9 +317,6 @@
 
                     // Assert
                     entity.FavoriteColor.Should().Be(Color.Green);
-
-                    // Cleanup
-                    database.Delete<PropertyEnum>(id);
                 }
             }
 
@@ -371,7 +328,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var id = database.Insert<int>(
                         new PropertyAllPossibleTypes
                             {
@@ -435,13 +391,8 @@
                         {
                             1, 2, 3
                         }, o => o.WithStrictOrdering());
-
-                    // Cleanup
-                    database.Delete<PropertyAllPossibleTypes>(id);
                 }
             }
-
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -450,7 +401,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var id = database.Insert<int>(new PropertyNotMapped { FirstName = "Bobby", LastName = "DropTables", Age = 10 });
 
                     // Act
@@ -461,9 +411,6 @@
                     entity.LastName.Should().Be("DropTables");
                     entity.FullName.Should().Be("Bobby DropTables");
                     entity.Age.Should().Be(0);
-
-                    // Cleanup
-                    database.DeleteAll<PropertyNotMapped>();
                 }
             }
         }
@@ -471,7 +418,6 @@
         public class Get
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_when_entity_has_no_key(IDialect dialect)
@@ -479,7 +425,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new NoKey { Name = "Some Name", Age = 1 });
 
                     // Act
@@ -492,17 +437,12 @@
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_when_entity_is_not_found(IDialect dialect)
             {
-
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    
                     // Act
                     Assert.Throws<InvalidOperationException>(() => database.Get<KeyInt32>(5));
                 }
             }
-
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -511,7 +451,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var id = database.Insert<int>(new KeyInt32 { Name = "Some Name" });
 
                     // Act
@@ -519,12 +458,8 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.Delete<KeyInt32>(id);
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -533,7 +468,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var id = database.Insert<long>(new KeyInt64 { Name = "Some Name" });
 
                     // Act
@@ -541,12 +475,8 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.Delete<KeyInt64>(id);
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -555,7 +485,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new KeyString { Name = "Some Name", Age = 42 });
 
                     // Act
@@ -563,12 +492,8 @@
 
                     // Assert
                     entity.Age.Should().Be(42);
-
-                    // Cleanup
-                    database.Delete(entity);
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -577,7 +502,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var id = Guid.NewGuid();
                     database.Insert(new KeyGuid { Id = id, Name = "Some Name" });
 
@@ -586,12 +510,8 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.Delete(entity);
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -600,7 +520,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new CompositeKeys { Key1 = 1, Key2 = 1, Name = "Some Name" });
                     var id = new { Key1 = 1, Key2 = 1 };
 
@@ -609,9 +528,6 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.DeleteAll<CompositeKeys>();
                 }
             }
 
@@ -623,7 +539,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var id = database.Insert<int>(new SchemaOther { Name = "Some Name" });
 
                     // Act
@@ -631,12 +546,8 @@
 
                     // Assert
                     entity.Name.Should().Be("Some Name");
-
-                    // Cleanup
-                    database.Delete<SchemaOther>(id);
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -645,7 +556,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var id = database.Insert<int>(new PropertyNotMapped { FirstName = "Bobby", LastName = "DropTables", Age = 10 });
 
                     // Act
@@ -656,9 +566,6 @@
                     entity.LastName.Should().Be("DropTables");
                     entity.FullName.Should().Be("Bobby DropTables");
                     entity.Age.Should().Be(0);
-
-                    // Cleanup
-                    database.DeleteAll<PropertyNotMapped>();
                 }
             }
         }
@@ -666,7 +573,6 @@
         public class GetFirstOrDefault
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Gets_first_matching_result(IDialect dialect)
@@ -674,7 +580,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -687,12 +592,8 @@
 
                     // Assert
                     entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -700,8 +601,6 @@
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    
                     // Act
                     var entity = database.GetFirstOrDefault<Dog>(
                         $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
@@ -716,7 +615,6 @@
         public class GetFirstOrDefaultWhereObject
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Gets_first_matching_result(IDialect dialect)
@@ -724,7 +622,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -735,12 +632,8 @@
 
                     // Assert
                     entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -748,8 +641,6 @@
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    
                     // Act
                     var entity = database.GetFirstOrDefault<Dog>(new { Age = 10 }, "Name DESC");
 
@@ -762,7 +653,6 @@
         public class GetFirst
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Gets_first_matching_result(IDialect dialect)
@@ -770,7 +660,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -783,15 +672,12 @@
 
                     // Assert
                     entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
+            [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
             public void Throws_exception_when_no_entity_matches(IDialect dialect)
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
@@ -808,7 +694,6 @@
         public class GetFirstWhereObject
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Gets_first_matching_result(IDialect dialect)
@@ -816,7 +701,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -827,15 +711,12 @@
 
                     // Assert
                     entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
+            [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
             public void Throws_exception_when_no_entity_matches(IDialect dialect)
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
@@ -852,7 +733,6 @@
         public class GetSingleOrDefault
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Gets_only_matching_result(IDialect dialect)
@@ -868,12 +748,8 @@
 
                     // Assert
                     entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -889,9 +765,9 @@
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
+            [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
             public void Throws_exception_when_multiple_entities_match(IDialect dialect)
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
@@ -905,9 +781,6 @@
 
                     // Assert
                     act.ShouldThrow<InvalidOperationException>();
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -915,7 +788,6 @@
         public class GetSingleOrDefaultWhereObject
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Gets_first_matching_result(IDialect dialect)
@@ -931,12 +803,8 @@
 
                     // Assert
                     entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -952,9 +820,9 @@
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
+            [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
             public void Throws_exception_when_multiple_entities_match(IDialect dialect)
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
@@ -968,9 +836,6 @@
 
                     // Assert
                     act.ShouldThrow<InvalidOperationException>();
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -978,7 +843,6 @@
         public class GetSingle
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Gets_first_matching_result(IDialect dialect)
@@ -994,15 +858,12 @@
 
                     // Assert
                     entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
+            [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
             public void Throws_exception_when_no_entity_matches(IDialect dialect)
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
@@ -1015,9 +876,9 @@
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
+            [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
             public void Throws_exception_when_multiple_entities_match(IDialect dialect)
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
@@ -1031,9 +892,6 @@
 
                     // Assert
                     act.ShouldThrow<InvalidOperationException>();
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -1041,7 +899,6 @@
         public class GetSingleWhereObject
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Gets_first_matching_result(IDialect dialect)
@@ -1057,15 +914,12 @@
 
                     // Assert
                     entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
+            [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
             public void Throws_exception_when_no_entity_matches(IDialect dialect)
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
@@ -1078,9 +932,9 @@
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
+            [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
             public void Throws_exception_when_multiple_entities_match(IDialect dialect)
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
@@ -1094,9 +948,6 @@
 
                     // Assert
                     act.ShouldThrow<InvalidOperationException>();
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -1104,7 +955,6 @@
         public class GetRange
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Filters_result_by_conditions(IDialect dialect)
@@ -1122,12 +972,8 @@
 
                     // Assert
                     entities.Count().Should().Be(3);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1146,9 +992,6 @@
 
                     // Assert
                     entities.Count().Should().Be(4);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -1156,7 +999,6 @@
         public class GetRangeWhereObject
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_when_conditions_is_null(IDialect dialect)
@@ -1186,12 +1028,8 @@
 
                     // Assert
                     entities.Count().Should().Be(4);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1200,7 +1038,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -1211,12 +1048,8 @@
 
                     // Assert
                     entities.Count().Should().Be(3);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1225,7 +1058,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -1236,21 +1068,16 @@
 
                     // Assert
                     entities.Count().Should().Be(3);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
+            [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
             public void Throws_exception_when_column_not_found(IDialect dialect)
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    
                     // Act
                     Action act = () => database.GetRange<Dog>(new { Ages = 10 });
 
@@ -1259,7 +1086,6 @@
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void When_value_is_not_null_does_not_find_nulls(IDialect dialect)
@@ -1267,7 +1093,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new PropertyNullable { Name = null });
                     database.Insert(new PropertyNullable { Name = "Some Name 3" });
                     database.Insert(new PropertyNullable { Name = null });
@@ -1277,12 +1102,8 @@
 
                     // Assert
                     entities.Count().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<PropertyNullable>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1291,7 +1112,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new PropertyNullable { Name = null });
                     database.Insert(new PropertyNullable { Name = "Some Name 3" });
                     database.Insert(new PropertyNullable { Name = null });
@@ -1301,12 +1121,8 @@
 
                     // Assert
                     entities.Count().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<PropertyNullable>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1315,7 +1131,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 12 });
@@ -1325,9 +1140,6 @@
 
                     // Assert
                     entities.Count().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -1335,15 +1147,12 @@
         public class GetPage
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Returns_empty_list_when_there_are_no_entities(IDialect dialect)
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    
                     // Act
                     var pageBuilder = new PageIndexPageBuilder(1, 10);
                     var entities = database.GetPage<Dog>(pageBuilder, null, "Age");
@@ -1353,7 +1162,6 @@
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Filters_result_by_conditions(IDialect dialect)
@@ -1361,7 +1169,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -1375,12 +1182,8 @@
 
                     // Assert
                     entities.Items.Count().Should().Be(3);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1389,7 +1192,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -1405,12 +1207,8 @@
                     entities.Count().Should().Be(2);
                     entities[0].Name.Should().Be("Some Name 1");
                     entities[1].Name.Should().Be("Some Name 2");
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1419,7 +1217,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -1434,12 +1231,8 @@
                     // Assert
                     entities.Count().Should().Be(1);
                     entities[0].Name.Should().Be("Some Name 3");
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1448,7 +1241,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -1462,12 +1254,8 @@
 
                     // Assert
                     entities.Should().BeEmpty();
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1476,7 +1264,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -1487,9 +1274,6 @@
 
                     // Assert
                     entities.Count().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -1497,7 +1281,6 @@
         public class GetPageWhereObject
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Returns_empty_list_when_there_are_no_entities(IDialect dialect)
@@ -1515,7 +1298,6 @@
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Filters_result_by_conditions(IDialect dialect)
@@ -1523,7 +1305,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -1535,12 +1316,8 @@
 
                     // Assert
                     entities.Items.Count().Should().Be(3);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1549,7 +1326,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -1564,12 +1340,8 @@
                     entities.Count().Should().Be(2);
                     entities[0].Name.Should().Be("Some Name 1");
                     entities[1].Name.Should().Be("Some Name 2");
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1578,7 +1350,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -1592,12 +1363,8 @@
                     // Assert
                     entities.Count().Should().Be(1);
                     entities[0].Name.Should().Be("Some Name 3");
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1606,7 +1373,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -1619,13 +1385,9 @@
 
                     // Assert
                     entities.Should().BeEmpty();
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
         }
-
 
         public class GetAll
             : DefaultDatabaseConnectionCrudTests
@@ -1638,7 +1400,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                     database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -1649,9 +1410,6 @@
 
                     // Assert
                     entities.Count().Should().Be(4);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
         }
@@ -1659,7 +1417,6 @@
         public class Insert
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Inserts_entity_with_int32_key(IDialect dialect)
@@ -1667,7 +1424,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entity = new KeyInt32 { Name = "Some Name" };
 
                     // Act
@@ -1675,12 +1431,8 @@
 
                     // Assert
                     database.Count<KeyInt32>().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<KeyInt32>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1689,7 +1441,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entity = new KeyInt64 { Name = "Some Name" };
 
                     // Act
@@ -1697,12 +1448,8 @@
 
                     // Assert
                     database.Count<KeyInt64>().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<KeyInt64>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1711,7 +1458,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entity = new CompositeKeys { Key1 = 2, Key2 = 3, Name = "Some Name" };
 
                     // Act
@@ -1719,21 +1465,17 @@
 
                     // Assert
                     database.Count<CompositeKeys>().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<CompositeKeys>();
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
+            [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
             public void Does_not_allow_part_of_composite_key_to_be_null(IDialect dialect)
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entity = new CompositeKeys { Key1 = null, Key2 = 5, Name = "Some Name" };
 
                     // Act
@@ -1744,7 +1486,6 @@
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Inserts_entities_with_string_key(IDialect dialect)
@@ -1752,7 +1493,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entity = new KeyString { Name = "Some Name", Age = 10 };
 
                     // Act
@@ -1760,21 +1500,17 @@
 
                     // Assert
                     database.Count<KeyString>().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<KeyString>();
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
+            [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
             public void Does_not_allow_string_key_to_be_null(IDialect dialect)
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entity = new KeyString { Name = null, Age = 10 };
 
                     // Act
@@ -1784,7 +1520,6 @@
                     act.ShouldThrow<Exception>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1800,12 +1535,8 @@
 
                     // Assert
                     database.Count<KeyGuid>().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<KeyGuid>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1814,7 +1545,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entity = new KeyAlias { Name = "Some Name" };
 
                     // Act
@@ -1822,12 +1552,8 @@
 
                     // Assert
                     database.Count<KeyAlias>().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<KeyAlias>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1836,7 +1562,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entity = new SchemaOther { Name = "Some name" };
 
                     // Act
@@ -1844,12 +1569,8 @@
 
                     // Assert
                     database.Count<SchemaOther>().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<SchemaOther>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1858,7 +1579,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entity = new PropertyNotMapped { FirstName = "Bobby", LastName = "DropTables", Age = 10 };
 
                     // Act
@@ -1866,9 +1586,6 @@
 
                     // Assert
                     database.Count<PropertyNotMapped>().Should().Be(1);
-
-                    // Cleanup
-                    database.DeleteAll<PropertyNotMapped>();
                 }
             }
         }
@@ -1876,21 +1593,16 @@
         public class InsertAndReturnKey
             : DefaultDatabaseConnectionCrudTests
         {
-
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_when_entity_has_no_key(IDialect dialect)
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    
                     // Act
                     Assert.Throws<InvalidPrimaryKeyException>(() => database.Insert<int>(new NoKey()));
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1898,13 +1610,10 @@
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    
                     // Act
                     Assert.Throws<InvalidPrimaryKeyException>(() => database.Insert<int>(new CompositeKeys()));
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1913,14 +1622,12 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entity = new KeyString { Name = "Some Name", Age = 10 };
 
                     // Act / Assert
                     Assert.Throws<InvalidPrimaryKeyException>(() => database.Insert<string>(entity));
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1929,7 +1636,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entity = new KeyGuid { Id = Guid.NewGuid(), Name = "Some Name" };
 
                     // Act / Assert
@@ -1937,26 +1643,19 @@
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Inserts_entity_with_int32_primary_key(IDialect dialect)
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    
                     // Act
                     var id = database.Insert<int>(new KeyInt32 { Name = "Some Name" });
 
                     // Assert
                     id.Should().BeGreaterThan(0);
-
-                    // Cleanup
-                    database.Delete<KeyInt32>(id);
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1964,19 +1663,13 @@
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    
                     // Act
                     var id = database.Insert<int>(new KeyInt64 { Name = "Some Name" });
 
                     // Assert
                     id.Should().BeGreaterThan(0);
-
-                    // Cleanup
-                    database.Delete<KeyInt64>(id);
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1984,19 +1677,13 @@
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    
                     // Act
                     var id = database.Insert<int>(new KeyAlias { Name = "Some Name" });
 
                     // Assert
                     id.Should().BeGreaterThan(0);
-
-                    // Cleanup
-                    database.Delete<KeyAlias>(id);
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -2004,16 +1691,11 @@
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    
                     // Act
                     var id = database.Insert<int>(new SchemaOther { Name = "Some name" });
 
                     // Assert
                     id.Should().BeGreaterThan(0);
-
-                    // Cleanup
-                    database.Delete<SchemaOther>(id);
                 }
             }
         }
@@ -2028,7 +1710,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entities = new[]
                         {
                             new KeyInt32 { Name = "Some Name" },
@@ -2040,12 +1721,8 @@
 
                     // Assert
                     database.Count<KeyInt32>().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<KeyInt32>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -2054,7 +1731,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entities = new[]
                         {
                             new KeyInt64 { Name = "Some Name" },
@@ -2066,12 +1742,8 @@
 
                     // Assert
                     database.Count<KeyInt64>().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<KeyInt64>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -2080,7 +1752,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entities = new[]
                         {
                             new CompositeKeys { Key1 = 2, Key2 = 3, Name = "Some Name1" },
@@ -2092,12 +1763,8 @@
 
                     // Assert
                     database.Count<CompositeKeys>().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<CompositeKeys>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -2106,7 +1773,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entities = new[]
                         {
                             new KeyString { Name = "Some Name", Age = 10 },
@@ -2118,12 +1784,8 @@
 
                     // Assert
                     database.Count<KeyString>().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<KeyString>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -2132,7 +1794,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entities = new[]
                         {
                             new KeyGuid { Id = Guid.NewGuid(), Name = "Some Name" },
@@ -2144,12 +1805,8 @@
 
                     // Assert
                     database.Count<KeyGuid>().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<KeyGuid>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -2170,12 +1827,8 @@
 
                     // Assert
                     database.Count<KeyAlias>().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<KeyAlias>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -2184,7 +1837,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entities = new[]
                         {
                             new SchemaOther { Name = "Some Name" },
@@ -2197,9 +1849,6 @@
 
                     // Assert
                     database.Count<SchemaOther>().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<SchemaOther>();
                 }
             }
         }
@@ -2207,7 +1856,6 @@
         public class InsertRangeAndSetKey
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_when_entity_has_no_key(IDialect dialect)
@@ -2215,7 +1863,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entities = new[]
                         {
                             new NoKey()
@@ -2227,7 +1874,6 @@
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_when_entity_has_composite_keys(IDialect dialect)
@@ -2235,7 +1881,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entities = new[]
                         {
                             new CompositeKeys()
@@ -2247,7 +1892,6 @@
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_for_string_keys(IDialect dialect)
@@ -2255,7 +1899,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entities = new[]
                         {
                             new KeyString { Name = "Some Name", Age = 10 }
@@ -2267,7 +1910,6 @@
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Throws_exception_for_guid_keys(IDialect dialect)
@@ -2275,7 +1917,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entities = new[]
                         {
                             new KeyGuid { Id = Guid.NewGuid(), Name = "Some Name" }
@@ -2287,7 +1928,6 @@
                 }
             }
 
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Inserts_entity_with_int32_primary_key(IDialect dialect)
@@ -2295,7 +1935,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entities = new[]
                         {
                             new KeyInt32 { Name = "Some Name" },
@@ -2310,12 +1949,8 @@
                     entities[0].Id.Should().BeGreaterThan(0);
                     entities[1].Id.Should().BeGreaterThan(entities[0].Id);
                     entities[2].Id.Should().BeGreaterThan(entities[1].Id);
-
-                    // Cleanup
-                    database.DeleteAll<KeyInt32>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -2324,7 +1959,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entities = new[]
                         {
                             new KeyInt64 { Name = "Some Name" },
@@ -2339,12 +1973,8 @@
                     entities[0].Id.Should().BeGreaterThan(0);
                     entities[1].Id.Should().BeGreaterThan(entities[0].Id);
                     entities[2].Id.Should().BeGreaterThan(entities[1].Id);
-
-                    // Cleanup
-                    database.DeleteAll<KeyInt64>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -2353,7 +1983,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entities = new[]
                         {
                             new KeyExplicit { Name = "Some Name" }
@@ -2364,12 +1993,8 @@
 
                     // Assert
                     entities[0].Key.Should().BeGreaterThan(0);
-
-                    // Cleanup
-                    database.DeleteAll<KeyAlias>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -2378,7 +2003,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entities = new[]
                         {
                             new SchemaOther { Name = "Some Name" },
@@ -2393,9 +2017,6 @@
                     entities[0].Id.Should().BeGreaterThan(0);
                     entities[1].Id.Should().BeGreaterThan(entities[0].Id);
                     entities[2].Id.Should().BeGreaterThan(entities[1].Id);
-
-                    // Cleanup
-                    database.DeleteAll<SchemaOther>();
                 }
             }
         }
@@ -2403,7 +2024,6 @@
         public class Update
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Updates_the_entity(IDialect dialect)
@@ -2411,7 +2031,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var id = database.Insert<int>(new Dog { Name = "Some name", Age = 10 });
 
                     // Act
@@ -2422,12 +2041,8 @@
                     // Assert
                     var updatedEntity = database.Find<Dog>(id);
                     updatedEntity.Name.Should().Be("Other name");
-
-                    // Cleanup
-                    database.Delete<Dog>(id);
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -2436,7 +2051,6 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Arrange
-                    
                     var entity = new PropertyNotMapped { FirstName = "Bobby", LastName = "DropTables", Age = 10 };
                     entity.Id = database.Insert<int>(entity);
 
@@ -2447,12 +2061,8 @@
                     // Assert
                     var updatedEntity = database.Find<PropertyNotMapped>(entity.Id);
                     updatedEntity.LastName.Should().Be("Other name");
-
-                    // Cleanup
-                    database.DeleteAll<PropertyNotMapped>();
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -2473,9 +2083,6 @@
                     var updatedEntity = database.Find<CompositeKeys>(id);
 
                     updatedEntity.Name.Should().Be("Other name");
-
-                    // Cleanup
-                    database.DeleteAll<CompositeKeys>();
                 }
             }
         }
@@ -2483,7 +2090,6 @@
         public class UpdateRange
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Updates_the_entity(IDialect dialect)
@@ -2514,9 +2120,6 @@
 
                     var updatedEntities = database.GetRange<Dog>($"WHERE Name = 'Other name'");
                     updatedEntities.Count().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<Dog>();
                 }
             }
 
@@ -2551,9 +2154,6 @@
 
                     var updatedEntities = database.GetRange<CompositeKeys>($"WHERE Name = 'Other name'");
                     updatedEntities.Count().Should().Be(2);
-
-                    // Cleanup
-                    database.DeleteAll<CompositeKeys>();
                 }
             }
 
@@ -2587,7 +2187,6 @@
                     using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                     {
                         // Arrange
-                        
                         database.Insert(new KeyString { Name = "Some Name", Age = 10 });
 
                         // Act
@@ -2603,7 +2202,6 @@
                     using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                     {
                         // Arrange
-                        
                         var id = Guid.NewGuid();
                         database.Insert(new KeyGuid { Id = id, Name = "Some Name" });
 
@@ -2620,7 +2218,6 @@
                     using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                     {
                         // Arrange
-                        
                         var id = new { Key1 = 5, Key2 = 20 };
                         var entity = new CompositeKeys { Key1 = 5, Key2 = 20, Name = "Some Name" };
                         database.Insert(entity);
@@ -2634,7 +2231,6 @@
             public class DeleteEntity
                 : DefaultDatabaseConnectionCrudTests
             {
-
                 [Theory]
                 [MemberData(nameof(TestDialects))]
                 public void Deletes_entity_with_matching_key(IDialect dialect)
@@ -2642,7 +2238,6 @@
                     using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                     {
                         // Arrange
-                        
                         var id = database.Insert<int>(new Dog { Name = "Some name", Age = 10 });
 
                         // Act
@@ -2662,7 +2257,6 @@
                     using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                     {
                         // Arrange
-                        
                         var id = new { Key1 = 5, Key2 = 20 };
                         var entity = new CompositeKeys { Key1 = 5, Key2 = 20, Name = "Some Name" };
                         database.Insert(entity);
@@ -2690,7 +2284,6 @@
                     using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                     {
                         // Arrange
-                        
                         var actualCondition = conditions != null ? new SqlString(conditions) : null;
 
                         // Act / Assert
@@ -2702,12 +2295,11 @@
                 [MemberData(nameof(TestDialectsWithData), "Where Age = 10")]
                 [MemberData(nameof(TestDialectsWithData), "where Age = 10")]
                 [MemberData(nameof(TestDialectsWithData), "WHERE Age = 10")]
+                [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
                 public void Allows_any_capitalization_of_where_clause(IDialect dialect, string conditions)
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                     {
-                        // Arrange
-                        
                         // Act
                         Action act = () => database.DeleteRange<Dog>(new SqlString(conditions));
 
@@ -2723,7 +2315,6 @@
                     using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                     {
                         // Arrange
-                        
                         database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                         database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                         database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -2735,9 +2326,6 @@
                         // Assert
                         result.NumRowsAffected.Should().Be(3);
                         database.Count<Dog>().Should().Be(1);
-
-                        // Cleanup
-                        database.DeleteAll<Dog>();
                     }
                 }
             }
@@ -2745,21 +2333,16 @@
             public class DeleteRangeWhereObject
                 : DefaultDatabaseConnectionCrudTests
             {
-
-
                 [Theory]
                 [MemberData(nameof(TestDialects))]
                 public void Throws_exception_if_conditions_is_null(IDialect dialect)
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                     {
-                        // Arrange
-                        
                         // Act / Assert
                         Assert.Throws<ArgumentNullException>(() => database.DeleteRange<Dog>((object)null));
                     }
                 }
-
 
                 [Theory]
                 [MemberData(nameof(TestDialects))]
@@ -2767,13 +2350,10 @@
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                     {
-                        // Arrange
-                        
                         // Act / Assert
                         Assert.Throws<ArgumentException>(() => database.DeleteRange<Dog>(new { }));
                     }
                 }
-
 
                 [Theory]
                 [MemberData(nameof(TestDialects))]
@@ -2782,7 +2362,6 @@
                     using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                     {
                         // Arrange
-                        
                         database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                         database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                         database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
@@ -2794,9 +2373,6 @@
                         // Assert
                         result.NumRowsAffected.Should().Be(3);
                         database.Count<Dog>().Should().Be(1);
-
-                        // Cleanup
-                        database.DeleteAll<Dog>();
                     }
                 }
             }
@@ -2811,7 +2387,6 @@
                     using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                     {
                         // Arrange
-                        
                         database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
                         database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
                         database.Insert(new Dog { Name = "Some Name 3", Age = 10 });
