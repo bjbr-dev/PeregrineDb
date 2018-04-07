@@ -1,9 +1,7 @@
 ﻿namespace PeregrineDb.PerformanceTests
 {
     using System;
-    using System.Collections.Generic;
     using System.Data.SqlClient;
-    using System.Linq;
     using System.Reflection;
     using BenchmarkDotNet.Running;
 
@@ -15,40 +13,11 @@
             WriteLineColor("Warning: DEBUG configuration; performance may be impacted!", ConsoleColor.Red);
             Console.WriteLine();
 #endif
-            Console.WriteLine("Welcome to Dapper's ORM performance benchmark suite, based on BenchmarkDotNet.");
-            Console.Write("  If you find a problem, please report it at: ");
-            WriteLineColor("https://github.com/StackExchange/Dapper", ConsoleColor.Blue);
-            Console.WriteLine("  Or if you're up to it, please submit a pull request! We welcome new additions.");
-            Console.WriteLine();
-
-            if (args.Length == 0)
-            {
-                Console.WriteLine("Optional arguments:");
-                WriteColor("  --all", ConsoleColor.Blue);
-                Console.WriteLine(": run all benchmarks");
-                Console.WriteLine();
-            }
             Console.WriteLine("Using ConnectionString: " + BenchmarkBase.ConnectionString);
             EnsureDBSetup();
             Console.WriteLine("Database setup complete.");
 
-            if (args.Any(a => a == "--all") || true)
-            {
-                Console.WriteLine("Iterations: " + BenchmarkBase.Iterations);
-                var benchmarks = new List<Benchmark>();
-                var benchTypes = Assembly.GetEntryAssembly().DefinedTypes.Where(t => t.IsSubclassOf(typeof(BenchmarkBase)));
-                WriteLineColor("Running full benchmarks suite", ConsoleColor.Green);
-                foreach (var b in benchTypes)
-                {
-                    benchmarks.AddRange(BenchmarkConverter.TypeToBenchmarks(b));
-                }
-                BenchmarkRunner.Run(benchmarks.ToArray(), null);
-            }
-            else
-            {
-                Console.WriteLine("Iterations: " + BenchmarkBase.Iterations);
-                BenchmarkSwitcher.FromAssembly(typeof(Program).GetTypeInfo().Assembly).Run(args);
-            }
+            BenchmarkSwitcher.FromAssembly(typeof(Program).GetTypeInfo().Assembly).Run(args);
         }
 
         private static void EnsureDBSetup()
@@ -92,7 +61,7 @@ End
             }
         }
 
-        public static void WriteLineColor(string message, ConsoleColor color)
+        private static void WriteLineColor(string message, ConsoleColor color)
         {
             var orig = Console.ForegroundColor;
             Console.ForegroundColor = color;
