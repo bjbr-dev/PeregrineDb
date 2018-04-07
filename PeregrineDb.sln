@@ -5,16 +5,14 @@ VisualStudioVersion = 15.0.27130.2036
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{18380DCA-34C0-47D0-A5D8-83E5F02143FC}"
 	ProjectSection(SolutionItems) = preProject
-		appveyor.yml = appveyor.yml
-		LICENSE = LICENSE
-		README.md = README.md
-		build.cake = build.cake
 		.gitignore = .gitignore
-		semver.txt = semver.txt
+		appveyor.yml = appveyor.yml
+		build.cake = build.cake
+		LICENSE = LICENSE
 		NOTICE.md = NOTICE.md
+		README.md = README.md
+		semver.txt = semver.txt
 	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "documentation", "documentation", "{A97482DD-B797-4C98-A272-786B20C84CC6}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PeregrineDb", "src\PeregrineDb\PeregrineDb.csproj", "{ACCB8BC8-9198-42BB-8018-1ED05DCFED51}"
 EndProject
@@ -23,6 +21,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{1E5E193E-6331-4E69-BFB2-001D47DBD26C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PeregrineDb.Tests", "tests\PeregrineDb.Tests\PeregrineDb.Tests.csproj", "{A47DE7D4-CCD3-44B7-B57B-25246FA99697}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PeregrineDb.PerformanceTests", "tests\PeregrineDb.PerformanceTests\PeregrineDb.PerformanceTests.csproj", "{A66D0E91-505B-43F2-8A81-C79158B4864A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,14 +38,18 @@ Global
 		{A47DE7D4-CCD3-44B7-B57B-25246FA99697}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A47DE7D4-CCD3-44B7-B57B-25246FA99697}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A47DE7D4-CCD3-44B7-B57B-25246FA99697}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A66D0E91-505B-43F2-8A81-C79158B4864A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A66D0E91-505B-43F2-8A81-C79158B4864A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A66D0E91-505B-43F2-8A81-C79158B4864A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A66D0E91-505B-43F2-8A81-C79158B4864A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{A97482DD-B797-4C98-A272-786B20C84CC6} = {18380DCA-34C0-47D0-A5D8-83E5F02143FC}
 		{ACCB8BC8-9198-42BB-8018-1ED05DCFED51} = {BC3B9252-89F5-49D2-962C-0136DB51C499}
 		{A47DE7D4-CCD3-44B7-B57B-25246FA99697} = {1E5E193E-6331-4E69-BFB2-001D47DBD26C}
+		{A66D0E91-505B-43F2-8A81-C79158B4864A} = {1E5E193E-6331-4E69-BFB2-001D47DBD26C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1F2455BD-6604-4879-B995-AF05A1B48969}

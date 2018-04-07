@@ -3,6 +3,9 @@ src/PeregrineDb/bin/
 src/PeregrineDb/obj/
 tests/PeregrineDb.Tests/bin/
 tests/PeregrineDb.Tests/obj/
+tests/PeregrineDb.PerformanceTests/bin/
+tests/PeregrineDb.PerformanceTests/obj/
+tests/PeregrineDb.PerformanceTests/BenchmarkDotNet.Artifacts/
 
 artifacts/
 tools/*

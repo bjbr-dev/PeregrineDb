@@ -40,4 +40,9 @@
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.3.0" />
     <PackageReference Include="System.Diagnostics.Tools" Version="4.3.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="ISqlConnection.*.cs" DependentUpon="ISqlConnection.cs" />
+    <Compile Update="Databases/DefaultSqlConnection.*.cs" DependentUpon="Databases/DefaultSqlConnection.cs" />
+  </ItemGroup>
 </Project>
