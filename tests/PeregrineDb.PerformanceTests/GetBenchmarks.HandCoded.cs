@@ -5,7 +5,7 @@
     using System.Data.SqlClient;
     using BenchmarkDotNet.Attributes;
 
-    public class HandCodedBenchmarks : BenchmarkBase
+    public class HandCodedGetBenchmarks : GetBenchmarks
     {
         private SqlCommand _postCommand;
         private SqlParameter _idParam;
@@ -19,7 +19,7 @@
             this.BaseSetup();
             this._postCommand = new SqlCommand()
             {
-                Connection = this._connection,
+                Connection = this.Connection,
                 CommandText = @"select Id, [Text], [CreationDate], LastChangeDate, 
                 Counter1,Counter2,Counter3,Counter4,Counter5,Counter6,Counter7,Counter8,Counter9 from Posts where Id = @Id"
             };

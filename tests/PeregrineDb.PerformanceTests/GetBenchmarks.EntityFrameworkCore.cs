@@ -4,7 +4,7 @@ namespace PeregrineDb.PerformanceTests
     using BenchmarkDotNet.Attributes;
     using Microsoft.EntityFrameworkCore;
 
-    public class EFCoreBenchmarks : BenchmarkBase
+    public class EfCoreGetBenchmarks : GetBenchmarks
     {
         private EntityFrameworkCore.EFCoreContext Context;
 
@@ -12,7 +12,7 @@ namespace PeregrineDb.PerformanceTests
         public void Setup()
         {
             this.BaseSetup();
-            this.Context = new EntityFrameworkCore.EFCoreContext(this._connection.ConnectionString);
+            this.Context = new EntityFrameworkCore.EFCoreContext(this.Connection.ConnectionString);
         }
 
         [Benchmark(Description = "Normal")]

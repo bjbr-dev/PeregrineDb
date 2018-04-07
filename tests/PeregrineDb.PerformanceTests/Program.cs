@@ -13,7 +13,7 @@
             WriteLineColor("Warning: DEBUG configuration; performance may be impacted!", ConsoleColor.Red);
             Console.WriteLine();
 #endif
-            Console.WriteLine("Using ConnectionString: " + BenchmarkBase.ConnectionString);
+            Console.WriteLine("Using ConnectionString: " + GetBenchmarks.ConnectionString);
             EnsureDBSetup();
             Console.WriteLine("Database setup complete.");
 
@@ -22,7 +22,7 @@
 
         private static void EnsureDBSetup()
         {
-            using (var cnn = new SqlConnection(BenchmarkBase.ConnectionString))
+            using (var cnn = new SqlConnection(GetBenchmarks.ConnectionString))
             {
                 cnn.Open();
                 var cmd = cnn.CreateCommand();

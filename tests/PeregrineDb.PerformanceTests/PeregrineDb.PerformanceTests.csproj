@@ -23,7 +23,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="1.1.2" />
     <PackageReference Include="Microsoft.SqlServer.Compact" Version="4.0.8876.1" />
     <PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
-    <PackageReference Include="PetaPoco" Version="5.1.259" />
+    <PackageReference Include="PetaPoco.Core.Compiled" Version="5.1.289" />
     <PackageReference Include="System.Data.SQLite" Version="1.0.105.2" />
     <PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
     <Reference Include="System.Configuration" />
@@ -36,7 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Benchmarks.*.cs" DependentUpon="Benchmarks.cs" />
+    <Compile Update="GetBenchmarks.*.cs" DependentUpon="GetBenchmarks.cs" />
   </ItemGroup>
 
 </Project>

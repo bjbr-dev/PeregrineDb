@@ -5,8 +5,8 @@
     using BenchmarkDotNet.Attributes;
     using PeregrineDb.Databases;
 
-    public class PeregrineDbBenchmarks
-        : BenchmarkBase
+    public class PeregrineDbGetBenchmarks
+        : GetBenchmarks
     {
         private IDatabase<SqlConnection> database;
 
@@ -14,7 +14,7 @@
         public void Setup()
         {
             this.BaseSetup();
-            this.database = DefaultDatabase.From(this._connection, PeregrineConfig.SqlServer2012, true);
+            this.database = DefaultDatabase.From(this.Connection, PeregrineConfig.SqlServer2012, true);
         }
 
         [Benchmark(Description = "Query<T>")]

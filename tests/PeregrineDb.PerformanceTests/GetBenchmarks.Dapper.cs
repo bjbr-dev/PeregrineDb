@@ -5,7 +5,8 @@
     using Dapper;
     using Dapper.Contrib.Extensions;
 
-    public class DapperBenchmarks : BenchmarkBase
+    public class DapperGetBenchmarks 
+        : GetBenchmarks
     {
         [GlobalSetup]
         public void Setup()
@@ -17,49 +18,49 @@
         public Post QueryBuffered()
         {
             this.Step();
-            return this._connection.Query<Post>("select * from Posts where Id = @Id", new { Id = this.i }, buffered: true).First();
+            return this.Connection.Query<Post>("select * from Posts where Id = @Id", new { Id = this.i }, buffered: true).First();
         }
 
         [Benchmark(Description = "Query<dyanmic> (buffered)")]
         public dynamic QueryBufferedDynamic()
         {
             this.Step();
-            return this._connection.Query("select * from Posts where Id = @Id", new { Id = this.i }, buffered: true).First();
+            return this.Connection.Query("select * from Posts where Id = @Id", new { Id = this.i }, buffered: true).First();
         }
 
         [Benchmark(Description = "Query<T> (unbuffered)")]
         public Post QueryUnbuffered()
         {
             this.Step();
-            return this._connection.Query<Post>("select * from Posts where Id = @Id", new { Id = this.i }, buffered: false).First();
+            return this.Connection.Query<Post>("select * from Posts where Id = @Id", new { Id = this.i }, buffered: false).First();
         }
 
         [Benchmark(Description = "Query<dyanmic> (unbuffered)")]
         public dynamic QueryUnbufferedDynamic()
         {
             this.Step();
-            return this._connection.Query("select * from Posts where Id = @Id", new { Id = this.i }, buffered: false).First();
+            return this.Connection.Query("select * from Posts where Id = @Id", new { Id = this.i }, buffered: false).First();
         }
 
         [Benchmark(Description = "QueryFirstOrDefault<T>")]
         public Post QueryFirstOrDefault()
         {
             this.Step();
-            return this._connection.QueryFirstOrDefault<Post>("select * from Posts where Id = @Id", new { Id = this.i });
+            return this.Connection.QueryFirstOrDefault<Post>("select * from Posts where Id = @Id", new { Id = this.i });
         }
 
         [Benchmark(Description = "QueryFirstOrDefault<dyanmic>")]
         public dynamic QueryFirstOrDefaultDynamic()
         {
             this.Step();
-            return this._connection.QueryFirstOrDefault("select * from Posts where Id = @Id", new { Id = this.i }).First();
+            return this.Connection.QueryFirstOrDefault("select * from Posts where Id = @Id", new { Id = this.i }).First();
         }
 
         [Benchmark(Description = "Contrib Get<T>")]
         public Post ContribGet()
         {
             this.Step();
-            return this._connection.Get<Post>(this.i);
+            return this.Connection.Get<Post>(this.i);
         }
     }
 }
