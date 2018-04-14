@@ -14,6 +14,7 @@
     using Xunit;
 
     [SuppressMessage("ReSharper", "StringLiteralAsInterpolationArgument")]
+    [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
     public abstract class DefaultDatabaseConnectionCrudAsyncTests
     {
         [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]

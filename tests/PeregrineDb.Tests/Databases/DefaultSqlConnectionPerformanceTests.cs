@@ -9,7 +9,7 @@
     using PeregrineDb.Tests.Utils;
     using Xunit;
 
-    public abstract class DefaultDatabaseConnectionPerformanceTests
+    public abstract class DefaultSqlConnectionPerformanceTests
     {
         private long PerformInsert(IDialect dialect)
         {
@@ -74,7 +74,7 @@
         }
 
         public class SqlServer2012
-            : DefaultDatabaseConnectionPerformanceTests
+            : DefaultSqlConnectionPerformanceTests
         {
             [Fact]
             public void Takes_less_than_6_seconds_to_insert_30000_rows()
@@ -92,7 +92,7 @@
         }
 
         public class PostgreSQL
-            : DefaultDatabaseConnectionPerformanceTests
+            : DefaultSqlConnectionPerformanceTests
         {
             [Fact]
             public void Takes_less_than_6_seconds_to_insert_30000_rows()
