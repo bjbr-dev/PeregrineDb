@@ -21,14 +21,14 @@ namespace PeregrineDb.PerformanceTests
             this.dbFast.EnableNamedParams = false;
         }
 
-        [Benchmark(Description = "Fetch<Post>")]
+        [Benchmark(Description = "Fetch{T}")]
         public Post Fetch()
         {
             this.Step();
             return this.db.Fetch<Post>("SELECT * from Posts where Id=@0", this.i).First();
         }
 
-        [Benchmark(Description = "Fetch<Post> (Fast)")]
+        [Benchmark(Description = "Fetch{T} (Fast)")]
         public Post FetchFast()
         {
             this.Step();
