@@ -4,14 +4,14 @@
 
     public class EFCoreContext : DbContext
     {
-        private readonly string _connectionString;
+        private readonly string connectionString;
 
         public EFCoreContext(string connectionString)
         {
-            this._connectionString = connectionString;
+            this.connectionString = connectionString;
         }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.UseSqlServer(this._connectionString);
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.UseSqlServer(this.connectionString);
 
         public DbSet<Post> Posts { get; set; }
     }

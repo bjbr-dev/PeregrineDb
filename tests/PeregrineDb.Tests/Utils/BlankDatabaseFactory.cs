@@ -1,7 +1,6 @@
 ﻿namespace PeregrineDb.Tests.Utils
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Data;
     using System.Data.SqlClient;
     using System.IO;
@@ -17,112 +16,57 @@
     internal class BlankDatabaseFactory
     {
         private const string DatabasePrefix = "peregrinetests_";
-        
-        private static readonly ConcurrentDictionary<IDialect, ObjectPool<string>> ConnectionStringPool =
-            new ConcurrentDictionary<IDialect, ObjectPool<string>>();
-        
+
+        private static readonly ObjectPool<string> SqlServer2012Pool = new ObjectPool<string>(CreateSqlServer2012Database);
+        private static readonly ObjectPool<string> PostgresPool = new ObjectPool<string>(CreatePostgreSqlDatabase);
+
         private static readonly object Sync = new object();
         private static bool cleanedUp;
 
         public static IDatabase<IDbConnection> MakeDatabase(IDialect dialect)
         {
+            CleanUp();
+
             switch (dialect)
             {
                 case PostgreSqlDialect _:
-                    return MakeDatabase(PeregrineConfig.Postgres);
+                    return OpenBlankDatabase(PostgresPool, cs => new NpgsqlConnection(cs), PeregrineConfig.Postgres);
                 case SqlServer2012Dialect _:
-                    return MakeDatabase(PeregrineConfig.SqlServer2012);
+                    return OpenBlankDatabase(SqlServer2012Pool, cs => new SqlConnection(cs), PeregrineConfig.SqlServer2012);
                 default:
                     throw new NotSupportedException("Unknown dialect: " + dialect.GetType().Name);
             }
-        }
 
-        public static IDatabase<IDbConnection> MakeDatabase(PeregrineConfig config)
-        {
-            CleanUp();
-            
-            var dialect = config.Dialect;
-            var dialectPool = ConnectionStringPool.GetOrAdd(dialect, d => new ObjectPool<string>(CreateDatabase));
-            
-            PooledInstance<string> pooledConnectionString = null;
-            try
+            DefaultDatabase<IDbConnection> OpenBlankDatabase(
+                ObjectPool<string> pool,
+                Func<string, IDbConnection> makeConnection,
+                PeregrineConfig config)
             {
-                pooledConnectionString = dialectPool.Acquire();
-
-                IDbConnection connection = null;
+                var pooledConnectionString = pool.Acquire();
                 try
                 {
-                    connection = OpenDatabase(pooledConnectionString.Item);
-                    var pooledConnection = new PooledConnection<IDbConnection>(pooledConnectionString, connection);
-                    var database = DefaultDatabase.From(pooledConnection, config);
+                    IDbConnection dbConnection = null;
+                    try
+                    {
+                        dbConnection = makeConnection(pooledConnectionString.Item);
+                        dbConnection.Open();
 
-                    DataWiper.ClearAllData(database);
+                        IDbConnection pooledConnection = new PooledConnection<IDbConnection>(pooledConnectionString, dbConnection);
+                        var database = DefaultDatabase.From(pooledConnection, config);
 
-                    return database;
+                        DataWiper.ClearAllData(database);
+                        return database;
+                    }
+                    catch
+                    {
+                        dbConnection?.Dispose();
+                        throw;
+                    }
                 }
                 catch
                 {
-                    connection?.Dispose();
+                    pooledConnectionString?.Dispose();
                     throw;
-                }
-            }
-            catch
-            {
-                pooledConnectionString?.Dispose();
-                throw;
-            }
-
-            string CreateDatabase()
-            {
-                switch (dialect)
-                {
-                    case SqlServer2012Dialect _:
-                        return CreateSqlServer2012Database();
-                    case PostgreSqlDialect _:
-                        return CreatePostgreSqlDatabase();
-                    default:
-                        throw new InvalidOperationException();
-                }
-            }
-
-            IDbConnection OpenDatabase(string connectionString)
-            {
-                switch (dialect)
-                {
-                    case SqlServer2012Dialect _:
-                    {
-                        SqlConnection dbConnection = null;
-                        try
-                        {
-                            dbConnection = new SqlConnection(connectionString);
-                            dbConnection.Open();
-                            return dbConnection;
-                        }
-                        catch
-                        {
-                            dbConnection?.Dispose();
-                            throw;
-                        }
-                    }
-
-                    case PostgreSqlDialect _:
-                    {
-                        NpgsqlConnection dbConnection = null;
-                        try
-                        {
-                            dbConnection = new NpgsqlConnection(connectionString);
-                            dbConnection.Open();
-                            return dbConnection;
-                        }
-                        catch
-                        {
-                            dbConnection?.Dispose();
-                            throw;
-                        }
-                    }
-
-                    default:
-                        throw new InvalidOperationException();
                 }
             }
         }
@@ -195,7 +139,7 @@
             }
         }
 
-        public static string CreateSqlServer2012Database()
+        private static string CreateSqlServer2012Database()
         {
             var databaseName = MakeRandomDatabaseName();
             using (var con = new SqlConnection(TestSettings.SqlServerConnectionString))
