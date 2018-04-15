@@ -24,10 +24,10 @@
         {
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
             {
-                bool oldSetting = SqlMapper.Settings.ApplyNullValues;
+                bool oldSetting = MapperSettings.ApplyNullValues;
                 try
                 {
-                    SqlMapper.Settings.ApplyNullValues = applyNulls;
+                    MapperSettings.ApplyNullValues = applyNulls;
                     QueryCache.Purge();
 
                     var data = database.Query<NullTestClass>($@"
@@ -67,7 +67,7 @@ select * from @data").ToDictionary(_ => _.Id);
                 }
                 finally
                 {
-                    SqlMapper.Settings.ApplyNullValues = oldSetting;
+                    MapperSettings.ApplyNullValues = oldSetting;
                 }
             }
         }

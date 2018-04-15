@@ -369,7 +369,7 @@
             catch (ArgumentException ex)
             {
                 // thanks, Sqlite!
-                if (Settings.DisableCommandBehaviorOptimizations(behavior, ex))
+                if (MapperSettings.DisableCommandBehaviorOptimizations(behavior, ex))
                 {
                     // we can retry; this time it will have different flags
                     return cmd.ExecuteReader(GetBehavior(wasClosed, behavior));
@@ -600,7 +600,7 @@
 
         private static CommandBehavior GetBehavior(bool close, CommandBehavior @default)
         {
-            return (close ? (@default | CommandBehavior.CloseConnection) : @default) & Settings.AllowedCommandBehaviors;
+            return (close ? (@default | CommandBehavior.CloseConnection) : @default) & MapperSettings.AllowedCommandBehaviors;
         }
 
         private static CacheInfo GetCacheInfo(Identity identity, object exampleParameters, bool addToCache)
@@ -916,7 +916,7 @@
                 var isDbString = value is IEnumerable<DbString>;
                 DbType dbType = 0;
 
-                var splitAt = SqlMapper.Settings.InListStringSplitCount;
+                var splitAt = MapperSettings.InListStringSplitCount;
                 var viaSplit = splitAt >= 0
                                && TryStringSplit(ref list, splitAt, namePrefix, command, byPosition);
 
@@ -970,7 +970,7 @@
                         }
                     }
 
-                    if (Settings.PadListExpansions && !isDbString && lastValue != null)
+                    if (MapperSettings.PadListExpansions && !isDbString && lastValue != null)
                     {
                         var padCount = GetListPaddingExtraCount(count);
                         for (var i = 0; i < padCount; i++)
@@ -1023,7 +1023,7 @@
                                     // looks like an optimize hint; expand it
                                     var suffix = match.Groups[2].Value;
 
-                                    var sb = GetStringBuilder().Append(variableName).Append(1).Append(suffix);
+                                    var sb = StringBuilderPool.Acquire().Append(variableName).Append(1).Append(suffix);
                                     for (var i = 2; i <= count; i++)
                                     {
                                         sb.Append(',').Append(variableName).Append(i).Append(suffix);
@@ -1033,7 +1033,7 @@
                                 }
                                 else
                                 {
-                                    var sb = GetStringBuilder().Append('(').Append(variableName);
+                                    var sb = StringBuilderPool.Acquire().Append('(').Append(variableName);
                                     if (!byPosition) sb.Append(1);
                                     for (var i = 2; i <= count; i++)
                                     {
@@ -1119,7 +1119,7 @@
             {
                 if (iter.MoveNext())
                 {
-                    var sb = GetStringBuilder();
+                    var sb = StringBuilderPool.Acquire();
                     append(sb, iter.Current);
                     while (iter.MoveNext())
                     {
@@ -1241,7 +1241,7 @@
                             {
                                 if (first)
                                 {
-                                    sb = GetStringBuilder().Append('(');
+                                    sb = StringBuilderPool.Acquire().Append('(');
                                     first = false;
                                 }
                                 else
@@ -1432,7 +1432,7 @@
 
             if (props == null)
             {
-                propsList.Sort(new PropertyInfoByNameComparer());
+                propsList.Sort(new SqlMapper.PropertyInfoByNameComparer());
                 props = propsList;
             }
 
@@ -2143,7 +2143,7 @@
             var first = true;
             var allDone = il.DefineLabel();
             int enumDeclareLocal = -1, valueCopyLocal = il.DeclareLocal(typeof(object)).LocalIndex;
-            var applyNullSetting = Settings.ApplyNullValues;
+            var applyNullSetting = MapperSettings.ApplyNullValues;
             foreach (var item in members)
             {
                 if (item != null)
@@ -2646,31 +2646,6 @@
             }
         }
 
-        private static IEqualityComparer<string> connectionStringComparer = StringComparer.Ordinal;
-
-        // one per thread
-        [ThreadStatic]
-        private static StringBuilder perThreadStringBuilderCache;
-
-        private static StringBuilder GetStringBuilder()
-        {
-            var tmp = perThreadStringBuilderCache;
-            if (tmp != null)
-            {
-                perThreadStringBuilderCache = null;
-                tmp.Length = 0;
-                return tmp;
-            }
-
-            return new StringBuilder();
-        }
-
-        private static string __ToStringRecycle(this StringBuilder obj)
-        {
-            if (obj == null) return "";
-            var s = obj.ToString();
-            perThreadStringBuilderCache = perThreadStringBuilderCache ?? obj;
-            return s;
-        }
+        internal static IEqualityComparer<string> connectionStringComparer = StringComparer.Ordinal;
     }
 }

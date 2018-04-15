@@ -15,14 +15,14 @@ namespace PeregrineDb.Databases.Mapper
     /// <summary>
     /// A bag of parameters that can be passed to the Dapper Query and Execute methods
     /// </summary>
-    internal partial class DynamicParameters : SqlMapper.IParameterLookup, SqlMapper.IParameterCallbacks
+    internal partial class DynamicParameters : IParameterLookup, IParameterCallbacks
     {
         internal const DbType EnumerableMultiParameter = (DbType)(-1);
-        private static readonly Dictionary<SqlMapper.Identity, Action<IDbCommand, object>> paramReaderCache = new Dictionary<SqlMapper.Identity, Action<IDbCommand, object>>();
+        private static readonly Dictionary<Identity, Action<IDbCommand, object>> paramReaderCache = new Dictionary<Identity, Action<IDbCommand, object>>();
         private readonly Dictionary<string, ParamInfo> parameters = new Dictionary<string, ParamInfo>();
         private List<object> templates;
 
-        object SqlMapper.IParameterLookup.this[string name] =>
+        object IParameterLookup.this[string name] =>
             this.parameters.TryGetValue(name, out ParamInfo param) ? param.Value : null;
 
         /// <summary>
@@ -149,7 +149,7 @@ namespace PeregrineDb.Databases.Mapper
             return name;
         }
 
-        void SqlMapper.IDynamicParameters.AddParameters(IDbCommand command, SqlMapper.Identity identity)
+        void IDynamicParameters.AddParameters(IDbCommand command, Identity identity)
         {
             this.AddParameters(command, identity);
         }
@@ -164,7 +164,7 @@ namespace PeregrineDb.Databases.Mapper
         /// </summary>
         /// <param name="command">The raw command prior to execution</param>
         /// <param name="identity">Information about the query</param>
-        protected void AddParameters(IDbCommand command, SqlMapper.Identity identity)
+        protected void AddParameters(IDbCommand command, Identity identity)
         {
             var literals = SqlMapper.GetLiteralTokens(identity.sql);
 
@@ -227,9 +227,9 @@ namespace PeregrineDb.Databases.Mapper
                 var dbType = param.DbType;
                 var val = param.Value;
                 string name = Clean(param.Name);
-                var isCustomQueryParameter = val is SqlMapper.ICustomQueryParameter;
+                var isCustomQueryParameter = val is ICustomQueryParameter;
 
-                SqlMapper.ITypeHandler handler = null;
+                ITypeHandler handler = null;
                 if (dbType == null && val != null && !isCustomQueryParameter)
                 {
 #pragma warning disable 618
@@ -238,7 +238,7 @@ namespace PeregrineDb.Databases.Mapper
                 }
                 if (isCustomQueryParameter)
                 {
-                    ((SqlMapper.ICustomQueryParameter)val).AddParameter(command, name);
+                    ((ICustomQueryParameter)val).AddParameter(command, name);
                 }
                 else if (dbType == EnumerableMultiParameter)
                 {
@@ -472,7 +472,7 @@ namespace PeregrineDb.Databases.Mapper
                 {
                     dbType = (!dbType.HasValue)
 #pragma warning disable 618
-                    ? SqlMapper.LookupDbType(targetMemberType, targetMemberType?.Name, true, out SqlMapper.ITypeHandler handler)
+                    ? SqlMapper.LookupDbType(targetMemberType, targetMemberType?.Name, true, out ITypeHandler handler)
 #pragma warning restore 618
                     : dbType;
 
@@ -491,7 +491,7 @@ namespace PeregrineDb.Databases.Mapper
 
         private List<Action> outputCallbacks;
 
-        void SqlMapper.IParameterCallbacks.OnCompleted()
+        void IParameterCallbacks.OnCompleted()
         {
             foreach (var param in from p in this.parameters select p.Value)
             {

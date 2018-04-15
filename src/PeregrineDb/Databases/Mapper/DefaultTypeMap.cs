@@ -8,7 +8,7 @@
     /// <summary>
     /// Represents default type mapping strategy used by Dapper
     /// </summary>
-    internal sealed class DefaultTypeMap : SqlMapper.ITypeMap
+    internal sealed class DefaultTypeMap : ITypeMap
     {
         private readonly List<FieldInfo> _fields;
         private readonly Type _type;
@@ -138,7 +138,7 @@
         /// <param name="constructor">Constructor to resolve</param>
         /// <param name="columnName">DataReader column name</param>
         /// <returns>Mapping implementation</returns>
-        public SqlMapper.IMemberMap GetConstructorParameter(ConstructorInfo constructor, string columnName)
+        public IMemberMap GetConstructorParameter(ConstructorInfo constructor, string columnName)
         {
             var parameters = constructor.GetParameters();
 
@@ -150,7 +150,7 @@
         /// </summary>
         /// <param name="columnName">DataReader column name</param>
         /// <returns>Mapping implementation</returns>
-        public SqlMapper.IMemberMap GetMember(string columnName)
+        public IMemberMap GetMember(string columnName)
         {
             var property = this.Properties.Find(p => string.Equals(p.Name, columnName, StringComparison.Ordinal))
                ?? this.Properties.Find(p => string.Equals(p.Name, columnName, StringComparison.OrdinalIgnoreCase));

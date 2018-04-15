@@ -14,7 +14,7 @@
         private static Task<DbDataReader> ExecuteReaderWithFlagsFallbackAsync(DbCommand cmd, bool wasClosed, CommandBehavior behavior, CancellationToken cancellationToken)
         {
             var task = cmd.ExecuteReaderAsync(GetBehavior(wasClosed, behavior), cancellationToken);
-            if (task.Status == TaskStatus.Faulted && Settings.DisableCommandBehaviorOptimizations(behavior, task.Exception.InnerException))
+            if (task.Status == TaskStatus.Faulted && MapperSettings.DisableCommandBehaviorOptimizations(behavior, task.Exception.InnerException))
             { // we can retry; this time it will have different flags
                 return cmd.ExecuteReaderAsync(GetBehavior(wasClosed, behavior), cancellationToken);
             }
@@ -186,7 +186,7 @@
                 if ((command.Flags & CommandFlags.Pipelined) != 0)
                 {
                     const int MAX_PENDING = 100;
-                    var pending = new Queue<AsyncExecState>(MAX_PENDING);
+                    var pending = new Queue<SqlMapper.AsyncExecState>(MAX_PENDING);
                     DbCommand cmd = null;
                     try
                     {
@@ -215,7 +215,7 @@
                             info.ParamReader(cmd, obj);
 
                             var task = cmd.ExecuteNonQueryAsync(command.CancellationToken);
-                            pending.Enqueue(new AsyncExecState(cmd, task));
+                            pending.Enqueue(new SqlMapper.AsyncExecState(cmd, task));
                             cmd = null; // note the using in the finally: this avoids a double-dispose
                         }
                         while (pending.Count != 0)

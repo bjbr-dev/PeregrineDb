@@ -18,7 +18,7 @@
     public class ParameterTests
     {
         public class DbParams
-            : SqlMapper.IDynamicParameters, IEnumerable<IDbDataParameter>
+            : IDynamicParameters, IEnumerable<IDbDataParameter>
         {
             private readonly List<IDbDataParameter> parameters = new List<IDbDataParameter>();
 
@@ -37,7 +37,7 @@
                 this.parameters.Add(value);
             }
 
-            void SqlMapper.IDynamicParameters.AddParameters(IDbCommand command, SqlMapper.Identity identity)
+            void IDynamicParameters.AddParameters(IDbCommand command, Identity identity)
             {
                 foreach (var parameter in this.parameters)
                 {
@@ -64,7 +64,7 @@
             return number_list;
         }
 
-        private class IntDynamicParam : SqlMapper.IDynamicParameters
+        private class IntDynamicParam : IDynamicParameters
         {
             private readonly IEnumerable<int> numbers;
 
@@ -73,7 +73,7 @@
                 this.numbers = numbers;
             }
 
-            public void AddParameters(IDbCommand command, SqlMapper.Identity identity)
+            public void AddParameters(IDbCommand command, Identity identity)
             {
                 var sqlCommand = (SqlCommand)command;
                 sqlCommand.CommandType = CommandType.StoredProcedure;
@@ -88,7 +88,7 @@
             }
         }
 
-        private class IntCustomParam : SqlMapper.ICustomQueryParameter
+        private class IntCustomParam : ICustomQueryParameter
         {
             private readonly IEnumerable<int> numbers;
 
@@ -936,10 +936,10 @@ SELECT * FROM @Issue192 WHERE Field IN @µ AND Field_1 IN @µµ",
         {
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
             {
-                int oldVal = SqlMapper.Settings.InListStringSplitCount;
+                int oldVal = MapperSettings.InListStringSplitCount;
                 try
                 {
-                    SqlMapper.Settings.InListStringSplitCount = stringSplit;
+                    MapperSettings.InListStringSplitCount = stringSplit;
                     try
                     {
                         database.Execute($"drop table #splits");
@@ -974,7 +974,7 @@ SELECT * FROM @Issue192 WHERE Field IN @µ AND Field_1 IN @µµ",
                 }
                 finally
                 {
-                    SqlMapper.Settings.InListStringSplitCount = oldVal;
+                    MapperSettings.InListStringSplitCount = oldVal;
                 }
 
             }
@@ -1011,10 +1011,10 @@ SELECT * FROM @Issue192 WHERE Field IN @µ AND Field_1 IN @µµ",
         {
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
             {
-                bool oldVal = SqlMapper.Settings.PadListExpansions;
+                bool oldVal = MapperSettings.PadListExpansions;
                 try
                 {
-                    SqlMapper.Settings.PadListExpansions = enabled;
+                    MapperSettings.PadListExpansions = enabled;
 
                     var command = new PSqlCommand(@"
 create table #ListExpansion(id int not null identity(1,1), value int null);
@@ -1056,7 +1056,7 @@ select count(1) as [Count] from #ListExpansion");
                 }
                 finally
                 {
-                    SqlMapper.Settings.PadListExpansions = oldVal;
+                    MapperSettings.PadListExpansions = oldVal;
                 }
 
             }

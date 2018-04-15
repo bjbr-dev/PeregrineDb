@@ -122,13 +122,13 @@
             }
         }
 
-        private class LocalDateHandler : SqlMapper.TypeHandler<LocalDate>
+        private class LocalDateHandler : TypeHandler<LocalDate>
         {
             private LocalDateHandler() { /* private constructor */ }
 
             // Make the field type ITypeHandler to ensure it cannot be used with SqlMapper.AddTypeHandler<T>(TypeHandler<T>)
             // by mistake.
-            public static readonly SqlMapper.ITypeHandler Default = new LocalDateHandler();
+            public static readonly ITypeHandler Default = new LocalDateHandler();
 
             public override LocalDate Parse(object value)
             {
@@ -372,7 +372,7 @@
             public int Id { get; set; }
         }
 
-        private class RatingValueHandler : SqlMapper.TypeHandler<RatingValue>
+        private class RatingValueHandler : TypeHandler<RatingValue>
         {
             private RatingValueHandler()
             {
@@ -435,7 +435,7 @@
             }
         }
 
-        private class StringListTypeHandler : SqlMapper.TypeHandler<List<string>>
+        private class StringListTypeHandler : TypeHandler<List<string>>
         {
             private StringListTypeHandler()
             {
@@ -495,7 +495,7 @@
         }
 
         private class RecordingTypeHandler<T>
-            : SqlMapper.TypeHandler<T>
+            : TypeHandler<T>
         {
             public override void SetValue(IDbDataParameter parameter, T value)
             {
@@ -745,7 +745,7 @@
             }
         }
 
-        private class Issue461_BlargHandler : SqlMapper.TypeHandler<Blarg>
+        private class Issue461_BlargHandler : TypeHandler<Blarg>
         {
             public override void SetValue(IDbDataParameter parameter, Blarg value)
             {

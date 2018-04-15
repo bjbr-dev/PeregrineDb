@@ -7,7 +7,7 @@
     /// Implements custom property mapping by user provided criteria (usually presence of some custom attribute with column to member mapping)
     /// </summary>
     internal sealed class CustomPropertyTypeMap 
-        : SqlMapper.ITypeMap
+        : ITypeMap
     {
         private readonly Type _type;
         private readonly Func<Type, string, PropertyInfo> _propertySelector;
@@ -44,7 +44,7 @@
         /// <param name="constructor"></param>
         /// <param name="columnName"></param>
         /// <returns></returns>
-        public SqlMapper.IMemberMap GetConstructorParameter(ConstructorInfo constructor, string columnName)
+        public IMemberMap GetConstructorParameter(ConstructorInfo constructor, string columnName)
         {
             throw new NotSupportedException();
         }
@@ -54,7 +54,7 @@
         /// </summary>
         /// <param name="columnName">DataReader column name</param>
         /// <returns>Poperty member map</returns>
-        public SqlMapper.IMemberMap GetMember(string columnName)
+        public IMemberMap GetMember(string columnName)
         {
             var prop = this._propertySelector(this._type, columnName);
             return prop != null ? new SimpleMemberMap(columnName, prop) : null;

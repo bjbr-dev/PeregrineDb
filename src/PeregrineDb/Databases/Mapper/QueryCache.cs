@@ -10,9 +10,9 @@ namespace PeregrineDb.Databases.Mapper
         private const int CollectPerItems = 1000;
         private const int CollectHitCountMin = 0;
         private static int collect;
-        private static readonly ConcurrentDictionary<SqlMapper.Identity, CacheInfo> Items = new ConcurrentDictionary<SqlMapper.Identity, CacheInfo>();
+        private static readonly ConcurrentDictionary<Identity, CacheInfo> Items = new ConcurrentDictionary<Identity, CacheInfo>();
 
-        internal static void SetQueryCache(SqlMapper.Identity key, CacheInfo value)
+        internal static void SetQueryCache(Identity key, CacheInfo value)
         {
             if (Interlocked.Increment(ref collect) == CollectPerItems)
             {
@@ -40,7 +40,7 @@ namespace PeregrineDb.Databases.Mapper
             }
         }
 
-        internal static bool TryGetQueryCache(SqlMapper.Identity key, out CacheInfo value)
+        internal static bool TryGetQueryCache(Identity key, out CacheInfo value)
         {
             if (Items.TryGetValue(key, out value))
             {

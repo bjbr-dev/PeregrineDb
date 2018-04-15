@@ -13,7 +13,7 @@
     {
         internal void OnCompleted()
         {
-            (this.Parameters as SqlMapper.IParameterCallbacks)?.OnCompleted();
+            (this.Parameters as IParameterCallbacks)?.OnCompleted();
         }
 
         /// <summary>
@@ -101,9 +101,9 @@
             {
                 cmd.CommandTimeout = this.CommandTimeout.Value;
             }
-            else if (SqlMapper.Settings.CommandTimeout.HasValue)
+            else if (MapperSettings.CommandTimeout.HasValue)
             {
-                cmd.CommandTimeout = SqlMapper.Settings.CommandTimeout.Value;
+                cmd.CommandTimeout = MapperSettings.CommandTimeout.Value;
             }
             if (this.CommandType.HasValue)
                 cmd.CommandType = this.CommandType.Value;
@@ -111,13 +111,13 @@
             return cmd;
         }
 
-        private static SqlMapper.Link<Type, Action<IDbCommand>> commandInitCache;
+        private static Link<Type, Action<IDbCommand>> commandInitCache;
 
         private static Action<IDbCommand> GetInit(Type commandType)
         {
             if (commandType == null)
                 return null; // GIGO
-            if (SqlMapper.Link<Type, Action<IDbCommand>>.TryGet(commandInitCache, commandType, out Action<IDbCommand> action))
+            if (Link<Type, Action<IDbCommand>>.TryGet(commandInitCache, commandType, out Action<IDbCommand> action))
             {
                 return action;
             }
@@ -150,7 +150,7 @@
                 action = (Action<IDbCommand>)method.CreateDelegate(typeof(Action<IDbCommand>));
             }
             // cache it
-            SqlMapper.Link<Type, Action<IDbCommand>>.TryAdd(ref commandInitCache, commandType, ref action);
+            Link<Type, Action<IDbCommand>>.TryAdd(ref commandInitCache, commandType, ref action);
             return action;
         }
 
