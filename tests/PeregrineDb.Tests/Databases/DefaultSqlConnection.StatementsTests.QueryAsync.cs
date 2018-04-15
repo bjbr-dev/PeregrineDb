@@ -74,37 +74,6 @@
             }
 
             [Fact]
-            public async Task TestSupportForDynamicParametersOutputExpressions_Query_Default()
-            {
-                using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                {
-                    var bob = new Person { Name = "bob", PersonId = 1, Address = new Address { PersonId = 2 } };
-
-                    var p = new DynamicParameters(bob);
-                    p.Output(bob, b => b.PersonId);
-                    p.Output(bob, b => b.Occupation);
-                    p.Output(bob, b => b.NumberOfLegs);
-                    p.Output(bob, b => b.Address.Name);
-                    p.Output(bob, b => b.Address.PersonId);
-
-                    var command = new PeregrineDb.SqlCommand(@"
-SET @Occupation = 'grillmaster' 
-SET @PersonId = @PersonId + 1 
-SET @NumberOfLegs = @NumberOfLegs - 1
-SET @AddressName = 'bobs burgers'
-SET @AddressPersonId = @PersonId
-select 42", p);
-                    var result = (await database.QueryAsync<int>(command).ConfigureAwait(false)).Single();
-
-                    Assert.Equal("grillmaster", bob.Occupation);
-                    Assert.Equal(2, bob.PersonId);
-                    Assert.Equal(1, bob.NumberOfLegs);
-                    Assert.Equal("bobs burgers", bob.Address.Name);
-                    Assert.Equal(2, bob.Address.PersonId);
-                    Assert.Equal(42, result);
-                }
-            }
-            [Fact]
             public async Task TestSubsequentQueriesSuccessAsync()
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))

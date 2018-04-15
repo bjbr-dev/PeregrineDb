@@ -13,7 +13,6 @@
             public DbType? DbType { get; set; }
             public int? Size { get; set; }
             public IDbDataParameter AttachedParam { get; set; }
-            internal Action<object, DynamicParameters> OutputCallback { get; set; }
             internal object OutputTarget { get; set; }
             internal bool CameFromTemplate { get; set; }
 

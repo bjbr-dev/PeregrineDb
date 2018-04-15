@@ -3,9 +3,7 @@
     using System;
     using System.Threading.Tasks;
     using FluentAssertions;
-    using PeregrineDb.Databases.Mapper;
     using PeregrineDb.Dialects;
-    using PeregrineDb.Tests.Databases.Mapper.SharedTypes;
     using PeregrineDb.Tests.Utils;
     using Xunit;
     using Dog = PeregrineDb.Tests.ExampleEntities.Dog;
@@ -89,37 +87,6 @@
                     var val = await database.ExecuteAsync($"declare @foo table(id int not null); insert @foo values({1});")
                                             .ConfigureAwait(false);
                     val.Equals(1);
-                }
-            }
-
-            [Fact]
-            public async Task TestSupportForDynamicParametersOutputExpressionsAsync()
-            {
-                using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-
-                {
-                    var bob = new Person { Name = "bob", PersonId = 1, Address = new Address { PersonId = 2 } };
-
-                    var p = new DynamicParameters(bob);
-                    p.Output(bob, b => b.PersonId);
-                    p.Output(bob, b => b.Occupation);
-                    p.Output(bob, b => b.NumberOfLegs);
-                    p.Output(bob, b => b.Address.Name);
-                    p.Output(bob, b => b.Address.PersonId);
-
-                    var sqlCommand = new SqlCommand($@"
-SET @Occupation = 'grillmaster' 
-SET @PersonId = @PersonId + 1 
-SET @NumberOfLegs = @NumberOfLegs - 1
-SET @AddressName = 'bobs burgers'
-SET @AddressPersonId = @PersonId", p);
-                    await database.ExecuteAsync(sqlCommand).ConfigureAwait(false);
-
-                    Assert.Equal("grillmaster", bob.Occupation);
-                    Assert.Equal(2, bob.PersonId);
-                    Assert.Equal(1, bob.NumberOfLegs);
-                    Assert.Equal("bobs burgers", bob.Address.Name);
-                    Assert.Equal(2, bob.Address.PersonId);
                 }
             }
         }

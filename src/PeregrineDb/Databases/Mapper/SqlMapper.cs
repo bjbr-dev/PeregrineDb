@@ -211,7 +211,10 @@
         /// <param name="value">The object to get a corresponding database type for.</param>
         public static DbType GetDbType(object value)
         {
-            if (value == null || value is DBNull) return DbType.Object;
+            if (value == null || value is DBNull)
+            {
+                return DbType.Object;
+            }
 
             return LookupDbType(value.GetType(), "n/a", false, out var handler);
         }
@@ -313,8 +316,6 @@
                             total += cmd.ExecuteNonQuery();
                         }
                     }
-
-                    command.OnCompleted();
                 }
                 finally
                 {
@@ -364,7 +365,7 @@
         {
             try
             {
-                return cmd.ExecuteReader(GetBehavior(wasClosed, behavior));
+                return cmd.ExecuteReader(MapperSettings.GetBehavior(behavior));
             }
             catch (ArgumentException ex)
             {
@@ -372,7 +373,7 @@
                 if (MapperSettings.DisableCommandBehaviorOptimizations(behavior, ex))
                 {
                     // we can retry; this time it will have different flags
-                    return cmd.ExecuteReader(GetBehavior(wasClosed, behavior));
+                    return cmd.ExecuteReader(MapperSettings.GetBehavior(behavior));
                 }
 
                 throw;
@@ -436,8 +437,6 @@
                 // need for "Cancel" etc
                 reader.Dispose();
                 reader = null;
-
-                command.OnCompleted();
             }
             finally
             {
@@ -485,7 +484,8 @@
                 case Row.SingleOrDefault:
                     ErrTwoRows.SingleOrDefault();
                     break;
-                default: throw new InvalidOperationException();
+                default:
+                    throw new InvalidOperationException();
             }
         }
 
@@ -500,7 +500,8 @@
                 case Row.Single:
                     ErrZeroRows.Single();
                     break;
-                default: throw new InvalidOperationException();
+                default:
+                    throw new InvalidOperationException();
             }
         }
 
@@ -513,16 +514,13 @@
             IDbCommand cmd = null;
             IDataReader reader = null;
 
-            var wasClosed = cnn.State == ConnectionState.Closed;
             try
             {
                 cmd = command.SetupCommand(cnn, info.ParamReader);
 
-                if (wasClosed) cnn.Open();
-                reader = ExecuteReaderWithFlagsFallback(cmd, wasClosed, (row & Row.Single) != 0
+                reader = ExecuteReaderWithFlagsFallback(cmd, false, (row & Row.Single) != 0
                     ? CommandBehavior.SequentialAccess | CommandBehavior.SingleResult // need to allow multiple rows, to check fail condition
                     : CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
-                wasClosed = false; // *if* the connection was closed and we got this far, then we now have a reader
 
                 T result = default;
                 if (reader.Read() && reader.FieldCount != 0)
@@ -571,7 +569,6 @@
                 reader.Dispose();
                 reader = null;
 
-                command.OnCompleted();
                 return result;
             }
             finally
@@ -593,14 +590,8 @@
                     reader.Dispose();
                 }
 
-                if (wasClosed) cnn.Close();
                 cmd?.Dispose();
             }
-        }
-
-        private static CommandBehavior GetBehavior(bool close, CommandBehavior @default)
-        {
-            return (close ? (@default | CommandBehavior.CloseConnection) : @default) & MapperSettings.AllowedCommandBehaviors;
         }
 
         private static CacheInfo GetCacheInfo(Identity identity, object exampleParameters, bool addToCache)
@@ -1808,7 +1799,6 @@
                 cmd = command.SetupCommand(cnn, paramReader);
                 if (wasClosed) cnn.Open();
                 var result = cmd.ExecuteNonQuery();
-                command.OnCompleted();
                 return result;
             }
             finally
@@ -1836,7 +1826,6 @@
                 cmd = command.SetupCommand(cnn, paramReader);
                 if (wasClosed) cnn.Open();
                 result = cmd.ExecuteScalar();
-                command.OnCompleted();
             }
             finally
             {
@@ -1933,7 +1922,7 @@
         /// Gets type-map for the given type
         /// </summary>
         /// <returns>Type map instance, default is to create new instance of DefaultTypeMap</returns>
-        public static Func<Type, ITypeMap> TypeMapProvider = (Type type) => new DefaultTypeMap(type);
+        public static Func<Type, ITypeMap> TypeMapProvider = type => new DefaultTypeMap(type);
 
         /// <summary>
         /// Gets type-map for the given <see cref="Type"/>.

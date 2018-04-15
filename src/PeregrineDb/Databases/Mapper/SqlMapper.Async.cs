@@ -13,10 +13,10 @@
     {
         private static Task<DbDataReader> ExecuteReaderWithFlagsFallbackAsync(DbCommand cmd, bool wasClosed, CommandBehavior behavior, CancellationToken cancellationToken)
         {
-            var task = cmd.ExecuteReaderAsync(GetBehavior(wasClosed, behavior), cancellationToken);
+            var task = cmd.ExecuteReaderAsync(MapperSettings.GetBehavior(behavior), cancellationToken);
             if (task.Status == TaskStatus.Faulted && MapperSettings.DisableCommandBehaviorOptimizations(behavior, task.Exception.InnerException))
             { // we can retry; this time it will have different flags
-                return cmd.ExecuteReaderAsync(GetBehavior(wasClosed, behavior), cancellationToken);
+                return cmd.ExecuteReaderAsync(MapperSettings.GetBehavior(behavior), cancellationToken);
             }
             return task;
         }
@@ -63,7 +63,7 @@
                             }
                         }
                         while (await reader.NextResultAsync(cancel).ConfigureAwait(false)) { /* ignore subsequent result sets */ }
-                        command.OnCompleted();
+
                         return buffer;
                     }
                     else
@@ -258,8 +258,6 @@
                         }
                     }
                 }
-
-                command.OnCompleted();
             }
             finally
             {
@@ -279,7 +277,6 @@
                 {
                     if (wasClosed) await ((DbConnection)cnn).OpenAsync(command.CancellationToken).ConfigureAwait(false);
                     var result = await cmd.ExecuteNonQueryAsync(command.CancellationToken).ConfigureAwait(false);
-                    command.OnCompleted();
                     return result;
                 }
                 finally
@@ -298,7 +295,6 @@
                     yield return (T)func(reader);
                 }
                 while (reader.NextResult()) { /* ignore subsequent result sets */ }
-                (parameters as IParameterCallbacks)?.OnCompleted();
             }
         }
 

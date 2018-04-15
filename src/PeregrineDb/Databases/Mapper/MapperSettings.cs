@@ -91,5 +91,10 @@
         /// operation if there are more than this many elements. Note that this feautre requires SQL Server 2016 / compatibility level 130 (or above).
         /// </summary>
         public static int InListStringSplitCount { get; set; } = -1;
+
+        public static CommandBehavior GetBehavior(CommandBehavior @default)
+        {
+            return @default & MapperSettings.AllowedCommandBehaviors;
+        }
     }
 }

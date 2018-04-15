@@ -2,8 +2,6 @@
 {
     using System;
     using System.Data;
-    using System.Reflection;
-    using System.Reflection.Emit;
     using System.Threading;
 
     /// <summary>
@@ -11,11 +9,6 @@
     /// </summary>
     internal struct CommandDefinition
     {
-        internal void OnCompleted()
-        {
-            (this.Parameters as IParameterCallbacks)?.OnCompleted();
-        }
-
         /// <summary>
         /// The command (sql or a stored-procedure name) to execute
         /// </summary>
@@ -92,11 +85,13 @@
         internal IDbCommand SetupCommand(IDbConnection cnn, Action<IDbCommand, object> paramReader)
         {
             var cmd = cnn.CreateCommand();
-            var init = GetInit(cmd.GetType());
-            init?.Invoke(cmd);
             if (this.Transaction != null)
+            {
                 cmd.Transaction = this.Transaction;
+            }
+
             cmd.CommandText = this.CommandText;
+
             if (this.CommandTimeout.HasValue)
             {
                 cmd.CommandTimeout = this.CommandTimeout.Value;
@@ -105,63 +100,14 @@
             {
                 cmd.CommandTimeout = MapperSettings.CommandTimeout.Value;
             }
+
             if (this.CommandType.HasValue)
+            {
                 cmd.CommandType = this.CommandType.Value;
+            }
+
             paramReader?.Invoke(cmd, this.Parameters);
             return cmd;
-        }
-
-        private static Link<Type, Action<IDbCommand>> commandInitCache;
-
-        private static Action<IDbCommand> GetInit(Type commandType)
-        {
-            if (commandType == null)
-                return null; // GIGO
-            if (Link<Type, Action<IDbCommand>>.TryGet(commandInitCache, commandType, out Action<IDbCommand> action))
-            {
-                return action;
-            }
-            var bindByName = GetBasicPropertySetter(commandType, "BindByName", typeof(bool));
-            var initialLongFetchSize = GetBasicPropertySetter(commandType, "InitialLONGFetchSize", typeof(int));
-
-            action = null;
-            if (bindByName != null || initialLongFetchSize != null)
-            {
-                var method = new DynamicMethod(commandType.Name + "_init", null, new Type[] { typeof(IDbCommand) });
-                var il = method.GetILGenerator();
-
-                if (bindByName != null)
-                {
-                    // .BindByName = true
-                    il.Emit(OpCodes.Ldarg_0);
-                    il.Emit(OpCodes.Castclass, commandType);
-                    il.Emit(OpCodes.Ldc_I4_1);
-                    il.EmitCall(OpCodes.Callvirt, bindByName, null);
-                }
-                if (initialLongFetchSize != null)
-                {
-                    // .InitialLONGFetchSize = -1
-                    il.Emit(OpCodes.Ldarg_0);
-                    il.Emit(OpCodes.Castclass, commandType);
-                    il.Emit(OpCodes.Ldc_I4_M1);
-                    il.EmitCall(OpCodes.Callvirt, initialLongFetchSize, null);
-                }
-                il.Emit(OpCodes.Ret);
-                action = (Action<IDbCommand>)method.CreateDelegate(typeof(Action<IDbCommand>));
-            }
-            // cache it
-            Link<Type, Action<IDbCommand>>.TryAdd(ref commandInitCache, commandType, ref action);
-            return action;
-        }
-
-        private static MethodInfo GetBasicPropertySetter(Type declaringType, string name, Type expectedType)
-        {
-            var prop = declaringType.GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
-            if (prop?.CanWrite == true && prop.PropertyType == expectedType && prop.GetIndexParameters().Length == 0)
-            {
-                return prop.GetSetMethod();
-            }
-            return null;
         }
     }
 }
