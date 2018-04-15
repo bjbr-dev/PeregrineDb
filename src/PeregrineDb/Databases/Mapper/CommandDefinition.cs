@@ -11,11 +11,6 @@
     /// </summary>
     internal struct CommandDefinition
     {
-        internal static CommandDefinition ForCallback(object parameters)
-        {
-            return parameters is DynamicParameters ? new CommandDefinition(parameters) : default;
-        }
-
         internal void OnCompleted()
         {
             (this.Parameters as SqlMapper.IParameterCallbacks)?.OnCompleted();
@@ -62,11 +57,6 @@
         public CommandFlags Flags { get; }
 
         /// <summary>
-        /// Can async queries be pipelined?
-        /// </summary>
-        public bool Pipelined => (this.Flags & CommandFlags.Pipelined) != 0;
-
-        /// <summary>
         /// Initialize the command definition
         /// </summary>
         /// <param name="commandText">The text for this command.</param>
@@ -92,11 +82,6 @@
             this.CommandType = commandType;
             this.Flags = flags;
             this.CancellationToken = cancellationToken;
-        }
-
-        private CommandDefinition(object parameters) : this()
-        {
-            this.Parameters = parameters;
         }
 
         /// <summary>

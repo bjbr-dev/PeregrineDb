@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Data;
     using System.Threading;
     using System.Threading.Tasks;
     using PeregrineDb.Databases.Mapper;
@@ -14,7 +15,7 @@
             var definition = new CommandDefinition(
                 command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType,
                 CommandFlags.Buffered, cancellationToken);
-            var result = await this.connection.QueryAsync<T>(definition).ConfigureAwait(false);
+            var result = await this.connection.QueryAsync<T>(typeof(T), definition).ConfigureAwait(false);
             return (List<T>)result;
         }
 
@@ -26,7 +27,10 @@
 
         public Task<T> QueryFirstAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.connection.QueryFirstAsync<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
+            string sql = command.CommandText;
+            object param = command.Parameters;
+            CommandType? commandType = command.CommandType;
+            return this.connection.QueryRowAsync<T>(SqlMapper.Row.First, typeof(T), new CommandDefinition(sql, param, this.transaction, commandTimeout, commandType, CommandFlags.None, cancellationToken));
         }
 
         public Task<T> QueryFirstAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
@@ -37,7 +41,10 @@
 
         public Task<T> QueryFirstOrDefaultAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.connection.QueryFirstOrDefaultAsync<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
+            string sql = command.CommandText;
+            object param = command.Parameters;
+            CommandType? commandType = command.CommandType;
+            return this.connection.QueryRowAsync<T>(SqlMapper.Row.FirstOrDefault, typeof(T), new CommandDefinition(sql, param, this.transaction, commandTimeout, commandType, CommandFlags.None, cancellationToken));
         }
 
         public Task<T> QueryFirstOrDefaultAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
@@ -48,7 +55,10 @@
 
         public Task<T> QuerySingleAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.connection.QuerySingleAsync<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
+            string sql = command.CommandText;
+            object param = command.Parameters;
+            CommandType? commandType = command.CommandType;
+            return this.connection.QueryRowAsync<T>(SqlMapper.Row.Single, typeof(T), new CommandDefinition(sql, param, this.transaction, commandTimeout, commandType, CommandFlags.None, cancellationToken));
         }
 
         public Task<T> QuerySingleAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
@@ -59,7 +69,10 @@
 
         public Task<T> QuerySingleOrDefaultAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.connection.QuerySingleOrDefaultAsync<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
+            string sql = command.CommandText;
+            object param = command.Parameters;
+            CommandType? commandType = command.CommandType;
+            return this.connection.QueryRowAsync<T>(SqlMapper.Row.SingleOrDefault, typeof(T), new CommandDefinition(sql, param, this.transaction, commandTimeout, commandType, CommandFlags.None, cancellationToken));
         }
 
         public Task<T> QuerySingleOrDefaultAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
@@ -70,7 +83,10 @@
 
         public async Task<CommandResult> ExecuteAsync(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var numRows = await this.connection.ExecuteAsync(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType)
+            string sql = command.CommandText;
+            object param = command.Parameters;
+            CommandType? commandType = command.CommandType;
+            var numRows = await this.connection.ExecuteAsync(new CommandDefinition(sql, param, this.transaction, commandTimeout, commandType, CommandFlags.Buffered, cancellationToken))
                                     .ConfigureAwait(false);
             return new CommandResult(numRows);
         }

@@ -2,6 +2,8 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Data;
+    using System.Linq;
     using PeregrineDb.Databases.Mapper;
     using PeregrineDb.SqlCommands;
 
@@ -9,7 +11,9 @@
     {
         public IReadOnlyList<T> Query<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            return (List<T>)this.connection.Query<T>(command.CommandText, command.Parameters, this.transaction, true, commandTimeout, command.CommandType);
+            return this.connection.QueryImpl<T>(
+                           new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType), typeof(T))
+                       .ToList();
         }
 
         public IReadOnlyList<T> Query<T>(FormattableString sql, int? commandTimeout = null)
@@ -20,7 +24,8 @@
 
         public T QueryFirst<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            return this.connection.QueryFirst<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
+            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType, CommandFlags.None);
+            return SqlMapper.QueryRowImpl<T>(this.connection, SqlMapper.Row.First, ref command1, typeof(T));
         }
 
         public T QueryFirst<T>(FormattableString sql, int? commandTimeout = null)
@@ -31,7 +36,8 @@
 
         public T QueryFirstOrDefault<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            return this.connection.QueryFirstOrDefault<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
+            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType, CommandFlags.None);
+            return SqlMapper.QueryRowImpl<T>(this.connection, SqlMapper.Row.FirstOrDefault, ref command1, typeof(T));
         }
 
         public T QueryFirstOrDefault<T>(FormattableString sql, int? commandTimeout = null)
@@ -42,7 +48,9 @@
 
         public T QuerySingle<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            return this.connection.QuerySingle<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
+            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType,
+                CommandFlags.None);
+            return SqlMapper.QueryRowImpl<T>(this.connection, SqlMapper.Row.Single, ref command1, typeof(T));
         }
 
         public T QuerySingle<T>(FormattableString sql, int? commandTimeout = null)
@@ -64,7 +72,11 @@
 
         public CommandResult Execute(in SqlCommand command, int? commandTimeout = null)
         {
-            return new CommandResult(this.connection.Execute(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType));
+            string sql = command.CommandText;
+            object param = command.Parameters;
+            CommandType? commandType = command.CommandType;
+            var command1 = new CommandDefinition(sql, param, this.transaction, commandTimeout, commandType, CommandFlags.Buffered);
+            return new CommandResult(SqlMapper.ExecuteImpl(this.connection, ref command1));
         }
 
         public CommandResult Execute(FormattableString sql, int? commandTimeout = null)
@@ -75,7 +87,11 @@
 
         public T ExecuteScalar<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            return this.connection.ExecuteScalar<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
+            string sql = command.CommandText;
+            object param = command.Parameters;
+            CommandType? commandType = command.CommandType;
+            var command1 = new CommandDefinition(sql, param, this.transaction, commandTimeout, commandType, CommandFlags.Buffered);
+            return SqlMapper.ExecuteScalarImpl<T>(this.connection, ref command1);
         }
 
         public T ExecuteScalar<T>(FormattableString sql, int? commandTimeout = null)

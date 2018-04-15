@@ -28,22 +28,27 @@
             this.Length = -1;
             this.IsAnsi = IsAnsiDefault;
         }
+
         /// <summary>
         /// Ansi vs Unicode 
         /// </summary>
         public bool IsAnsi { get; set; }
+
         /// <summary>
         /// Fixed length 
         /// </summary>
         public bool IsFixedLength { get; set; }
+
         /// <summary>
         /// Length of the string -1 for max
         /// </summary>
         public int Length { get; set; }
+
         /// <summary>
         /// The value of the string
         /// </summary>
         public string Value { get; set; }
+
         /// <summary>
         /// Add the parameter to the command... internal use only
         /// </summary>
