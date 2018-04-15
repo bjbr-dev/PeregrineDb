@@ -4,16 +4,23 @@
     using System.Data;
     using System.Threading;
 
-    internal static partial class SqlMapper
+    internal class CacheInfo
     {
-        private class CacheInfo
+        private int hitCount;
+
+        public DeserializerState Deserializer { get; set; }
+
+        public Action<IDbCommand, object> ParamReader { get; set; }
+
+
+        public int GetHitCount()
         {
-            public DeserializerState Deserializer { get; set; }
-            public Func<IDataReader, object>[] OtherDeserializers { get; set; }
-            public Action<IDbCommand, object> ParamReader { get; set; }
-            private int hitCount;
-            public int GetHitCount() { return Interlocked.CompareExchange(ref this.hitCount, 0, 0); }
-            public void RecordHit() { Interlocked.Increment(ref this.hitCount); }
+            return Interlocked.CompareExchange(ref this.hitCount, 0, 0);
+        }
+
+        public void RecordHit()
+        {
+            Interlocked.Increment(ref this.hitCount);
         }
     }
 }

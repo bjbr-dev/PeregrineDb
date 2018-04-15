@@ -28,7 +28,7 @@
                 try
                 {
                     SqlMapper.Settings.ApplyNullValues = applyNulls;
-                    SqlMapper.PurgeQueryCache();
+                    QueryCache.Purge();
 
                     var data = database.Query<NullTestClass>($@"
 declare @data table(Id int not null, A int null, B int null, C varchar(20), D int null, E int null)

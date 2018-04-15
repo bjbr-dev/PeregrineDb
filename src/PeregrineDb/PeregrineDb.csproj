@@ -44,8 +44,4 @@
     <Compile Update="ISqlConnection.*.cs" DependentUpon="ISqlConnection.cs" />
     <Compile Update="Databases/DefaultSqlConnection.*.cs" DependentUpon="Databases/DefaultSqlConnection.cs" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Databases\Mapper\" />
-  </ItemGroup>
 </Project>

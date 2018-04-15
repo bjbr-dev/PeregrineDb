@@ -41,7 +41,7 @@
                     if (tuple.Func == null || tuple.Hash != hash)
                     {
                         tuple = info.Deserializer = new DeserializerState(hash, GetDeserializer(effectiveType, reader, 0, -1, false));
-                        if (command.AddToCache) SetQueryCache(identity, info);
+                        if (command.AddToCache) QueryCache.SetQueryCache(identity, info);
                     }
 
                     var func = tuple.Func;
@@ -108,7 +108,7 @@
                         if (tuple.Func == null || tuple.Hash != hash)
                         {
                             tuple = info.Deserializer = new DeserializerState(hash, GetDeserializer(effectiveType, reader, 0, -1, false));
-                            if (command.AddToCache) SetQueryCache(identity, info);
+                            if (command.AddToCache) QueryCache.SetQueryCache(identity, info);
                         }
 
                         var func = tuple.Func;

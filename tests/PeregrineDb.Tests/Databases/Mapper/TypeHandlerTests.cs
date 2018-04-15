@@ -22,13 +22,13 @@
                 var result01 = database.Query<string>($"SELECT SQL_VARIANT_PROPERTY(CONVERT(sql_variant, {"TestString"}),'BaseType') AS BaseType").FirstOrDefault();
                 Assert.Equal("nvarchar", result01);
 
-                SqlMapper.PurgeQueryCache();
+                QueryCache.Purge();
 
                 SqlMapper.AddTypeMap(typeof(string), DbType.AnsiString); // Change Default String Handling to AnsiString
                 var result02 = database.Query<string>($"SELECT SQL_VARIANT_PROPERTY(CONVERT(sql_variant, {"TestString"}),'BaseType') AS BaseType").FirstOrDefault();
                 Assert.Equal("varchar", result02);
 
-                SqlMapper.PurgeQueryCache();
+                QueryCache.Purge();
                 SqlMapper.AddTypeMap(typeof(string), DbType.String); // Restore Default to Unicode String
             }
         }
@@ -42,14 +42,14 @@
                     $"SELECT SQL_VARIANT_PROPERTY(CONVERT(sql_variant, {"TestString"}),'BaseType') AS BaseType");
                 Assert.Equal("nvarchar", result01);
 
-                SqlMapper.PurgeQueryCache();
+                QueryCache.Purge();
 
                 SqlMapper.AddTypeMap(typeof(string), DbType.AnsiString); // Change Default String Handling to AnsiString
                 var result02 = database.QueryFirstOrDefault<string>(
                     $"SELECT SQL_VARIANT_PROPERTY(CONVERT(sql_variant, {"TestString"}),'BaseType') AS BaseType");
                 Assert.Equal("varchar", result02);
 
-                SqlMapper.PurgeQueryCache();
+                QueryCache.Purge();
                 SqlMapper.AddTypeMap(typeof(string), DbType.String); // Restore Default to Unicode String
             }
         }

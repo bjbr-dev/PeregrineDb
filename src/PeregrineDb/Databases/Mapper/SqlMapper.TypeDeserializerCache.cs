@@ -5,158 +5,157 @@
     using System.Collections.Generic;
     using System.Data;
     using System.Text;
-
-    internal static partial class SqlMapper
+    
+    internal class TypeDeserializerCache
     {
-        private class TypeDeserializerCache
+        private TypeDeserializerCache(Type type)
         {
-            private TypeDeserializerCache(Type type)
-            {
-                this.type = type;
-            }
+            this.type = type;
+        }
 
-            private static readonly Hashtable byType = new Hashtable();
-            private readonly Type type;
-            internal static void Purge(Type type)
+        private static readonly Hashtable byType = new Hashtable();
+        private readonly Type type;
+
+        internal static void Purge(Type type)
+        {
+            lock (byType)
+            {
+                byType.Remove(type);
+            }
+        }
+
+        internal static void Purge()
+        {
+            lock (byType)
+            {
+                byType.Clear();
+            }
+        }
+
+        internal static Func<IDataReader, object> GetReader(Type type, IDataReader reader, int startBound, int length, bool returnNullIfFirstMissing)
+        {
+            var found = (TypeDeserializerCache)byType[type];
+            if (found == null)
             {
                 lock (byType)
                 {
-                    byType.Remove(type);
+                    found = (TypeDeserializerCache)byType[type];
+                    if (found == null)
+                    {
+                        byType[type] = found = new TypeDeserializerCache(type);
+                    }
+                }
+            }
+            return found.GetReader(reader, startBound, length, returnNullIfFirstMissing);
+        }
+
+        private readonly Dictionary<DeserializerKey, Func<IDataReader, object>> readers = new Dictionary<DeserializerKey, Func<IDataReader, object>>();
+
+        private struct DeserializerKey : IEquatable<DeserializerKey>
+        {
+            private readonly int startBound, length;
+            private readonly bool returnNullIfFirstMissing;
+            private readonly IDataReader reader;
+            private readonly string[] names;
+            private readonly Type[] types;
+            private readonly int hashCode;
+
+            public DeserializerKey(int hashCode, int startBound, int length, bool returnNullIfFirstMissing, IDataReader reader, bool copyDown)
+            {
+                this.hashCode = hashCode;
+                this.startBound = startBound;
+                this.length = length;
+                this.returnNullIfFirstMissing = returnNullIfFirstMissing;
+
+                if (copyDown)
+                {
+                    this.reader = null;
+                    this.names = new string[length];
+                    this.types = new Type[length];
+                    var index = startBound;
+                    for (var i = 0; i < length; i++)
+                    {
+                        this.names[i] = reader.GetName(index);
+                        this.types[i] = reader.GetFieldType(index++);
+                    }
+                }
+                else
+                {
+                    this.reader = reader;
+                    this.names = null;
+                    this.types = null;
                 }
             }
 
-            internal static void Purge()
+            public override int GetHashCode() => this.hashCode;
+
+            public override string ToString()
             {
-                lock (byType)
+                // only used in the debugger
+                if (this.names != null)
                 {
-                    byType.Clear();
+                    return string.Join(", ", this.names);
                 }
+                if (this.reader != null)
+                {
+                    var sb = new StringBuilder();
+                    var index = this.startBound;
+                    for (var i = 0; i < this.length; i++)
+                    {
+                        if (i != 0) sb.Append(", ");
+                        sb.Append(this.reader.GetName(index++));
+                    }
+                    return sb.ToString();
+                }
+                return base.ToString();
             }
 
-            internal static Func<IDataReader, object> GetReader(Type type, IDataReader reader, int startBound, int length, bool returnNullIfFirstMissing)
+            public override bool Equals(object obj)
             {
-                var found = (TypeDeserializerCache)byType[type];
-                if (found == null)
-                {
-                    lock (byType)
-                    {
-                        found = (TypeDeserializerCache)byType[type];
-                        if (found == null)
-                        {
-                            byType[type] = found = new TypeDeserializerCache(type);
-                        }
-                    }
-                }
-                return found.GetReader(reader, startBound, length, returnNullIfFirstMissing);
+                return obj is DeserializerKey && this.Equals((DeserializerKey)obj);
             }
 
-            private readonly Dictionary<DeserializerKey, Func<IDataReader, object>> readers = new Dictionary<DeserializerKey, Func<IDataReader, object>>();
-
-            private struct DeserializerKey : IEquatable<DeserializerKey>
+            public bool Equals(DeserializerKey other)
             {
-                private readonly int startBound, length;
-                private readonly bool returnNullIfFirstMissing;
-                private readonly IDataReader reader;
-                private readonly string[] names;
-                private readonly Type[] types;
-                private readonly int hashCode;
-
-                public DeserializerKey(int hashCode, int startBound, int length, bool returnNullIfFirstMissing, IDataReader reader, bool copyDown)
+                if (this.hashCode != other.hashCode
+                    || this.startBound != other.startBound
+                    || this.length != other.length
+                    || this.returnNullIfFirstMissing != other.returnNullIfFirstMissing)
                 {
-                    this.hashCode = hashCode;
-                    this.startBound = startBound;
-                    this.length = length;
-                    this.returnNullIfFirstMissing = returnNullIfFirstMissing;
-
-                    if (copyDown)
-                    {
-                        this.reader = null;
-                        this.names = new string[length];
-                        this.types = new Type[length];
-                        int index = startBound;
-                        for (int i = 0; i < length; i++)
-                        {
-                            this.names[i] = reader.GetName(index);
-                            this.types[i] = reader.GetFieldType(index++);
-                        }
-                    }
-                    else
-                    {
-                        this.reader = reader;
-                        this.names = null;
-                        this.types = null;
-                    }
+                    return false; // clearly different
                 }
-
-                public override int GetHashCode() => this.hashCode;
-
-                public override string ToString()
-                { // only used in the debugger
-                    if (this.names != null)
-                    {
-                        return string.Join(", ", this.names);
-                    }
-                    if (this.reader != null)
-                    {
-                        var sb = new StringBuilder();
-                        int index = this.startBound;
-                        for (int i = 0; i < this.length; i++)
-                        {
-                            if (i != 0) sb.Append(", ");
-                            sb.Append(this.reader.GetName(index++));
-                        }
-                        return sb.ToString();
-                    }
-                    return base.ToString();
-                }
-
-                public override bool Equals(object obj)
+                for (var i = 0; i < this.length; i++)
                 {
-                    return obj is DeserializerKey && this.Equals((DeserializerKey)obj);
-                }
-
-                public bool Equals(DeserializerKey other)
-                {
-                    if (this.hashCode != other.hashCode
-                        || this.startBound != other.startBound
-                        || this.length != other.length
-                        || this.returnNullIfFirstMissing != other.returnNullIfFirstMissing)
+                    if ((this.names?[i] ?? this.reader?.GetName(this.startBound + i)) != (other.names?[i] ?? other.reader?.GetName(this.startBound + i))
+                        ||
+                        (this.types?[i] ?? this.reader?.GetFieldType(this.startBound + i)) != (other.types?[i] ?? other.reader?.GetFieldType(this.startBound + i))
+                    )
                     {
-                        return false; // clearly different
+                        return false; // different column name or type
                     }
-                    for (int i = 0; i < this.length; i++)
-                    {
-                        if ((this.names?[i] ?? this.reader?.GetName(this.startBound + i)) != (other.names?[i] ?? other.reader?.GetName(this.startBound + i))
-                            ||
-                            (this.types?[i] ?? this.reader?.GetFieldType(this.startBound + i)) != (other.types?[i] ?? other.reader?.GetFieldType(this.startBound + i))
-                            )
-                        {
-                            return false; // different column name or type
-                        }
-                    }
-                    return true;
                 }
+                return true;
             }
+        }
 
-            private Func<IDataReader, object> GetReader(IDataReader reader, int startBound, int length, bool returnNullIfFirstMissing)
+        private Func<IDataReader, object> GetReader(IDataReader reader, int startBound, int length, bool returnNullIfFirstMissing)
+        {
+            if (length < 0) length = reader.FieldCount - startBound;
+            var hash = SqlMapper.GetColumnHash(reader, startBound, length);
+            if (returnNullIfFirstMissing) hash *= -27;
+            // get a cheap key first: false means don't copy the values down
+            var key = new DeserializerKey(hash, startBound, length, returnNullIfFirstMissing, reader, false);
+            Func<IDataReader, object> deser;
+            lock (this.readers)
             {
-                if (length < 0) length = reader.FieldCount - startBound;
-                int hash = GetColumnHash(reader, startBound, length);
-                if (returnNullIfFirstMissing) hash *= -27;
-                // get a cheap key first: false means don't copy the values down
-                var key = new DeserializerKey(hash, startBound, length, returnNullIfFirstMissing, reader, false);
-                Func<IDataReader, object> deser;
-                lock (this.readers)
-                {
-                    if (this.readers.TryGetValue(key, out deser)) return deser;
-                }
-                deser = GetTypeDeserializerImpl(this.type, reader, startBound, length, returnNullIfFirstMissing);
-                // get a more expensive key: true means copy the values down so it can be used as a key later
-                key = new DeserializerKey(hash, startBound, length, returnNullIfFirstMissing, reader, true);
-                lock (this.readers)
-                {
-                    return this.readers[key] = deser;
-                }
+                if (this.readers.TryGetValue(key, out deser)) return deser;
+            }
+            deser = SqlMapper.GetTypeDeserializerImpl(this.type, reader, startBound, length, returnNullIfFirstMissing);
+            // get a more expensive key: true means copy the values down so it can be used as a key later
+            key = new DeserializerKey(hash, startBound, length, returnNullIfFirstMissing, reader, true);
+            lock (this.readers)
+            {
+                return this.readers[key] = deser;
             }
         }
     }

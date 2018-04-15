@@ -3,7 +3,6 @@
     using System;
     using System.Collections;
     using System.Collections.Generic;
-    using System.ComponentModel;
     using System.Data;
     using System.Globalization;
     using System.Linq;
@@ -11,7 +10,6 @@
     using System.Reflection.Emit;
     using System.Text;
     using System.Text.RegularExpressions;
-    using System.Threading;
 
 #if NETSTANDARD1_3
     using DataException = System.InvalidOperationException;
@@ -26,7 +24,8 @@
         {
             public int Compare(PropertyInfo x, PropertyInfo y) => string.CompareOrdinal(x.Name, y.Name);
         }
-        private static int GetColumnHash(IDataReader reader, int startBound = 0, int length = -1)
+
+        internal static int GetColumnHash(IDataReader reader, int startBound = 0, int length = -1)
         {
             unchecked
             {
@@ -37,69 +36,9 @@
                     object tmp = reader.GetName(i);
                     hash = (-79 * ((hash * 31) + (tmp?.GetHashCode() ?? 0))) + (reader.GetFieldType(i)?.GetHashCode() ?? 0);
                 }
+
                 return hash;
             }
-        }
-
-        private static readonly System.Collections.Concurrent.ConcurrentDictionary<Identity, CacheInfo> _queryCache = new System.Collections.Concurrent.ConcurrentDictionary<Identity, CacheInfo>();
-        private static void SetQueryCache(Identity key, CacheInfo value)
-        {
-            if (Interlocked.Increment(ref collect) == COLLECT_PER_ITEMS)
-            {
-                CollectCacheGarbage();
-            }
-            _queryCache[key] = value;
-        }
-
-        private static void CollectCacheGarbage()
-        {
-            try
-            {
-                foreach (var pair in _queryCache)
-                {
-                    if (pair.Value.GetHitCount() <= COLLECT_HIT_COUNT_MIN)
-                    {
-                        _queryCache.TryRemove(pair.Key, out var cache);
-                    }
-                }
-            }
-
-            finally
-            {
-                Interlocked.Exchange(ref collect, 0);
-            }
-        }
-
-        private const int COLLECT_PER_ITEMS = 1000, COLLECT_HIT_COUNT_MIN = 0;
-        private static int collect;
-        private static bool TryGetQueryCache(Identity key, out CacheInfo value)
-        {
-            if (_queryCache.TryGetValue(key, out value))
-            {
-                value.RecordHit();
-                return true;
-            }
-            value = null;
-            return false;
-        }
-
-        /// <summary>
-        /// Purge the query cache
-        /// </summary>
-        public static void PurgeQueryCache()
-        {
-            _queryCache.Clear();
-            TypeDeserializerCache.Purge();
-        }
-
-        private static void PurgeQueryCacheByType(Type type)
-        {
-            foreach (var entry in _queryCache)
-            {
-                if (entry.Key.type == type)
-                    _queryCache.TryRemove(entry.Key, out var cache);
-            }
-            TypeDeserializerCache.Purge(type);
         }
 
         private static Dictionary<Type, DbType> typeMap;
@@ -107,45 +46,45 @@
         static SqlMapper()
         {
             typeMap = new Dictionary<Type, DbType>
-            {
-                [typeof(byte)] = DbType.Byte,
-                [typeof(sbyte)] = DbType.SByte,
-                [typeof(short)] = DbType.Int16,
-                [typeof(ushort)] = DbType.UInt16,
-                [typeof(int)] = DbType.Int32,
-                [typeof(uint)] = DbType.UInt32,
-                [typeof(long)] = DbType.Int64,
-                [typeof(ulong)] = DbType.UInt64,
-                [typeof(float)] = DbType.Single,
-                [typeof(double)] = DbType.Double,
-                [typeof(decimal)] = DbType.Decimal,
-                [typeof(bool)] = DbType.Boolean,
-                [typeof(string)] = DbType.String,
-                [typeof(char)] = DbType.StringFixedLength,
-                [typeof(Guid)] = DbType.Guid,
-                [typeof(DateTime)] = DbType.DateTime,
-                [typeof(DateTimeOffset)] = DbType.DateTimeOffset,
-                [typeof(TimeSpan)] = DbType.Time,
-                [typeof(byte[])] = DbType.Binary,
-                [typeof(byte?)] = DbType.Byte,
-                [typeof(sbyte?)] = DbType.SByte,
-                [typeof(short?)] = DbType.Int16,
-                [typeof(ushort?)] = DbType.UInt16,
-                [typeof(int?)] = DbType.Int32,
-                [typeof(uint?)] = DbType.UInt32,
-                [typeof(long?)] = DbType.Int64,
-                [typeof(ulong?)] = DbType.UInt64,
-                [typeof(float?)] = DbType.Single,
-                [typeof(double?)] = DbType.Double,
-                [typeof(decimal?)] = DbType.Decimal,
-                [typeof(bool?)] = DbType.Boolean,
-                [typeof(char?)] = DbType.StringFixedLength,
-                [typeof(Guid?)] = DbType.Guid,
-                [typeof(DateTime?)] = DbType.DateTime,
-                [typeof(DateTimeOffset?)] = DbType.DateTimeOffset,
-                [typeof(TimeSpan?)] = DbType.Time,
-                [typeof(object)] = DbType.Object
-            };
+                {
+                    [typeof(byte)] = DbType.Byte,
+                    [typeof(sbyte)] = DbType.SByte,
+                    [typeof(short)] = DbType.Int16,
+                    [typeof(ushort)] = DbType.UInt16,
+                    [typeof(int)] = DbType.Int32,
+                    [typeof(uint)] = DbType.UInt32,
+                    [typeof(long)] = DbType.Int64,
+                    [typeof(ulong)] = DbType.UInt64,
+                    [typeof(float)] = DbType.Single,
+                    [typeof(double)] = DbType.Double,
+                    [typeof(decimal)] = DbType.Decimal,
+                    [typeof(bool)] = DbType.Boolean,
+                    [typeof(string)] = DbType.String,
+                    [typeof(char)] = DbType.StringFixedLength,
+                    [typeof(Guid)] = DbType.Guid,
+                    [typeof(DateTime)] = DbType.DateTime,
+                    [typeof(DateTimeOffset)] = DbType.DateTimeOffset,
+                    [typeof(TimeSpan)] = DbType.Time,
+                    [typeof(byte[])] = DbType.Binary,
+                    [typeof(byte?)] = DbType.Byte,
+                    [typeof(sbyte?)] = DbType.SByte,
+                    [typeof(short?)] = DbType.Int16,
+                    [typeof(ushort?)] = DbType.UInt16,
+                    [typeof(int?)] = DbType.Int32,
+                    [typeof(uint?)] = DbType.UInt32,
+                    [typeof(long?)] = DbType.Int64,
+                    [typeof(ulong?)] = DbType.UInt64,
+                    [typeof(float?)] = DbType.Single,
+                    [typeof(double?)] = DbType.Double,
+                    [typeof(decimal?)] = DbType.Decimal,
+                    [typeof(bool?)] = DbType.Boolean,
+                    [typeof(char?)] = DbType.StringFixedLength,
+                    [typeof(Guid?)] = DbType.Guid,
+                    [typeof(DateTime?)] = DbType.DateTime,
+                    [typeof(DateTimeOffset?)] = DbType.DateTimeOffset,
+                    [typeof(TimeSpan?)] = DbType.Time,
+                    [typeof(object)] = DbType.Object
+                };
             ResetTypeHandlers(false);
         }
 
@@ -232,10 +171,13 @@
             var newCopy = clone ? new Dictionary<Type, ITypeHandler>(snapshot) : snapshot;
 
 #pragma warning disable 618
-            typeof(TypeHandlerCache<>).MakeGenericType(type).GetMethod(nameof(TypeHandlerCache<int>.SetHandler), BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { handler });
+            typeof(TypeHandlerCache<>).MakeGenericType(type).GetMethod(nameof(TypeHandlerCache<int>.SetHandler), BindingFlags.Static | BindingFlags.NonPublic)
+                                      .Invoke(null, new object[] { handler });
             if (secondary != null)
             {
-                typeof(TypeHandlerCache<>).MakeGenericType(secondary).GetMethod(nameof(TypeHandlerCache<int>.SetHandler), BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { handler });
+                typeof(TypeHandlerCache<>).MakeGenericType(secondary)
+                                          .GetMethod(nameof(TypeHandlerCache<int>.SetHandler), BindingFlags.Static | BindingFlags.NonPublic)
+                                          .Invoke(null, new object[] { handler });
             }
 #pragma warning restore 618
             if (handler == null)
@@ -248,6 +190,7 @@
                 newCopy[type] = handler;
                 if (secondary != null) newCopy[secondary] = handler;
             }
+
             typeHandlers = newCopy;
         }
 
@@ -341,6 +284,7 @@
                     // this includes all the code for concurrent/overlapped query
                     return ExecuteMultiImplAsync(cnn, command, multiExec).Result;
                 }
+
                 var isFirst = true;
                 var total = 0;
                 var wasClosed = cnn.State == ConnectionState.Closed;
@@ -364,16 +308,19 @@
                                 cmd.CommandText = masterSql; // because we do magic replaces on "in" etc
                                 cmd.Parameters.Clear(); // current code is Add-tastic
                             }
+
                             info.ParamReader(cmd, obj);
                             total += cmd.ExecuteNonQuery();
                         }
                     }
+
                     command.OnCompleted();
                 }
                 finally
                 {
                     if (wasClosed) cnn.Close();
                 }
+
                 return total;
             }
 
@@ -383,6 +330,7 @@
                 identity = new Identity(command.CommandText, command.CommandType, cnn, null, param.GetType(), null);
                 info = GetCacheInfo(identity, param, command.AddToCache);
             }
+
             return ExecuteCommand(cnn, ref command, param == null ? null : info.ParamReader);
         }
 
@@ -400,7 +348,13 @@
         /// A sequence of data of the supplied type; if a basic type (int, string, etc) is queried then the data from the first column in assumed, otherwise an instance is
         /// created per row, and a direct column-name===member-name mapping is assumed (case insensitive).
         /// </returns>
-        public static T QuerySingleOrDefault<T>(this IDbConnection cnn, string sql, object param = null, IDbTransaction transaction = null, int? commandTimeout = null, CommandType? commandType = null)
+        public static T QuerySingleOrDefault<T>(
+            this IDbConnection cnn,
+            string sql,
+            object param = null,
+            IDbTransaction transaction = null,
+            int? commandTimeout = null,
+            CommandType? commandType = null)
         {
             var command = new CommandDefinition(sql, param, transaction, commandTimeout, commandType, CommandFlags.None);
             return QueryRowImpl<T>(cnn, Row.SingleOrDefault, ref command, typeof(T));
@@ -413,12 +367,14 @@
                 return cmd.ExecuteReader(GetBehavior(wasClosed, behavior));
             }
             catch (ArgumentException ex)
-            { // thanks, Sqlite!
+            {
+                // thanks, Sqlite!
                 if (Settings.DisableCommandBehaviorOptimizations(behavior, ex))
                 {
                     // we can retry; this time it will have different flags
                     return cmd.ExecuteReader(GetBehavior(wasClosed, behavior));
                 }
+
                 throw;
             }
         }
@@ -450,7 +406,10 @@
                     if (reader.FieldCount == 0) //https://code.google.com/p/dapper-dot-net/issues/detail?id=57
                         yield break;
                     tuple = info.Deserializer = new DeserializerState(hash, GetDeserializer(effectiveType, reader, 0, -1, false));
-                    if (command.AddToCache) SetQueryCache(identity, info);
+                    if (command.AddToCache)
+                    {
+                        QueryCache.SetQueryCache(identity, info);
+                    }
                 }
 
                 var func = tuple.Func;
@@ -467,7 +426,12 @@
                         yield return (T)Convert.ChangeType(val, convertToType, CultureInfo.InvariantCulture);
                     }
                 }
-                while (reader.NextResult()) { /* ignore subsequent result sets */ }
+
+                while (reader.NextResult())
+                {
+                    /* ignore subsequent result sets */
+                }
+
                 // happy path; close the reader cleanly - no
                 // need for "Cancel" etc
                 reader.Dispose();
@@ -481,11 +445,19 @@
                 {
                     if (!reader.IsClosed)
                     {
-                        try { cmd.Cancel(); }
-                        catch { /* don't spoil the existing exception */ }
+                        try
+                        {
+                            cmd.Cancel();
+                        }
+                        catch
+                        {
+                            /* don't spoil the existing exception */
+                        }
                     }
+
                     reader.Dispose();
                 }
+
                 if (wasClosed) cnn.Close();
                 cmd?.Dispose();
             }
@@ -505,9 +477,14 @@
         private static void ThrowMultipleRows(Row row)
         {
             switch (row)
-            {  // get the standard exception from the runtime
-                case Row.Single: ErrTwoRows.Single(); break;
-                case Row.SingleOrDefault: ErrTwoRows.SingleOrDefault(); break;
+            {
+                // get the standard exception from the runtime
+                case Row.Single:
+                    ErrTwoRows.Single();
+                    break;
+                case Row.SingleOrDefault:
+                    ErrTwoRows.SingleOrDefault();
+                    break;
                 default: throw new InvalidOperationException();
             }
         }
@@ -515,9 +492,14 @@
         private static void ThrowZeroRows(Row row)
         {
             switch (row)
-            { // get the standard exception from the runtime
-                case Row.First: ErrZeroRows.First(); break;
-                case Row.Single: ErrZeroRows.Single(); break;
+            {
+                // get the standard exception from the runtime
+                case Row.First:
+                    ErrZeroRows.First();
+                    break;
+                case Row.Single:
+                    ErrZeroRows.Single();
+                    break;
                 default: throw new InvalidOperationException();
             }
         }
@@ -553,7 +535,7 @@
                     if (tuple.Func == null || tuple.Hash != hash)
                     {
                         tuple = info.Deserializer = new DeserializerState(hash, GetDeserializer(effectiveType, reader, 0, -1, false));
-                        if (command.AddToCache) SetQueryCache(identity, info);
+                        if (command.AddToCache) QueryCache.SetQueryCache(identity, info);
                     }
 
                     var func = tuple.Func;
@@ -567,14 +549,23 @@
                         var convertToType = Nullable.GetUnderlyingType(effectiveType) ?? effectiveType;
                         result = (T)Convert.ChangeType(val, convertToType, CultureInfo.InvariantCulture);
                     }
+
                     if ((row & Row.Single) != 0 && reader.Read()) ThrowMultipleRows(row);
-                    while (reader.Read()) { /* ignore subsequent rows */ }
+                    while (reader.Read())
+                    {
+                        /* ignore subsequent rows */
+                    }
                 }
                 else if ((row & Row.FirstOrDefault) == 0) // demanding a row, and don't have one
                 {
                     ThrowZeroRows(row);
                 }
-                while (reader.NextResult()) { /* ignore subsequent result sets */ }
+
+                while (reader.NextResult())
+                {
+                    /* ignore subsequent result sets */
+                }
+
                 // happy path; close the reader cleanly - no
                 // need for "Cancel" etc
                 reader.Dispose();
@@ -589,11 +580,19 @@
                 {
                     if (!reader.IsClosed)
                     {
-                        try { cmd.Cancel(); }
-                        catch { /* don't spoil the existing exception */ }
+                        try
+                        {
+                            cmd.Cancel();
+                        }
+                        catch
+                        {
+                            /* don't spoil the existing exception */
+                        }
                     }
+
                     reader.Dispose();
                 }
+
                 if (wasClosed) cnn.Close();
                 cmd?.Dispose();
             }
@@ -604,55 +603,15 @@
             return (close ? (@default | CommandBehavior.CloseConnection) : @default) & Settings.AllowedCommandBehaviors;
         }
 
-        private static int GetNextSplitDynamic(int startIdx, string splitOn, IDataReader reader)
-        {
-            if (startIdx == reader.FieldCount)
-            {
-                throw MultiMapException(reader);
-            }
-
-            if (splitOn == "*")
-            {
-                return ++startIdx;
-            }
-
-            for (var i = startIdx + 1; i < reader.FieldCount; ++i)
-            {
-                if (string.Equals(splitOn, reader.GetName(i), StringComparison.OrdinalIgnoreCase))
-                {
-                    return i;
-                }
-            }
-
-            return reader.FieldCount;
-        }
-
-        private static int GetNextSplit(int startIdx, string splitOn, IDataReader reader)
-        {
-            if (splitOn == "*")
-            {
-                return --startIdx;
-            }
-
-            for (var i = startIdx - 1; i > 0; --i)
-            {
-                if (string.Equals(splitOn, reader.GetName(i), StringComparison.OrdinalIgnoreCase))
-                {
-                    return i;
-                }
-            }
-
-            throw MultiMapException(reader);
-        }
-
         private static CacheInfo GetCacheInfo(Identity identity, object exampleParameters, bool addToCache)
         {
-            if (!TryGetQueryCache(identity, out var info))
+            if (!QueryCache.TryGetQueryCache(identity, out var info))
             {
                 if (GetMultiExec(exampleParameters) != null)
                 {
                     throw new InvalidOperationException("An enumerable sequence of parameters (arrays, lists, etc) is not allowed in this context");
                 }
+
                 info = new CacheInfo();
                 if (identity.parametersType != null)
                 {
@@ -674,6 +633,7 @@
                         var literals = GetLiteralTokens(identity.sql);
                         reader = CreateParamInfoGenerator(identity, false, true, literals);
                     }
+
                     if ((identity.commandType == null || identity.commandType == CommandType.Text) && ShouldPassByPosition(identity.sql))
                     {
                         var tail = reader;
@@ -683,10 +643,13 @@
                             PassByPosition(cmd);
                         };
                     }
+
                     info.ParamReader = reader;
                 }
-                if (addToCache) SetQueryCache(identity, info);
+
+                if (addToCache) QueryCache.SetQueryCache(identity, info);
             }
+
             return info;
         }
 
@@ -705,6 +668,7 @@
             {
                 if (!string.IsNullOrEmpty(param.ParameterName)) parameters[param.ParameterName] = param;
             }
+
             var consumed = new HashSet<string>(StringComparer.Ordinal);
             var firstMatch = true;
             cmd.CommandText = pseudoPositional.Replace(cmd.CommandText, match =>
@@ -721,6 +685,7 @@
                         firstMatch = false;
                         cmd.Parameters.Clear(); // only clear if we are pretty positive that we've found this pattern successfully
                     }
+
                     // if found, return the anonymous token "?"
                     cmd.Parameters.Add(param);
                     parameters.Remove(key);
@@ -742,16 +707,19 @@
             {
                 return GetDapperRowDeserializer(reader, startBound, length, returnNullIfFirstMissing);
             }
+
             Type underlyingType = null;
             if (!(typeMap.ContainsKey(type) || type.IsEnum() || type.FullName == LinqBinary
-                || (type.IsValueType() && (underlyingType = Nullable.GetUnderlyingType(type)) != null && underlyingType.IsEnum())))
+                  || (type.IsValueType() && (underlyingType = Nullable.GetUnderlyingType(type)) != null && underlyingType.IsEnum())))
             {
                 if (typeHandlers.TryGetValue(type, out var handler))
                 {
                     return GetHandlerDeserializer(handler, type, startBound);
                 }
+
                 return GetTypeDeserializer(type, reader, startBound, length, returnNullIfFirstMissing);
             }
+
             return GetStructDeserializer(type, underlyingType ?? type, startBound);
         }
 
@@ -763,8 +731,15 @@
         private static Exception MultiMapException(IDataRecord reader)
         {
             var hasFields = false;
-            try { hasFields = reader != null && reader.FieldCount != 0; }
-            catch { /* don't throw when trying to throw */ }
+            try
+            {
+                hasFields = reader != null && reader.FieldCount != 0;
+            }
+            catch
+            {
+                /* don't throw when trying to throw */
+            }
+
             if (hasFields)
                 return new ArgumentException("When using the multi-mapping APIs ensure you set the splitOn param if you have keys other than Id", "splitOn");
             else
@@ -798,6 +773,7 @@
                         {
                             names[i] = r.GetName(i + startBound);
                         }
+
                         table = new DapperTable(names);
                     }
 
@@ -829,9 +805,11 @@
                             values[iter] = obj is DBNull ? null : obj;
                         }
                     }
+
                     return new DapperRow(table, values);
                 };
         }
+
         /// <summary>
         /// Internal use only.
         /// </summary>
@@ -875,6 +853,7 @@
                 result.ParameterName = name;
                 parameters.Add(result);
             }
+
             return result;
         }
 
@@ -890,6 +869,7 @@
                 case 5:
                     return 0; // no padding
             }
+
             if (count < 0) return 0;
 
             int padFactor;
@@ -906,8 +886,8 @@
         }
 
         private static string GetInListRegex(string name, bool byPosition) => byPosition
-            ? (@"(\?)" + Regex.Escape(name) + @"\?(?!\w)(\s+(?i)unknown(?-i))?")
-            : ("([?@:]" + Regex.Escape(name) + @")(?!\w)(\s+(?i)unknown(?-i))?");
+            ? @"(\?)" + Regex.Escape(name) + @"\?(?!\w)(\s+(?i)unknown(?-i))?"
+            : "([?@:]" + Regex.Escape(name) + @")(?!\w)(\s+(?i)unknown(?-i))?";
 
         /// <summary>
         /// Internal use only.
@@ -938,7 +918,7 @@
 
                 var splitAt = SqlMapper.Settings.InListStringSplitCount;
                 var viaSplit = splitAt >= 0
-                    && TryStringSplit(ref list, splitAt, namePrefix, command, byPosition);
+                               && TryStringSplit(ref list, splitAt, namePrefix, command, byPosition);
 
                 if (list != null && !viaSplit)
                 {
@@ -951,11 +931,13 @@
                             {
                                 throw new NotSupportedException("The first item in a list-expansion cannot be null");
                             }
+
                             if (!isDbString)
                             {
                                 dbType = LookupDbType(item.GetType(), "", true, out var handler);
                             }
                         }
+
                         var nextName = namePrefix + count.ToString();
                         if (isDbString && item is DbString)
                         {
@@ -983,9 +965,11 @@
                             {
                                 listParam.DbType = dbType;
                             }
+
                             command.Parameters.Add(listParam);
                         }
                     }
+
                     if (Settings.PadListExpansions && !isDbString && lastValue != null)
                     {
                         var padCount = GetListPaddingExtraCount(count);
@@ -1012,18 +996,18 @@
                     if (count == 0)
                     {
                         command.CommandText = Regex.Replace(command.CommandText, regexIncludingUnknown, match =>
-                        {
-                            var variableName = match.Groups[1].Value;
-                            if (match.Groups[2].Success)
                             {
-                                // looks like an optimize hint; leave it alone!
-                                return match.Value;
-                            }
-                            else
-                            {
-                                return "(SELECT " + variableName + " WHERE 1 = 0)";
-                            }
-                        }, RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant);
+                                var variableName = match.Groups[1].Value;
+                                if (match.Groups[2].Success)
+                                {
+                                    // looks like an optimize hint; leave it alone!
+                                    return match.Value;
+                                }
+                                else
+                                {
+                                    return "(SELECT " + variableName + " WHERE 1 = 0)";
+                                }
+                            }, RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant);
                         var dummyParam = command.CreateParameter();
                         dummyParam.ParameterName = namePrefix;
                         dummyParam.Value = DBNull.Value;
@@ -1032,32 +1016,34 @@
                     else
                     {
                         command.CommandText = Regex.Replace(command.CommandText, regexIncludingUnknown, match =>
-                        {
-                            var variableName = match.Groups[1].Value;
-                            if (match.Groups[2].Success)
                             {
-                                // looks like an optimize hint; expand it
-                                var suffix = match.Groups[2].Value;
+                                var variableName = match.Groups[1].Value;
+                                if (match.Groups[2].Success)
+                                {
+                                    // looks like an optimize hint; expand it
+                                    var suffix = match.Groups[2].Value;
 
-                                var sb = GetStringBuilder().Append(variableName).Append(1).Append(suffix);
-                                for (var i = 2; i <= count; i++)
-                                {
-                                    sb.Append(',').Append(variableName).Append(i).Append(suffix);
+                                    var sb = GetStringBuilder().Append(variableName).Append(1).Append(suffix);
+                                    for (var i = 2; i <= count; i++)
+                                    {
+                                        sb.Append(',').Append(variableName).Append(i).Append(suffix);
+                                    }
+
+                                    return sb.__ToStringRecycle();
                                 }
-                                return sb.__ToStringRecycle();
-                            }
-                            else
-                            {
-                                var sb = GetStringBuilder().Append('(').Append(variableName);
-                                if (!byPosition) sb.Append(1);
-                                for (var i = 2; i <= count; i++)
+                                else
                                 {
-                                    sb.Append(',').Append(variableName);
-                                    if (!byPosition) sb.Append(i);
+                                    var sb = GetStringBuilder().Append('(').Append(variableName);
+                                    if (!byPosition) sb.Append(1);
+                                    for (var i = 2; i <= count; i++)
+                                    {
+                                        sb.Append(',').Append(variableName);
+                                        if (!byPosition) sb.Append(i);
+                                    }
+
+                                    return sb.Append(')').__ToStringRecycle();
                                 }
-                                return sb.Append(')').__ToStringRecycle();
-                            }
-                        }, RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant);
+                            }, RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant);
                     }
                 }
             }
@@ -1069,44 +1055,58 @@
             switch (list)
             {
                 case IEnumerable<int> l:
-                    return TryStringSplit(ref l, splitAt, namePrefix, command, "int", byPosition, (sb, i) => sb.Append(i.ToString(CultureInfo.InvariantCulture)));
+                    return TryStringSplit(ref l, splitAt, namePrefix, command, "int", byPosition,
+                        (sb, i) => sb.Append(i.ToString(CultureInfo.InvariantCulture)));
                 case IEnumerable<long> l:
-                    return TryStringSplit(ref l, splitAt, namePrefix, command, "bigint", byPosition, (sb, i) => sb.Append(i.ToString(CultureInfo.InvariantCulture)));
+                    return TryStringSplit(ref l, splitAt, namePrefix, command, "bigint", byPosition,
+                        (sb, i) => sb.Append(i.ToString(CultureInfo.InvariantCulture)));
                 case IEnumerable<short> l:
-                    return TryStringSplit(ref l, splitAt, namePrefix, command, "smallint", byPosition, (sb, i) => sb.Append(i.ToString(CultureInfo.InvariantCulture)));
+                    return TryStringSplit(ref l, splitAt, namePrefix, command, "smallint", byPosition,
+                        (sb, i) => sb.Append(i.ToString(CultureInfo.InvariantCulture)));
                 case IEnumerable<byte> l:
-                    return TryStringSplit(ref l, splitAt, namePrefix, command, "tinyint", byPosition, (sb, i) => sb.Append(i.ToString(CultureInfo.InvariantCulture)));
+                    return TryStringSplit(ref l, splitAt, namePrefix, command, "tinyint", byPosition,
+                        (sb, i) => sb.Append(i.ToString(CultureInfo.InvariantCulture)));
             }
+
             return false;
         }
 
-        private static bool TryStringSplit<T>(ref IEnumerable<T> list, int splitAt, string namePrefix, IDbCommand command, string colType, bool byPosition,
+        private static bool TryStringSplit<T>(
+            ref IEnumerable<T> list,
+            int splitAt,
+            string namePrefix,
+            IDbCommand command,
+            string colType,
+            bool byPosition,
             Action<StringBuilder, T> append)
         {
-            var typed = list as ICollection<T>;
-            if (typed == null)
+            if (!(list is ICollection<T> typed))
             {
                 typed = list.ToList();
                 list = typed; // because we still need to be able to iterate it, even if we fail here
             }
-            if (typed.Count < splitAt) return false;
+
+            if (typed.Count < splitAt)
+            {
+                return false;
+            }
 
             string varName = null;
             var regexIncludingUnknown = GetInListRegex(namePrefix, byPosition);
             var sql = Regex.Replace(command.CommandText, regexIncludingUnknown, match =>
-            {
-                var variableName = match.Groups[1].Value;
-                if (match.Groups[2].Success)
                 {
-                    // looks like an optimize hint; leave it alone!
-                    return match.Value;
-                }
-                else
-                {
-                    varName = variableName;
-                    return "(select cast([value] as " + colType + ") from string_split(" + variableName + ",','))";
-                }
-            }, RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant);
+                    var variableName = match.Groups[1].Value;
+                    if (match.Groups[2].Success)
+                    {
+                        // looks like an optimize hint; leave it alone!
+                        return match.Value;
+                    }
+                    else
+                    {
+                        varName = variableName;
+                        return "(select cast([value] as " + colType + ") from string_split(" + variableName + ",','))";
+                    }
+                }, RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant);
             if (varName == null) return false; // couldn't resolve the var!
 
             command.CommandText = sql;
@@ -1125,6 +1125,7 @@
                     {
                         append(sb.Append(','), iter.Current);
                     }
+
                     val = sb.ToString();
                 }
                 else
@@ -1132,6 +1133,7 @@
                     val = "";
                 }
             }
+
             concatenatedParam.Value = val;
             command.Parameters.Add(concatenatedParam);
             return true;
@@ -1143,18 +1145,14 @@
         /// <param name="value">The value to sanitize.</param>
         public static object SanitizeParameterValue(object value)
         {
-            if (value == null) return DBNull.Value;
+            if (value == null)
+            {
+                return DBNull.Value;
+            }
+
             if (value is Enum)
             {
-                TypeCode typeCode;
-                if (value is IConvertible)
-                {
-                    typeCode = ((IConvertible)value).GetTypeCode();
-                }
-                else
-                {
-                    typeCode = TypeExtensions.GetTypeCode(Enum.GetUnderlyingType(value.GetType()));
-                }
+                var typeCode = ((IConvertible)value).GetTypeCode();
                 switch (typeCode)
                 {
                     case TypeCode.Byte: return (byte)value;
@@ -1167,6 +1165,7 @@
                     case TypeCode.UInt64: return (ulong)value;
                 }
             }
+
             return value;
         }
 
@@ -1175,15 +1174,17 @@
             var list = new List<PropertyInfo>(16);
             foreach (var p in parameters)
             {
-                if (Regex.IsMatch(sql, @"[?@:]" + p.Name + @"([^\p{L}\p{N}_]+|$)", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant))
+                if (Regex.IsMatch(sql, @"[?@:]" + p.Name + @"([^\p{L}\p{N}_]+|$)",
+                    RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant))
                     list.Add(p);
             }
+
             return list;
         }
 
         // look for ? / @ / : *by itself*
-        private static readonly Regex smellsLikeOleDb = new Regex(@"(?<![\p{L}\p{N}@_])[?@:](?![\p{L}\p{N}@_])", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant | RegexOptions.Compiled),
-            literalTokens = new Regex(@"(?<![\p{L}\p{N}_])\{=([\p{L}\p{N}_]+)\}", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant | RegexOptions.Compiled),
+        private static readonly Regex literalTokens = new Regex(@"(?<![\p{L}\p{N}_])\{=([\p{L}\p{N}_]+)\}",
+                RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant | RegexOptions.Compiled),
             pseudoPositional = new Regex(@"\?([\p{L}_][\p{L}\p{N}_]*)\?", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
         internal static readonly MethodInfo format = typeof(SqlMapper).GetMethod("Format", BindingFlags.Public | BindingFlags.Static);
@@ -1247,8 +1248,10 @@
                                 {
                                     sb.Append(',');
                                 }
+
                                 sb.Append(Format(subval));
                             }
+
                             if (first)
                             {
                                 return "(select null where 1=0)";
@@ -1258,6 +1261,7 @@
                                 return sb.Append(')').__ToStringRecycle();
                             }
                         }
+
                         throw new NotSupportedException(value.GetType().Name);
                 }
             }
@@ -1274,6 +1278,7 @@
 #pragma warning restore 0618
                 sql = sql.Replace(token.Token, text);
             }
+
             command.CommandText = sql;
         }
 
@@ -1293,17 +1298,9 @@
                     list.Add(new LiteralToken(token, match.Groups[1].Value));
                 }
             }
+
             return list.Count == 0 ? LiteralToken.None : list;
         }
-
-        /// <summary>
-        /// Internal use only.
-        /// </summary>
-        /// <param name="identity">The identity of the generator.</param>
-        /// <param name="checkForDuplicates">Whether to check for duplicates.</param>
-        /// <param name="removeUnused">Whether to remove unused parameters.</param>
-        public static Action<IDbCommand, object> CreateParamInfoGenerator(Identity identity, bool checkForDuplicates, bool removeUnused) =>
-            CreateParamInfoGenerator(identity, checkForDuplicates, removeUnused, GetLiteralTokens(identity.sql));
 
         private static bool IsValueTuple(Type type) => type?.IsValueType() == true && type.FullName.StartsWith("System.ValueTuple`", StringComparison.Ordinal);
 
@@ -1323,26 +1320,29 @@
                         break;
                     }
                 }
+
                 result.Add(field == null ? null : new SimpleMemberMap(string.IsNullOrWhiteSpace(names[i]) ? name : names[i], field));
             }
+
             return result;
         }
 
-        internal static Action<IDbCommand, object> CreateParamInfoGenerator(Identity identity, bool checkForDuplicates, bool removeUnused, IList<LiteralToken> literals)
+        internal static Action<IDbCommand, object> CreateParamInfoGenerator(
+            Identity identity,
+            bool checkForDuplicates,
+            bool removeUnused,
+            IList<LiteralToken> literals)
         {
             var type = identity.parametersType;
 
             if (IsValueTuple(type))
             {
-                throw new NotSupportedException("ValueTuple should not be used for parameters - the language-level names are not available to use as parameter names, and it adds unnecessary boxing");
+                throw new NotSupportedException(
+                    "ValueTuple should not be used for parameters - the language-level names are not available to use as parameter names, and it adds unnecessary boxing");
             }
 
-            var filterParams = false;
-            if (removeUnused && identity.commandType.GetValueOrDefault(CommandType.Text) == CommandType.Text)
-            {
-                filterParams = !smellsLikeOleDb.IsMatch(identity.sql);
-            }
-            var dm = new DynamicMethod("ParamInfo" + Guid.NewGuid().ToString(), null, new[] { typeof(IDbCommand), typeof(object) }, type, true);
+            var filterParams = removeUnused && identity.commandType.GetValueOrDefault(CommandType.Text) == CommandType.Text;
+            var dm = new DynamicMethod("ParamInfo" + Guid.NewGuid(), null, new[] { typeof(IDbCommand), typeof(object) }, type, true);
 
             var il = dm.GetILGenerator();
 
@@ -1359,7 +1359,8 @@
                 il.DeclareLocal(type); // 0
                 il.Emit(OpCodes.Castclass, type); // stack is now [typed-param]
             }
-            il.Emit(OpCodes.Stloc_0);// stack is now empty
+
+            il.Emit(OpCodes.Stloc_0); // stack is now empty
 
             il.Emit(OpCodes.Ldarg_0); // stack is now [command]
             il.EmitCall(OpCodes.Callvirt, typeof(IDbCommand).GetProperty(nameof(IDbCommand.Parameters)).GetGetMethod(), null); // stack is now [parameters]
@@ -1390,18 +1391,21 @@
                         break;
                     }
                 }
+
                 if (ok)
                 {
                     // pre-sorted; the reflection gods have smiled upon us
                     props = propsList;
                 }
                 else
-                { // might still all be accounted for; check the hard way
+                {
+                    // might still all be accounted for; check the hard way
                     var positionByName = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
                     foreach (var param in ctorParams)
                     {
                         positionByName[param.Name] = param.Position;
                     }
+
                     if (positionByName.Count == propsList.Count)
                     {
                         var positions = new int[propsList.Count];
@@ -1413,8 +1417,10 @@
                                 ok = false;
                                 break;
                             }
+
                             positions[i] = pos;
                         }
+
                         if (ok)
                         {
                             props = propsList.ToArray();
@@ -1423,11 +1429,13 @@
                     }
                 }
             }
+
             if (props == null)
             {
                 propsList.Sort(new PropertyInfoByNameComparer());
                 props = propsList;
             }
+
             if (filterParams)
             {
                 props = FilterParameters(props, identity.sql);
@@ -1459,9 +1467,11 @@
                     {
                         il.Emit(OpCodes.Box, prop.PropertyType); // stack is [parameters] [command] [name] [boxed-value]
                     }
+
                     il.EmitCall(OpCodes.Call, typeof(SqlMapper).GetMethod(nameof(SqlMapper.PackListParameters)), null); // stack is [parameters]
                     continue;
                 }
+
                 il.Emit(OpCodes.Dup); // stack is now [parameters] [parameters]
 
                 il.Emit(OpCodes.Ldarg_0); // stack is now [parameters] [parameters] [command]
@@ -1475,35 +1485,43 @@
                 else
                 {
                     // no risk of duplicates; just blindly add
-                    il.EmitCall(OpCodes.Callvirt, typeof(IDbCommand).GetMethod(nameof(IDbCommand.CreateParameter)), null);// stack is now [parameters] [parameters] [parameter]
+                    il.EmitCall(OpCodes.Callvirt, typeof(IDbCommand).GetMethod(nameof(IDbCommand.CreateParameter)),
+                        null); // stack is now [parameters] [parameters] [parameter]
 
-                    il.Emit(OpCodes.Dup);// stack is now [parameters] [parameters] [parameter] [parameter]
+                    il.Emit(OpCodes.Dup); // stack is now [parameters] [parameters] [parameter] [parameter]
                     il.Emit(OpCodes.Ldstr, prop.Name); // stack is now [parameters] [parameters] [parameter] [parameter] [name]
-                    il.EmitCall(OpCodes.Callvirt, typeof(IDataParameter).GetProperty(nameof(IDataParameter.ParameterName)).GetSetMethod(), null);// stack is now [parameters] [parameters] [parameter]
+                    il.EmitCall(OpCodes.Callvirt, typeof(IDataParameter).GetProperty(nameof(IDataParameter.ParameterName)).GetSetMethod(),
+                        null); // stack is now [parameters] [parameters] [parameter]
                 }
-                if (dbType != DbType.Time && handler == null) // https://connect.microsoft.com/VisualStudio/feedback/details/381934/sqlparameter-dbtype-dbtype-time-sets-the-parameter-to-sqldbtype-datetime-instead-of-sqldbtype-time
+
+                if (dbType != DbType.Time && handler == null
+                ) // https://connect.microsoft.com/VisualStudio/feedback/details/381934/sqlparameter-dbtype-dbtype-time-sets-the-parameter-to-sqldbtype-datetime-instead-of-sqldbtype-time
                 {
-                    il.Emit(OpCodes.Dup);// stack is now [parameters] [[parameters]] [parameter] [parameter]
+                    il.Emit(OpCodes.Dup); // stack is now [parameters] [[parameters]] [parameter] [parameter]
                     if (dbType == DbType.Object && prop.PropertyType == typeof(object)) // includes dynamic
                     {
                         // look it up from the param value
                         il.Emit(OpCodes.Ldloc_0); // stack is now [parameters] [[parameters]] [parameter] [parameter] [typed-param]
                         il.Emit(callOpCode, prop.GetGetMethod()); // stack is [parameters] [[parameters]] [parameter] [parameter] [object-value]
-                        il.Emit(OpCodes.Call, typeof(SqlMapper).GetMethod(nameof(SqlMapper.GetDbType), BindingFlags.Static | BindingFlags.Public)); // stack is now [parameters] [[parameters]] [parameter] [parameter] [db-type]
+                        il.Emit(OpCodes.Call,
+                            typeof(SqlMapper).GetMethod(nameof(SqlMapper.GetDbType),
+                                BindingFlags.Static | BindingFlags.Public)); // stack is now [parameters] [[parameters]] [parameter] [parameter] [db-type]
                     }
                     else
                     {
                         // constant value; nice and simple
-                        EmitInt32(il, (int)dbType);// stack is now [parameters] [[parameters]] [parameter] [parameter] [db-type]
+                        EmitInt32(il, (int)dbType); // stack is now [parameters] [[parameters]] [parameter] [parameter] [db-type]
                     }
-                    il.EmitCall(OpCodes.Callvirt, typeof(IDataParameter).GetProperty(nameof(IDataParameter.DbType)).GetSetMethod(), null);// stack is now [parameters] [[parameters]] [parameter]
+
+                    il.EmitCall(OpCodes.Callvirt, typeof(IDataParameter).GetProperty(nameof(IDataParameter.DbType)).GetSetMethod(), null); // stack is now [parameters] [[parameters]] [parameter]
                 }
 
-                il.Emit(OpCodes.Dup);// stack is now [parameters] [[parameters]] [parameter] [parameter]
-                EmitInt32(il, (int)ParameterDirection.Input);// stack is now [parameters] [[parameters]] [parameter] [parameter] [dir]
-                il.EmitCall(OpCodes.Callvirt, typeof(IDataParameter).GetProperty(nameof(IDataParameter.Direction)).GetSetMethod(), null);// stack is now [parameters] [[parameters]] [parameter]
+                il.Emit(OpCodes.Dup); // stack is now [parameters] [[parameters]] [parameter] [parameter]
+                EmitInt32(il, (int)ParameterDirection.Input); // stack is now [parameters] [[parameters]] [parameter] [parameter] [dir]
+                il.EmitCall(OpCodes.Callvirt, typeof(IDataParameter).GetProperty(nameof(IDataParameter.Direction)).GetSetMethod(),
+                    null); // stack is now [parameters] [[parameters]] [parameter]
 
-                il.Emit(OpCodes.Dup);// stack is now [parameters] [[parameters]] [parameter] [parameter]
+                il.Emit(OpCodes.Dup); // stack is now [parameters] [[parameters]] [parameter] [parameter]
                 il.Emit(OpCodes.Ldloc_0); // stack is now [parameters] [[parameters]] [parameter] [parameter] [typed-param]
                 il.Emit(callOpCode, prop.GetGetMethod()); // stack is [parameters] [[parameters]] [parameter] [parameter] [typed-value]
                 bool checkForNull;
@@ -1527,14 +1545,30 @@
                             // non-nullable enum; we can do that! just box to the wrong type! (no, really)
                             switch (TypeExtensions.GetTypeCode(Enum.GetUnderlyingType(propType)))
                             {
-                                case TypeCode.Byte: propType = typeof(byte); break;
-                                case TypeCode.SByte: propType = typeof(sbyte); break;
-                                case TypeCode.Int16: propType = typeof(short); break;
-                                case TypeCode.Int32: propType = typeof(int); break;
-                                case TypeCode.Int64: propType = typeof(long); break;
-                                case TypeCode.UInt16: propType = typeof(ushort); break;
-                                case TypeCode.UInt32: propType = typeof(uint); break;
-                                case TypeCode.UInt64: propType = typeof(ulong); break;
+                                case TypeCode.Byte:
+                                    propType = typeof(byte);
+                                    break;
+                                case TypeCode.SByte:
+                                    propType = typeof(sbyte);
+                                    break;
+                                case TypeCode.Int16:
+                                    propType = typeof(short);
+                                    break;
+                                case TypeCode.Int32:
+                                    propType = typeof(int);
+                                    break;
+                                case TypeCode.Int64:
+                                    propType = typeof(long);
+                                    break;
+                                case TypeCode.UInt16:
+                                    propType = typeof(ushort);
+                                    break;
+                                case TypeCode.UInt32:
+                                    propType = typeof(uint);
+                                    break;
+                                case TypeCode.UInt64:
+                                    propType = typeof(ulong);
+                                    break;
                             }
                         }
                     }
@@ -1542,6 +1576,7 @@
                     {
                         checkForNull = nullType != null;
                     }
+
                     il.Emit(OpCodes.Box, propType); // stack is [parameters] [[parameters]] [parameter] [parameter] [boxed-value]
                     if (callSanitize)
                     {
@@ -1554,6 +1589,7 @@
                 {
                     checkForNull = true; // if not a value-type, need to check
                 }
+
                 if (checkForNull)
                 {
                     if ((dbType == DbType.String || dbType == DbType.AnsiString) && !haveInt32Arg1)
@@ -1561,8 +1597,9 @@
                         il.DeclareLocal(typeof(int));
                         haveInt32Arg1 = true;
                     }
+
                     // relative stack: [boxed value]
-                    il.Emit(OpCodes.Dup);// relative stack: [boxed value] [boxed value]
+                    il.Emit(OpCodes.Dup); // relative stack: [boxed value] [boxed value]
                     var notNull = il.DefineLabel();
                     var allDone = (dbType == DbType.String || dbType == DbType.AnsiString) ? il.DefineLabel() : (Label?)null;
                     il.Emit(OpCodes.Brtrue_S, notNull);
@@ -1574,6 +1611,7 @@
                         EmitInt32(il, 0);
                         il.Emit(OpCodes.Stloc_1);
                     }
+
                     if (allDone != null) il.Emit(OpCodes.Br_S, allDone.Value);
                     il.MarkLabel(notNull);
                     if (prop.PropertyType == typeof(string))
@@ -1591,10 +1629,12 @@
                         il.MarkLabel(lenDone);
                         il.Emit(OpCodes.Stloc_1); // [string]
                     }
+
                     if (prop.PropertyType.FullName == LinqBinary)
                     {
                         il.EmitCall(OpCodes.Callvirt, prop.PropertyType.GetMethod("ToArray", BindingFlags.Public | BindingFlags.Instance), null);
                     }
+
                     if (allDone != null) il.MarkLabel(allDone.Value);
                     // relative stack [boxed value or DBNull]
                 }
@@ -1607,7 +1647,7 @@
                 }
                 else
                 {
-                    il.EmitCall(OpCodes.Callvirt, typeof(IDataParameter).GetProperty(nameof(IDataParameter.Value)).GetSetMethod(), null);// stack is now [parameters] [[parameters]] [parameter]
+                    il.EmitCall(OpCodes.Callvirt, typeof(IDataParameter).GetProperty(nameof(IDataParameter.Value)).GetSetMethod(), null); // stack is now [parameters] [[parameters]] [parameter]
                 }
 
                 if (prop.PropertyType == typeof(string))
@@ -1617,12 +1657,14 @@
                     il.Emit(OpCodes.Ldloc_1); // [parameters] [[parameters]] [parameter] [size]
                     il.Emit(OpCodes.Brfalse_S, endOfSize); // [parameters] [[parameters]] [parameter]
 
-                    il.Emit(OpCodes.Dup);// stack is now [parameters] [[parameters]] [parameter] [parameter]
+                    il.Emit(OpCodes.Dup); // stack is now [parameters] [[parameters]] [parameter] [parameter]
                     il.Emit(OpCodes.Ldloc_1); // stack is now [parameters] [[parameters]] [parameter] [parameter] [size]
-                    il.EmitCall(OpCodes.Callvirt, typeof(IDbDataParameter).GetProperty(nameof(IDbDataParameter.Size)).GetSetMethod(), null); // stack is now [parameters] [[parameters]] [parameter]
+                    il.EmitCall(OpCodes.Callvirt, typeof(IDbDataParameter).GetProperty(nameof(IDbDataParameter.Size)).GetSetMethod(),
+                        null); // stack is now [parameters] [[parameters]] [parameter]
 
                     il.MarkLabel(endOfSize);
                 }
+
                 if (checkForDuplicates)
                 {
                     // stack is now [parameters] [parameter]
@@ -1666,6 +1708,7 @@
                             }
                         }
                     }
+
                     var prop = exact ?? fallback;
 
                     if (prop != null)
@@ -1711,12 +1754,14 @@
                                     {
                                         if (!locals.TryGetValue(propType, out local)) local = null;
                                     }
+
                                     if (local == null)
                                     {
                                         local = il.DeclareLocal(propType);
                                         locals.Add(propType, local);
                                     }
                                 }
+
                                 il.Emit(OpCodes.Stloc, local); // command, sql
                                 il.Emit(OpCodes.Ldloca, local); // command, sql, ref-to-value
                                 il.EmitCall(OpCodes.Call, InvariantCulture, null); // command, sql, ref-to-value, culture
@@ -1727,9 +1772,11 @@
                                 il.EmitCall(OpCodes.Call, format, null); // command, sql, string value
                                 break;
                         }
+
                         il.EmitCall(OpCodes.Callvirt, StringReplace, null);
                     }
                 }
+
                 il.EmitCall(OpCodes.Callvirt, cmdText.GetSetMethod(), null); // empty
             }
 
@@ -1738,17 +1785,18 @@
         }
 
         private static readonly Dictionary<TypeCode, MethodInfo> toStrings = new[]
-        {
-            typeof(bool), typeof(sbyte), typeof(byte), typeof(ushort), typeof(short),
-            typeof(uint), typeof(int), typeof(ulong), typeof(long), typeof(float), typeof(double), typeof(decimal)
-        }.ToDictionary(x => TypeExtensions.GetTypeCode(x), x => x.GetPublicInstanceMethod(nameof(object.ToString), new[] { typeof(IFormatProvider) }));
+            {
+                typeof(bool), typeof(sbyte), typeof(byte), typeof(ushort), typeof(short),
+                typeof(uint), typeof(int), typeof(ulong), typeof(long), typeof(float), typeof(double), typeof(decimal)
+            }.ToDictionary(x => TypeExtensions.GetTypeCode(x), x => x.GetPublicInstanceMethod(nameof(object.ToString), new[] { typeof(IFormatProvider) }));
 
         private static MethodInfo GetToString(TypeCode typeCode)
         {
             return toStrings.TryGetValue(typeCode, out var method) ? method : null;
         }
 
-        private static readonly MethodInfo StringReplace = typeof(string).GetPublicInstanceMethod(nameof(string.Replace), new Type[] { typeof(string), typeof(string) }),
+        private static readonly MethodInfo StringReplace =
+                typeof(string).GetPublicInstanceMethod(nameof(string.Replace), new Type[] { typeof(string), typeof(string) }),
             InvariantCulture = typeof(CultureInfo).GetProperty(nameof(CultureInfo.InvariantCulture), BindingFlags.Public | BindingFlags.Static).GetGetMethod();
 
         private static int ExecuteCommand(IDbConnection cnn, ref CommandDefinition command, Action<IDbCommand, object> paramReader)
@@ -1795,27 +1843,8 @@
                 if (wasClosed) cnn.Close();
                 cmd?.Dispose();
             }
+
             return Parse<T>(result);
-        }
-
-        private static Action<IDbCommand, object> GetParameterReader(IDbConnection cnn, ref CommandDefinition command)
-        {
-            var param = command.Parameters;
-            var multiExec = GetMultiExec(param);
-            CacheInfo info = null;
-            if (multiExec != null)
-            {
-                throw new NotSupportedException("MultiExec is not supported by ExecuteReader");
-            }
-
-            // nice and simple
-            if (param != null)
-            {
-                var identity = new Identity(command.CommandText, command.CommandType, cnn, null, param.GetType(), null);
-                info = GetCacheInfo(identity, param, command.AddToCache);
-            }
-            var paramReader = info?.ParamReader;
-            return paramReader;
         }
 
         private static Func<IDataReader, object> GetStructDeserializer(Type type, Type effectiveType, int index)
@@ -1823,13 +1852,16 @@
             // no point using special per-type handling here; it boils down to the same, plus not all are supported anyway (see: SqlDataReader.GetChar - not supported!)
 #pragma warning disable 618
             if (type == typeof(char))
-            { // this *does* need special handling, though
+            {
+                // this *does* need special handling, though
                 return r => ReadChar(r.GetValue(index));
             }
+
             if (type == typeof(char?))
             {
                 return r => ReadNullableChar(r.GetValue(index));
             }
+
             if (type.FullName == LinqBinary)
             {
                 return r => Activator.CreateInstance(type, r.GetValue(index));
@@ -1837,7 +1869,8 @@
 #pragma warning restore 618
 
             if (effectiveType.IsEnum())
-            {   // assume the value is returned as the correct type (int/byte/etc), but box back to the typed enum
+            {
+                // assume the value is returned as the correct type (int/byte/etc), but box back to the typed enum
                 return r =>
                 {
                     var val = r.GetValue(index);
@@ -1845,9 +1878,11 @@
                     {
                         val = Convert.ChangeType(val, Enum.GetUnderlyingType(effectiveType), CultureInfo.InvariantCulture);
                     }
+
                     return val is DBNull ? null : Enum.ToObject(effectiveType, val);
                 };
             }
+
             if (typeHandlers.TryGetValue(type, out var handler))
             {
                 return r =>
@@ -1856,6 +1891,7 @@
                     return val is DBNull ? null : handler.Parse(type, val);
                 };
             }
+
             return r =>
             {
                 var val = r.GetValue(index);
@@ -1875,20 +1911,23 @@
                 {
                     value = Convert.ChangeType(value, Enum.GetUnderlyingType(type), CultureInfo.InvariantCulture);
                 }
+
                 return (T)Enum.ToObject(type, value);
             }
+
             if (typeHandlers.TryGetValue(type, out var handler))
             {
                 return (T)handler.Parse(type, value);
             }
+
             return (T)Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
         }
 
         private static readonly MethodInfo
-                    enumParse = typeof(Enum).GetMethod(nameof(Enum.Parse), new Type[] { typeof(Type), typeof(string), typeof(bool) }),
-                    getItem = typeof(IDataRecord).GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                        .Where(p => p.GetIndexParameters().Length > 0 && p.GetIndexParameters()[0].ParameterType == typeof(int))
-                        .Select(p => p.GetGetMethod()).First();
+            enumParse = typeof(Enum).GetMethod(nameof(Enum.Parse), new Type[] { typeof(Type), typeof(string), typeof(bool) }),
+            getItem = typeof(IDataRecord).GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                                         .Where(p => p.GetIndexParameters().Length > 0 && p.GetIndexParameters()[0].ParameterType == typeof(int))
+                                         .Select(p => p.GetGetMethod()).First();
 
         /// <summary>
         /// Gets type-map for the given type
@@ -1908,7 +1947,8 @@
             if (map == null)
             {
                 lock (_typeMaps)
-                {   // double-checked; store this to avoid reflection next time we see this type
+                {
+                    // double-checked; store this to avoid reflection next time we see this type
                     // since multiple queries commonly use the same domain-entity/DTO/view-model type
                     map = (ITypeMap)_typeMaps[type];
 
@@ -1919,6 +1959,7 @@
                     }
                 }
             }
+
             return map;
         }
 
@@ -1950,7 +1991,7 @@
                 }
             }
 
-            PurgeQueryCacheByType(type);
+            QueryCache.PurgeQueryCacheByType(type);
         }
 
         /// <summary>
@@ -1963,7 +2004,11 @@
         /// <param name="returnNullIfFirstMissing"></param>
         /// <returns></returns>
         public static Func<IDataReader, object> GetTypeDeserializer(
-            Type type, IDataReader reader, int startBound = 0, int length = -1, bool returnNullIfFirstMissing = false
+            Type type,
+            IDataReader reader,
+            int startBound = 0,
+            int length = -1,
+            bool returnNullIfFirstMissing = false
         )
         {
             return TypeDeserializerCache.GetReader(type, reader, startBound, length, returnNullIfFirstMissing);
@@ -1978,6 +2023,7 @@
                 found = il.DeclareLocal(type);
                 locals.Add(type, found);
             }
+
             if (initAndLoad)
             {
                 il.Emit(OpCodes.Ldloca, (short)found.LocalIndex);
@@ -1985,15 +2031,19 @@
                 il.Emit(OpCodes.Ldloca, (short)found.LocalIndex);
                 il.Emit(OpCodes.Ldobj, type);
             }
+
             return found;
         }
 
-        private static Func<IDataReader, object> GetTypeDeserializerImpl(
-            Type type, IDataReader reader, int startBound = 0, int length = -1, bool returnNullIfFirstMissing = false
-        )
+        internal static Func<IDataReader, object> GetTypeDeserializerImpl(
+            Type type,
+            IDataReader reader,
+            int startBound = 0,
+            int length = -1,
+            bool returnNullIfFirstMissing = false)
         {
             var returnType = type.IsValueType() ? typeof(object) : type;
-            var dm = new DynamicMethod("Deserialize" + Guid.NewGuid().ToString(), returnType, new[] { typeof(IDataReader) }, type, true);
+            var dm = new DynamicMethod("Deserialize" + Guid.NewGuid(), returnType, new[] { typeof(IDataReader) }, type, true);
             var il = dm.GetILGenerator();
             il.DeclareLocal(typeof(int));
             il.DeclareLocal(type);
@@ -2056,7 +2106,8 @@
                     if (ctor == null)
                     {
                         var proposedTypes = "(" + string.Join(", ", types.Select((t, i) => t.FullName + " " + names[i]).ToArray()) + ")";
-                        throw new InvalidOperationException($"A parameterless default constructor or one matching signature {proposedTypes} is required for {type.FullName} materialization");
+                        throw new InvalidOperationException(
+                            $"A parameterless default constructor or one matching signature {proposedTypes} is required for {type.FullName} materialization");
                     }
 
                     if (ctor.GetParameters().Length == 0)
@@ -2074,16 +2125,18 @@
             il.BeginExceptionBlock();
             if (type.IsValueType())
             {
-                il.Emit(OpCodes.Ldloca_S, (byte)1);// [target]
+                il.Emit(OpCodes.Ldloca_S, (byte)1); // [target]
             }
             else if (specializedConstructor == null)
             {
-                il.Emit(OpCodes.Ldloc_1);// [target]
+                il.Emit(OpCodes.Ldloc_1); // [target]
             }
 
-            var members = IsValueTuple(type) ? GetValueTupleMembers(type, names) : ((specializedConstructor != null
-                ? names.Select(n => typeMap.GetConstructorParameter(specializedConstructor, n))
-                : names.Select(n => typeMap.GetMember(n))).ToList());
+            var members = IsValueTuple(type)
+                ? GetValueTupleMembers(type, names)
+                : ((specializedConstructor != null
+                    ? names.Select(n => typeMap.GetConstructorParameter(specializedConstructor, n))
+                    : names.Select(n => typeMap.GetMember(n))).ToList());
 
             // stack is now [target]
 
@@ -2102,8 +2155,8 @@
 
                     il.Emit(OpCodes.Ldarg_0); // stack is now [target][target][reader]
                     EmitInt32(il, index); // stack is now [target][target][reader][index]
-                    il.Emit(OpCodes.Dup);// stack is now [target][target][reader][index][index]
-                    il.Emit(OpCodes.Stloc_0);// stack is now [target][target][reader][index]
+                    il.Emit(OpCodes.Dup); // stack is now [target][target][reader][index][index]
+                    il.Emit(OpCodes.Stloc_0); // stack is now [target][target][reader][index]
                     il.Emit(OpCodes.Callvirt, getItem); // stack is now [target][target][value-as-object]
                     il.Emit(OpCodes.Dup); // stack is now [target][target][value-as-object][value-as-object]
                     StoreLocal(il, valueCopyLocal);
@@ -2113,7 +2166,8 @@
                     if (memberType == typeof(char) || memberType == typeof(char?))
                     {
                         il.EmitCall(OpCodes.Call, typeof(SqlMapper).GetMethod(
-                            memberType == typeof(char) ? nameof(SqlMapper.ReadChar) : nameof(SqlMapper.ReadNullableChar), BindingFlags.Static | BindingFlags.Public), null); // stack is now [target][target][typed-value]
+                            memberType == typeof(char) ? nameof(SqlMapper.ReadChar) : nameof(SqlMapper.ReadNullableChar),
+                            BindingFlags.Static | BindingFlags.Public), null); // stack is now [target][target][typed-value]
                     }
                     else
                     {
@@ -2135,10 +2189,12 @@
                                 {
                                     enumDeclareLocal = il.DeclareLocal(typeof(string)).LocalIndex;
                                 }
+
                                 il.Emit(OpCodes.Castclass, typeof(string)); // stack is now [target][target][string]
                                 StoreLocal(il, enumDeclareLocal); // stack is now [target][target]
                                 il.Emit(OpCodes.Ldtoken, unboxType); // stack is now [target][target][enum-type-token]
-                                il.EmitCall(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle)), null);// stack is now [target][target][enum-type]
+                                il.EmitCall(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle)),
+                                    null); // stack is now [target][target][enum-type]
                                 LoadLocal(il, enumDeclareLocal); // stack is now [target][target][enum-type][string]
                                 il.Emit(OpCodes.Ldc_I4_1); // stack is now [target][target][enum-type][string][true]
                                 il.EmitCall(OpCodes.Call, enumParse, null); // stack is now [target][target][enum-as-object]
@@ -2157,18 +2213,21 @@
                         else if (memberType.FullName == LinqBinary)
                         {
                             il.Emit(OpCodes.Unbox_Any, typeof(byte[])); // stack is now [target][target][byte-array]
-                            il.Emit(OpCodes.Newobj, memberType.GetConstructor(new Type[] { typeof(byte[]) }));// stack is now [target][target][binary]
+                            il.Emit(OpCodes.Newobj, memberType.GetConstructor(new Type[] { typeof(byte[]) })); // stack is now [target][target][binary]
                         }
                         else
                         {
                             TypeCode dataTypeCode = TypeExtensions.GetTypeCode(colType), unboxTypeCode = TypeExtensions.GetTypeCode(unboxType);
                             bool hasTypeHandler;
-                            if ((hasTypeHandler = typeHandlers.ContainsKey(unboxType)) || colType == unboxType || dataTypeCode == unboxTypeCode || dataTypeCode == TypeExtensions.GetTypeCode(nullUnderlyingType))
+                            if ((hasTypeHandler = typeHandlers.ContainsKey(unboxType)) || colType == unboxType || dataTypeCode == unboxTypeCode ||
+                                dataTypeCode == TypeExtensions.GetTypeCode(nullUnderlyingType))
                             {
                                 if (hasTypeHandler)
                                 {
 #pragma warning disable 618
-                                    il.EmitCall(OpCodes.Call, typeof(TypeHandlerCache<>).MakeGenericType(unboxType).GetMethod(nameof(TypeHandlerCache<int>.Parse)), null); // stack is now [target][target][typed-value]
+                                    il.EmitCall(OpCodes.Call,
+                                        typeof(TypeHandlerCache<>).MakeGenericType(unboxType).GetMethod(nameof(TypeHandlerCache<int>.Parse)),
+                                        null); // stack is now [target][target][typed-value]
 #pragma warning restore 618
                                 }
                                 else
@@ -2182,11 +2241,13 @@
                                 FlexibleConvertBoxedFromHeadOfStack(il, colType, nullUnderlyingType ?? unboxType, null);
                                 if (nullUnderlyingType != null)
                                 {
-                                    il.Emit(OpCodes.Newobj, unboxType.GetConstructor(new[] { nullUnderlyingType })); // stack is now [target][target][typed-value]
+                                    il.Emit(OpCodes.Newobj,
+                                        unboxType.GetConstructor(new[] { nullUnderlyingType })); // stack is now [target][target][typed-value]
                                 }
                             }
                         }
                     }
+
                     if (specializedConstructor == null)
                     {
                         // Store the value in the property/field
@@ -2223,11 +2284,13 @@
                         il.Emit(OpCodes.Pop); // stack is now [target][target]
                         // can load a null with this value
                         if (memberType.IsValueType())
-                        { // must be Nullable<T> for some T
+                        {
+                            // must be Nullable<T> for some T
                             GetTempLocal(il, ref structLocals, memberType, true); // stack is now [target][target][null]
                         }
                         else
-                        { // regular reference-type
+                        {
+                            // regular reference-type
                             il.Emit(OpCodes.Ldnull); // stack is now [target][target][null]
                         }
 
@@ -2258,9 +2321,11 @@
 
                     il.MarkLabel(finishLabel);
                 }
+
                 first = false;
                 index++;
             }
+
             if (type.IsValueType())
             {
                 il.Emit(OpCodes.Pop);
@@ -2271,8 +2336,10 @@
                 {
                     il.Emit(OpCodes.Newobj, specializedConstructor);
                 }
+
                 il.Emit(OpCodes.Stloc_1); // stack is empty
             }
+
             il.MarkLabel(allDone);
             il.BeginCatchBlock(typeof(Exception)); // stack is Exception
             il.Emit(OpCodes.Ldloc_0); // stack is Exception, index
@@ -2286,6 +2353,7 @@
             {
                 il.Emit(OpCodes.Box, type);
             }
+
             il.Emit(OpCodes.Ret);
 
             var funcType = System.Linq.Expressions.Expression.GetFuncType(typeof(IDataReader), returnType);
@@ -2326,38 +2394,51 @@
                         switch (TypeExtensions.GetTypeCode(via ?? to))
                         {
                             case TypeCode.Byte:
-                                opCode = OpCodes.Conv_Ovf_I1_Un; break;
+                                opCode = OpCodes.Conv_Ovf_I1_Un;
+                                break;
                             case TypeCode.SByte:
-                                opCode = OpCodes.Conv_Ovf_I1; break;
+                                opCode = OpCodes.Conv_Ovf_I1;
+                                break;
                             case TypeCode.UInt16:
-                                opCode = OpCodes.Conv_Ovf_I2_Un; break;
+                                opCode = OpCodes.Conv_Ovf_I2_Un;
+                                break;
                             case TypeCode.Int16:
-                                opCode = OpCodes.Conv_Ovf_I2; break;
+                                opCode = OpCodes.Conv_Ovf_I2;
+                                break;
                             case TypeCode.UInt32:
-                                opCode = OpCodes.Conv_Ovf_I4_Un; break;
+                                opCode = OpCodes.Conv_Ovf_I4_Un;
+                                break;
                             case TypeCode.Boolean: // boolean is basically an int, at least at this level
                             case TypeCode.Int32:
-                                opCode = OpCodes.Conv_Ovf_I4; break;
+                                opCode = OpCodes.Conv_Ovf_I4;
+                                break;
                             case TypeCode.UInt64:
-                                opCode = OpCodes.Conv_Ovf_I8_Un; break;
+                                opCode = OpCodes.Conv_Ovf_I8_Un;
+                                break;
                             case TypeCode.Int64:
-                                opCode = OpCodes.Conv_Ovf_I8; break;
+                                opCode = OpCodes.Conv_Ovf_I8;
+                                break;
                             case TypeCode.Single:
-                                opCode = OpCodes.Conv_R4; break;
+                                opCode = OpCodes.Conv_R4;
+                                break;
                             case TypeCode.Double:
-                                opCode = OpCodes.Conv_R8; break;
+                                opCode = OpCodes.Conv_R8;
+                                break;
                             default:
                                 handled = false;
                                 break;
                         }
+
                         break;
                 }
+
                 if (handled)
                 {
                     il.Emit(OpCodes.Unbox_Any, from); // stack is now [target][target][col-typed-value]
                     il.Emit(opCode); // stack is now [target][target][typed-value]
                     if (to == typeof(bool))
-                    { // compare to zero; I checked "csc" - this is the trick it uses; nice
+                    {
+                        // compare to zero; I checked "csc" - this is the trick it uses; nice
                         il.Emit(OpCodes.Ldc_I4_0);
                         il.Emit(OpCodes.Ceq);
                         il.Emit(OpCodes.Ldc_I4_0);
@@ -2379,9 +2460,9 @@
             if (to == null) return null;
             MethodInfo[] fromMethods, toMethods;
             return ResolveOperator(fromMethods = from.GetMethods(BindingFlags.Static | BindingFlags.Public), from, to, "op_Implicit")
-                ?? ResolveOperator(toMethods = to.GetMethods(BindingFlags.Static | BindingFlags.Public), from, to, "op_Implicit")
-                ?? ResolveOperator(fromMethods, from, to, "op_Explicit")
-                ?? ResolveOperator(toMethods, from, to, "op_Explicit");
+                   ?? ResolveOperator(toMethods = to.GetMethods(BindingFlags.Static | BindingFlags.Public), from, to, "op_Implicit")
+                   ?? ResolveOperator(fromMethods, from, to, "op_Explicit")
+                   ?? ResolveOperator(toMethods, from, to, "op_Explicit");
         }
 
         private static MethodInfo ResolveOperator(MethodInfo[] methods, Type from, Type to, string name)
@@ -2393,6 +2474,7 @@
                 if (args.Length != 1 || args[0].ParameterType != from) continue;
                 return methods[i];
             }
+
             return null;
         }
 
@@ -2401,10 +2483,18 @@
             if (index < 0 || index >= short.MaxValue) throw new ArgumentNullException(nameof(index));
             switch (index)
             {
-                case 0: il.Emit(OpCodes.Ldloc_0); break;
-                case 1: il.Emit(OpCodes.Ldloc_1); break;
-                case 2: il.Emit(OpCodes.Ldloc_2); break;
-                case 3: il.Emit(OpCodes.Ldloc_3); break;
+                case 0:
+                    il.Emit(OpCodes.Ldloc_0);
+                    break;
+                case 1:
+                    il.Emit(OpCodes.Ldloc_1);
+                    break;
+                case 2:
+                    il.Emit(OpCodes.Ldloc_2);
+                    break;
+                case 3:
+                    il.Emit(OpCodes.Ldloc_3);
+                    break;
                 default:
                     if (index <= 255)
                     {
@@ -2414,6 +2504,7 @@
                     {
                         il.Emit(OpCodes.Ldloc, (short)index);
                     }
+
                     break;
             }
         }
@@ -2423,10 +2514,18 @@
             if (index < 0 || index >= short.MaxValue) throw new ArgumentNullException(nameof(index));
             switch (index)
             {
-                case 0: il.Emit(OpCodes.Stloc_0); break;
-                case 1: il.Emit(OpCodes.Stloc_1); break;
-                case 2: il.Emit(OpCodes.Stloc_2); break;
-                case 3: il.Emit(OpCodes.Stloc_3); break;
+                case 0:
+                    il.Emit(OpCodes.Stloc_0);
+                    break;
+                case 1:
+                    il.Emit(OpCodes.Stloc_1);
+                    break;
+                case 2:
+                    il.Emit(OpCodes.Stloc_2);
+                    break;
+                case 3:
+                    il.Emit(OpCodes.Stloc_3);
+                    break;
                 default:
                     if (index <= 255)
                     {
@@ -2436,6 +2535,7 @@
                     {
                         il.Emit(OpCodes.Stloc, (short)index);
                     }
+
                     break;
             }
         }
@@ -2486,12 +2586,15 @@
                         formattedValue = valEx.Message;
                     }
                 }
+
                 toThrow = new DataException($"Error parsing column {index} ({name}={formattedValue})", ex);
             }
             catch
-            { // throw the **original** exception, wrapped as DataException
+            {
+                // throw the **original** exception, wrapped as DataException
                 toThrow = new DataException(ex.Message, ex);
             }
+
             throw toThrow;
         }
 
@@ -2499,16 +2602,36 @@
         {
             switch (value)
             {
-                case -1: il.Emit(OpCodes.Ldc_I4_M1); break;
-                case 0: il.Emit(OpCodes.Ldc_I4_0); break;
-                case 1: il.Emit(OpCodes.Ldc_I4_1); break;
-                case 2: il.Emit(OpCodes.Ldc_I4_2); break;
-                case 3: il.Emit(OpCodes.Ldc_I4_3); break;
-                case 4: il.Emit(OpCodes.Ldc_I4_4); break;
-                case 5: il.Emit(OpCodes.Ldc_I4_5); break;
-                case 6: il.Emit(OpCodes.Ldc_I4_6); break;
-                case 7: il.Emit(OpCodes.Ldc_I4_7); break;
-                case 8: il.Emit(OpCodes.Ldc_I4_8); break;
+                case -1:
+                    il.Emit(OpCodes.Ldc_I4_M1);
+                    break;
+                case 0:
+                    il.Emit(OpCodes.Ldc_I4_0);
+                    break;
+                case 1:
+                    il.Emit(OpCodes.Ldc_I4_1);
+                    break;
+                case 2:
+                    il.Emit(OpCodes.Ldc_I4_2);
+                    break;
+                case 3:
+                    il.Emit(OpCodes.Ldc_I4_3);
+                    break;
+                case 4:
+                    il.Emit(OpCodes.Ldc_I4_4);
+                    break;
+                case 5:
+                    il.Emit(OpCodes.Ldc_I4_5);
+                    break;
+                case 6:
+                    il.Emit(OpCodes.Ldc_I4_6);
+                    break;
+                case 7:
+                    il.Emit(OpCodes.Ldc_I4_7);
+                    break;
+                case 8:
+                    il.Emit(OpCodes.Ldc_I4_8);
+                    break;
                 default:
                     if (value >= -128 && value <= 127)
                     {
@@ -2518,6 +2641,7 @@
                     {
                         il.Emit(OpCodes.Ldc_I4, value);
                     }
+
                     break;
             }
         }
@@ -2527,6 +2651,7 @@
         // one per thread
         [ThreadStatic]
         private static StringBuilder perThreadStringBuilderCache;
+
         private static StringBuilder GetStringBuilder()
         {
             var tmp = perThreadStringBuilderCache;
@@ -2536,6 +2661,7 @@
                 tmp.Length = 0;
                 return tmp;
             }
+
             return new StringBuilder();
         }
 
