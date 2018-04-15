@@ -29,8 +29,7 @@
         /// <param name="names">DataReader column names</param>
         /// <param name="types">DataReader column types</param>
         /// <returns>Default constructor</returns>
-        public ConstructorInfo FindConstructor(string[] names, Type[] types) =>
-            this._type.GetConstructor(new Type[0]);
+        public ConstructorInfo FindConstructor(string[] names, Type[] types) => this._type.GetConstructor(new Type[0]);
 
         /// <summary>
         /// Always returns null

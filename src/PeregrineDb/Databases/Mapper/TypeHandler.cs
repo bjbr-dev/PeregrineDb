@@ -7,7 +7,8 @@
     /// Base-class for simple type-handlers
     /// </summary>
     /// <typeparam name="T">This <see cref="Type"/> this handler is for.</typeparam>
-    internal abstract class TypeHandler<T> : ITypeHandler
+    internal abstract class TypeHandler<T>
+        : ITypeHandler
     {
         /// <summary>
         /// Assign the value of a parameter before a command executes

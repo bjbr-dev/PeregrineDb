@@ -8,7 +8,8 @@
     /// <summary>
     /// Represents default type mapping strategy used by Dapper
     /// </summary>
-    internal sealed class DefaultTypeMap : ITypeMap
+    internal sealed class DefaultTypeMap 
+        : ITypeMap
     {
         private readonly List<FieldInfo> _fields;
         private readonly Type _type;
@@ -39,7 +40,11 @@
 #endif
         internal static MethodInfo GetPropertySetter(PropertyInfo propertyInfo, Type type)
         {
-            if (propertyInfo.DeclaringType == type) return propertyInfo.GetSetMethod(true);
+            if (propertyInfo.DeclaringType == type)
+            {
+                return propertyInfo.GetSetMethod(true);
+            }
+
 #if NETSTANDARD1_3
             return propertyInfo.DeclaringType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                     .Single(x => x.Name == propertyInfo.Name
@@ -57,15 +62,14 @@
 #endif
         }
 
-        internal static List<PropertyInfo> GetSettableProps(Type t)
+        private static List<PropertyInfo> GetSettableProps(Type t)
         {
-            return t
-                  .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                  .Where(p => GetPropertySetter(p, t) != null)
-                  .ToList();
+            return t.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                    .Where(p => GetPropertySetter(p, t) != null)
+                    .ToList();
         }
 
-        internal static List<FieldInfo> GetSettableFields(Type t)
+        private static List<FieldInfo> GetSettableFields(Type t)
         {
             return t.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).ToList();
         }
