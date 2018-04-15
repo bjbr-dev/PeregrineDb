@@ -76,12 +76,6 @@ Task("Pack")
         });
 });
 
-Task("Publish")
-    .IsDependentOn("Pack")
-    .Does(() =>
-{
-});
-
 //////////////////////////////////////////////////////////////////////
 // TASK METHODS
 //////////////////////////////////////////////////////////////////////
@@ -100,7 +94,7 @@ void RunProcess(string name, ProcessSettings settings)
 //////////////////////////////////////////////////////////////////////
 
 Task("Default")
-    .IsDependentOn("Publish");
+    .IsDependentOn("Pack");
 
 Task("CommitTest")
     .IsDependentOn("Test");
