@@ -2,8 +2,9 @@
 {
     using System;
     using System.Data;
-    using Dapper;
+    using System.Linq;
     using FluentAssertions;
+    using PeregrineDb.Databases.Mapper;
     using PeregrineDb.Dialects;
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
@@ -76,24 +77,6 @@
                         // Assert
                         act.ShouldThrow<Exception>();
                         database.Count<Dog>().Should().Be(0);
-                    }
-                }
-            }
-
-            public class OutputParameters
-                : Execute
-            {
-                [Theory(Skip = "Don't need to support yet")]
-                [MemberData(nameof(TestDialects))]
-                public void TestExecuteCommandWithHybridParameters(IDialect dialect)
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
-                    {
-                        var p = new DynamicParameters(new { a = 1, b = 2 });
-                        p.Add("c", dbType: DbType.Int32, direction: ParameterDirection.Output);
-                        var command = new SqlCommand("set @c = @a + @b", p);
-                        database.Execute(in command);
-                        Assert.Equal(3, p.Get<int>("@c"));
                     }
                 }
             }

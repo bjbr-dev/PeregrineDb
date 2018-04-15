@@ -4,17 +4,21 @@
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Dapper;
+    using PeregrineDb.Databases.Mapper;
     using PeregrineDb.SqlCommands;
 
     public partial class DefaultSqlConnection
     {
-        public Task<IEnumerable<T>> QueryAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<T>> QueryAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.connection.QueryAsync<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
+            var definition = new CommandDefinition(
+                command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType,
+                CommandFlags.Buffered, cancellationToken);
+            var result = await this.connection.QueryAsync<T>(definition).ConfigureAwait(false);
+            return (List<T>)result;
         }
 
-        public Task<IEnumerable<T>> QueryAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
+        public Task<IReadOnlyList<T>> QueryAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var command = MakeCommand(sql);
             return this.QueryAsync<T>(command, commandTimeout, cancellationToken);

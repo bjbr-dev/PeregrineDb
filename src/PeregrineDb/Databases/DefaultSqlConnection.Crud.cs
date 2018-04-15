@@ -85,13 +85,13 @@
             return this.QuerySingle<TEntity>(in command, commandTimeout);
         }
 
-        public IEnumerable<TEntity> GetRange<TEntity>(FormattableString conditions, int? commandTimeout = null)
+        public IReadOnlyList<TEntity> GetRange<TEntity>(FormattableString conditions, int? commandTimeout = null)
         {
             var command = this.Dialect.MakeGetRangeCommand<TEntity>(conditions);
             return this.Query<TEntity>(in command, commandTimeout);
         }
 
-        public IEnumerable<TEntity> GetRange<TEntity>(object conditions, int? commandTimeout = null)
+        public IReadOnlyList<TEntity> GetRange<TEntity>(object conditions, int? commandTimeout = null)
         {
             var command = this.Dialect.MakeGetRangeCommand<TEntity>(conditions);
             return this.Query<TEntity>(in command, commandTimeout);
@@ -127,7 +127,7 @@
             return PagedList<TEntity>.Create(totalNumberOfItems, page, items);
         }
 
-        public IEnumerable<TEntity> GetAll<TEntity>(int? commandTimeout = null)
+        public IReadOnlyList<TEntity> GetAll<TEntity>(int? commandTimeout = null)
         {
             var command = this.Dialect.MakeGetRangeCommand<TEntity>(null);
             return this.Query<TEntity>(in command, commandTimeout);

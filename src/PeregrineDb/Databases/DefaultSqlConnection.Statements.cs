@@ -2,17 +2,17 @@
 {
     using System;
     using System.Collections.Generic;
-    using Dapper;
+    using PeregrineDb.Databases.Mapper;
     using PeregrineDb.SqlCommands;
 
     public partial class DefaultSqlConnection
     {
-        public IEnumerable<T> Query<T>(in SqlCommand command, int? commandTimeout = null)
+        public IReadOnlyList<T> Query<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            return this.connection.Query<T>(command.CommandText, command.Parameters, this.transaction, true, commandTimeout, command.CommandType);
+            return (List<T>)this.connection.Query<T>(command.CommandText, command.Parameters, this.transaction, true, commandTimeout, command.CommandType);
         }
 
-        public IEnumerable<T> Query<T>(FormattableString sql, int? commandTimeout = null)
+        public IReadOnlyList<T> Query<T>(FormattableString sql, int? commandTimeout = null)
         {
             var command = MakeCommand(sql);
             return this.Query<T>(in command, commandTimeout);

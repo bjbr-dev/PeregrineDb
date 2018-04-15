@@ -181,7 +181,7 @@
         /// ]]>
         /// </code>
         /// </example>
-        IEnumerable<TEntity> GetRange<TEntity>(FormattableString conditions, int? commandTimeout = null);
+        IReadOnlyList<TEntity> GetRange<TEntity>(FormattableString conditions, int? commandTimeout = null);
 
         /// <summary>
         /// Gets a collection of entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
@@ -193,7 +193,7 @@
         /// ]]>
         /// </code>
         /// </example>
-        IEnumerable<TEntity> GetRange<TEntity>(object conditions, int? commandTimeout = null);
+        IReadOnlyList<TEntity> GetRange<TEntity>(object conditions, int? commandTimeout = null);
 
         /// <summary>
         /// Gets a collection of entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
@@ -226,7 +226,7 @@
         /// <summary>
         /// Gets all the entities in the <typeparamref name="TEntity"/> table.
         /// </summary>
-        IEnumerable<TEntity> GetAll<TEntity>(int? commandTimeout = null);
+        IReadOnlyList<TEntity> GetAll<TEntity>(int? commandTimeout = null);
 
         /// <summary>
         /// Inserts the <paramref name="entity"/> into the databaseConnection.

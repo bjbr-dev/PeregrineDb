@@ -8,6 +8,7 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <TargetFrameworks>net462</TargetFrameworks>
     <IsPackable>false</IsPackable>
+    <Configurations>Debug;Release;Debug (Standard)</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

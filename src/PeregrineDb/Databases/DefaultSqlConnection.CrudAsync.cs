@@ -111,7 +111,7 @@
             return result ?? throw new InvalidOperationException($"No entity matching {conditions} was found");
         }
 
-        public Task<IEnumerable<TEntity>> GetRangeAsync<TEntity>(
+        public Task<IReadOnlyList<TEntity>> GetRangeAsync<TEntity>(
             FormattableString conditions,
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
@@ -120,7 +120,7 @@
             return this.QueryAsync<TEntity>(command, commandTimeout, cancellationToken);
         }
 
-        public Task<IEnumerable<TEntity>> GetRangeAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default)
+        public Task<IReadOnlyList<TEntity>> GetRangeAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var command = this.Dialect.MakeGetRangeCommand<TEntity>(conditions);
             return this.QueryAsync<TEntity>(command, commandTimeout, cancellationToken);
@@ -164,7 +164,7 @@
             return PagedList<TEntity>.Create(totalNumberOfItems, page, items);
         }
 
-        public Task<IEnumerable<TEntity>> GetAllAsync<TEntity>(int? commandTimeout = null, CancellationToken cancellationToken = default)
+        public Task<IReadOnlyList<TEntity>> GetAllAsync<TEntity>(int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             return this.QueryAsync<TEntity>(this.Dialect.MakeGetRangeCommand<TEntity>(null), commandTimeout, cancellationToken);
         }

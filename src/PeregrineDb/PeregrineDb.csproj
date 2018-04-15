@@ -25,7 +25,7 @@
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
     <PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
     <PackageReference Include="System.Collections.NonGeneric" Version="4.3.0" />
-    <PackageReference Include="System.Data.Common" Version="4.3.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
     <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
     <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
@@ -36,7 +36,6 @@
 
   <ItemGroup>
     <PackageReference Include="berkeleybross.Pagination" Version="1.0.24" />
-    <PackageReference Include="Dapper" Version="1.50.4" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.3.0" />
     <PackageReference Include="System.Diagnostics.Tools" Version="4.3.0" />
   </ItemGroup>
@@ -44,5 +43,9 @@
   <ItemGroup>
     <Compile Update="ISqlConnection.*.cs" DependentUpon="ISqlConnection.cs" />
     <Compile Update="Databases/DefaultSqlConnection.*.cs" DependentUpon="Databases/DefaultSqlConnection.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Databases\Mapper\" />
   </ItemGroup>
 </Project>

@@ -6,7 +6,7 @@
 
     public partial interface ISqlConnection
     {
-        IEnumerable<T> Query<T>(in SqlCommand command, int? commandTimeout = null);
+        IReadOnlyList<T> Query<T>(in SqlCommand command, int? commandTimeout = null);
 
         /// <summary>
         /// Executes a query, returning the data typed as <typeparamref name="T"/>.
@@ -18,7 +18,7 @@
         /// A sequence of data of the supplied type; if a basic type (int, string, etc) is queried then the data from the first column in assumed, otherwise an instance is
         /// created per row, and a direct column-name===member-name mapping is assumed (case insensitive).
         /// </returns>
-        IEnumerable<T> Query<T>(FormattableString sql, int? commandTimeout = null);
+        IReadOnlyList<T> Query<T>(FormattableString sql, int? commandTimeout = null);
 
         T QueryFirst<T>(in SqlCommand command, int? commandTimeout = null);
 
