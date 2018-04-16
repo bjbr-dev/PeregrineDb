@@ -14,19 +14,19 @@
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                 {
-                    int i = await database.ExecuteScalarAsync<int>($"select 123").ConfigureAwait(false);
+                    var i = await database.ExecuteScalarAsync<int>($"select 123").ConfigureAwait(false);
                     Assert.Equal(123, i);
 
                     i = await database.ExecuteScalarAsync<int>($"select cast(123 as bigint)").ConfigureAwait(false);
                     Assert.Equal(123, i);
 
-                    long j = await database.ExecuteScalarAsync<long>($"select 123").ConfigureAwait(false);
+                    var j = await database.ExecuteScalarAsync<long>($"select 123").ConfigureAwait(false);
                     Assert.Equal(123L, j);
 
                     j = await database.ExecuteScalarAsync<long>($"select cast(123 as bigint)").ConfigureAwait(false);
                     Assert.Equal(123L, j);
 
-                    int? k = await database.ExecuteScalarAsync<int?>($"select {default(int?)}").ConfigureAwait(false);
+                    var k = await database.ExecuteScalarAsync<int?>($"select {default(int?)}").ConfigureAwait(false);
                     Assert.Null(k);
                 }
             }

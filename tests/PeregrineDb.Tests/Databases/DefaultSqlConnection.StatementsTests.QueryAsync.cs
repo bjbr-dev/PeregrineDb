@@ -120,6 +120,50 @@ select @@Name
                     }
                 }
             }
+
+            [Fact]
+            public async void SO35470588_WrongValuePidValue()
+            {
+                using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                {
+                    // nuke, rebuild, and populate the table
+                    try
+                    {
+                        database.Execute($"drop table TPTable");
+                    }
+                    catch
+                    {
+                        /* don't care */
+                    }
+
+                    database.Execute($@"
+create table TPTable (Pid int not null primary key identity(1,1), Value int not null);
+insert TPTable (Value) values (2), (568)");
+
+                    // fetch the data using the query in the question, then force to a dictionary
+                    var rows = (await database.QueryAsync<TPTable>($"select * from TPTable").ConfigureAwait(false))
+                        .ToDictionary(x => x.Pid);
+
+                    // check the number of rows
+                    Assert.Equal(2, rows.Count);
+
+                    // check row 1
+                    var row = rows[1];
+                    Assert.Equal(1, row.Pid);
+                    Assert.Equal(2, row.Value);
+
+                    // check row 2
+                    row = rows[2];
+                    Assert.Equal(2, row.Pid);
+                    Assert.Equal(568, row.Value);
+                }
+            }
+
+            public class TPTable
+            {
+                public int Pid { get; set; }
+                public int Value { get; set; }
+            }
         }
     }
 }

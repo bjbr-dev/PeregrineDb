@@ -52,10 +52,4 @@
   <ItemGroup>
     <Compile Update="Databases\DefaultSqlConnection.StatementsTests.*.cs" DependentUpon="Databases\DefaultSqlConnection.StatementsTests.cs" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Databases\DefaultSqlConnection - Copy.StatementsTests.ExecuteScalar.cs">
-      <DependentUpon>Databases\DefaultSqlConnection.StatementsTests.cs</DependentUpon>
-    </Compile>
-  </ItemGroup>
 </Project>

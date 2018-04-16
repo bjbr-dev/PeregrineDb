@@ -6,6 +6,7 @@ namespace PeregrineDb.Databases.Mapper
     using System.Data;
 #if NETSTANDARD1_3
     using ApplicationException = System.InvalidOperationException;
+
 #endif
 
     /// <summary>
@@ -97,18 +98,25 @@ namespace PeregrineDb.Databases.Mapper
         /// <param name="size">The size of the parameter.</param>
         /// <param name="precision">The precision of the parameter.</param>
         /// <param name="scale">The scale of the parameter.</param>
-        public void Add(string name, object value = null, DbType? dbType = null, ParameterDirection? direction = null, int? size = null, byte? precision = null, byte? scale = null)
+        public void Add(
+            string name,
+            object value = null,
+            DbType? dbType = null,
+            ParameterDirection? direction = null,
+            int? size = null,
+            byte? precision = null,
+            byte? scale = null)
         {
             this.parameters[Clean(name)] = new ParamInfo
-            {
-                Name = name,
-                Value = value,
-                ParameterDirection = direction ?? ParameterDirection.Input,
-                DbType = dbType,
-                Size = size,
-                Precision = precision,
-                Scale = scale
-            };
+                {
+                    Name = name,
+                    Value = value,
+                    ParameterDirection = direction ?? ParameterDirection.Input,
+                    DbType = dbType,
+                    Size = size,
+                    Precision = precision,
+                    Scale = scale
+                };
         }
 
         private static string Clean(string name)
@@ -123,6 +131,7 @@ namespace PeregrineDb.Databases.Mapper
                         return name.Substring(1);
                 }
             }
+
             return name;
         }
 
@@ -174,7 +183,10 @@ namespace PeregrineDb.Databases.Mapper
 
             foreach (var param in this.parameters.Values)
             {
-                if (param.CameFromTemplate) continue;
+                if (param.CameFromTemplate)
+                {
+                    continue;
+                }
 
                 var dbType = param.DbType;
                 var val = param.Value;
@@ -184,23 +196,20 @@ namespace PeregrineDb.Databases.Mapper
                 ITypeHandler handler = null;
                 if (dbType == null && val != null && !isCustomQueryParameter)
                 {
-#pragma warning disable 618
                     dbType = SqlMapper.LookupDbType(val.GetType(), name, true, out handler);
-#pragma warning disable 618
                 }
+
                 if (isCustomQueryParameter)
                 {
                     ((ICustomQueryParameter)val).AddParameter(command, name);
                 }
                 else if (dbType == EnumerableMultiParameter)
                 {
-#pragma warning disable 612, 618
                     SqlMapper.PackListParameters(command, name, val);
-#pragma warning restore 612, 618
                 }
                 else
                 {
-                    bool add = !command.Parameters.Contains(name);
+                    var add = !command.Parameters.Contains(name);
                     IDbDataParameter p;
                     if (add)
                     {
@@ -215,18 +224,18 @@ namespace PeregrineDb.Databases.Mapper
                     p.Direction = param.ParameterDirection;
                     if (handler == null)
                     {
-#pragma warning disable 0618
                         p.Value = SqlMapper.SanitizeParameterValue(val);
-#pragma warning restore 0618
                         if (dbType != null && p.DbType != dbType)
                         {
                             p.DbType = dbType.Value;
                         }
+
                         var s = val as string;
                         if (s?.Length <= DbString.DefaultLength)
                         {
                             p.Size = DbString.DefaultLength;
                         }
+
                         if (param.Size != null) p.Size = param.Size.Value;
                         if (param.Precision != null) p.Precision = param.Precision.Value;
                         if (param.Scale != null) p.Scale = param.Scale.Value;
@@ -244,6 +253,7 @@ namespace PeregrineDb.Databases.Mapper
                     {
                         command.Parameters.Add(p);
                     }
+
                     param.AttachedParam = p;
                 }
             }
@@ -278,8 +288,8 @@ namespace PeregrineDb.Databases.Mapper
                 return default;
             }
 
-            throw new ApplicationException("Attempting to cast a DBNull to a non nullable type! Note that out/return parameters will not have updated values until the data stream completes (after the 'foreach' for Query(..., buffered: false), or after the GridReader has been disposed for QueryMultiple)");
-
+            throw new ApplicationException(
+                "Attempting to cast a DBNull to a non nullable type! Note that out/return parameters will not have updated values until the data stream completes (after the 'foreach' for Query(..., buffered: false), or after the GridReader has been disposed for QueryMultiple)");
         }
     }
 }
