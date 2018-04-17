@@ -96,10 +96,6 @@
             {
                 cmd.CommandTimeout = this.CommandTimeout.Value;
             }
-            else if (MapperSettings.CommandTimeout.HasValue)
-            {
-                cmd.CommandTimeout = MapperSettings.CommandTimeout.Value;
-            }
 
             if (this.CommandType.HasValue)
             {

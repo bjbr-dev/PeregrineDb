@@ -1601,16 +1601,15 @@
 
             var members = IsValueTuple(type)
                 ? GetValueTupleMembers(type, names)
-                : ((specializedConstructor != null
+                : (specializedConstructor != null
                     ? names.Select(n => typeMap.GetConstructorParameter(specializedConstructor, n))
-                    : names.Select(n => typeMap.GetMember(n))).ToList());
+                    : names.Select(n => typeMap.GetMember(n))).ToList();
 
             // stack is now [target]
 
             var first = true;
             var allDone = il.DefineLabel();
             int enumDeclareLocal = -1, valueCopyLocal = il.DeclareLocal(typeof(object)).LocalIndex;
-            var applyNullSetting = MapperSettings.ApplyNullValues;
             foreach (var item in members)
             {
                 if (item != null)
@@ -1742,32 +1741,6 @@
                         else
                         {
                             il.Emit(OpCodes.Ldnull);
-                        }
-                    }
-                    else if (applyNullSetting && (!memberType.IsValueType() || Nullable.GetUnderlyingType(memberType) != null))
-                    {
-                        il.Emit(OpCodes.Pop); // stack is now [target][target]
-                        // can load a null with this value
-                        if (memberType.IsValueType())
-                        {
-                            // must be Nullable<T> for some T
-                            GetTempLocal(il, ref structLocals, memberType, true); // stack is now [target][target][null]
-                        }
-                        else
-                        {
-                            // regular reference-type
-                            il.Emit(OpCodes.Ldnull); // stack is now [target][target][null]
-                        }
-
-                        // Store the value in the property/field
-                        if (item.Property != null)
-                        {
-                            il.Emit(type.IsValueType() ? OpCodes.Call : OpCodes.Callvirt, DefaultTypeMap.GetPropertySetter(item.Property, type));
-                            // stack is now [target]
-                        }
-                        else
-                        {
-                            il.Emit(OpCodes.Stfld, item.Field); // stack is now [target]
                         }
                     }
                     else
