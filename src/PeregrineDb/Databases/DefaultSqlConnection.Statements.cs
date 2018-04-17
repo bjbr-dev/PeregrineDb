@@ -61,7 +61,8 @@
 
         public T QuerySingleOrDefault<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            return this.connection.QuerySingleOrDefault<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
+            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType, CommandFlags.None);
+            return SqlMapper.QueryRowImpl<T>(this.connection, SqlMapper.Row.SingleOrDefault, ref command1, typeof(T));
         }
 
         public T QuerySingleOrDefault<T>(FormattableString sql, int? commandTimeout = null)
@@ -87,10 +88,7 @@
 
         public T ExecuteScalar<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            string sql = command.CommandText;
-            object param = command.Parameters;
-            CommandType? commandType = command.CommandType;
-            var command1 = new CommandDefinition(sql, param, this.transaction, commandTimeout, commandType, CommandFlags.Buffered);
+            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType, CommandFlags.Buffered);
             return SqlMapper.ExecuteScalarImpl<T>(this.connection, ref command1);
         }
 

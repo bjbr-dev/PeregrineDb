@@ -68,36 +68,28 @@
 
                 var isFirst = true;
                 var total = 0;
-                var wasClosed = cnn.State == ConnectionState.Closed;
-                try
-                {
-                    if (wasClosed) cnn.Open();
-                    using (var cmd = command.SetupCommand(cnn, null))
-                    {
-                        string masterSql = null;
-                        foreach (var obj in multiExec)
-                        {
-                            if (isFirst)
-                            {
-                                masterSql = cmd.CommandText;
-                                isFirst = false;
-                                identity = new Identity(command.CommandText, cmd.CommandType, cnn, null, obj.GetType(), null);
-                                info = GetCacheInfo(identity, obj, command.AddToCache);
-                            }
-                            else
-                            {
-                                cmd.CommandText = masterSql; // because we do magic replaces on "in" etc
-                                cmd.Parameters.Clear(); // current code is Add-tastic
-                            }
 
-                            info.ParamReader(cmd, obj);
-                            total += cmd.ExecuteNonQuery();
-                        }
-                    }
-                }
-                finally
+                using (var cmd = command.SetupCommand(cnn, null))
                 {
-                    if (wasClosed) cnn.Close();
+                    string masterSql = null;
+                    foreach (var obj in multiExec)
+                    {
+                        if (isFirst)
+                        {
+                            masterSql = cmd.CommandText;
+                            isFirst = false;
+                            identity = new Identity(command.CommandText, cmd.CommandType, cnn, null, obj.GetType(), null);
+                            info = GetCacheInfo(identity, obj, command.AddToCache);
+                        }
+                        else
+                        {
+                            cmd.CommandText = masterSql; // because we do magic replaces on "in" etc
+                            cmd.Parameters.Clear(); // current code is Add-tastic
+                        }
+
+                        info.ParamReader(cmd, obj);
+                        total += cmd.ExecuteNonQuery();
+                    }
                 }
 
                 return total;
@@ -110,51 +102,9 @@
                 info = GetCacheInfo(identity, param, command.AddToCache);
             }
 
-            return ExecuteCommand(cnn, ref command, param == null ? null : info.ParamReader);
-        }
-
-        /// <summary>
-        /// Executes a single-row query, returning the data typed as <typeparamref name="T"/>.
-        /// </summary>
-        /// <typeparam name="T">The type of result to return.</typeparam>
-        /// <param name="cnn">The connection to query on.</param>
-        /// <param name="sql">The SQL to execute for the query.</param>
-        /// <param name="param">The parameters to pass, if any.</param>
-        /// <param name="transaction">The transaction to use, if any.</param>
-        /// <param name="commandTimeout">The command timeout (in seconds).</param>
-        /// <param name="commandType">The type of command to execute.</param>
-        /// <returns>
-        /// A sequence of data of the supplied type; if a basic type (int, string, etc) is queried then the data from the first column in assumed, otherwise an instance is
-        /// created per row, and a direct column-name===member-name mapping is assumed (case insensitive).
-        /// </returns>
-        public static T QuerySingleOrDefault<T>(
-            this IDbConnection cnn,
-            string sql,
-            object param = null,
-            IDbTransaction transaction = null,
-            int? commandTimeout = null,
-            CommandType? commandType = null)
-        {
-            var command = new CommandDefinition(sql, param, transaction, commandTimeout, commandType, CommandFlags.None);
-            return QueryRowImpl<T>(cnn, Row.SingleOrDefault, ref command, typeof(T));
-        }
-
-        private static IDataReader ExecuteReaderWithFlagsFallback(IDbCommand cmd, bool wasClosed, CommandBehavior behavior)
-        {
-            try
+            using (var cmd = command.SetupCommand(cnn, param == null ? null : info.ParamReader))
             {
-                return cmd.ExecuteReader(MapperSettings.GetBehavior(behavior));
-            }
-            catch (ArgumentException ex)
-            {
-                // thanks, Sqlite!
-                if (MapperSettings.DisableCommandBehaviorOptimizations(behavior, ex))
-                {
-                    // we can retry; this time it will have different flags
-                    return cmd.ExecuteReader(MapperSettings.GetBehavior(behavior));
-                }
-
-                throw;
+                return cmd.ExecuteNonQuery();
             }
         }
 
@@ -171,7 +121,7 @@
             {
                 cmd = command.SetupCommand(cnn, info.ParamReader);
 
-                reader = ExecuteReaderWithFlagsFallback(cmd, false, CommandBehavior.SequentialAccess | CommandBehavior.SingleResult);
+                reader = cmd.ExecuteReader(MapperSettings.GetBehavior(CommandBehavior.SequentialAccess | CommandBehavior.SingleResult));
                 var tuple = info.Deserializer;
                 var hash = GetColumnHash(reader);
                 if (tuple.Func == null || tuple.Hash != hash)
@@ -292,9 +242,9 @@
             {
                 cmd = command.SetupCommand(cnn, info.ParamReader);
 
-                reader = ExecuteReaderWithFlagsFallback(cmd, false, (row & Row.Single) != 0
+                reader = cmd.ExecuteReader(MapperSettings.GetBehavior((row & Row.Single) != 0
                     ? CommandBehavior.SequentialAccess | CommandBehavior.SingleResult // need to allow multiple rows, to check fail condition
-                    : CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow);
+                    : CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow));
 
                 T result = default;
                 if (reader.Read() && reader.FieldCount != 0)
@@ -581,9 +531,16 @@
         /// <param name="value">The object to convert to a character.</param>
         public static char ReadChar(object value)
         {
-            if (value == null || value is DBNull) throw new ArgumentNullException(nameof(value));
-            var s = value as string;
-            if (s == null || s.Length != 1) throw new ArgumentException("A single-character was expected", nameof(value));
+            if (value == null || value is DBNull)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            if (!(value is string s) || s.Length != 1)
+            {
+                throw new ArgumentException("A single-character was expected", nameof(value));
+            }
+
             return s[0];
         }
 
@@ -1560,24 +1517,6 @@
                 typeof(string).GetPublicInstanceMethod(nameof(string.Replace), new Type[] { typeof(string), typeof(string) }),
             InvariantCulture = typeof(CultureInfo).GetProperty(nameof(CultureInfo.InvariantCulture), BindingFlags.Public | BindingFlags.Static).GetGetMethod();
 
-        private static int ExecuteCommand(IDbConnection cnn, ref CommandDefinition command, Action<IDbCommand, object> paramReader)
-        {
-            IDbCommand cmd = null;
-            var wasClosed = cnn.State == ConnectionState.Closed;
-            try
-            {
-                cmd = command.SetupCommand(cnn, paramReader);
-                if (wasClosed) cnn.Open();
-                var result = cmd.ExecuteNonQuery();
-                return result;
-            }
-            finally
-            {
-                if (wasClosed) cnn.Close();
-                cmd?.Dispose();
-            }
-        }
-
         public static T ExecuteScalarImpl<T>(IDbConnection cnn, ref CommandDefinition command)
         {
             Action<IDbCommand, object> paramReader = null;
@@ -1588,19 +1527,10 @@
                 paramReader = GetCacheInfo(identity, command.Parameters, command.AddToCache).ParamReader;
             }
 
-            IDbCommand cmd = null;
-            var wasClosed = cnn.State == ConnectionState.Closed;
             object result;
-            try
+            using (var cmd = command.SetupCommand(cnn, paramReader))
             {
-                cmd = command.SetupCommand(cnn, paramReader);
-                if (wasClosed) cnn.Open();
                 result = cmd.ExecuteScalar();
-            }
-            finally
-            {
-                if (wasClosed) cnn.Close();
-                cmd?.Dispose();
             }
 
             return Parse<T>(result);

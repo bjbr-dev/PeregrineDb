@@ -27,10 +27,9 @@
 
         public Task<T> QueryFirstAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            string sql = command.CommandText;
-            object param = command.Parameters;
-            CommandType? commandType = command.CommandType;
-            return this.connection.QueryRowAsync<T>(SqlMapper.Row.First, typeof(T), new CommandDefinition(sql, param, this.transaction, commandTimeout, commandType, CommandFlags.None, cancellationToken));
+            return this.connection.QueryRowAsync<T>(SqlMapper.Row.First, typeof(T),
+                new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType,
+                    CommandFlags.None, cancellationToken));
         }
 
         public Task<T> QueryFirstAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
@@ -41,10 +40,9 @@
 
         public Task<T> QueryFirstOrDefaultAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            string sql = command.CommandText;
-            object param = command.Parameters;
-            CommandType? commandType = command.CommandType;
-            return this.connection.QueryRowAsync<T>(SqlMapper.Row.FirstOrDefault, typeof(T), new CommandDefinition(sql, param, this.transaction, commandTimeout, commandType, CommandFlags.None, cancellationToken));
+            return this.connection.QueryRowAsync<T>(SqlMapper.Row.FirstOrDefault, typeof(T),
+                new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType,
+                    CommandFlags.None, cancellationToken));
         }
 
         public Task<T> QueryFirstOrDefaultAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)

@@ -11,30 +11,18 @@
 
     internal static partial class SqlMapper
     {
-        private static Task<DbDataReader> ExecuteReaderWithFlagsFallbackAsync(DbCommand cmd, bool wasClosed, CommandBehavior behavior, CancellationToken cancellationToken)
-        {
-            var task = cmd.ExecuteReaderAsync(MapperSettings.GetBehavior(behavior), cancellationToken);
-            if (task.Status == TaskStatus.Faulted && MapperSettings.DisableCommandBehaviorOptimizations(behavior, task.Exception.InnerException))
-            { // we can retry; this time it will have different flags
-                return cmd.ExecuteReaderAsync(MapperSettings.GetBehavior(behavior), cancellationToken);
-            }
-            return task;
-        }
-
         public static async Task<IEnumerable<T>> QueryAsync<T>(this IDbConnection cnn, Type effectiveType, CommandDefinition command)
         {
             var param = command.Parameters;
             var identity = new Identity(command.CommandText, command.CommandType, cnn, effectiveType, param?.GetType(), null);
             var info = GetCacheInfo(identity, param, command.AddToCache);
-            var wasClosed = cnn.State == ConnectionState.Closed;
             var cancel = command.CancellationToken;
             using (var cmd = (DbCommand)command.SetupCommand(cnn, info.ParamReader))
             {
                 DbDataReader reader = null;
                 try
                 {
-                    if (wasClosed) await ((DbConnection)cnn).OpenAsync(cancel).ConfigureAwait(false);
-                    reader = await ExecuteReaderWithFlagsFallbackAsync(cmd, wasClosed, CommandBehavior.SequentialAccess | CommandBehavior.SingleResult, cancel).ConfigureAwait(false);
+                    reader = await cmd.ExecuteReaderAsync(MapperSettings.GetBehavior(CommandBehavior.SequentialAccess | CommandBehavior.SingleResult), cancel).ConfigureAwait(false);
 
                     var tuple = info.Deserializer;
                     var hash = GetColumnHash(reader);
@@ -69,7 +57,6 @@
                     else
                     {
                         // can't use ReadAsync / cancellation; but this will have to do
-                        wasClosed = false; // don't close if handing back an open reader; rely on the command-behavior
                         var deferred = ExecuteReaderSync<T>(reader, func, command.Parameters);
                         reader = null; // to prevent it being disposed before the caller gets to see it
                         return deferred;
@@ -78,7 +65,6 @@
                 finally
                 {
                     using (reader) { /* dispose if non-null */ }
-                    if (wasClosed) cnn.Close();
                 }
             }
         }
@@ -88,17 +74,15 @@
             var param = command.Parameters;
             var identity = new Identity(command.CommandText, command.CommandType, cnn, effectiveType, param?.GetType(), null);
             var info = GetCacheInfo(identity, param, command.AddToCache);
-            var wasClosed = cnn.State == ConnectionState.Closed;
             var cancel = command.CancellationToken;
             using (var cmd = (DbCommand)command.SetupCommand(cnn, info.ParamReader))
             {
                 DbDataReader reader = null;
                 try
                 {
-                    if (wasClosed) await ((DbConnection)cnn).OpenAsync(cancel).ConfigureAwait(false);
-                    reader = await ExecuteReaderWithFlagsFallbackAsync(cmd, wasClosed, (row & Row.Single) != 0
-                    ? CommandBehavior.SequentialAccess | CommandBehavior.SingleResult // need to allow multiple rows, to check fail condition
-                    : CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow, cancel).ConfigureAwait(false);
+                    reader = await cmd.ExecuteReaderAsync(MapperSettings.GetBehavior((row & Row.Single) != 0
+                        ? CommandBehavior.SequentialAccess | CommandBehavior.SingleResult // need to allow multiple rows, to check fail condition
+                        : CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow), cancel).ConfigureAwait(false);
 
                     T result = default;
                     if (await reader.ReadAsync(cancel).ConfigureAwait(false) && reader.FieldCount != 0)
@@ -136,7 +120,6 @@
                 finally
                 {
                     using (reader) { /* dispose if non-null */ }
-                    if (wasClosed) cnn.Close();
                 }
             }
         }
@@ -276,19 +259,9 @@
         {
             var identity = new Identity(command.CommandText, command.CommandType, cnn, null, param?.GetType(), null);
             var info = GetCacheInfo(identity, param, command.AddToCache);
-            var wasClosed = cnn.State == ConnectionState.Closed;
             using (var cmd = (DbCommand)command.SetupCommand(cnn, info.ParamReader))
             {
-                try
-                {
-                    if (wasClosed) await ((DbConnection)cnn).OpenAsync(command.CancellationToken).ConfigureAwait(false);
-                    var result = await cmd.ExecuteNonQueryAsync(command.CancellationToken).ConfigureAwait(false);
-                    return result;
-                }
-                finally
-                {
-                    if (wasClosed) cnn.Close();
-                }
+                return await cmd.ExecuteNonQueryAsync(command.CancellationToken).ConfigureAwait(false);
             }
         }
 
