@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Data;
     using System.Linq;
     using PeregrineDb.Databases.Mapper;
     using PeregrineDb.SqlCommands;
@@ -24,7 +23,7 @@
 
         public T QueryFirst<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType, CommandFlags.None);
+            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
             return SqlMapper.QueryRowImpl<T>(this.connection, SqlMapper.Row.First, ref command1, typeof(T));
         }
 
@@ -36,7 +35,7 @@
 
         public T QueryFirstOrDefault<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType, CommandFlags.None);
+            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
             return SqlMapper.QueryRowImpl<T>(this.connection, SqlMapper.Row.FirstOrDefault, ref command1, typeof(T));
         }
 
@@ -48,8 +47,7 @@
 
         public T QuerySingle<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType,
-                CommandFlags.None);
+            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
             return SqlMapper.QueryRowImpl<T>(this.connection, SqlMapper.Row.Single, ref command1, typeof(T));
         }
 
@@ -61,7 +59,7 @@
 
         public T QuerySingleOrDefault<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType, CommandFlags.None);
+            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
             return SqlMapper.QueryRowImpl<T>(this.connection, SqlMapper.Row.SingleOrDefault, ref command1, typeof(T));
         }
 
@@ -73,10 +71,7 @@
 
         public CommandResult Execute(in SqlCommand command, int? commandTimeout = null)
         {
-            string sql = command.CommandText;
-            object param = command.Parameters;
-            CommandType? commandType = command.CommandType;
-            var command1 = new CommandDefinition(sql, param, this.transaction, commandTimeout, commandType, CommandFlags.Buffered);
+            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
             return new CommandResult(SqlMapper.ExecuteImpl(this.connection, ref command1));
         }
 
@@ -88,7 +83,7 @@
 
         public T ExecuteScalar<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType, CommandFlags.Buffered);
+            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
             return SqlMapper.ExecuteScalarImpl<T>(this.connection, ref command1);
         }
 

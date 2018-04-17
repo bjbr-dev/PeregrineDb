@@ -35,21 +35,6 @@
         public CommandType? CommandType { get; }
 
         /// <summary>
-        /// Should data be buffered before returning?
-        /// </summary>
-        public bool Buffered => (this.Flags & CommandFlags.Buffered) != 0;
-
-        /// <summary>
-        /// Should the plan for this query be cached?
-        /// </summary>
-        internal bool AddToCache => (this.Flags & CommandFlags.NoCache) == 0;
-
-        /// <summary>
-        /// Additional state flags against this command
-        /// </summary>
-        public CommandFlags Flags { get; }
-
-        /// <summary>
         /// Initialize the command definition
         /// </summary>
         /// <param name="commandText">The text for this command.</param>
@@ -57,7 +42,6 @@
         /// <param name="transaction">The transaction for this command to participate in.</param>
         /// <param name="commandTimeout">The timeout (in seconds) for this command.</param>
         /// <param name="commandType">The <see cref="CommandType"/> for this command.</param>
-        /// <param name="flags">The behavior flags for this command.</param>
         /// <param name="cancellationToken">The cancellation token for this command.</param>
         public CommandDefinition(
             string commandText,
@@ -65,7 +49,6 @@
             IDbTransaction transaction = null,
             int? commandTimeout = null,
             CommandType? commandType = null,
-            CommandFlags flags = CommandFlags.Buffered,
             CancellationToken cancellationToken = default)
         {
             this.CommandText = commandText;
@@ -73,7 +56,6 @@
             this.Transaction = transaction;
             this.CommandTimeout = commandTimeout;
             this.CommandType = commandType;
-            this.Flags = flags;
             this.CancellationToken = cancellationToken;
         }
 

@@ -60,12 +60,6 @@
             CacheInfo info = null;
             if (multiExec != null)
             {
-                if ((command.Flags & CommandFlags.Pipelined) != 0)
-                {
-                    // this includes all the code for concurrent/overlapped query
-                    return ExecuteMultiImplAsync(cnn, command, multiExec).Result;
-                }
-
                 var isFirst = true;
                 var total = 0;
 
@@ -79,7 +73,7 @@
                             masterSql = cmd.CommandText;
                             isFirst = false;
                             identity = new Identity(command.CommandText, cmd.CommandType, cnn, null, obj.GetType(), null);
-                            info = GetCacheInfo(identity, obj, command.AddToCache);
+                            info = GetCacheInfo(identity, obj, true);
                         }
                         else
                         {
@@ -99,7 +93,7 @@
             if (param != null)
             {
                 identity = new Identity(command.CommandText, command.CommandType, cnn, null, param.GetType(), null);
-                info = GetCacheInfo(identity, param, command.AddToCache);
+                info = GetCacheInfo(identity, param, true);
             }
 
             using (var cmd = command.SetupCommand(cnn, param == null ? null : info.ParamReader))
@@ -112,7 +106,7 @@
         {
             var param = command.Parameters;
             var identity = new Identity(command.CommandText, command.CommandType, cnn, effectiveType, param?.GetType(), null);
-            var info = GetCacheInfo(identity, param, command.AddToCache);
+            var info = GetCacheInfo(identity, param, true);
 
             IDbCommand cmd = null;
             IDataReader reader = null;
@@ -121,7 +115,7 @@
             {
                 cmd = command.SetupCommand(cnn, info.ParamReader);
 
-                reader = cmd.ExecuteReader(MapperSettings.GetBehavior(CommandBehavior.SequentialAccess | CommandBehavior.SingleResult));
+                reader = cmd.ExecuteReader(MapperSettings.Instance.GetBehavior(CommandBehavior.SequentialAccess | CommandBehavior.SingleResult));
                 var tuple = info.Deserializer;
                 var hash = GetColumnHash(reader);
                 if (tuple.Func == null || tuple.Hash != hash)
@@ -132,7 +126,7 @@
                     }
 
                     tuple = info.Deserializer = new DeserializerState(hash, GetDeserializer(effectiveType, reader, 0, -1, false));
-                    if (command.AddToCache)
+                    if (true)
                     {
                         QueryCache.SetQueryCache(identity, info);
                     }
@@ -233,7 +227,7 @@
         {
             var param = command.Parameters;
             var identity = new Identity(command.CommandText, command.CommandType, cnn, effectiveType, param?.GetType(), null);
-            var info = GetCacheInfo(identity, param, command.AddToCache);
+            var info = GetCacheInfo(identity, param, true);
 
             IDbCommand cmd = null;
             IDataReader reader = null;
@@ -242,7 +236,7 @@
             {
                 cmd = command.SetupCommand(cnn, info.ParamReader);
 
-                reader = cmd.ExecuteReader(MapperSettings.GetBehavior((row & Row.Single) != 0
+                reader = cmd.ExecuteReader(MapperSettings.Instance.GetBehavior((row & Row.Single) != 0
                     ? CommandBehavior.SequentialAccess | CommandBehavior.SingleResult // need to allow multiple rows, to check fail condition
                     : CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow));
 
@@ -254,7 +248,7 @@
                     if (tuple.Func == null || tuple.Hash != hash)
                     {
                         tuple = info.Deserializer = new DeserializerState(hash, GetDeserializer(effectiveType, reader, 0, -1, false));
-                        if (command.AddToCache) QueryCache.SetQueryCache(identity, info);
+                        if (true) QueryCache.SetQueryCache(identity, info);
                     }
 
                     var func = tuple.Func;
@@ -1311,7 +1305,7 @@
             if (param != null)
             {
                 var identity = new Identity(command.CommandText, command.CommandType, cnn, null, param.GetType(), null);
-                paramReader = GetCacheInfo(identity, command.Parameters, command.AddToCache).ParamReader;
+                paramReader = GetCacheInfo(identity, command.Parameters, true).ParamReader;
             }
 
             object result;

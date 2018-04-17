@@ -11,60 +11,58 @@
 
     internal static partial class SqlMapper
     {
-        public static async Task<IEnumerable<T>> QueryAsync<T>(this IDbConnection cnn, Type effectiveType, CommandDefinition command)
+        public static async Task<IReadOnlyList<T>> QueryAsync<T>(this IDbConnection cnn, Type effectiveType, CommandDefinition command)
         {
             var param = command.Parameters;
             var identity = new Identity(command.CommandText, command.CommandType, cnn, effectiveType, param?.GetType(), null);
-            var info = GetCacheInfo(identity, param, command.AddToCache);
+            var info = GetCacheInfo(identity, param, true);
             var cancel = command.CancellationToken;
             using (var cmd = (DbCommand)command.SetupCommand(cnn, info.ParamReader))
             {
                 DbDataReader reader = null;
                 try
                 {
-                    reader = await cmd.ExecuteReaderAsync(MapperSettings.GetBehavior(CommandBehavior.SequentialAccess | CommandBehavior.SingleResult), cancel).ConfigureAwait(false);
+                    var commandBehavior = MapperSettings.Instance.GetBehavior(CommandBehavior.SequentialAccess | CommandBehavior.SingleResult);
+                    reader = await cmd.ExecuteReaderAsync(commandBehavior, cancel).ConfigureAwait(false);
 
                     var tuple = info.Deserializer;
                     var hash = GetColumnHash(reader);
                     if (tuple.Func == null || tuple.Hash != hash)
                     {
                         tuple = info.Deserializer = new DeserializerState(hash, GetDeserializer(effectiveType, reader, 0, -1, false));
-                        if (command.AddToCache) QueryCache.SetQueryCache(identity, info);
+                        QueryCache.SetQueryCache(identity, info);
                     }
 
                     var func = tuple.Func;
 
-                    if (command.Buffered)
+                    var buffer = new List<T>();
+                    var convertToType = Nullable.GetUnderlyingType(effectiveType) ?? effectiveType;
+                    while (await reader.ReadAsync(cancel).ConfigureAwait(false))
                     {
-                        var buffer = new List<T>();
-                        var convertToType = Nullable.GetUnderlyingType(effectiveType) ?? effectiveType;
-                        while (await reader.ReadAsync(cancel).ConfigureAwait(false))
+                        var val = func(reader);
+                        if (val == null || val is T)
                         {
-                            var val = func(reader);
-                            if (val == null || val is T)
-                            {
-                                buffer.Add((T)val);
-                            }
-                            else
-                            {
-                                buffer.Add((T)Convert.ChangeType(val, convertToType, CultureInfo.InvariantCulture));
-                            }
+                            buffer.Add((T)val);
                         }
-                        while (await reader.NextResultAsync(cancel).ConfigureAwait(false)) { /* ignore subsequent result sets */ }
+                        else
+                        {
+                            buffer.Add((T)Convert.ChangeType(val, convertToType, CultureInfo.InvariantCulture));
+                        }
+                    }
 
-                        return buffer;
-                    }
-                    else
+                    while (await reader.NextResultAsync(cancel).ConfigureAwait(false))
                     {
-                        // can't use ReadAsync / cancellation; but this will have to do
-                        var deferred = ExecuteReaderSync<T>(reader, func, command.Parameters);
-                        reader = null; // to prevent it being disposed before the caller gets to see it
-                        return deferred;
+                        /* ignore subsequent result sets */
                     }
+
+                    return buffer;
                 }
                 finally
                 {
-                    using (reader) { /* dispose if non-null */ }
+                    using (reader)
+                    {
+                        /* dispose if non-null */
+                    }
                 }
             }
         }
@@ -73,14 +71,14 @@
         {
             var param = command.Parameters;
             var identity = new Identity(command.CommandText, command.CommandType, cnn, effectiveType, param?.GetType(), null);
-            var info = GetCacheInfo(identity, param, command.AddToCache);
+            var info = GetCacheInfo(identity, param, true);
             var cancel = command.CancellationToken;
             using (var cmd = (DbCommand)command.SetupCommand(cnn, info.ParamReader))
             {
                 DbDataReader reader = null;
                 try
                 {
-                    reader = await cmd.ExecuteReaderAsync(MapperSettings.GetBehavior((row & Row.Single) != 0
+                    reader = await cmd.ExecuteReaderAsync(MapperSettings.Instance.GetBehavior((row & Row.Single) != 0
                         ? CommandBehavior.SequentialAccess | CommandBehavior.SingleResult // need to allow multiple rows, to check fail condition
                         : CommandBehavior.SequentialAccess | CommandBehavior.SingleResult | CommandBehavior.SingleRow), cancel).ConfigureAwait(false);
 
@@ -92,7 +90,7 @@
                         if (tuple.Func == null || tuple.Hash != hash)
                         {
                             tuple = info.Deserializer = new DeserializerState(hash, GetDeserializer(effectiveType, reader, 0, -1, false));
-                            if (command.AddToCache) QueryCache.SetQueryCache(identity, info);
+                            if (true) QueryCache.SetQueryCache(identity, info);
                         }
 
                         var func = tuple.Func;
@@ -144,111 +142,32 @@
             }
         }
 
-        private struct AsyncExecState
-        {
-            public readonly DbCommand Command;
-            public readonly Task<int> Task;
-            public AsyncExecState(DbCommand command, Task<int> task)
-            {
-                this.Command = command;
-                this.Task = task;
-            }
-        }
-
         private static async Task<int> ExecuteMultiImplAsync(IDbConnection cnn, CommandDefinition command, IEnumerable multiExec)
         {
             var isFirst = true;
             var total = 0;
             CacheInfo info = null;
             string masterSql = null;
-            if ((command.Flags & CommandFlags.Pipelined) != 0)
+
+            using (var cmd = (DbCommand)command.SetupCommand(cnn, null))
             {
-                const int MAX_PENDING = 100;
-                var pending = new Queue<SqlMapper.AsyncExecState>(MAX_PENDING);
-                DbCommand cmd = null;
-                try
+                foreach (var obj in multiExec)
                 {
-                    foreach (var obj in multiExec)
+                    if (isFirst)
                     {
-                        if (isFirst)
-                        {
-                            isFirst = false;
-                            cmd = (DbCommand)command.SetupCommand(cnn, null);
-                            masterSql = cmd.CommandText;
-                            var identity = new Identity(command.CommandText, cmd.CommandType, cnn, null, obj.GetType(), null);
-                            info = GetCacheInfo(identity, obj, command.AddToCache);
-                        }
-                        else if (pending.Count >= MAX_PENDING)
-                        {
-                            var recycled = pending.Dequeue();
-                            total += await recycled.Task.ConfigureAwait(false);
-                            cmd = recycled.Command;
-                            cmd.CommandText = masterSql; // because we do magic replaces on "in" etc
-                            cmd.Parameters.Clear(); // current code is Add-tastic
-                        }
-                        else
-                        {
-                            cmd = (DbCommand)command.SetupCommand(cnn, null);
-                        }
-
-                        info.ParamReader(cmd, obj);
-
-                        var task = cmd.ExecuteNonQueryAsync(command.CancellationToken);
-                        pending.Enqueue(new SqlMapper.AsyncExecState(cmd, task));
-                        cmd = null; // note the using in the finally: this avoids a double-dispose
+                        masterSql = cmd.CommandText;
+                        isFirst = false;
+                        var identity = new Identity(command.CommandText, cmd.CommandType, cnn, null, obj.GetType(), null);
+                        info = GetCacheInfo(identity, obj, true);
+                    }
+                    else
+                    {
+                        cmd.CommandText = masterSql; // because we do magic replaces on "in" etc
+                        cmd.Parameters.Clear(); // current code is Add-tastic
                     }
 
-                    while (pending.Count != 0)
-                    {
-                        var pair = pending.Dequeue();
-                        using (pair.Command)
-                        {
-                            /* dispose commands */
-                        }
-
-                        total += await pair.Task.ConfigureAwait(false);
-                    }
-                }
-                finally
-                {
-                    // this only has interesting work to do if there are failures
-                    using (cmd)
-                    {
-                        /* dispose commands */
-                    }
-
-                    while (pending.Count != 0)
-                    {
-                        // dispose tasks even in failure
-                        using (pending.Dequeue().Command)
-                        {
-                            /* dispose commands */
-                        }
-                    }
-                }
-            }
-            else
-            {
-                using (var cmd = (DbCommand)command.SetupCommand(cnn, null))
-                {
-                    foreach (var obj in multiExec)
-                    {
-                        if (isFirst)
-                        {
-                            masterSql = cmd.CommandText;
-                            isFirst = false;
-                            var identity = new Identity(command.CommandText, cmd.CommandType, cnn, null, obj.GetType(), null);
-                            info = GetCacheInfo(identity, obj, command.AddToCache);
-                        }
-                        else
-                        {
-                            cmd.CommandText = masterSql; // because we do magic replaces on "in" etc
-                            cmd.Parameters.Clear(); // current code is Add-tastic
-                        }
-
-                        info.ParamReader(cmd, obj);
-                        total += await cmd.ExecuteNonQueryAsync(command.CancellationToken).ConfigureAwait(false);
-                    }
+                    info.ParamReader(cmd, obj);
+                    total += await cmd.ExecuteNonQueryAsync(command.CancellationToken).ConfigureAwait(false);
                 }
             }
 
@@ -258,22 +177,10 @@
         private static async Task<int> ExecuteImplAsync(IDbConnection cnn, CommandDefinition command, object param)
         {
             var identity = new Identity(command.CommandText, command.CommandType, cnn, null, param?.GetType(), null);
-            var info = GetCacheInfo(identity, param, command.AddToCache);
+            var info = GetCacheInfo(identity, param, true);
             using (var cmd = (DbCommand)command.SetupCommand(cnn, info.ParamReader))
             {
                 return await cmd.ExecuteNonQueryAsync(command.CancellationToken).ConfigureAwait(false);
-            }
-        }
-
-        private static IEnumerable<T> ExecuteReaderSync<T>(IDataReader reader, Func<IDataReader, object> func, object parameters)
-        {
-            using (reader)
-            {
-                while (reader.Read())
-                {
-                    yield return (T)func(reader);
-                }
-                while (reader.NextResult()) { /* ignore subsequent result sets */ }
             }
         }
 
