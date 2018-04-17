@@ -194,10 +194,11 @@
 
             return null;
         }
+
         /// <summary>
         /// Should column names like User_Id be allowed to match properties/fields like UserId ?
         /// </summary>
-        public static bool MatchNamesWithUnderscores { get; set; }
+        public static bool MatchNamesWithUnderscores { get; set; } = true;
 
         /// <summary>
         /// The settable properties for this typemap
