@@ -24,12 +24,12 @@
 
                 QueryCache.Purge();
 
-                SqlMapper.AddTypeMap(typeof(string), DbType.AnsiString); // Change Default String Handling to AnsiString
+                TypeProvider.AddTypeMap(typeof(string), DbType.AnsiString); // Change Default String Handling to AnsiString
                 var result02 = database.Query<string>($"SELECT SQL_VARIANT_PROPERTY(CONVERT(sql_variant, {"TestString"}),'BaseType') AS BaseType").FirstOrDefault();
                 Assert.Equal("varchar", result02);
 
                 QueryCache.Purge();
-                SqlMapper.AddTypeMap(typeof(string), DbType.String); // Restore Default to Unicode String
+                TypeProvider.AddTypeMap(typeof(string), DbType.String); // Restore Default to Unicode String
             }
         }
 
@@ -44,13 +44,13 @@
 
                 QueryCache.Purge();
 
-                SqlMapper.AddTypeMap(typeof(string), DbType.AnsiString); // Change Default String Handling to AnsiString
+                TypeProvider.AddTypeMap(typeof(string), DbType.AnsiString); // Change Default String Handling to AnsiString
                 var result02 = database.QueryFirstOrDefault<string>(
                     $"SELECT SQL_VARIANT_PROPERTY(CONVERT(sql_variant, {"TestString"}),'BaseType') AS BaseType");
                 Assert.Equal("varchar", result02);
 
                 QueryCache.Purge();
-                SqlMapper.AddTypeMap(typeof(string), DbType.String); // Restore Default to Unicode String
+                TypeProvider.AddTypeMap(typeof(string), DbType.String); // Restore Default to Unicode String
             }
         }
 
@@ -101,8 +101,8 @@
         {
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
             {
-                SqlMapper.ResetTypeHandlers();
-                SqlMapper.AddTypeHandler(typeof(LocalDate), LocalDateHandler.Default);
+                TypeProvider.ResetTypeHandlers();
+                TypeProvider.AddTypeHandler(typeof(LocalDate), LocalDateHandler.Default);
                 var param = new LocalDateResult
                 {
                     NotNullable = new LocalDate { Year = 2014, Month = 7, Day = 25 },
@@ -114,8 +114,8 @@
                     param);
                 var result = database.Query<LocalDateResult>(in command).Single();
 
-                SqlMapper.ResetTypeHandlers();
-                SqlMapper.AddTypeHandler(typeof(LocalDate?), LocalDateHandler.Default);
+                TypeProvider.ResetTypeHandlers();
+                TypeProvider.AddTypeHandler(typeof(LocalDate?), LocalDateHandler.Default);
 
                 command = new SqlCommand("SELECT @NotNullable AS NotNullable, @NullableNotNull AS NullableNotNull, @NullableIsNull AS NullableIsNull", param);
                 result = database.Query<LocalDateResult>(in command).Single();
@@ -415,7 +415,7 @@
         {
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
             {
-                SqlMapper.AddTypeHandler(RatingValueHandler.Default);
+                TypeProvider.AddTypeHandler(RatingValueHandler.Default);
                 var foo = database.Query<MyResult>($"SELECT 'Foo' AS CategoryName, 200 AS CategoryRating").Single();
 
                 Assert.Equal("Foo", foo.CategoryName);
@@ -428,7 +428,7 @@
         {
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
             {
-                SqlMapper.AddTypeHandler(RatingValueHandler.Default);
+                TypeProvider.AddTypeHandler(RatingValueHandler.Default);
                 var foo = database.Query<RatingValue>($"SELECT 200 AS CategoryRating").Single();
 
                 Assert.Equal(200, foo.Value);
@@ -464,8 +464,8 @@
         {
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
             {
-                SqlMapper.ResetTypeHandlers();
-                SqlMapper.AddTypeHandler(StringListTypeHandler.Default);
+                TypeProvider.ResetTypeHandlers();
+                TypeProvider.AddTypeHandler(StringListTypeHandler.Default);
                 var foo = database.Query<MyObjectWithStringList>($"SELECT 'Sam,Kyro' AS Names").Single();
                 Assert.Equal(new[] { "Sam", "Kyro" }, foo.Names);
             }
@@ -476,8 +476,8 @@
         {
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
             {
-                SqlMapper.ResetTypeHandlers();
-                SqlMapper.AddTypeHandler(StringListTypeHandler.Default);
+                TypeProvider.ResetTypeHandlers();
+                TypeProvider.AddTypeHandler(StringListTypeHandler.Default);
 
                 database.Execute($"CREATE TABLE #Issue253 (Names VARCHAR(50) NOT NULL);");
                 try
@@ -518,11 +518,11 @@
         {
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
             {
-                SqlMapper.ResetTypeHandlers();
-                SqlMapper.RemoveTypeMap(typeof(DateTime));
+                TypeProvider.ResetTypeHandlers();
+                TypeProvider.RemoveTypeMap(typeof(DateTime));
 
                 var dateTimeHandler = new RecordingTypeHandler<DateTime>();
-                SqlMapper.AddTypeHandler(dateTimeHandler);
+                TypeProvider.AddTypeHandler(dateTimeHandler);
 
                 database.Execute($"CREATE TABLE #Test_RemoveTypeMap (x datetime NOT NULL);");
 
@@ -537,7 +537,7 @@
                 finally
                 {
                     database.Execute($"DROP TABLE #Test_RemoveTypeMap");
-                    SqlMapper.AddTypeMap(typeof(DateTime), DbType.DateTime); // or an option to reset type map?
+                    TypeProvider.AddTypeMap(typeof(DateTime), DbType.DateTime); // or an option to reset type map?
                 }
             }
         }
@@ -706,7 +706,7 @@
         {
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
             {
-                SqlMapper.AddTypeHandler(new Issue461_BlargHandler());
+                TypeProvider.AddTypeHandler(new Issue461_BlargHandler());
 
                 database.Execute($@"CREATE TABLE #Issue461 (
                                       Id                int not null IDENTITY(1,1),

@@ -20,7 +20,8 @@
     /// </remarks>
     internal static partial class SqlMapper
     {
-        private class PropertyInfoByNameComparer : IComparer<PropertyInfo>
+        private class PropertyInfoByNameComparer
+            : IComparer<PropertyInfo>
         {
             public int Compare(PropertyInfo x, PropertyInfo y) => string.CompareOrdinal(x.Name, y.Name);
         }
@@ -39,229 +40,6 @@
 
                 return hash;
             }
-        }
-
-        private static Dictionary<Type, DbType> typeMap;
-
-        static SqlMapper()
-        {
-            typeMap = new Dictionary<Type, DbType>
-                {
-                    [typeof(byte)] = DbType.Byte,
-                    [typeof(sbyte)] = DbType.SByte,
-                    [typeof(short)] = DbType.Int16,
-                    [typeof(ushort)] = DbType.UInt16,
-                    [typeof(int)] = DbType.Int32,
-                    [typeof(uint)] = DbType.UInt32,
-                    [typeof(long)] = DbType.Int64,
-                    [typeof(ulong)] = DbType.UInt64,
-                    [typeof(float)] = DbType.Single,
-                    [typeof(double)] = DbType.Double,
-                    [typeof(decimal)] = DbType.Decimal,
-                    [typeof(bool)] = DbType.Boolean,
-                    [typeof(string)] = DbType.String,
-                    [typeof(char)] = DbType.StringFixedLength,
-                    [typeof(Guid)] = DbType.Guid,
-                    [typeof(DateTime)] = DbType.DateTime,
-                    [typeof(DateTimeOffset)] = DbType.DateTimeOffset,
-                    [typeof(TimeSpan)] = DbType.Time,
-                    [typeof(byte[])] = DbType.Binary,
-                    [typeof(byte?)] = DbType.Byte,
-                    [typeof(sbyte?)] = DbType.SByte,
-                    [typeof(short?)] = DbType.Int16,
-                    [typeof(ushort?)] = DbType.UInt16,
-                    [typeof(int?)] = DbType.Int32,
-                    [typeof(uint?)] = DbType.UInt32,
-                    [typeof(long?)] = DbType.Int64,
-                    [typeof(ulong?)] = DbType.UInt64,
-                    [typeof(float?)] = DbType.Single,
-                    [typeof(double?)] = DbType.Double,
-                    [typeof(decimal?)] = DbType.Decimal,
-                    [typeof(bool?)] = DbType.Boolean,
-                    [typeof(char?)] = DbType.StringFixedLength,
-                    [typeof(Guid?)] = DbType.Guid,
-                    [typeof(DateTime?)] = DbType.DateTime,
-                    [typeof(DateTimeOffset?)] = DbType.DateTimeOffset,
-                    [typeof(TimeSpan?)] = DbType.Time,
-                    [typeof(object)] = DbType.Object
-                };
-            ResetTypeHandlers(false);
-        }
-
-        /// <summary>
-        /// Clear the registered type handlers.
-        /// </summary>
-        public static void ResetTypeHandlers() => ResetTypeHandlers(true);
-
-        private static void ResetTypeHandlers(bool clone)
-        {
-            typeHandlers = new Dictionary<Type, ITypeHandler>();
-        }
-
-        /// <summary>
-        /// Configure the specified type to be mapped to a given db-type.
-        /// </summary>
-        /// <param name="type">The type to map from.</param>
-        /// <param name="dbType">The database type to map to.</param>
-        public static void AddTypeMap(Type type, DbType dbType)
-        {
-            // use clone, mutate, replace to avoid threading issues
-            var snapshot = typeMap;
-
-            if (snapshot.TryGetValue(type, out var oldValue) && oldValue == dbType) return; // nothing to do
-
-            typeMap = new Dictionary<Type, DbType>(snapshot) { [type] = dbType };
-        }
-
-        /// <summary>
-        /// Removes the specified type from the Type/DbType mapping table.
-        /// </summary>
-        /// <param name="type">The type to remove from the current map.</param>
-        public static void RemoveTypeMap(Type type)
-        {
-            // use clone, mutate, replace to avoid threading issues
-            var snapshot = typeMap;
-
-            if (!snapshot.ContainsKey(type)) return; // nothing to do
-
-            var newCopy = new Dictionary<Type, DbType>(snapshot);
-            newCopy.Remove(type);
-
-            typeMap = newCopy;
-        }
-
-        /// <summary>
-        /// Configure the specified type to be processed by a custom handler.
-        /// </summary>
-        /// <param name="type">The type to handle.</param>
-        /// <param name="handler">The handler to process the <paramref name="type"/>.</param>
-        public static void AddTypeHandler(Type type, ITypeHandler handler) => AddTypeHandlerImpl(type, handler, true);
-
-        internal static bool HasTypeHandler(Type type) => typeHandlers.ContainsKey(type);
-
-        /// <summary>
-        /// Configure the specified type to be processed by a custom handler.
-        /// </summary>
-        /// <param name="type">The type to handle.</param>
-        /// <param name="handler">The handler to process the <paramref name="type"/>.</param>
-        /// <param name="clone">Whether to clone the current type handler map.</param>
-        private static void AddTypeHandlerImpl(Type type, ITypeHandler handler, bool clone)
-        {
-            if (type == null) throw new ArgumentNullException(nameof(type));
-
-            Type secondary = null;
-            if (type.IsValueType())
-            {
-                var underlying = Nullable.GetUnderlyingType(type);
-                if (underlying == null)
-                {
-                    secondary = typeof(Nullable<>).MakeGenericType(type); // the Nullable<T>
-                    // type is already the T
-                }
-                else
-                {
-                    secondary = type; // the Nullable<T>
-                    type = underlying; // the T
-                }
-            }
-
-            var snapshot = typeHandlers;
-            if (snapshot.TryGetValue(type, out var oldValue) && handler == oldValue) return; // nothing to do
-
-            var newCopy = clone ? new Dictionary<Type, ITypeHandler>(snapshot) : snapshot;
-
-#pragma warning disable 618
-            typeof(TypeHandlerCache<>).MakeGenericType(type).GetMethod(nameof(TypeHandlerCache<int>.SetHandler), BindingFlags.Static | BindingFlags.NonPublic)
-                                      .Invoke(null, new object[] { handler });
-            if (secondary != null)
-            {
-                typeof(TypeHandlerCache<>).MakeGenericType(secondary)
-                                          .GetMethod(nameof(TypeHandlerCache<int>.SetHandler), BindingFlags.Static | BindingFlags.NonPublic)
-                                          .Invoke(null, new object[] { handler });
-            }
-#pragma warning restore 618
-            if (handler == null)
-            {
-                newCopy.Remove(type);
-                if (secondary != null) newCopy.Remove(secondary);
-            }
-            else
-            {
-                newCopy[type] = handler;
-                if (secondary != null) newCopy[secondary] = handler;
-            }
-
-            typeHandlers = newCopy;
-        }
-
-        /// <summary>
-        /// Configure the specified type to be processed by a custom handler.
-        /// </summary>
-        /// <typeparam name="T">The type to handle.</typeparam>
-        /// <param name="handler">The handler for the type <typeparamref name="T"/>.</param>
-        public static void AddTypeHandler<T>(TypeHandler<T> handler) => AddTypeHandlerImpl(typeof(T), handler, true);
-
-        private static Dictionary<Type, ITypeHandler> typeHandlers;
-
-        internal const string LinqBinary = "System.Data.Linq.Binary";
-
-        /// <summary>
-        /// Get the DbType that maps to a given value.
-        /// </summary>
-        /// <param name="value">The object to get a corresponding database type for.</param>
-        public static DbType GetDbType(object value)
-        {
-            if (value == null || value is DBNull)
-            {
-                return DbType.Object;
-            }
-
-            return LookupDbType(value.GetType(), "n/a", false, out var handler);
-        }
-
-        /// <summary>
-        /// OBSOLETE: For internal usage only. Lookup the DbType and handler for a given Type and member
-        /// </summary>
-        /// <param name="type">The type to lookup.</param>
-        /// <param name="name">The name (for error messages).</param>
-        /// <param name="demand">Whether to demand a value (throw if missing).</param>
-        /// <param name="handler">The handler for <paramref name="type"/>.</param>
-        public static DbType LookupDbType(Type type, string name, bool demand, out ITypeHandler handler)
-        {
-            handler = null;
-            var nullUnderlyingType = Nullable.GetUnderlyingType(type);
-            if (nullUnderlyingType != null) type = nullUnderlyingType;
-            if (type.IsEnum() && !typeMap.ContainsKey(type))
-            {
-                type = Enum.GetUnderlyingType(type);
-            }
-
-            if (typeMap.TryGetValue(type, out var dbType))
-            {
-                return dbType;
-            }
-
-            if (type.FullName == LinqBinary)
-            {
-                return DbType.Binary;
-            }
-
-            if (typeHandlers.TryGetValue(type, out handler))
-            {
-                return DbType.Object;
-            }
-
-            if (typeof(IEnumerable).IsAssignableFrom(type))
-            {
-                return DynamicParameters.EnumerableMultiParameter;
-            }
-
-            if (demand)
-            {
-                throw new NotSupportedException($"The member {name} of type {type.FullName} cannot be used as a parameter value");
-            }
-
-            return DbType.Object;
         }
 
         private static IEnumerable GetMultiExec(object param)
@@ -389,23 +167,20 @@
             IDbCommand cmd = null;
             IDataReader reader = null;
 
-            var wasClosed = cnn.State == ConnectionState.Closed;
             try
             {
                 cmd = command.SetupCommand(cnn, info.ParamReader);
 
-                if (wasClosed) cnn.Open();
-                reader = ExecuteReaderWithFlagsFallback(cmd, wasClosed, CommandBehavior.SequentialAccess | CommandBehavior.SingleResult);
-                wasClosed = false; // *if* the connection was closed and we got this far, then we now have a reader
-                // with the CloseConnection flag, so the reader will deal with the connection; we
-                // still need something in the "finally" to ensure that broken SQL still results
-                // in the connection closing itself
+                reader = ExecuteReaderWithFlagsFallback(cmd, false, CommandBehavior.SequentialAccess | CommandBehavior.SingleResult);
                 var tuple = info.Deserializer;
                 var hash = GetColumnHash(reader);
                 if (tuple.Func == null || tuple.Hash != hash)
                 {
                     if (reader.FieldCount == 0) //https://code.google.com/p/dapper-dot-net/issues/detail?id=57
+                    {
                         yield break;
+                    }
+
                     tuple = info.Deserializer = new DeserializerState(hash, GetDeserializer(effectiveType, reader, 0, -1, false));
                     if (command.AddToCache)
                     {
@@ -457,7 +232,6 @@
                     reader.Dispose();
                 }
 
-                if (wasClosed) cnn.Close();
                 cmd?.Dispose();
             }
         }
@@ -700,10 +474,10 @@
             }
 
             Type underlyingType = null;
-            if (!(typeMap.ContainsKey(type) || type.IsEnum() || type.FullName == LinqBinary
+            if (!(TypeProvider.ContainsTypeMap(type) || type.IsEnum() || type.FullName == TypeProvider.LinqBinary
                   || (type.IsValueType() && (underlyingType = Nullable.GetUnderlyingType(type)) != null && underlyingType.IsEnum())))
             {
-                if (typeHandlers.TryGetValue(type, out var handler))
+                if (TypeProvider.TryGetHandler(type, out var handler))
                 {
                     return GetHandlerDeserializer(handler, type, startBound);
                 }
@@ -925,7 +699,7 @@
 
                             if (!isDbString)
                             {
-                                dbType = LookupDbType(item.GetType(), "", true, out var handler);
+                                dbType = TypeProvider.LookupDbType(item.GetType(), "", true, out var handler);
                             }
                         }
 
@@ -1445,7 +1219,7 @@
                     continue;
                 }
 #pragma warning disable 618
-                var dbType = LookupDbType(prop.PropertyType, prop.Name, true, out var handler);
+                var dbType = TypeProvider.LookupDbType(prop.PropertyType, prop.Name, true, out var handler);
 #pragma warning restore 618
                 if (dbType == DynamicParameters.EnumerableMultiParameter)
                 {
@@ -1494,9 +1268,7 @@
                         // look it up from the param value
                         il.Emit(OpCodes.Ldloc_0); // stack is now [parameters] [[parameters]] [parameter] [parameter] [typed-param]
                         il.Emit(callOpCode, prop.GetGetMethod()); // stack is [parameters] [[parameters]] [parameter] [parameter] [object-value]
-                        il.Emit(OpCodes.Call,
-                            typeof(SqlMapper).GetMethod(nameof(SqlMapper.GetDbType),
-                                BindingFlags.Static | BindingFlags.Public)); // stack is now [parameters] [[parameters]] [parameter] [parameter] [db-type]
+                        il.Emit(OpCodes.Call, typeof(TypeProvider).GetMethod(nameof(TypeProvider.GetDbType), BindingFlags.Static | BindingFlags.Public)); // stack is now [parameters] [[parameters]] [parameter] [parameter] [db-type]
                     }
                     else
                     {
@@ -1621,7 +1393,7 @@
                         il.Emit(OpCodes.Stloc_1); // [string]
                     }
 
-                    if (prop.PropertyType.FullName == LinqBinary)
+                    if (prop.PropertyType.FullName == TypeProvider.LinqBinary)
                     {
                         il.EmitCall(OpCodes.Callvirt, prop.PropertyType.GetMethod("ToArray", BindingFlags.Public | BindingFlags.Instance), null);
                     }
@@ -1632,9 +1404,7 @@
 
                 if (handler != null)
                 {
-#pragma warning disable 618
                     il.Emit(OpCodes.Call, typeof(TypeHandlerCache<>).MakeGenericType(prop.PropertyType).GetMethod(nameof(TypeHandlerCache<int>.SetValue))); // stack is now [parameters] [[parameters]] [parameter]
-#pragma warning restore 618
                 }
                 else
                 {
@@ -1851,7 +1621,7 @@
                 return r => ReadNullableChar(r.GetValue(index));
             }
 
-            if (type.FullName == LinqBinary)
+            if (type.FullName == TypeProvider.LinqBinary)
             {
                 return r => Activator.CreateInstance(type, r.GetValue(index));
             }
@@ -1872,7 +1642,7 @@
                 };
             }
 
-            if (typeHandlers.TryGetValue(type, out var handler))
+            if (TypeProvider.TryGetHandler(type, out var handler))
             {
                 return r =>
                 {
@@ -1904,7 +1674,7 @@
                 return (T)Enum.ToObject(type, value);
             }
 
-            if (typeHandlers.TryGetValue(type, out var handler))
+            if (TypeProvider.TryGetHandler(type, out var handler))
             {
                 return (T)handler.Parse(type, value);
             }
@@ -2199,7 +1969,7 @@
                                 il.Emit(OpCodes.Newobj, memberType.GetConstructor(new[] { nullUnderlyingType })); // stack is now [target][target][typed-value]
                             }
                         }
-                        else if (memberType.FullName == LinqBinary)
+                        else if (memberType.FullName == TypeProvider.LinqBinary)
                         {
                             il.Emit(OpCodes.Unbox_Any, typeof(byte[])); // stack is now [target][target][byte-array]
                             il.Emit(OpCodes.Newobj, memberType.GetConstructor(new Type[] { typeof(byte[]) })); // stack is now [target][target][binary]
@@ -2208,7 +1978,7 @@
                         {
                             TypeCode dataTypeCode = TypeExtensions.GetTypeCode(colType), unboxTypeCode = TypeExtensions.GetTypeCode(unboxType);
                             bool hasTypeHandler;
-                            if ((hasTypeHandler = typeHandlers.ContainsKey(unboxType)) || colType == unboxType || dataTypeCode == unboxTypeCode ||
+                            if ((hasTypeHandler = TypeProvider.ContainsHandler(unboxType)) || colType == unboxType || dataTypeCode == unboxTypeCode ||
                                 dataTypeCode == TypeExtensions.GetTypeCode(nullUnderlyingType))
                             {
                                 if (hasTypeHandler)

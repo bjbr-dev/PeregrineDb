@@ -176,93 +176,99 @@
         {
             var isFirst = true;
             var total = 0;
-            var wasClosed = cnn.State == ConnectionState.Closed;
-            try
+            CacheInfo info = null;
+            string masterSql = null;
+            if ((command.Flags & CommandFlags.Pipelined) != 0)
             {
-                if (wasClosed) await ((DbConnection)cnn).OpenAsync(command.CancellationToken).ConfigureAwait(false);
-
-                CacheInfo info = null;
-                string masterSql = null;
-                if ((command.Flags & CommandFlags.Pipelined) != 0)
+                const int MAX_PENDING = 100;
+                var pending = new Queue<SqlMapper.AsyncExecState>(MAX_PENDING);
+                DbCommand cmd = null;
+                try
                 {
-                    const int MAX_PENDING = 100;
-                    var pending = new Queue<SqlMapper.AsyncExecState>(MAX_PENDING);
-                    DbCommand cmd = null;
-                    try
+                    foreach (var obj in multiExec)
                     {
-                        foreach (var obj in multiExec)
+                        if (isFirst)
                         {
-                            if (isFirst)
-                            {
-                                isFirst = false;
-                                cmd = (DbCommand)command.SetupCommand(cnn, null);
-                                masterSql = cmd.CommandText;
-                                var identity = new Identity(command.CommandText, cmd.CommandType, cnn, null, obj.GetType(), null);
-                                info = GetCacheInfo(identity, obj, command.AddToCache);
-                            }
-                            else if (pending.Count >= MAX_PENDING)
-                            {
-                                var recycled = pending.Dequeue();
-                                total += await recycled.Task.ConfigureAwait(false);
-                                cmd = recycled.Command;
-                                cmd.CommandText = masterSql; // because we do magic replaces on "in" etc
-                                cmd.Parameters.Clear(); // current code is Add-tastic
-                            }
-                            else
-                            {
-                                cmd = (DbCommand)command.SetupCommand(cnn, null);
-                            }
-                            info.ParamReader(cmd, obj);
+                            isFirst = false;
+                            cmd = (DbCommand)command.SetupCommand(cnn, null);
+                            masterSql = cmd.CommandText;
+                            var identity = new Identity(command.CommandText, cmd.CommandType, cnn, null, obj.GetType(), null);
+                            info = GetCacheInfo(identity, obj, command.AddToCache);
+                        }
+                        else if (pending.Count >= MAX_PENDING)
+                        {
+                            var recycled = pending.Dequeue();
+                            total += await recycled.Task.ConfigureAwait(false);
+                            cmd = recycled.Command;
+                            cmd.CommandText = masterSql; // because we do magic replaces on "in" etc
+                            cmd.Parameters.Clear(); // current code is Add-tastic
+                        }
+                        else
+                        {
+                            cmd = (DbCommand)command.SetupCommand(cnn, null);
+                        }
 
-                            var task = cmd.ExecuteNonQueryAsync(command.CancellationToken);
-                            pending.Enqueue(new SqlMapper.AsyncExecState(cmd, task));
-                            cmd = null; // note the using in the finally: this avoids a double-dispose
-                        }
-                        while (pending.Count != 0)
-                        {
-                            var pair = pending.Dequeue();
-                            using (pair.Command) { /* dispose commands */ }
-                            total += await pair.Task.ConfigureAwait(false);
-                        }
+                        info.ParamReader(cmd, obj);
+
+                        var task = cmd.ExecuteNonQueryAsync(command.CancellationToken);
+                        pending.Enqueue(new SqlMapper.AsyncExecState(cmd, task));
+                        cmd = null; // note the using in the finally: this avoids a double-dispose
                     }
-                    finally
+
+                    while (pending.Count != 0)
                     {
-                        // this only has interesting work to do if there are failures
-                        using (cmd) { /* dispose commands */ }
-                        while (pending.Count != 0)
-                        { // dispose tasks even in failure
-                            using (pending.Dequeue().Command) { /* dispose commands */ }
+                        var pair = pending.Dequeue();
+                        using (pair.Command)
+                        {
+                            /* dispose commands */
                         }
+
+                        total += await pair.Task.ConfigureAwait(false);
                     }
                 }
-                else
+                finally
                 {
-                    using (var cmd = (DbCommand)command.SetupCommand(cnn, null))
+                    // this only has interesting work to do if there are failures
+                    using (cmd)
                     {
-                        foreach (var obj in multiExec)
+                        /* dispose commands */
+                    }
+
+                    while (pending.Count != 0)
+                    {
+                        // dispose tasks even in failure
+                        using (pending.Dequeue().Command)
                         {
-                            if (isFirst)
-                            {
-                                masterSql = cmd.CommandText;
-                                isFirst = false;
-                                var identity = new Identity(command.CommandText, cmd.CommandType, cnn, null, obj.GetType(), null);
-                                info = GetCacheInfo(identity, obj, command.AddToCache);
-                            }
-                            else
-                            {
-                                cmd.CommandText = masterSql; // because we do magic replaces on "in" etc
-                                cmd.Parameters.Clear(); // current code is Add-tastic
-                            }
-                            info.ParamReader(cmd, obj);
-                            total += await cmd.ExecuteNonQueryAsync(command.CancellationToken).ConfigureAwait(false);
+                            /* dispose commands */
                         }
                     }
                 }
             }
-            finally
+            else
             {
-                if (wasClosed) cnn.Close();
+                using (var cmd = (DbCommand)command.SetupCommand(cnn, null))
+                {
+                    foreach (var obj in multiExec)
+                    {
+                        if (isFirst)
+                        {
+                            masterSql = cmd.CommandText;
+                            isFirst = false;
+                            var identity = new Identity(command.CommandText, cmd.CommandType, cnn, null, obj.GetType(), null);
+                            info = GetCacheInfo(identity, obj, command.AddToCache);
+                        }
+                        else
+                        {
+                            cmd.CommandText = masterSql; // because we do magic replaces on "in" etc
+                            cmd.Parameters.Clear(); // current code is Add-tastic
+                        }
+
+                        info.ParamReader(cmd, obj);
+                        total += await cmd.ExecuteNonQueryAsync(command.CancellationToken).ConfigureAwait(false);
+                    }
+                }
             }
+
             return total;
         }
 

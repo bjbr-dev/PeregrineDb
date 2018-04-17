@@ -97,10 +97,10 @@
                 {
                     if (!string.Equals(ctorParameters[i].Name, names[i], StringComparison.OrdinalIgnoreCase))
                         break;
-                    if (types[i] == typeof(byte[]) && ctorParameters[i].ParameterType.FullName == SqlMapper.LinqBinary)
+                    if (types[i] == typeof(byte[]) && ctorParameters[i].ParameterType.FullName == TypeProvider.LinqBinary)
                         continue;
                     var unboxedType = Nullable.GetUnderlyingType(ctorParameters[i].ParameterType) ?? ctorParameters[i].ParameterType;
-                    if ((unboxedType != types[i] && !SqlMapper.HasTypeHandler(unboxedType))
+                    if ((unboxedType != types[i] && !TypeProvider.HasTypeHandler(unboxedType))
                         && !(unboxedType.IsEnum() && Enum.GetUnderlyingType(unboxedType) == types[i])
                         && !(unboxedType == typeof(char) && types[i] == typeof(string))
                         && !(unboxedType.IsEnum() && types[i] == typeof(string)))

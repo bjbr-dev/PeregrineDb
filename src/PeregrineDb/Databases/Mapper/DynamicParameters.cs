@@ -196,7 +196,7 @@ namespace PeregrineDb.Databases.Mapper
                 ITypeHandler handler = null;
                 if (dbType == null && val != null && !isCustomQueryParameter)
                 {
-                    dbType = SqlMapper.LookupDbType(val.GetType(), name, true, out handler);
+                    dbType = TypeProvider.LookupDbType(val.GetType(), name, true, out handler);
                 }
 
                 if (isCustomQueryParameter)

@@ -5,6 +5,8 @@
     /// <typeparam name="T">The type to have a cache for.</typeparam>
     internal static class TypeHandlerCache<T>
     {
+        private static ITypeHandler handler;
+
         /// <param name="value">The object to parse.</param>
         public static T Parse(object value) => (T)handler.Parse(typeof(T), value);
 
@@ -19,7 +21,5 @@
         {
             TypeHandlerCache<T>.handler = handler;
         }
-
-        private static ITypeHandler handler;
     }
 }
