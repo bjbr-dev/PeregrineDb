@@ -1152,45 +1152,36 @@ SELECT * FROM @Issue192 WHERE Field IN @µ AND Field_1 IN @µµ",
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        int oldVal = MapperSettings.InListStringSplitCount;
                         try
                         {
-                            MapperSettings.InListStringSplitCount = -1;
+                            database.Execute($"drop table #splits");
+                        }
+                        catch
+                        {
+                            /* don't care */
+                        }
+
+                        var sqlCommand = new SqlCommand("create table #splits (i int not null);"
+                                                        + string.Concat(Enumerable
+                                                                        .Range(-1500, 1500 * 3).Select(i => $"insert #splits (i) values ({i});"))
+                                                        + "select count(1) from #splits");
+
+                        int count = database.QuerySingle<int>(in sqlCommand);
+                        Assert.Equal(count, 3 * 1500);
+
+                        for (int i = 0; i < 1500; Incr(ref i))
+                        {
                             try
                             {
-                                database.Execute($"drop table #splits");
+                                var vals = Enumerable.Range(1, i);
+                                var list = database.Query<int>($"select i from #splits where i in {vals}");
+                                Assert.Equal(list.Count, i);
+                                Assert.Equal(list.Sum(), vals.Sum());
                             }
-                            catch
+                            catch (Exception ex)
                             {
-                                /* don't care */
+                                throw new InvalidOperationException($"Error when i={i}: {ex.Message}", ex);
                             }
-
-                            var sqlCommand = new SqlCommand("create table #splits (i int not null);"
-                                                            + string.Concat(Enumerable
-                                                                            .Range(-1500, 1500 * 3).Select(i => $"insert #splits (i) values ({i});"))
-                                                            + "select count(1) from #splits");
-
-                            int count = database.QuerySingle<int>(in sqlCommand);
-                            Assert.Equal(count, 3 * 1500);
-
-                            for (int i = 0; i < 1500; Incr(ref i))
-                            {
-                                try
-                                {
-                                    var vals = Enumerable.Range(1, i);
-                                    var list = database.Query<int>($"select i from #splits where i in {vals}");
-                                    Assert.Equal(list.Count, i);
-                                    Assert.Equal(list.Sum(), vals.Sum());
-                                }
-                                catch (Exception ex)
-                                {
-                                    throw new InvalidOperationException($"Error when i={i}: {ex.Message}", ex);
-                                }
-                            }
-                        }
-                        finally
-                        {
-                            MapperSettings.InListStringSplitCount = oldVal;
                         }
                     }
 

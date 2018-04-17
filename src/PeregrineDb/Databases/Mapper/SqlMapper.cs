@@ -249,9 +249,6 @@
                 T result = default;
                 if (reader.Read() && reader.FieldCount != 0)
                 {
-                    // with the CloseConnection flag, so the reader will deal with the connection; we
-                    // still need something in the "finally" to ensure that broken SQL still results
-                    // in the connection closing itself
                     var tuple = info.Deserializer;
                     var hash = GetColumnHash(reader);
                     if (tuple.Func == null || tuple.Hash != hash)
@@ -349,70 +346,16 @@
                         reader = CreateParamInfoGenerator(identity, false, true, literals);
                     }
 
-                    if ((identity.commandType == null || identity.commandType == CommandType.Text) && ShouldPassByPosition(identity.sql))
-                    {
-                        var tail = reader;
-                        reader = (cmd, obj) =>
-                        {
-                            tail(cmd, obj);
-                            PassByPosition(cmd);
-                        };
-                    }
-
                     info.ParamReader = reader;
                 }
 
-                if (addToCache) QueryCache.SetQueryCache(identity, info);
+                if (addToCache)
+                {
+                    QueryCache.SetQueryCache(identity, info);
+                }
             }
 
             return info;
-        }
-
-        private static bool ShouldPassByPosition(string sql)
-        {
-            return sql?.IndexOf('?') >= 0 && pseudoPositional.IsMatch(sql);
-        }
-
-        private static void PassByPosition(IDbCommand cmd)
-        {
-            if (cmd.Parameters.Count == 0) return;
-
-            var parameters = new Dictionary<string, IDbDataParameter>(StringComparer.Ordinal);
-
-            foreach (IDbDataParameter param in cmd.Parameters)
-            {
-                if (!string.IsNullOrEmpty(param.ParameterName)) parameters[param.ParameterName] = param;
-            }
-
-            var consumed = new HashSet<string>(StringComparer.Ordinal);
-            var firstMatch = true;
-            cmd.CommandText = pseudoPositional.Replace(cmd.CommandText, match =>
-            {
-                var key = match.Groups[1].Value;
-                if (!consumed.Add(key))
-                {
-                    throw new InvalidOperationException("When passing parameters by position, each parameter can only be referenced once");
-                }
-                else if (parameters.TryGetValue(key, out var param))
-                {
-                    if (firstMatch)
-                    {
-                        firstMatch = false;
-                        cmd.Parameters.Clear(); // only clear if we are pretty positive that we've found this pattern successfully
-                    }
-
-                    // if found, return the anonymous token "?"
-                    cmd.Parameters.Add(param);
-                    parameters.Remove(key);
-                    consumed.Add(key);
-                    return "?";
-                }
-                else
-                {
-                    // otherwise, leave alone for simple debugging
-                    return match.Value;
-                }
-            });
         }
 
         private static Func<IDataReader, object> GetDeserializer(Type type, IDataReader reader, int startBound, int length, bool returnNullIfFirstMissing)
@@ -456,9 +399,11 @@
             }
 
             if (hasFields)
+            {
                 return new ArgumentException("When using the multi-mapping APIs ensure you set the splitOn param if you have keys other than Id", "splitOn");
-            else
-                return new InvalidOperationException("No columns were selected");
+            }
+
+            return new InvalidOperationException("No columns were selected");
         }
 
         internal static Func<IDataReader, object> GetDapperRowDeserializer(IDataRecord reader, int startBound, int length, bool returnNullIfFirstMissing)
@@ -478,51 +423,50 @@
 
             DapperTable table = null;
 
-            return
-                r =>
+            return r =>
+            {
+                if (table == null)
                 {
-                    if (table == null)
+                    var names = new string[effectiveFieldCount];
+                    for (var i = 0; i < effectiveFieldCount; i++)
                     {
-                        var names = new string[effectiveFieldCount];
-                        for (var i = 0; i < effectiveFieldCount; i++)
-                        {
-                            names[i] = r.GetName(i + startBound);
-                        }
-
-                        table = new DapperTable(names);
+                        names[i] = r.GetName(i + startBound);
                     }
 
-                    var values = new object[effectiveFieldCount];
+                    table = new DapperTable(names);
+                }
 
-                    if (returnNullIfFirstMissing)
-                    {
-                        values[0] = r.GetValue(startBound);
-                        if (values[0] is DBNull)
-                        {
-                            return null;
-                        }
-                    }
+                var values = new object[effectiveFieldCount];
 
-                    if (startBound == 0)
+                if (returnNullIfFirstMissing)
+                {
+                    values[0] = r.GetValue(startBound);
+                    if (values[0] is DBNull)
                     {
-                        for (var i = 0; i < values.Length; i++)
-                        {
-                            var val = r.GetValue(i);
-                            values[i] = val is DBNull ? null : val;
-                        }
+                        return null;
                     }
-                    else
-                    {
-                        var begin = returnNullIfFirstMissing ? 1 : 0;
-                        for (var iter = begin; iter < effectiveFieldCount; ++iter)
-                        {
-                            var obj = r.GetValue(iter + startBound);
-                            values[iter] = obj is DBNull ? null : obj;
-                        }
-                    }
+                }
 
-                    return new DapperRow(table, values);
-                };
+                if (startBound == 0)
+                {
+                    for (var i = 0; i < values.Length; i++)
+                    {
+                        var val = r.GetValue(i);
+                        values[i] = val is DBNull ? null : val;
+                    }
+                }
+                else
+                {
+                    var begin = returnNullIfFirstMissing ? 1 : 0;
+                    for (var iter = begin; iter < effectiveFieldCount; ++iter)
+                    {
+                        var obj = r.GetValue(iter + startBound);
+                        values[iter] = obj is DBNull ? null : obj;
+                    }
+                }
+
+                return new DapperRow(table, values);
+            };
         }
 
         /// <summary>
@@ -579,37 +523,7 @@
             return result;
         }
 
-        internal static int GetListPaddingExtraCount(int count)
-        {
-            switch (count)
-            {
-                case 0:
-                case 1:
-                case 2:
-                case 3:
-                case 4:
-                case 5:
-                    return 0; // no padding
-            }
-
-            if (count < 0) return 0;
-
-            int padFactor;
-            if (count <= 150) padFactor = 10;
-            else if (count <= 750) padFactor = 50;
-            else if (count <= 2000) padFactor = 100; // note: max param count for SQL Server
-            else if (count <= 2070) padFactor = 10; // try not to over-pad as we approach that limit
-            else if (count <= 2100) return 0; // just don't pad between 2070 and 2100, to minimize the crazy
-            else padFactor = 200; // above that, all bets are off!
-
-            // if we have 17, factor = 10; 17 % 10 = 7, we need 3 more
-            var intoBlock = count % padFactor;
-            return intoBlock == 0 ? 0 : (padFactor - intoBlock);
-        }
-
-        private static string GetInListRegex(string name, bool byPosition) => byPosition
-            ? @"(\?)" + Regex.Escape(name) + @"\?(?!\w)(\s+(?i)unknown(?-i))?"
-            : "([?@:]" + Regex.Escape(name) + @")(?!\w)(\s+(?i)unknown(?-i))?";
+        private static string GetInListRegex(string name) => "([?@:]" + Regex.Escape(name) + @")(?!\w)(\s+(?i)unknown(?-i))?";
 
         /// <summary>
         /// Internal use only.
@@ -631,20 +545,14 @@
             }
             else
             {
-                var byPosition = ShouldPassByPosition(command.CommandText);
                 var list = value as IEnumerable;
                 var count = 0;
                 var isString = value is IEnumerable<string>;
                 var isDbString = value is IEnumerable<DbString>;
                 DbType dbType = 0;
 
-                var splitAt = MapperSettings.InListStringSplitCount;
-                var viaSplit = splitAt >= 0
-                               && TryStringSplit(ref list, splitAt, namePrefix, command, byPosition);
-
-                if (list != null && !viaSplit)
+                if (list != null)
                 {
-                    object lastValue = null;
                     foreach (var item in list)
                     {
                         if (++count == 1) // first item: fetch some type info
@@ -660,10 +568,9 @@
                             }
                         }
 
-                        var nextName = namePrefix + count.ToString();
-                        if (isDbString && item is DbString)
+                        var nextName = namePrefix + count;
+                        if (isDbString && item is DbString str)
                         {
-                            var str = item as DbString;
                             str.AddParameter(command, nextName);
                         }
                         else
@@ -679,9 +586,7 @@
                                 }
                             }
 
-                            var tmp = listParam.Value = SanitizeParameterValue(item);
-                            if (tmp != null && !(tmp is DBNull))
-                                lastValue = tmp; // only interested in non-trivial values for padding
+                            listParam.Value = SanitizeParameterValue(item);
 
                             if (listParam.DbType != dbType)
                             {
@@ -691,174 +596,62 @@
                             command.Parameters.Add(listParam);
                         }
                     }
+                }
 
-                    if (MapperSettings.PadListExpansions && !isDbString && lastValue != null)
-                    {
-                        var padCount = GetListPaddingExtraCount(count);
-                        for (var i = 0; i < padCount; i++)
+                var regexIncludingUnknown = GetInListRegex(namePrefix);
+                if (count == 0)
+                {
+                    command.CommandText = Regex.Replace(command.CommandText, regexIncludingUnknown, match =>
                         {
-                            count++;
-                            var padParam = command.CreateParameter();
-                            padParam.ParameterName = namePrefix + count.ToString();
-                            if (isString) padParam.Size = DbString.DefaultLength;
-                            padParam.DbType = dbType;
-                            padParam.Value = lastValue;
-                            command.Parameters.Add(padParam);
-                        }
-                    }
-                }
-
-                if (viaSplit)
-                {
-                    // already done
+                            var variableName = match.Groups[1].Value;
+                            if (match.Groups[2].Success)
+                            {
+                                // looks like an optimize hint; leave it alone!
+                                return match.Value;
+                            }
+                            else
+                            {
+                                return "(SELECT " + variableName + " WHERE 1 = 0)";
+                            }
+                        }, RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant);
+                    var dummyParam = command.CreateParameter();
+                    dummyParam.ParameterName = namePrefix;
+                    dummyParam.Value = DBNull.Value;
+                    command.Parameters.Add(dummyParam);
                 }
                 else
                 {
-                    var regexIncludingUnknown = GetInListRegex(namePrefix, byPosition);
-                    if (count == 0)
-                    {
-                        command.CommandText = Regex.Replace(command.CommandText, regexIncludingUnknown, match =>
+                    command.CommandText = Regex.Replace(command.CommandText, regexIncludingUnknown, match =>
+                        {
+                            var variableName = match.Groups[1].Value;
+                            if (match.Groups[2].Success)
                             {
-                                var variableName = match.Groups[1].Value;
-                                if (match.Groups[2].Success)
+                                // looks like an optimize hint; expand it
+                                var suffix = match.Groups[2].Value;
+
+                                var sb = StringBuilderPool.Acquire().Append(variableName).Append(1).Append(suffix);
+                                for (var i = 2; i <= count; i++)
                                 {
-                                    // looks like an optimize hint; leave it alone!
-                                    return match.Value;
+                                    sb.Append(',').Append(variableName).Append(i).Append(suffix);
                                 }
-                                else
-                                {
-                                    return "(SELECT " + variableName + " WHERE 1 = 0)";
-                                }
-                            }, RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant);
-                        var dummyParam = command.CreateParameter();
-                        dummyParam.ParameterName = namePrefix;
-                        dummyParam.Value = DBNull.Value;
-                        command.Parameters.Add(dummyParam);
-                    }
-                    else
-                    {
-                        command.CommandText = Regex.Replace(command.CommandText, regexIncludingUnknown, match =>
+
+                                return sb.__ToStringRecycle();
+                            }
+                            else
                             {
-                                var variableName = match.Groups[1].Value;
-                                if (match.Groups[2].Success)
+                                var sb = StringBuilderPool.Acquire().Append('(').Append(variableName);
+                                sb.Append(1);
+                                for (var i = 2; i <= count; i++)
                                 {
-                                    // looks like an optimize hint; expand it
-                                    var suffix = match.Groups[2].Value;
-
-                                    var sb = StringBuilderPool.Acquire().Append(variableName).Append(1).Append(suffix);
-                                    for (var i = 2; i <= count; i++)
-                                    {
-                                        sb.Append(',').Append(variableName).Append(i).Append(suffix);
-                                    }
-
-                                    return sb.__ToStringRecycle();
+                                    sb.Append(',').Append(variableName);
+                                    sb.Append(i);
                                 }
-                                else
-                                {
-                                    var sb = StringBuilderPool.Acquire().Append('(').Append(variableName);
-                                    if (!byPosition) sb.Append(1);
-                                    for (var i = 2; i <= count; i++)
-                                    {
-                                        sb.Append(',').Append(variableName);
-                                        if (!byPosition) sb.Append(i);
-                                    }
 
-                                    return sb.Append(')').__ToStringRecycle();
-                                }
-                            }, RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant);
-                    }
+                                return sb.Append(')').__ToStringRecycle();
+                            }
+                        }, RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant);
                 }
             }
-        }
-
-        private static bool TryStringSplit(ref IEnumerable list, int splitAt, string namePrefix, IDbCommand command, bool byPosition)
-        {
-            if (list == null || splitAt < 0) return false;
-            switch (list)
-            {
-                case IEnumerable<int> l:
-                    return TryStringSplit(ref l, splitAt, namePrefix, command, "int", byPosition,
-                        (sb, i) => sb.Append(i.ToString(CultureInfo.InvariantCulture)));
-                case IEnumerable<long> l:
-                    return TryStringSplit(ref l, splitAt, namePrefix, command, "bigint", byPosition,
-                        (sb, i) => sb.Append(i.ToString(CultureInfo.InvariantCulture)));
-                case IEnumerable<short> l:
-                    return TryStringSplit(ref l, splitAt, namePrefix, command, "smallint", byPosition,
-                        (sb, i) => sb.Append(i.ToString(CultureInfo.InvariantCulture)));
-                case IEnumerable<byte> l:
-                    return TryStringSplit(ref l, splitAt, namePrefix, command, "tinyint", byPosition,
-                        (sb, i) => sb.Append(i.ToString(CultureInfo.InvariantCulture)));
-            }
-
-            return false;
-        }
-
-        private static bool TryStringSplit<T>(
-            ref IEnumerable<T> list,
-            int splitAt,
-            string namePrefix,
-            IDbCommand command,
-            string colType,
-            bool byPosition,
-            Action<StringBuilder, T> append)
-        {
-            if (!(list is ICollection<T> typed))
-            {
-                typed = list.ToList();
-                list = typed; // because we still need to be able to iterate it, even if we fail here
-            }
-
-            if (typed.Count < splitAt)
-            {
-                return false;
-            }
-
-            string varName = null;
-            var regexIncludingUnknown = GetInListRegex(namePrefix, byPosition);
-            var sql = Regex.Replace(command.CommandText, regexIncludingUnknown, match =>
-                {
-                    var variableName = match.Groups[1].Value;
-                    if (match.Groups[2].Success)
-                    {
-                        // looks like an optimize hint; leave it alone!
-                        return match.Value;
-                    }
-                    else
-                    {
-                        varName = variableName;
-                        return "(select cast([value] as " + colType + ") from string_split(" + variableName + ",','))";
-                    }
-                }, RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant);
-            if (varName == null) return false; // couldn't resolve the var!
-
-            command.CommandText = sql;
-            var concatenatedParam = command.CreateParameter();
-            concatenatedParam.ParameterName = namePrefix;
-            concatenatedParam.DbType = DbType.AnsiString;
-            concatenatedParam.Size = -1;
-            string val;
-            using (var iter = typed.GetEnumerator())
-            {
-                if (iter.MoveNext())
-                {
-                    var sb = StringBuilderPool.Acquire();
-                    append(sb, iter.Current);
-                    while (iter.MoveNext())
-                    {
-                        append(sb.Append(','), iter.Current);
-                    }
-
-                    val = sb.ToString();
-                }
-                else
-                {
-                    val = "";
-                }
-            }
-
-            concatenatedParam.Value = val;
-            command.Parameters.Add(concatenatedParam);
-            return true;
         }
 
         /// <summary>
@@ -877,14 +670,22 @@
                 var typeCode = ((IConvertible)value).GetTypeCode();
                 switch (typeCode)
                 {
-                    case TypeCode.Byte: return (byte)value;
-                    case TypeCode.SByte: return (sbyte)value;
-                    case TypeCode.Int16: return (short)value;
-                    case TypeCode.Int32: return (int)value;
-                    case TypeCode.Int64: return (long)value;
-                    case TypeCode.UInt16: return (ushort)value;
-                    case TypeCode.UInt32: return (uint)value;
-                    case TypeCode.UInt64: return (ulong)value;
+                    case TypeCode.Byte:
+                        return (byte)value;
+                    case TypeCode.SByte:
+                        return (sbyte)value;
+                    case TypeCode.Int16:
+                        return (short)value;
+                    case TypeCode.Int32:
+                        return (int)value;
+                    case TypeCode.Int64:
+                        return (long)value;
+                    case TypeCode.UInt16:
+                        return (ushort)value;
+                    case TypeCode.UInt32:
+                        return (uint)value;
+                    case TypeCode.UInt64:
+                        return (ulong)value;
                 }
             }
 
@@ -893,21 +694,14 @@
 
         private static IEnumerable<PropertyInfo> FilterParameters(IEnumerable<PropertyInfo> parameters, string sql)
         {
-            var list = new List<PropertyInfo>(16);
-            foreach (var p in parameters)
-            {
-                if (Regex.IsMatch(sql, @"[?@:]" + p.Name + @"([^\p{L}\p{N}_]+|$)",
-                    RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant))
-                    list.Add(p);
-            }
-
-            return list;
+            return parameters.Where(p => Regex.IsMatch(sql, @"[?@:]" + p.Name + @"([^\p{L}\p{N}_]+|$)",
+                                 RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant))
+                             .ToList();
         }
 
         // look for ? / @ / : *by itself*
         private static readonly Regex literalTokens = new Regex(@"(?<![\p{L}\p{N}_])\{=([\p{L}\p{N}_]+)\}",
-                RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant | RegexOptions.Compiled),
-            pseudoPositional = new Regex(@"\?([\p{L}_][\p{L}\p{N}_]*)\?", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+                RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
         internal static readonly MethodInfo format = typeof(SqlMapper).GetMethod("Format", BindingFlags.Public | BindingFlags.Static);
 
@@ -921,71 +715,69 @@
             {
                 return "null";
             }
-            else
+
+            switch (TypeExtensions.GetTypeCode(value.GetType()))
             {
-                switch (TypeExtensions.GetTypeCode(value.GetType()))
-                {
 #if !NETSTANDARD1_3
-                    case TypeCode.DBNull:
-                        return "null";
+                case TypeCode.DBNull:
+                    return "null";
 #endif
-                    case TypeCode.Boolean:
-                        return ((bool)value) ? "1" : "0";
-                    case TypeCode.Byte:
-                        return ((byte)value).ToString(CultureInfo.InvariantCulture);
-                    case TypeCode.SByte:
-                        return ((sbyte)value).ToString(CultureInfo.InvariantCulture);
-                    case TypeCode.UInt16:
-                        return ((ushort)value).ToString(CultureInfo.InvariantCulture);
-                    case TypeCode.Int16:
-                        return ((short)value).ToString(CultureInfo.InvariantCulture);
-                    case TypeCode.UInt32:
-                        return ((uint)value).ToString(CultureInfo.InvariantCulture);
-                    case TypeCode.Int32:
-                        return ((int)value).ToString(CultureInfo.InvariantCulture);
-                    case TypeCode.UInt64:
-                        return ((ulong)value).ToString(CultureInfo.InvariantCulture);
-                    case TypeCode.Int64:
-                        return ((long)value).ToString(CultureInfo.InvariantCulture);
-                    case TypeCode.Single:
-                        return ((float)value).ToString(CultureInfo.InvariantCulture);
-                    case TypeCode.Double:
-                        return ((double)value).ToString(CultureInfo.InvariantCulture);
-                    case TypeCode.Decimal:
-                        return ((decimal)value).ToString(CultureInfo.InvariantCulture);
-                    default:
-                        var multiExec = GetMultiExec(value);
-                        if (multiExec != null)
+                case TypeCode.Boolean:
+                    return ((bool)value) ? "1" : "0";
+                case TypeCode.Byte:
+                    return ((byte)value).ToString(CultureInfo.InvariantCulture);
+                case TypeCode.SByte:
+                    return ((sbyte)value).ToString(CultureInfo.InvariantCulture);
+                case TypeCode.UInt16:
+                    return ((ushort)value).ToString(CultureInfo.InvariantCulture);
+                case TypeCode.Int16:
+                    return ((short)value).ToString(CultureInfo.InvariantCulture);
+                case TypeCode.UInt32:
+                    return ((uint)value).ToString(CultureInfo.InvariantCulture);
+                case TypeCode.Int32:
+                    return ((int)value).ToString(CultureInfo.InvariantCulture);
+                case TypeCode.UInt64:
+                    return ((ulong)value).ToString(CultureInfo.InvariantCulture);
+                case TypeCode.Int64:
+                    return ((long)value).ToString(CultureInfo.InvariantCulture);
+                case TypeCode.Single:
+                    return ((float)value).ToString(CultureInfo.InvariantCulture);
+                case TypeCode.Double:
+                    return ((double)value).ToString(CultureInfo.InvariantCulture);
+                case TypeCode.Decimal:
+                    return ((decimal)value).ToString(CultureInfo.InvariantCulture);
+                default:
+                    var multiExec = GetMultiExec(value);
+                    if (multiExec != null)
+                    {
+                        StringBuilder sb = null;
+                        var first = true;
+                        foreach (var subval in multiExec)
                         {
-                            StringBuilder sb = null;
-                            var first = true;
-                            foreach (var subval in multiExec)
-                            {
-                                if (first)
-                                {
-                                    sb = StringBuilderPool.Acquire().Append('(');
-                                    first = false;
-                                }
-                                else
-                                {
-                                    sb.Append(',');
-                                }
-
-                                sb.Append(Format(subval));
-                            }
-
                             if (first)
                             {
-                                return "(select null where 1=0)";
+                                sb = StringBuilderPool.Acquire().Append('(');
+                                first = false;
                             }
                             else
                             {
-                                return sb.Append(')').__ToStringRecycle();
+                                sb.Append(',');
                             }
+
+                            sb.Append(Format(subval));
                         }
 
-                        throw new NotSupportedException(value.GetType().Name);
-                }
+                        if (first)
+                        {
+                            return "(select null where 1=0)";
+                        }
+                        else
+                        {
+                            return sb.Append(')').__ToStringRecycle();
+                        }
+                    }
+
+                    throw new NotSupportedException(value.GetType().Name);
             }
         }
 
@@ -994,10 +786,7 @@
             var sql = command.CommandText;
             foreach (var token in tokens)
             {
-                var value = parameters[token.Member];
-#pragma warning disable 0618
-                var text = Format(value);
-#pragma warning restore 0618
+                var text = Format(parameters[token.Member]);
                 sql = sql.Replace(token.Token, text);
             }
 
@@ -1175,9 +964,8 @@
                     il.EmitCall(OpCodes.Callvirt, prop.PropertyType.GetMethod(nameof(ICustomQueryParameter.AddParameter)), null); // stack is now [parameters]
                     continue;
                 }
-#pragma warning disable 618
+
                 var dbType = TypeProvider.LookupDbType(prop.PropertyType, prop.Name, true, out var handler);
-#pragma warning restore 618
                 if (dbType == DynamicParameters.EnumerableMultiParameter)
                 {
                     // this actually represents special handling for list types;
@@ -1216,8 +1004,7 @@
                         null); // stack is now [parameters] [parameters] [parameter]
                 }
 
-                if (dbType != DbType.Time && handler == null
-                ) // https://connect.microsoft.com/VisualStudio/feedback/details/381934/sqlparameter-dbtype-dbtype-time-sets-the-parameter-to-sqldbtype-datetime-instead-of-sqldbtype-time
+                if (dbType != DbType.Time && handler == null) // https://connect.microsoft.com/VisualStudio/feedback/details/381934/sqlparameter-dbtype-dbtype-time-sets-the-parameter-to-sqldbtype-datetime-instead-of-sqldbtype-time
                 {
                     il.Emit(OpCodes.Dup); // stack is now [parameters] [[parameters]] [parameter] [parameter]
                     if (dbType == DbType.Object && prop.PropertyType == typeof(object)) // includes dynamic
@@ -1539,7 +1326,6 @@
         private static Func<IDataReader, object> GetStructDeserializer(Type type, Type effectiveType, int index)
         {
             // no point using special per-type handling here; it boils down to the same, plus not all are supported anyway (see: SqlDataReader.GetChar - not supported!)
-#pragma warning disable 618
             if (type == typeof(char))
             {
                 // this *does* need special handling, though
@@ -1555,7 +1341,6 @@
             {
                 return r => Activator.CreateInstance(type, r.GetValue(index));
             }
-#pragma warning restore 618
 
             if (effectiveType.IsEnum())
             {
@@ -1686,19 +1471,12 @@
         /// <summary>
         /// Internal use only
         /// </summary>
-        /// <param name="type"></param>
-        /// <param name="reader"></param>
-        /// <param name="startBound"></param>
-        /// <param name="length"></param>
-        /// <param name="returnNullIfFirstMissing"></param>
-        /// <returns></returns>
         public static Func<IDataReader, object> GetTypeDeserializer(
             Type type,
             IDataReader reader,
             int startBound = 0,
             int length = -1,
-            bool returnNullIfFirstMissing = false
-        )
+            bool returnNullIfFirstMissing = false)
         {
             return TypeDeserializerCache.GetReader(type, reader, startBound, length, returnNullIfFirstMissing);
         }
@@ -1913,11 +1691,9 @@
                             {
                                 if (hasTypeHandler)
                                 {
-#pragma warning disable 618
                                     il.EmitCall(OpCodes.Call,
                                         typeof(TypeHandlerCache<>).MakeGenericType(unboxType).GetMethod(nameof(TypeHandlerCache<int>.Parse)),
                                         null); // stack is now [target][target][typed-value]
-#pragma warning restore 618
                                 }
                                 else
                                 {
