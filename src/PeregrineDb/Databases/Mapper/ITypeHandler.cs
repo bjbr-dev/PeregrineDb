@@ -6,7 +6,7 @@
     /// <summary>
     /// Implement this interface to perform custom type-based parameter handling and value parsing
     /// </summary>
-    internal interface ITypeHandler
+    public interface ITypeHandler
     {
         /// <summary>
         /// Assign the value of a parameter before a command executes

@@ -7,7 +7,8 @@
     /// Base-class for simple type-handlers that are based around strings
     /// </summary>
     /// <typeparam name="T">This <see cref="Type"/> this handler is for.</typeparam>
-    internal abstract class StringTypeHandler<T> : TypeHandler<T>
+    public abstract class StringTypeHandler<T>
+        : TypeHandler<T>
     {
         /// <summary>
         /// Parse a string into the expected type (the string will never be null)
@@ -38,7 +39,11 @@
         /// <returns>The typed value</returns>
         public override T Parse(object value)
         {
-            if (value == null || value is DBNull) return default(T);
+            if (value == null || value is DBNull)
+            {
+                return default;
+            }
+
             return this.Parse((string)value);
         }
     }

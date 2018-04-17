@@ -6,7 +6,7 @@
     using System.Data;
     using System.Reflection;
 
-    internal static class TypeProvider
+    public static class TypeProvider
     {
         internal const string LinqBinary = "System.Data.Linq.Binary";
         private static Dictionary<Type, DbType> typeMap;

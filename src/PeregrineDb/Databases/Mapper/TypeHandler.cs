@@ -7,7 +7,7 @@
     /// Base-class for simple type-handlers
     /// </summary>
     /// <typeparam name="T">This <see cref="Type"/> this handler is for.</typeparam>
-    internal abstract class TypeHandler<T>
+    public abstract class TypeHandler<T>
         : ITypeHandler
     {
         /// <summary>
