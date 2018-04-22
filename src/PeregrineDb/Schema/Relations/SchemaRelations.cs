@@ -33,16 +33,29 @@
         public IEnumerable<object> GetClearDataCommands()
         {
             var commands = new List<object>();
-            BuildTableList(this.tables.ToList(), new RelationCollection(this.relations));
-            return commands;
+            ICollection<string> remainingTables = this.tables.ToList();
+            var remainingRelationships = new RelationCollection(this.relations);
 
-            void BuildTableList(ICollection<string> remainingTables, RelationCollection remainingRelationships)
+            var safetyNet = 0;
+            var max = this.tables.Count() * 3;
+            while (safetyNet++ <= max)
             {
                 var referencedTables = remainingRelationships.GetReferencedTables();
-
                 var leafTables = remainingTables.Except(referencedTables).ToList();
 
-                if (referencedTables.Count > 0 && leafTables.Count == 0)
+                if (leafTables.Any() || !referencedTables.Any())
+                {
+                    commands.AddRange(leafTables.Select(t => new ClearTableCommand(t)));
+
+                    if (!referencedTables.Any())
+                    {
+                        return commands;
+                    }
+
+                    remainingTables = remainingTables.Except(leafTables).ToList();
+                    remainingRelationships = remainingRelationships.WithoutLeaves(leafTables);
+                }
+                else
                 {
                     var nullableRelation = remainingRelationships.FindFirstNullableCyclicRelation();
                     if (nullableRelation == null)
@@ -50,19 +63,15 @@
                         throw new InvalidOperationException("Cylclic foreign key detected with no nullable foreign keys");
                     }
 
-                    commands.Add(new NullColumnCommand(nullableRelation.ForeignKeyTable, nullableRelation.ColumnName));
+                    commands.Add(new NullColumnCommand(nullableRelation.SourceTable, nullableRelation.SourceColumn));
 
-                    BuildTableList(remainingTables.Except(leafTables).ToList(), remainingRelationships.WithoutRelation(nullableRelation));
-                    return;
-                }
-
-                commands.AddRange(leafTables.Select(t => new ClearTableCommand(t)));
-
-                if (referencedTables.Any())
-                {
-                    BuildTableList(remainingTables.Except(leafTables).ToList(), remainingRelationships.WithoutLeaves(leafTables));
+                    remainingRelationships = remainingRelationships.WithoutRelation(nullableRelation);
                 }
             }
+
+            throw new InvalidOperationException("Infinite loop detected whilst processing tables: " + Environment.NewLine + Environment.NewLine +
+                                                string.Join(Environment.NewLine, this.tables) + Environment.NewLine + Environment.NewLine + "And relations:" +
+                                                Environment.NewLine + Environment.NewLine + string.Join(Environment.NewLine, this.relations));
         }
 
         private class RelationCollection
@@ -76,19 +85,22 @@
 
             public List<string> GetReferencedTables()
             {
-                return this.relations.Select(rel => rel.PrimaryKeyTable).Distinct().ToList();
+                return this.relations.Select(rel => rel.TargetTable).Distinct().ToList();
             }
 
             public RelationCollection WithoutRelation(TableRelation relation)
             {
                 var relationships = this.relations.ToList();
-                relationships.Remove(relation);
+                if (!relationships.Remove(relation))
+                {
+                    throw new InvalidOperationException("Could not remove relation: " + relation);
+                }
                 return new RelationCollection(relationships);
             }
 
             public RelationCollection WithoutLeaves(IReadOnlyCollection<string> leaves)
             {
-                return new RelationCollection(this.relations.Where(x => !leaves.Contains(x.ForeignKeyTable)).ToList());
+                return new RelationCollection(this.relations.Where(x => !leaves.Contains(x.SourceTable)).ToList());
             }
 
             public TableRelation FindFirstNullableCyclicRelation()
@@ -97,7 +109,7 @@
 
                 bool HasCycle(TableRelation t)
                 {
-                    return HasPath(t.PrimaryKeyTable, t.ForeignKeyTable);
+                    return HasPath(t.TargetTable, t.SourceTable);
                 }
 
                 bool HasPath(string source, string dest)
@@ -107,28 +119,34 @@
                         return true;
                     }
 
-                    return this.relations.Any(r => r.ForeignKeyTable == source && HasPath(r.PrimaryKeyTable, dest));
+                    return this.relations.Any(r => r.SourceTable == source && HasPath(r.TargetTable, dest));
                 }
             }
         }
 
         private class TableRelation
         {
-            public TableRelation(string primaryKeyTable, string foreignKeyTable, string columnName, bool isNullable)
+            public TableRelation(string targetTable, string sourceTable, string sourceColumn, bool isNullable)
             {
-                this.PrimaryKeyTable = primaryKeyTable;
-                this.ForeignKeyTable = foreignKeyTable;
-                this.ColumnName = columnName;
+                this.TargetTable = targetTable;
+                this.SourceTable = sourceTable;
+                this.SourceColumn = sourceColumn;
                 this.IsNullable = isNullable;
             }
 
-            public string PrimaryKeyTable { get; }
+            public string TargetTable { get; }
 
-            public string ForeignKeyTable { get; }
+            public string SourceTable { get; }
 
-            public string ColumnName { get; }
+            public string SourceColumn { get; }
 
             public bool IsNullable { get; }
+
+            public override string ToString()
+            {
+                var relationType = this.IsNullable ? "~" : "-";
+                return $"{this.SourceTable}.{this.SourceColumn} {relationType}> {this.TargetTable}";
+            }
         }
     }
 }
