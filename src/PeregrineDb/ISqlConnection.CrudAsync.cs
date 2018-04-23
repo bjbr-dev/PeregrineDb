@@ -70,7 +70,7 @@
         /// ]]>
         /// </code>
         /// </example>
-        Task<TEntity> GetFirstOrDefaultAsync<TEntity>(
+        Task<TEntity> FindFirstAsync<TEntity>(
             FormattableString conditions,
             string orderBy,
             int? commandTimeout = null,
@@ -87,7 +87,7 @@
         /// ]]>
         /// </code>
         /// </example>
-        Task<TEntity> GetFirstOrDefaultAsync<TEntity>(
+        Task<TEntity> FindFirstAsync<TEntity>(
             object conditions,
             string orderBy,
             int? commandTimeout = null,
@@ -136,7 +136,7 @@
         /// ]]>
         /// </code>
         /// </example>
-        Task<TEntity> GetSingleOrDefaultAsync<TEntity>(FormattableString conditions, int? commandTimeout = null, CancellationToken cancellationToken = default);
+        Task<TEntity> FindSingleAsync<TEntity>(FormattableString conditions, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets the only matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
@@ -149,7 +149,7 @@
         /// ]]>
         /// </code>
         /// </example>
-        Task<TEntity> GetSingleOrDefaultAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default);
+        Task<TEntity> FindSingleAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets the only matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,

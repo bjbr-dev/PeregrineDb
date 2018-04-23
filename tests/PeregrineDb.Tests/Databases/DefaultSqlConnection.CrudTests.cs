@@ -32,7 +32,6 @@
         public class Count
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Counts_all_entities_when_conditions_is_null(IDialect dialect)
@@ -52,7 +51,6 @@
                     result.Should().Be(4);
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -570,7 +568,7 @@
             }
         }
 
-        public class GetFirstOrDefault
+        public class FindFirst
             : DefaultDatabaseConnectionCrudTests
         {
             [Theory]
@@ -586,7 +584,7 @@
                     database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var entity = database.GetFirstOrDefault<Dog>(
+                    var entity = database.FindFirst<Dog>(
                         $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
                         "Name DESC");
 
@@ -602,7 +600,7 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Act
-                    var entity = database.GetFirstOrDefault<Dog>(
+                    var entity = database.FindFirst<Dog>(
                         $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
                         "Name DESC");
 
@@ -612,7 +610,7 @@
             }
         }
 
-        public class GetFirstOrDefaultWhereObject
+        public class FindFirstWhereObject
             : DefaultDatabaseConnectionCrudTests
         {
             [Theory]
@@ -628,7 +626,7 @@
                     database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var entity = database.GetFirstOrDefault<Dog>(new { Age = 10 }, "Name DESC");
+                    var entity = database.FindFirst<Dog>(new { Age = 10 }, "Name DESC");
 
                     // Assert
                     entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
@@ -642,7 +640,7 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Act
-                    var entity = database.GetFirstOrDefault<Dog>(new { Age = 10 }, "Name DESC");
+                    var entity = database.FindFirst<Dog>(new { Age = 10 }, "Name DESC");
 
                     // Assert
                     entity.Should().BeNull();
@@ -730,7 +728,7 @@
             }
         }
 
-        public class GetSingleOrDefault
+        public class FindSingle
             : DefaultDatabaseConnectionCrudTests
         {
             [Theory]
@@ -744,7 +742,7 @@
                     database.Insert(new Dog { Name = "Some Name 2", Age = 11 });
 
                     // Act
-                    var entity = database.GetSingleOrDefault<Dog>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
+                    var entity = database.FindSingle<Dog>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
 
                     // Assert
                     entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
@@ -758,7 +756,7 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Act
-                    var entity = database.GetSingleOrDefault<Dog>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
+                    var entity = database.FindSingle<Dog>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
 
                     // Assert
                     entity.Should().BeNull();
@@ -777,7 +775,7 @@
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
 
                     // Act
-                    Action act = () => database.GetSingleOrDefault<Dog>($"WHERE Age = {10}");
+                    Action act = () => database.FindSingle<Dog>($"WHERE Age = {10}");
 
                     // Assert
                     act.ShouldThrow<InvalidOperationException>();
@@ -785,7 +783,7 @@
             }
         }
 
-        public class GetSingleOrDefaultWhereObject
+        public class FindSingleWhereObject
             : DefaultDatabaseConnectionCrudTests
         {
             [Theory]
@@ -799,7 +797,7 @@
                     database.Insert(new Dog { Name = "Some Name 2", Age = 11 });
 
                     // Act
-                    var entity = database.GetSingleOrDefault<Dog>(new { Age = 10 });
+                    var entity = database.FindSingle<Dog>(new { Age = 10 });
 
                     // Assert
                     entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
@@ -813,7 +811,7 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Act
-                    var entity = database.GetSingleOrDefault<Dog>(new { Age = 10 });
+                    var entity = database.FindSingle<Dog>(new { Age = 10 });
 
                     // Assert
                     entity.Should().BeNull();
@@ -832,7 +830,7 @@
                     database.Insert(new Dog { Name = "Some Name 2", Age = 10 });
 
                     // Act
-                    Action act = () => database.GetSingleOrDefault<Dog>(new { Age = 10 });
+                    Action act = () => database.FindSingle<Dog>(new { Age = 10 });
 
                     // Assert
                     act.ShouldThrow<InvalidOperationException>();
@@ -1009,7 +1007,6 @@
                     Assert.Throws<ArgumentNullException>(() => database.GetRange<Dog>((object)null));
                 }
             }
-
 
             [Theory]
             [MemberData(nameof(TestDialects))]
@@ -1392,7 +1389,6 @@
         public class GetAll
             : DefaultDatabaseConnectionCrudTests
         {
-
             [Theory]
             [MemberData(nameof(TestDialects))]
             public void Gets_all(IDialect dialect)

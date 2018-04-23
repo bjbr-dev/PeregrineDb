@@ -33,13 +33,13 @@
             return this.Find<TEntity>(id, commandTimeout) ?? throw new InvalidOperationException($"An entity with id {id} was not found");
         }
 
-        public TEntity GetFirstOrDefault<TEntity>(FormattableString conditions, string orderBy, int? commandTimeout = null)
+        public TEntity FindFirst<TEntity>(FormattableString conditions, string orderBy, int? commandTimeout = null)
         {
             var command = this.Dialect.MakeGetFirstNCommand<TEntity>(1, conditions, orderBy);
             return this.QueryFirstOrDefault<TEntity>(in command, commandTimeout);
         }
 
-        public TEntity GetFirstOrDefault<TEntity>(object conditions, string orderBy, int? commandTimeout = null)
+        public TEntity FindFirst<TEntity>(object conditions, string orderBy, int? commandTimeout = null)
         {
             var command = this.Dialect.MakeGetFirstNCommand<TEntity>(1, conditions, orderBy);
             return this.QueryFirstOrDefault<TEntity>(in command, commandTimeout);
@@ -48,7 +48,7 @@
         public TEntity GetFirst<TEntity>(FormattableString conditions, string orderBy, int? commandTimeout = null)
             where TEntity : class
         {
-            var result = this.GetFirstOrDefault<TEntity>(conditions, orderBy, commandTimeout);
+            var result = this.FindFirst<TEntity>(conditions, orderBy, commandTimeout);
             return result ?? throw new InvalidOperationException($"No entity matching {conditions} was found");
         }
 
@@ -59,13 +59,13 @@
             return this.QueryFirst<TEntity>(in command, commandTimeout);
         }
 
-        public TEntity GetSingleOrDefault<TEntity>(FormattableString conditions, int? commandTimeout = null)
+        public TEntity FindSingle<TEntity>(FormattableString conditions, int? commandTimeout = null)
         {
             var command = this.Dialect.MakeGetFirstNCommand<TEntity>(2, conditions, null);
             return this.QuerySingleOrDefault<TEntity>(in command, commandTimeout);
         }
 
-        public TEntity GetSingleOrDefault<TEntity>(object conditions, int? commandTimeout = null)
+        public TEntity FindSingle<TEntity>(object conditions, int? commandTimeout = null)
         {
             var command = this.Dialect.MakeGetFirstNCommand<TEntity>(2, conditions, null);
             return this.QuerySingleOrDefault<TEntity>(in command, commandTimeout);

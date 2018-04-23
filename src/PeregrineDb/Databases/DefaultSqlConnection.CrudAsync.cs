@@ -34,7 +34,7 @@
             return result ?? throw new InvalidOperationException($"An entity with id {id} was not found");
         }
 
-        public Task<TEntity> GetFirstOrDefaultAsync<TEntity>(
+        public Task<TEntity> FindFirstAsync<TEntity>(
             FormattableString conditions,
             string orderBy,
             int? commandTimeout = null,
@@ -44,7 +44,7 @@
             return this.QueryFirstOrDefaultAsync<TEntity>(sql, commandTimeout, cancellationToken);
         }
 
-        public Task<TEntity> GetFirstOrDefaultAsync<TEntity>(
+        public Task<TEntity> FindFirstAsync<TEntity>(
             object conditions,
             string orderBy,
             int? commandTimeout = null,
@@ -76,7 +76,7 @@
             return this.QueryFirstAsync<TEntity>(command, commandTimeout, cancellationToken);
         }
 
-        public Task<TEntity> GetSingleOrDefaultAsync<TEntity>(
+        public Task<TEntity> FindSingleAsync<TEntity>(
             FormattableString conditions,
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
@@ -85,7 +85,7 @@
             return this.QuerySingleOrDefaultAsync<TEntity>(command, commandTimeout, cancellationToken);
         }
 
-        public Task<TEntity> GetSingleOrDefaultAsync<TEntity>(
+        public Task<TEntity> FindSingleAsync<TEntity>(
             object conditions,
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
@@ -100,15 +100,15 @@
             CancellationToken cancellationToken = default)
             where TEntity : class
         {
-            var result = await this.GetSingleOrDefaultAsync<TEntity>(conditions, commandTimeout, cancellationToken);
-            return result ?? throw new InvalidOperationException($"No entity matching {conditions} was found");
+            var result = await this.FindSingleAsync<TEntity>(conditions, commandTimeout, cancellationToken);
+            return result ?? throw new InvalidOperationException("No entity matching given conditions was found");
         }
 
         public async Task<TEntity> GetSingleAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default)
             where TEntity : class
         {
-            var result = await this.GetSingleOrDefaultAsync<TEntity>(conditions, commandTimeout, cancellationToken);
-            return result ?? throw new InvalidOperationException($"No entity matching {conditions} was found");
+            var result = await this.FindSingleAsync<TEntity>(conditions, commandTimeout, cancellationToken);
+            return result ?? throw new InvalidOperationException("No entity matching given conditions was found");
         }
 
         public Task<IReadOnlyList<TEntity>> GetRangeAsync<TEntity>(

@@ -70,7 +70,7 @@
         /// ]]>
         /// </code>
         /// </example>
-        TEntity GetFirstOrDefault<TEntity>(FormattableString conditions, string orderBy, int? commandTimeout = null);
+        TEntity FindFirst<TEntity>(FormattableString conditions, string orderBy, int? commandTimeout = null);
 
         /// <summary>
         /// Gets the first matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
@@ -83,7 +83,7 @@
         /// ]]>
         /// </code>
         /// </example>
-        TEntity GetFirstOrDefault<TEntity>(object conditions, string orderBy, int? commandTimeout = null);
+        TEntity FindFirst<TEntity>(object conditions, string orderBy, int? commandTimeout = null);
 
         /// <summary>
         /// Gets the first matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
@@ -126,7 +126,7 @@
         /// ]]>
         /// </code>
         /// </example>
-        TEntity GetSingleOrDefault<TEntity>(FormattableString conditions, int? commandTimeout = null);
+        TEntity FindSingle<TEntity>(FormattableString conditions, int? commandTimeout = null);
 
         /// <summary>
         /// Gets the only matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
@@ -139,7 +139,7 @@
         /// ]]>
         /// </code>
         /// </example>
-        TEntity GetSingleOrDefault<TEntity>(object conditions, int? commandTimeout = null);
+        TEntity FindSingle<TEntity>(object conditions, int? commandTimeout = null);
 
         /// <summary>
         /// Gets the only matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
