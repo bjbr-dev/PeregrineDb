@@ -64,6 +64,9 @@
         }
 
         /// <inheritdoc />
+        public abstract SqlCommand MakeGetFirstNCommand<TEntity>(int take, string orderBy);
+
+        /// <inheritdoc />
         public abstract SqlCommand MakeGetFirstNCommand<TEntity>(int take, FormattableString conditions, string orderBy);
 
         /// <inheritdoc />

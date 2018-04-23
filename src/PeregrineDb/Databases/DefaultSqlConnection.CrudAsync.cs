@@ -126,6 +126,24 @@
             return this.QueryAsync<TEntity>(command, commandTimeout, cancellationToken);
         }
 
+        public Task<IReadOnlyList<TEntity>> GetTopAsync<TEntity>(int count, string orderBy, int? commandTimeout = null, CancellationToken cancellationToken = default)
+        {
+            var command = this.Dialect.MakeGetFirstNCommand<TEntity>(count, orderBy);
+            return this.QueryAsync<TEntity>(command, commandTimeout, cancellationToken);
+        }
+
+        public Task<IReadOnlyList<TEntity>> GetTopAsync<TEntity>(int count, FormattableString conditions, string orderBy, int? commandTimeout = null, CancellationToken cancellationToken = default)
+        {
+            var command = this.Dialect.MakeGetFirstNCommand<TEntity>(count, conditions, orderBy);
+            return this.QueryAsync<TEntity>(command, commandTimeout, cancellationToken);
+        }
+
+        public Task<IReadOnlyList<TEntity>> GetTopAsync<TEntity>(int count, object conditions, string orderBy, int? commandTimeout = null, CancellationToken cancellationToken = default)
+        {
+            var command = this.Dialect.MakeGetFirstNCommand<TEntity>(count, conditions, orderBy);
+            return this.QueryAsync<TEntity>(command, commandTimeout, cancellationToken);
+        }
+
         public async Task<PagedList<TEntity>> GetPageAsync<TEntity>(
             IPageBuilder pageBuilder,
             FormattableString conditions,

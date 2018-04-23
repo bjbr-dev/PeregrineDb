@@ -27,6 +27,11 @@
         SqlCommand MakeFindCommand<TEntity>(object id);
 
         /// <summary>
+        /// Generates a SQL statement to select the first N records.
+        /// </summary>
+        SqlCommand MakeGetFirstNCommand<TEntity>(int take, string orderBy);
+
+        /// <summary>
         /// Generates a SQL statement to select the first N records which match the <paramref name="conditions"/>.
         /// </summary>
         SqlCommand MakeGetFirstNCommand<TEntity>(int take, FormattableString conditions, string orderBy);

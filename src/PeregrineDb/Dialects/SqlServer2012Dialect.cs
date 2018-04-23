@@ -72,6 +72,26 @@
             return sql.ToCommand();
         }
 
+        public override SqlCommand MakeGetFirstNCommand<TEntity>(int take, string orderBy)
+        {
+            var entityType = typeof(TEntity);
+            var tableSchema = this.GetTableSchema(entityType);
+
+            if (!tableSchema.CanOrderBy(orderBy))
+            {
+                throw new ArgumentException("Unknown column name: " + orderBy, nameof(orderBy));
+            }
+
+            var sql = new SqlCommandBuilder("SELECT TOP ").Append(take).Append(" ").AppendSelectPropertiesClause(tableSchema.Columns);
+            sql.AppendClause("FROM ").Append(tableSchema.Name);
+            if (!string.IsNullOrWhiteSpace(orderBy))
+            {
+                sql.AppendClause("ORDER BY ").Append(orderBy);
+            }
+
+            return sql.ToCommand();
+        }
+
         public override SqlCommand MakeGetFirstNCommand<TEntity>(int take, FormattableString conditions, string orderBy)
         {
             Ensure.NotNull(conditions, nameof(conditions));

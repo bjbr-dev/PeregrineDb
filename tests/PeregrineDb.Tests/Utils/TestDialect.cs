@@ -44,6 +44,22 @@
             return sql.ToCommand();
         }
 
+        public override SqlCommand MakeGetFirstNCommand<TEntity>(int take, string orderBy)
+        {
+            var entityType = typeof(TEntity);
+            var tableSchema = this.GetTableSchema(entityType);
+
+            var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
+            sql.AppendClause("FROM ").Append(tableSchema.Name);
+            if (!string.IsNullOrWhiteSpace(orderBy))
+            {
+                sql.AppendClause("ORDER BY ").Append(orderBy);
+            }
+
+            sql.AppendLine().AppendFormat("TAKE {0}", take);
+            return new SqlCommand(sql.ToString());
+        }
+
         public override SqlCommand MakeGetFirstNCommand<TEntity>(int take, FormattableString conditions, string orderBy)
         {
             Ensure.NotNull(conditions, nameof(conditions));

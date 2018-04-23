@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Immutable;
     using System.Data;
+    using System.Linq;
     using Pagination;
     using PeregrineDb.Schema;
     using PeregrineDb.Schema.Relations;
@@ -69,6 +70,27 @@
             sql.AppendClause("VALUES (").AppendParameterNames(columns, include).Append(")");
             sql.AppendClause("RETURNING ").AppendSelectPropertiesClause(tableSchema.PrimaryKeyColumns);
             sql.AddParameters(entity);
+            return sql.ToCommand();
+        }
+
+        public override SqlCommand MakeGetFirstNCommand<TEntity>(int take, string orderBy)
+        {
+            var entityType = typeof(TEntity);
+            var tableSchema = this.GetTableSchema(entityType);
+
+            if (!tableSchema.CanOrderBy(orderBy))
+            {
+                throw new ArgumentException("Unknown column name: " + orderBy, nameof(orderBy));
+            }
+
+            var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
+            sql.AppendClause("FROM ").Append(tableSchema.Name);
+            if (!string.IsNullOrWhiteSpace(orderBy))
+            {
+                sql.AppendClause("ORDER BY ").Append(orderBy);
+            }
+
+            sql.AppendLine().Append("LIMIT ").Append(take);
             return sql.ToCommand();
         }
 

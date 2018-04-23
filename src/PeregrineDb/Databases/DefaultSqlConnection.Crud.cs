@@ -97,6 +97,30 @@
             return this.Query<TEntity>(in command, commandTimeout);
         }
 
+        public IReadOnlyList<TEntity> GetTop<TEntity>(int count, string orderBy, int? commandTimeout = null)
+        {
+            Ensure.NotNullOrWhiteSpace(orderBy, nameof(orderBy));
+
+            var command = this.Dialect.MakeGetFirstNCommand<TEntity>(count, orderBy);
+            return this.Query<TEntity>(in command, commandTimeout);
+        }
+
+        public IReadOnlyList<TEntity> GetTop<TEntity>(int count, FormattableString conditions, string orderBy, int? commandTimeout = null)
+        {
+            Ensure.NotNullOrWhiteSpace(orderBy, nameof(orderBy));
+
+            var command = this.Dialect.MakeGetFirstNCommand<TEntity>(count, conditions, orderBy);
+            return this.Query<TEntity>(in command, commandTimeout);
+        }
+
+        public IReadOnlyList<TEntity> GetTop<TEntity>(int count, object conditions, string orderBy, int? commandTimeout = null)
+        {
+            Ensure.NotNullOrWhiteSpace(orderBy, nameof(orderBy));
+
+            var command = this.Dialect.MakeGetFirstNCommand<TEntity>(count, conditions, orderBy);
+            return this.Query<TEntity>(in command, commandTimeout);
+        }
+
         public PagedList<TEntity> GetPage<TEntity>(IPageBuilder pageBuilder, FormattableString conditions, string orderBy, int? commandTimeout = null)
         {
             var countCommand = this.Dialect.MakeCountCommand<TEntity>(conditions);

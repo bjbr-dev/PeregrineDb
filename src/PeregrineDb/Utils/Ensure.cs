@@ -18,5 +18,16 @@
                 throw new ArgumentNullException(paramName);
             }
         }
+
+        /// <summary>
+        /// Throws an <see cref="ArgumentNullException"/> if the value is null
+        /// </summary>
+        public static void NotNullOrWhiteSpace(string value, string paramName)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                throw new ArgumentNullException(paramName);
+            }
+        }
     }
 }

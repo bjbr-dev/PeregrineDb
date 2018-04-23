@@ -207,6 +207,43 @@
         Task<IReadOnlyList<TEntity>> GetRangeAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// Gets the first <see cref="count"/> entities from the <typeparamref name="TEntity"/> table.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// var dogs = databaseConnection.GetTop<DogEntity>(5, "id");
+        /// ]]>
+        /// </code>
+        /// </example>
+        Task<IReadOnlyList<TEntity>> GetTopAsync<TEntity>(int count, string orderBy, int? commandTimeout = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Gets the first <see cref="count"/> entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// var minAge = 18;
+        /// var dogs = databaseConnection.GetTop<DogEntity>(5, $"WHERE Age > {minAge}", "id");
+        /// ]]>
+        /// </code>
+        /// </example>
+        Task<IReadOnlyList<TEntity>> GetTopAsync<TEntity>(int count, FormattableString conditions, string orderBy, int? commandTimeout = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Gets the first <see cref="count"/> entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// var dogs = databaseConnection.GetTop<DogEntity>(5, new { Age = 18 }, "id");
+        /// ]]>
+        /// </code>
+        /// </example>
+        Task<IReadOnlyList<TEntity>> GetTopAsync<TEntity>(int count, object conditions, string orderBy, int? commandTimeout = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Gets a collection of entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
         /// </summary>
         /// <example>

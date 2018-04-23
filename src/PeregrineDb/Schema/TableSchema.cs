@@ -64,5 +64,10 @@
 
             return result;
         }
+
+        public bool CanOrderBy(string orderBy)
+        {
+            return this.Columns.Any(c => c.ColumnName == orderBy || c.ColumnName + " ASC" == orderBy || c.ColumnName + "DESC" == orderBy);
+        }
     }
 }
