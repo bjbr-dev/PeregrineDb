@@ -156,6 +156,96 @@
             }
         }
 
+        public class ExistsAsyncWhere
+            : DefaultDatabaseConnectionCrudTests
+        {
+            [Theory]
+            [MemberData(nameof(TestDialects))]
+            public async Task Returns_false_if_no_entity_matches_conditions(IDialect dialect)
+            {
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
+                {
+                    // Arrange
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
+
+                    // Act
+                    var result = await database.ExistsAsync<Dog>($"WHERE Age < {11}");
+
+                    // Assert
+                    result.Should().BeFalse();
+                }
+            }
+
+            [Theory]
+            [MemberData(nameof(TestDialects))]
+            public async Task Returns_true_if_an_entity_matches_conditions(IDialect dialect)
+            {
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
+                {
+                    // Arrange
+                    database.Insert(new Dog { Name = "Some Name 1", Age = 10 });
+
+                    // Act
+                    var result = await database.ExistsAsync<Dog>($"WHERE Age < {11}");
+
+                    // Assert
+                    result.Should().BeTrue();
+                }
+            }
+        }
+
+        public class ExistsAsyncWhereObject
+            : DefaultDatabaseConnectionCrudTests
+        {
+            [Theory]
+            [MemberData(nameof(TestDialects))]
+            public void Throws_exception_when_conditions_is_null(IDialect dialect)
+            {
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
+                {
+                    // Act
+                    Func<Task> act = async () => await database.ExistsAsync<Dog>((object)null);
+
+                    // Assert
+                    act.ShouldThrow<ArgumentNullException>();
+                }
+            }
+
+            [Theory]
+            [MemberData(nameof(TestDialects))]
+            public async Task Returns_false_if_no_entity_matches_conditions(IDialect dialect)
+            {
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
+                {
+                    // Arrange
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
+
+                    // Act
+                    var result = await database.ExistsAsync<Dog>(new { Age = 10 });
+
+                    // Assert
+                    result.Should().BeFalse();
+                }
+            }
+
+            [Theory]
+            [MemberData(nameof(TestDialects))]
+            public async Task Returns_true_if_an_entity_matches_conditions(IDialect dialect)
+            {
+                using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
+                {
+                    // Arrange
+                    database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
+
+                    // Act
+                    var result = await database.ExistsAsync<Dog>(new { Age = 11 });
+
+                    // Assert
+                    result.Should().BeTrue();
+                }
+            }
+        }
+
         public class FindAsync
             : DefaultDatabaseConnectionCrudAsyncTests
         {
@@ -782,7 +872,7 @@
         {
             [Theory]
             [MemberData(nameof(TestDialects))]
-            public void Returns_less_than_count_if_there_arent_that_many_rows(IDialect dialect)
+            public async Task Returns_less_than_count_if_there_arent_that_many_rows(IDialect dialect)
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
@@ -791,7 +881,7 @@
                     var orderBy = dialect is SqlServer2012Dialect ? "[Name] ASC" : "name ASC";
 
                     // Act
-                    var entities = database.GetTop<Dog>(2, orderBy);
+                    var entities = await database.GetTopAsync<Dog>(2, orderBy);
 
                     // Assert
                     entities.Count().Should().Be(1);
@@ -800,7 +890,7 @@
 
             [Theory]
             [MemberData(nameof(TestDialects))]
-            public void Returns_first_N_matching_rows(IDialect dialect)
+            public async Task Returns_first_N_matching_rows(IDialect dialect)
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
@@ -813,7 +903,7 @@
                     var orderBy = dialect is SqlServer2012Dialect ? "[Name] ASC" : "name ASC";
 
                     // Act
-                    var entities = database.GetTop<Dog>(2, orderBy);
+                    var entities = await database.GetTopAsync<Dog>(2, orderBy);
 
                     // Assert
                     entities.ShouldAllBeEquivalentTo(new[]
@@ -841,7 +931,7 @@
                     database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    Action act = () => database.GetTop<Dog>(2, $"WHERE Age = {10}");
+                    Func<Task> act = async () => await database.GetTopAsync<Dog>(2, $"WHERE Age = {10}");
 
                     // Assert
                     act.ShouldThrow<ArgumentException>().WithMessage("Unknown column name: WHERE Age = 10" + Environment.NewLine + "Parameter name: orderBy");
@@ -854,7 +944,7 @@
         {
             [Theory]
             [MemberData(nameof(TestDialects))]
-            public void Filters_result_by_conditions(IDialect dialect)
+            public async Task Filters_result_by_conditions(IDialect dialect)
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
@@ -865,7 +955,7 @@
                     database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var entities = database.GetTop<Dog>(2, $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}", "name");
+                    var entities = await database.GetTopAsync<Dog>(2, $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}", "name");
 
                     // Assert
                     entities.Count().Should().Be(2);
@@ -878,7 +968,7 @@
         {
             [Theory]
             [MemberData(nameof(TestDialects))]
-            public void Filters_result_by_conditions(IDialect dialect)
+            public async Task Filters_result_by_conditions(IDialect dialect)
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
@@ -889,7 +979,7 @@
                     database.Insert(new Dog { Name = "Some Name 4", Age = 10 });
 
                     // Act
-                    var entities = database.GetTop<Dog>(2, new { Age = 10 }, "name");
+                    var entities = await database.GetTopAsync<Dog>(2, new { Age = 10 }, "name");
 
                     // Assert
                     entities.ShouldAllBeEquivalentTo(new[]

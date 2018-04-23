@@ -21,6 +21,16 @@
             return this.ExecuteScalar<int>(in command, commandTimeout);
         }
 
+        public bool Exists<TEntity>(FormattableString conditions = null, int? commandTimeout = null)
+        {
+            return this.Count<TEntity>(conditions, commandTimeout) > 0;
+        }
+
+        public bool Exists<TEntity>(object conditions, int? commandTimeout = null)
+        {
+            return this.Count<TEntity>(conditions, commandTimeout) > 0;
+        }
+
         public TEntity Find<TEntity>(object id, int? commandTimeout = null)
         {
             var command = this.Dialect.MakeFindCommand<TEntity>(id);

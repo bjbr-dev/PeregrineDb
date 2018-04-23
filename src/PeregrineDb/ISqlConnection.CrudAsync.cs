@@ -34,6 +34,31 @@
         Task<int> CountAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// Gets whether an entity in the <typeparamref name="TEntity"/> table matches the <paramref name="conditions"/>.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// var minAge = 18;
+        /// databaseConnection.Exists<DogEntity>($"WHERE Age > {minAge}");
+        /// ]]>
+        /// </code>
+        /// </example>
+        Task<bool> ExistsAsync<TEntity>(FormattableString conditions = null, int? commandTimeout = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Gets whether an entity in the <typeparamref name="TEntity"/> table matches the <paramref name="conditions"/>.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// databaseConnection.Exists<DogEntity>(new { Age = 18 });
+        /// ]]>
+        /// </code>
+        /// </example>
+        Task<bool> ExistsAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Finds a single entity from the <typeparamref name="TEntity"/> table by it's primary key, or the default value if not found.
         /// </summary>
         /// <example>

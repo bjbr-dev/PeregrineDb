@@ -33,6 +33,31 @@
         int Count<TEntity>(object conditions, int? commandTimeout = null);
 
         /// <summary>
+        /// Gets whether an entity in the <typeparamref name="TEntity"/> table matches the <paramref name="conditions"/>.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// var minAge = 18;
+        /// databaseConnection.Exists<DogEntity>($"WHERE Age > {minAge}");
+        /// ]]>
+        /// </code>
+        /// </example>
+        bool Exists<TEntity>(FormattableString conditions = null, int? commandTimeout = null);
+
+        /// <summary>
+        /// Gets whether an entity in the <typeparamref name="TEntity"/> table matches the <paramref name="conditions"/>.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// <![CDATA[
+        /// databaseConnection.Exists<DogEntity>(new { Age = 18 });
+        /// ]]>
+        /// </code>
+        /// </example>
+        bool Exists<TEntity>(object conditions, int? commandTimeout = null);
+
+        /// <summary>
         /// Finds a single entity from the <typeparamref name="TEntity"/> table by it's primary key, or the default value if not found.
         /// </summary>
         /// <example>

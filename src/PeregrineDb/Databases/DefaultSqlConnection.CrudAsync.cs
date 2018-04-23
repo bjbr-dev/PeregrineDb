@@ -21,6 +21,17 @@
             return this.ExecuteScalarAsync<int>(this.Dialect.MakeCountCommand<TEntity>(conditions), commandTimeout, cancellationToken);
         }
 
+        public async Task<bool> ExistsAsync<TEntity>(FormattableString conditions = null, int? commandTimeout = null, CancellationToken cancellationToken = default)
+        {
+            var count = await this.CountAsync<TEntity>(conditions, commandTimeout, cancellationToken).ConfigureAwait(false);
+            return count > 0;
+        }
+
+        public async Task<bool> ExistsAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default)
+        {
+            var count = await this.CountAsync<TEntity>(conditions, commandTimeout, cancellationToken).ConfigureAwait(false);
+            return count > 0;
+        }
 
         public Task<TEntity> FindAsync<TEntity>(object id, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
