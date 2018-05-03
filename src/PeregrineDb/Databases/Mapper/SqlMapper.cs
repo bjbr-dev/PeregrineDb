@@ -336,8 +336,7 @@
                     }
                     else
                     {
-                        var literals = GetLiteralTokens(identity.sql);
-                        reader = CreateParamInfoGenerator(identity, false, true, literals);
+                        reader = CreateParamInfoGenerator(identity, false, true);
                     }
 
                     info.ParamReader = reader;
@@ -517,8 +516,6 @@
             return result;
         }
 
-        private static string GetInListRegex(string name) => "([?@:]" + Regex.Escape(name) + @")(?!\w)(\s+(?i)unknown(?-i))?";
-
         /// <summary>
         /// Internal use only.
         /// </summary>
@@ -527,125 +524,10 @@
         /// <param name="value">The parameter value can be an <see cref="IEnumerable{T}"/></param>
         public static void PackListParameters(IDbCommand command, string namePrefix, object value)
         {
-            // initially we tried TVP, however it performs quite poorly.
-            // keep in mind SQL support up to 2000 params easily in sp_executesql, needing more is rare
-
-            if (FeatureSupport.Get(command.Connection).Arrays)
-            {
-                var arrayParm = command.CreateParameter();
-                arrayParm.Value = SanitizeParameterValue(value);
-                arrayParm.ParameterName = namePrefix;
-                command.Parameters.Add(arrayParm);
-            }
-            else
-            {
-                var list = value as IEnumerable;
-                var count = 0;
-                var isString = value is IEnumerable<string>;
-                var isDbString = value is IEnumerable<DbString>;
-                DbType dbType = 0;
-
-                if (list != null)
-                {
-                    foreach (var item in list)
-                    {
-                        if (++count == 1) // first item: fetch some type info
-                        {
-                            if (item == null)
-                            {
-                                throw new NotSupportedException("The first item in a list-expansion cannot be null");
-                            }
-
-                            if (!isDbString)
-                            {
-                                dbType = TypeProvider.LookupDbType(item.GetType(), "", true, out var handler);
-                            }
-                        }
-
-                        var nextName = namePrefix + count;
-                        if (isDbString && item is DbString str)
-                        {
-                            str.AddParameter(command, nextName);
-                        }
-                        else
-                        {
-                            var listParam = command.CreateParameter();
-                            listParam.ParameterName = nextName;
-                            if (isString)
-                            {
-                                listParam.Size = DbString.DefaultLength;
-                                if (item != null && ((string)item).Length > DbString.DefaultLength)
-                                {
-                                    listParam.Size = -1;
-                                }
-                            }
-
-                            listParam.Value = SanitizeParameterValue(item);
-
-                            if (listParam.DbType != dbType)
-                            {
-                                listParam.DbType = dbType;
-                            }
-
-                            command.Parameters.Add(listParam);
-                        }
-                    }
-                }
-
-                var regexIncludingUnknown = GetInListRegex(namePrefix);
-                if (count == 0)
-                {
-                    command.CommandText = Regex.Replace(command.CommandText, regexIncludingUnknown, match =>
-                        {
-                            var variableName = match.Groups[1].Value;
-                            if (match.Groups[2].Success)
-                            {
-                                // looks like an optimize hint; leave it alone!
-                                return match.Value;
-                            }
-                            else
-                            {
-                                return "(SELECT " + variableName + " WHERE 1 = 0)";
-                            }
-                        }, RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant);
-                    var dummyParam = command.CreateParameter();
-                    dummyParam.ParameterName = namePrefix;
-                    dummyParam.Value = DBNull.Value;
-                    command.Parameters.Add(dummyParam);
-                }
-                else
-                {
-                    command.CommandText = Regex.Replace(command.CommandText, regexIncludingUnknown, match =>
-                        {
-                            var variableName = match.Groups[1].Value;
-                            if (match.Groups[2].Success)
-                            {
-                                // looks like an optimize hint; expand it
-                                var suffix = match.Groups[2].Value;
-
-                                var sb = StringBuilderPool.Acquire().Append(variableName).Append(1).Append(suffix);
-                                for (var i = 2; i <= count; i++)
-                                {
-                                    sb.Append(',').Append(variableName).Append(i).Append(suffix);
-                                }
-
-                                return sb.__ToStringRecycle();
-                            }
-                            else
-                            {
-                                var sb = StringBuilderPool.Acquire().Append('(').Append(variableName);
-                                sb.Append(1);
-                                for (var i = 2; i <= count; i++)
-                                {
-                                    sb.Append(',').Append(variableName);
-                                    sb.Append(i);
-                                }
-
-                                return sb.Append(')').__ToStringRecycle();
-                            }
-                        }, RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant);
-                }
-            }
+            var arrayParm = command.CreateParameter();
+            arrayParm.Value = SanitizeParameterValue(value);
+            arrayParm.ParameterName = namePrefix;
+            command.Parameters.Add(arrayParm);
         }
 
         /// <summary>
@@ -692,12 +574,6 @@
                                  RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant))
                              .ToList();
         }
-
-        // look for ? / @ / : *by itself*
-        private static readonly Regex literalTokens = new Regex(@"(?<![\p{L}\p{N}_])\{=([\p{L}\p{N}_]+)\}",
-                RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant | RegexOptions.Compiled);
-
-        internal static readonly MethodInfo format = typeof(SqlMapper).GetMethod("Format", BindingFlags.Public | BindingFlags.Static);
 
         /// <summary>
         /// Convert numeric values to their string form for SQL literal purposes.
@@ -775,38 +651,6 @@
             }
         }
 
-        internal static void ReplaceLiterals(IParameterLookup parameters, IDbCommand command, IList<LiteralToken> tokens)
-        {
-            var sql = command.CommandText;
-            foreach (var token in tokens)
-            {
-                var text = Format(parameters[token.Member]);
-                sql = sql.Replace(token.Token, text);
-            }
-
-            command.CommandText = sql;
-        }
-
-        internal static IList<LiteralToken> GetLiteralTokens(string sql)
-        {
-            if (string.IsNullOrEmpty(sql)) return LiteralToken.None;
-            if (!literalTokens.IsMatch(sql)) return LiteralToken.None;
-
-            var matches = literalTokens.Matches(sql);
-            var found = new HashSet<string>(StringComparer.Ordinal);
-            var list = new List<LiteralToken>(matches.Count);
-            foreach (Match match in matches)
-            {
-                var token = match.Value;
-                if (found.Add(match.Value))
-                {
-                    list.Add(new LiteralToken(token, match.Groups[1].Value));
-                }
-            }
-
-            return list.Count == 0 ? LiteralToken.None : list;
-        }
-
         private static bool IsValueTuple(Type type) => type?.IsValueType() == true && type.FullName.StartsWith("System.ValueTuple`", StringComparison.Ordinal);
 
         private static List<IMemberMap> GetValueTupleMembers(Type type, string[] names)
@@ -835,8 +679,7 @@
         internal static Action<IDbCommand, object> CreateParamInfoGenerator(
             Identity identity,
             bool checkForDuplicates,
-            bool removeUnused,
-            IList<LiteralToken> literals)
+            bool removeUnused)
         {
             var type = identity.parametersType;
 
@@ -989,13 +832,11 @@
                 else
                 {
                     // no risk of duplicates; just blindly add
-                    il.EmitCall(OpCodes.Callvirt, typeof(IDbCommand).GetMethod(nameof(IDbCommand.CreateParameter)),
-                        null); // stack is now [parameters] [parameters] [parameter]
+                    il.EmitCall(OpCodes.Callvirt, typeof(IDbCommand).GetMethod(nameof(IDbCommand.CreateParameter)), null); // stack is now [parameters] [parameters] [parameter]
 
                     il.Emit(OpCodes.Dup); // stack is now [parameters] [parameters] [parameter] [parameter]
                     il.Emit(OpCodes.Ldstr, prop.Name); // stack is now [parameters] [parameters] [parameter] [parameter] [name]
-                    il.EmitCall(OpCodes.Callvirt, typeof(IDataParameter).GetProperty(nameof(IDataParameter.ParameterName)).GetSetMethod(),
-                        null); // stack is now [parameters] [parameters] [parameter]
+                    il.EmitCall(OpCodes.Callvirt, typeof(IDataParameter).GetProperty(nameof(IDataParameter.ParameterName)).GetSetMethod(), null); // stack is now [parameters] [parameters] [parameter]
                 }
 
                 if (dbType != DbType.Time && handler == null) // https://connect.microsoft.com/VisualStudio/feedback/details/381934/sqlparameter-dbtype-dbtype-time-sets-the-parameter-to-sqldbtype-datetime-instead-of-sqldbtype-time
@@ -1181,122 +1022,9 @@
             // stack is currently [parameters]
             il.Emit(OpCodes.Pop); // stack is now empty
 
-            if (literals.Count != 0 && propsList != null)
-            {
-                il.Emit(OpCodes.Ldarg_0); // command
-                il.Emit(OpCodes.Ldarg_0); // command, command
-                var cmdText = typeof(IDbCommand).GetProperty(nameof(IDbCommand.CommandText));
-                il.EmitCall(OpCodes.Callvirt, cmdText.GetGetMethod(), null); // command, sql
-                Dictionary<Type, LocalBuilder> locals = null;
-                LocalBuilder local = null;
-                foreach (var literal in literals)
-                {
-                    // find the best member, preferring case-sensitive
-                    PropertyInfo exact = null, fallback = null;
-                    var huntName = literal.Member;
-                    for (var i = 0; i < propsList.Count; i++)
-                    {
-                        var thisName = propsList[i].Name;
-                        if (string.Equals(thisName, huntName, StringComparison.OrdinalIgnoreCase))
-                        {
-                            fallback = propsList[i];
-                            if (string.Equals(thisName, huntName, StringComparison.Ordinal))
-                            {
-                                exact = fallback;
-                                break;
-                            }
-                        }
-                    }
-
-                    var prop = exact ?? fallback;
-
-                    if (prop != null)
-                    {
-                        il.Emit(OpCodes.Ldstr, literal.Token);
-                        il.Emit(OpCodes.Ldloc_0); // command, sql, typed parameter
-                        il.EmitCall(callOpCode, prop.GetGetMethod(), null); // command, sql, typed value
-                        var propType = prop.PropertyType;
-                        var typeCode = TypeExtensions.GetTypeCode(propType);
-                        switch (typeCode)
-                        {
-                            case TypeCode.Boolean:
-                                Label ifTrue = il.DefineLabel(), allDone = il.DefineLabel();
-                                il.Emit(OpCodes.Brtrue_S, ifTrue);
-                                il.Emit(OpCodes.Ldstr, "0");
-                                il.Emit(OpCodes.Br_S, allDone);
-                                il.MarkLabel(ifTrue);
-                                il.Emit(OpCodes.Ldstr, "1");
-                                il.MarkLabel(allDone);
-                                break;
-                            case TypeCode.Byte:
-                            case TypeCode.SByte:
-                            case TypeCode.UInt16:
-                            case TypeCode.Int16:
-                            case TypeCode.UInt32:
-                            case TypeCode.Int32:
-                            case TypeCode.UInt64:
-                            case TypeCode.Int64:
-                            case TypeCode.Single:
-                            case TypeCode.Double:
-                            case TypeCode.Decimal:
-                                // need to stloc, ldloca, call
-                                // re-use existing locals (both the last known, and via a dictionary)
-                                var convert = GetToString(typeCode);
-                                if (local == null || local.LocalType != propType)
-                                {
-                                    if (locals == null)
-                                    {
-                                        locals = new Dictionary<Type, LocalBuilder>();
-                                        local = null;
-                                    }
-                                    else
-                                    {
-                                        if (!locals.TryGetValue(propType, out local)) local = null;
-                                    }
-
-                                    if (local == null)
-                                    {
-                                        local = il.DeclareLocal(propType);
-                                        locals.Add(propType, local);
-                                    }
-                                }
-
-                                il.Emit(OpCodes.Stloc, local); // command, sql
-                                il.Emit(OpCodes.Ldloca, local); // command, sql, ref-to-value
-                                il.EmitCall(OpCodes.Call, InvariantCulture, null); // command, sql, ref-to-value, culture
-                                il.EmitCall(OpCodes.Call, convert, null); // command, sql, string value
-                                break;
-                            default:
-                                if (propType.IsValueType()) il.Emit(OpCodes.Box, propType); // command, sql, object value
-                                il.EmitCall(OpCodes.Call, format, null); // command, sql, string value
-                                break;
-                        }
-
-                        il.EmitCall(OpCodes.Callvirt, StringReplace, null);
-                    }
-                }
-
-                il.EmitCall(OpCodes.Callvirt, cmdText.GetSetMethod(), null); // empty
-            }
-
             il.Emit(OpCodes.Ret);
             return (Action<IDbCommand, object>)dm.CreateDelegate(typeof(Action<IDbCommand, object>));
         }
-
-        private static readonly Dictionary<TypeCode, MethodInfo> toStrings = new[]
-            {
-                typeof(bool), typeof(sbyte), typeof(byte), typeof(ushort), typeof(short),
-                typeof(uint), typeof(int), typeof(ulong), typeof(long), typeof(float), typeof(double), typeof(decimal)
-            }.ToDictionary(x => TypeExtensions.GetTypeCode(x), x => x.GetPublicInstanceMethod(nameof(object.ToString), new[] { typeof(IFormatProvider) }));
-
-        private static MethodInfo GetToString(TypeCode typeCode)
-        {
-            return toStrings.TryGetValue(typeCode, out var method) ? method : null;
-        }
-
-        private static readonly MethodInfo StringReplace =
-                typeof(string).GetPublicInstanceMethod(nameof(string.Replace), new Type[] { typeof(string), typeof(string) }),
-            InvariantCulture = typeof(CultureInfo).GetProperty(nameof(CultureInfo.InvariantCulture), BindingFlags.Public | BindingFlags.Static).GetGetMethod();
 
         public static T ExecuteScalarImpl<T>(IDbConnection cnn, ref CommandDefinition command)
         {

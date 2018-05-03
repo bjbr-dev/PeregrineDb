@@ -72,7 +72,7 @@
         public CommandResult Execute(in SqlCommand command, int? commandTimeout = null)
         {
             var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
-            return new CommandResult(SqlMapper.ExecuteImpl(this.connection, ref command1));
+            return new CommandResult(this.connection.ExecuteImpl(ref command1));
         }
 
         public CommandResult Execute(FormattableString sql, int? commandTimeout = null)

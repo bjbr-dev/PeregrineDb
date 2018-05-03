@@ -137,8 +137,6 @@ namespace PeregrineDb.Databases.Mapper
 
         public void AddParameters(IDbCommand command, Identity identity)
         {
-            var literals = SqlMapper.GetLiteralTokens(identity.sql);
-
             if (this.templates != null)
             {
                 foreach (var template in this.templates)
@@ -150,7 +148,7 @@ namespace PeregrineDb.Databases.Mapper
                     {
                         if (!paramReaderCache.TryGetValue(newIdent, out appender))
                         {
-                            appender = SqlMapper.CreateParamInfoGenerator(newIdent, true, this.RemoveUnused, literals);
+                            appender = SqlMapper.CreateParamInfoGenerator(newIdent, true, this.RemoveUnused);
                             paramReaderCache[newIdent] = appender;
                         }
                     }
@@ -188,78 +186,104 @@ namespace PeregrineDb.Databases.Mapper
                     continue;
                 }
 
-                var dbType = param.DbType;
                 var val = param.Value;
-                string name = Clean(param.Name);
-                var isCustomQueryParameter = val is ICustomQueryParameter;
+                var name = Clean(param.Name);
 
-                ITypeHandler handler = null;
-                if (dbType == null && val != null && !isCustomQueryParameter)
+                if (val is ICustomQueryParameter customParameter)
                 {
-                    dbType = TypeProvider.LookupDbType(val.GetType(), name, true, out handler);
-                }
-
-                if (isCustomQueryParameter)
-                {
-                    ((ICustomQueryParameter)val).AddParameter(command, name);
-                }
-                else if (dbType == EnumerableMultiParameter)
-                {
-                    SqlMapper.PackListParameters(command, name, val);
+                    customParameter.AddParameter(command, name);
                 }
                 else
                 {
-                    var add = !command.Parameters.Contains(name);
-                    IDbDataParameter p;
-                    if (add)
+                    var dbType = param.DbType;
+                    ITypeHandler handler = null;
+                    if (dbType == null && val != null)
                     {
-                        p = command.CreateParameter();
-                        p.ParameterName = name;
+                        dbType = TypeProvider.LookupDbType(val.GetType(), name, true, out handler);
+                    }
+
+                    if (dbType == EnumerableMultiParameter)
+                    {
+                        SqlMapper.PackListParameters(command, name, val);
                     }
                     else
                     {
-                        p = (IDbDataParameter)command.Parameters[name];
-                    }
-
-                    p.Direction = param.ParameterDirection;
-                    if (handler == null)
-                    {
-                        p.Value = SqlMapper.SanitizeParameterValue(val);
-                        if (dbType != null && p.DbType != dbType)
+                        var add = !command.Parameters.Contains(name);
+                        IDbDataParameter p;
+                        if (add)
                         {
-                            p.DbType = dbType.Value;
+                            p = command.CreateParameter();
+                            p.ParameterName = name;
+                        }
+                        else
+                        {
+                            p = (IDbDataParameter)command.Parameters[name];
                         }
 
-                        var s = val as string;
-                        if (s?.Length <= DbString.DefaultLength)
+                        p.Direction = param.ParameterDirection;
+                        if (handler == null)
                         {
-                            p.Size = DbString.DefaultLength;
+                            p.Value = SqlMapper.SanitizeParameterValue(val);
+                            if (dbType != null && p.DbType != dbType)
+                            {
+                                p.DbType = dbType.Value;
+                            }
+
+                            var s = val as string;
+                            if (s?.Length <= DbString.DefaultLength)
+                            {
+                                p.Size = DbString.DefaultLength;
+                            }
+
+                            if (param.Size != null)
+                            {
+                                p.Size = param.Size.Value;
+                            }
+
+                            if (param.Precision != null)
+                            {
+                                p.Precision = param.Precision.Value;
+                            }
+
+                            if (param.Scale != null)
+                            {
+                                p.Scale = param.Scale.Value;
+                            }
+                        }
+                        else
+                        {
+                            if (dbType != null)
+                            {
+                                p.DbType = dbType.Value;
+                            }
+
+                            if (param.Size != null)
+                            {
+                                p.Size = param.Size.Value;
+                            }
+
+                            if (param.Precision != null)
+                            {
+                                p.Precision = param.Precision.Value;
+                            }
+
+                            if (param.Scale != null)
+                            {
+                                p.Scale = param.Scale.Value;
+                            }
+
+                            handler.SetValue(p, val ?? DBNull.Value);
                         }
 
-                        if (param.Size != null) p.Size = param.Size.Value;
-                        if (param.Precision != null) p.Precision = param.Precision.Value;
-                        if (param.Scale != null) p.Scale = param.Scale.Value;
-                    }
-                    else
-                    {
-                        if (dbType != null) p.DbType = dbType.Value;
-                        if (param.Size != null) p.Size = param.Size.Value;
-                        if (param.Precision != null) p.Precision = param.Precision.Value;
-                        if (param.Scale != null) p.Scale = param.Scale.Value;
-                        handler.SetValue(p, val ?? DBNull.Value);
-                    }
+                        if (add)
+                        {
+                            command.Parameters.Add(p);
+                        }
 
-                    if (add)
-                    {
-                        command.Parameters.Add(p);
+                        param.AttachedParam = p;
                     }
-
-                    param.AttachedParam = p;
                 }
             }
-
-            // note: most non-priveleged implementations would use: this.ReplaceLiterals(command);
-            if (literals.Count != 0) SqlMapper.ReplaceLiterals(this, command, literals);
         }
 
         /// <summary>

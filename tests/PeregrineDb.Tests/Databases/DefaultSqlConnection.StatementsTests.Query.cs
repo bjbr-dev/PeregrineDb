@@ -9,6 +9,7 @@
     using System.Dynamic;
     using System.Globalization;
     using System.Linq;
+    using FluentAssertions;
     using Microsoft.CSharp.RuntimeBinder;
     using PeregrineDb.Databases.Mapper;
     using PeregrineDb.Tests.Databases.Mapper.Helpers;
@@ -18,25 +19,20 @@
     using SqlClientCommand = System.Data.SqlClient.SqlCommand;
     using SqlCommand = PeregrineDb.SqlCommand;
 
-#if NETCOREAPP1_0
-namespace System
-{
-    public enum GenericUriParserOptions
+    public enum UnhandledTypeOptions
     {
         Default
     }
 
-    public class GenericUriParser
+    public class UnhandledType
     {
-        private readonly GenericUriParserOptions options;
+        private readonly UnhandledTypeOptions options;
 
-        public GenericUriParser(GenericUriParserOptions options)
+        public UnhandledType(UnhandledTypeOptions options)
         {
             this.options = options;
         }
     }
-}
-#endif
 
     public abstract partial class DefaultDatabaseConnectionStatementsTests
     {
@@ -561,12 +557,12 @@ SELECT * FROM @ExplicitConstructors"
                 [Fact]
                 public void PassInIntArray()
                 {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
                     {
                         Assert.Equal(
                             new[] { 1, 2, 3 },
                             database.Query<int>(
-                                $"select * from (select 1 as Id union all select 2 union all select 3) as X where Id in {new int[] { 1, 2, 3 }.AsEnumerable()}")
+                                $"select * from (select 1 as Id union all select 2 union all select 3) as X where Id = ANY ({new[] { 1, 2, 3 }.AsEnumerable()})")
                         );
                     }
                 }
@@ -574,11 +570,11 @@ SELECT * FROM @ExplicitConstructors"
                 [Fact]
                 public void PassInEmptyIntArray()
                 {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
                     {
                         Assert.Equal(
                             new int[0],
-                            database.Query<int>($"select * from (select 1 as Id union all select 2 union all select 3) as X where Id in {new int[0]}")
+                            database.Query<int>($"select * from (select 1 as Id union all select 2 union all select 3) as X where Id = ANY ({new int[0]})")
                         );
                     }
                 }
@@ -615,41 +611,6 @@ SELECT * FROM @ExplicitConstructors"
                         var guid = Guid.NewGuid();
                         var guid2 = database.Query<Guid?>($"select {guid}").First();
                         Assert.True(guid == guid2);
-                    }
-                }
-
-                [Fact]
-                public void GuidIn_SO_24177902()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        // invent and populate
-                        Guid a = Guid.NewGuid(), b = Guid.NewGuid(), c = Guid.NewGuid(), d = Guid.NewGuid();
-                        database.Execute($"create table #foo (i int, g uniqueidentifier)");
-
-                        var insertCommand = new SqlCommand("insert #foo(i,g) values(@i,@g)", new[]
-                            {
-                                new { i = 1, g = a }, new { i = 2, g = b },
-                                new { i = 3, g = c }, new { i = 4, g = d }
-                            });
-                        database.Execute(in insertCommand);
-
-                        // check that rows 2&3 yield guids b&c
-                        var guids = database.Query<Guid>($"select g from #foo where i in (2,3)").ToArray();
-                        guids.Length.Equals(2);
-                        guids.Contains(a).Equals(false);
-                        guids.Contains(b).Equals(true);
-                        guids.Contains(c).Equals(true);
-                        guids.Contains(d).Equals(false);
-
-                        // in query on the guids
-                        var rows = database.Query<dynamic>($"select * from #foo where g in {guids} order by i")
-                                           .Select(row => new { i = (int)row.i, g = (Guid)row.g }).ToArray();
-                        rows.Length.Equals(2);
-                        rows[0].i.Equals(2);
-                        rows[0].g.Equals(b);
-                        rows[1].i.Equals(3);
-                        rows[1].g.Equals(c);
                     }
                 }
 
@@ -737,13 +698,13 @@ SELECT * FROM @ExplicitConstructors"
                 [Fact]
                 public void TestAppendingAList()
                 {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
                     {
                         var p = new DynamicParameters();
                         var list = new int[] { 1, 2, 3 };
                         p.AddDynamicParams(new { list });
 
-                        var command = new SqlCommand("select * from (select 1 A union all select 2 union all select 3) X where A in @list", p);
+                        var command = new SqlCommand("select * from (select 1 A union all select 2 union all select 3) X where A = ANY (@list)", p);
                         var result = database.Query<int>(in command).ToList();
 
                         Assert.Equal(1, result[0]);
@@ -755,14 +716,14 @@ SELECT * FROM @ExplicitConstructors"
                 [Fact]
                 public void TestAppendingAListAsDictionary()
                 {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
                     {
                         var p = new DynamicParameters();
                         var list = new int[] { 1, 2, 3 };
                         var args = new Dictionary<string, object> { ["ids"] = list };
                         p.AddDynamicParams(args);
 
-                        var command = new SqlCommand("select * from (select 1 A union all select 2 union all select 3) X where A in @ids", p);
+                        var command = new SqlCommand("select * from (select 1 A union all select 2 union all select 3) X where A = ANY (@ids)", p);
                         var result = database.Query<int>(in command).ToList();
 
                         Assert.Equal(1, result[0]);
@@ -774,45 +735,18 @@ SELECT * FROM @ExplicitConstructors"
                 [Fact]
                 public void TestAppendingAListByName()
                 {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
                     {
                         DynamicParameters p = new DynamicParameters();
                         var list = new int[] { 1, 2, 3 };
                         p.Add("ids", list);
 
-                        var command = new SqlCommand("select * from (select 1 A union all select 2 union all select 3) X where A in @ids", p);
+                        var command = new SqlCommand("select * from (select 1 A union all select 2 union all select 3) X where A = ANY (@ids)", p);
                         var result = database.Query<int>(in command).ToList();
 
                         Assert.Equal(1, result[0]);
                         Assert.Equal(2, result[1]);
                         Assert.Equal(3, result[2]);
-                    }
-                }
-
-                [Fact]
-                public void ParameterizedInWithOptimizeHint()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        const string sql = @"
-select count(1)
-from(
-    select 1 as x
-    union all select 2
-    union all select 5) y
-where y.x in @vals
-option (optimize for (@vals unKnoWn))";
-                        var command = new SqlCommand(sql, new { vals = new[] { 1, 2, 3, 4 } });
-                        int count = database.Query<int>(in command).Single();
-                        Assert.Equal(2, count);
-
-                        command = new SqlCommand(sql, new { vals = new[] { 1 } });
-                        count = database.Query<int>(in command).Single();
-                        Assert.Equal(1, count);
-
-                        command = new SqlCommand(sql, new { vals = new int[0] });
-                        count = database.Query<int>(in command).Single();
-                        Assert.Equal(0, count);
                     }
                 }
 
@@ -900,37 +834,20 @@ option (optimize for (@vals unKnoWn))";
                     }
                 }
 
-                public class HazX
-                {
-                    public string X { get; set; }
-                }
-
                 [Fact]
                 public void SO25297173_DynamicIn()
                 {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
                     {
-                        const string query = @"
-declare @table table(value int not null);
-insert @table values(1);
-insert @table values(2);
-insert @table values(3);
-insert @table values(4);
-insert @table values(5);
-insert @table values(6);
-insert @table values(7);
-SELECT value FROM @table WHERE value IN @myIds";
                         var queryParams = new Dictionary<string, object>
-                        {
-                            ["myIds"] = new[] { 5, 6 }
-                        };
+                            {
+                                ["myIds"] = new[] { 5, 6 }
+                            };
 
                         var dynamicParams = new DynamicParameters(queryParams);
-                        var command = new SqlCommand(query, dynamicParams);
+                        var command = new SqlCommand(@"SELECT id FROM unnest (@myIds) as id", dynamicParams);
                         var result = database.Query<int>(in command);
-                        Assert.Equal(2, result.Count);
-                        Assert.Contains(5, result);
-                        Assert.Contains(6, result);
+                        result.ShouldAllBeEquivalentTo(new[] { 5, 6 });
                     }
                 }
 
@@ -1101,97 +1018,13 @@ SELECT value FROM @table WHERE value IN @myIds";
                 }
 
                 [Fact]
-                public void Issue192_InParameterWorksWithSimilarNames()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var command = new SqlCommand(@"
-declare @Issue192 table (
-    Field INT NOT NULL PRIMARY KEY IDENTITY(1,1),
-    Field_1 INT NOT NULL);
-insert @Issue192(Field_1) values (1), (2), (3);
-SELECT * FROM @Issue192 WHERE Field IN @Field AND Field_1 IN @Field_1",
-                            new { Field = new[] { 1, 2 }, Field_1 = new[] { 2, 3 } });
-                        var rows = database.Query<dynamic>(in command).Single();
-                        Assert.Equal(2, (int)rows.Field);
-                        Assert.Equal(2, (int)rows.Field_1);
-                    }
-                }
-
-                [Fact]
-                public void Issue192_InParameterWorksWithSimilarNamesWithUnicode()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var command = new SqlCommand(@"
-declare @Issue192 table (
-    Field INT NOT NULL PRIMARY KEY IDENTITY(1,1),
-    Field_1 INT NOT NULL);
-insert @Issue192(Field_1) values (1), (2), (3);
-SELECT * FROM @Issue192 WHERE Field IN @µ AND Field_1 IN @µµ",
-                            new { µ = new[] { 1, 2 }, µµ = new[] { 2, 3 } });
-                        var rows = database.Query<dynamic>(in command).Single();
-                        Assert.Equal(2, (int)rows.Field);
-                        Assert.Equal(2, (int)rows.Field_1);
-                    }
-                }
-
-                [Fact]
                 public void Issue220_InParameterCanBeSpecifiedInAnyCase()
                 {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
                     {
                         // note this might fail if your database server is case-sensitive
-                        var command = new SqlCommand("select * from (select 1 as Id) as X where Id in @ids", new { Ids = new[] { 1 } });
+                        var command = new SqlCommand("select * from (select 1 as Id) as X where Id = ANY (@ids)", new { Ids = new[] { 1 } });
                         Assert.Equal(new[] { 1 }, database.Query<int>(in command));
-                    }
-                }
-
-                [Fact]
-                public void RunAllStringSplitTestsDisabled()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        try
-                        {
-                            database.Execute($"drop table #splits");
-                        }
-                        catch
-                        {
-                            /* don't care */
-                        }
-
-                        var sqlCommand = new SqlCommand("create table #splits (i int not null);"
-                                                        + string.Concat(Enumerable
-                                                                        .Range(-1500, 1500 * 3).Select(i => $"insert #splits (i) values ({i});"))
-                                                        + "select count(1) from #splits");
-
-                        int count = database.QuerySingle<int>(in sqlCommand);
-                        Assert.Equal(count, 3 * 1500);
-
-                        for (int i = 0; i < 1500; Incr(ref i))
-                        {
-                            try
-                            {
-                                var vals = Enumerable.Range(1, i);
-                                var list = database.Query<int>($"select i from #splits where i in {vals}");
-                                Assert.Equal(list.Count, i);
-                                Assert.Equal(list.Sum(), vals.Sum());
-                            }
-                            catch (Exception ex)
-                            {
-                                throw new InvalidOperationException($"Error when i={i}: {ex.Message}", ex);
-                            }
-                        }
-                    }
-
-                    void Incr(ref int i)
-                    {
-                        if (i <= 15) i++;
-                        else if (i <= 80) i += 5;
-                        else if (i <= 200) i += 10;
-                        else if (i <= 1000) i += 50;
-                        else i += 100;
                     }
                 }
 
@@ -1380,16 +1213,18 @@ insert #users16726709 values ('Fred','Bloggs') insert #users16726709 values ('To
                 [Fact]
                 public void TestStringList()
                 {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
                     {
-                        Assert.Equal(
-                            new[] { "a", "b", "c" },
-                            database.Query<string>($"select * from (select 'a' as x union all select 'b' union all select 'c') as T where x in {new[] { "a", "b", "c" }}")
-                        );
-                        Assert.Equal(
-                            new string[0],
-                            database.Query<string>($"select * from (select 'a' as x union all select 'b' union all select 'c') as T where x in {new string[0]}")
-                        );
+                        var values = new[] { "a", "b", "c" }.ToList();
+                        database.Query<string>(
+                                    $@"
+select * from (select 'a' as x union all select 'b' union all select 'c') as T 
+where x = ANY ({values})")
+                                .ShouldAllBeEquivalentTo(values);
+
+                        var emptyList = new string[0].ToList();
+                        database.Query<string>($"select * from (select 'a' as x union all select 'b' union all select 'c') as T where x = ANY ({emptyList})")
+                                .Should().BeEmpty();
                     }
                 }
 
@@ -1911,35 +1746,35 @@ select * from @bar").Single();
                     NotStarted = 1, Started = 2, Finished = 3
                 }
 
-                //[Fact]
-                //public void TestUnexpectedDataMessage()
-                //{
-                //    string msg = null;
-                //    try
-                //    {
-                //        database.Query<int>("select count(1) where 1 = @Foo", new WithBizarreData { Foo = new System.GenericUriParser(GenericUriParserOptions.Default), Bar = 23 }).First();
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        msg = ex.Message;
-                //    }
-                //    Assert.Equal("The member Foo of type System.GenericUriParser cannot be used as a parameter value", msg);
-                //}
+                [Fact]
+                public void TestUnexpectedDataMessage()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        string msg = null;
+                        try
+                        {
+                            var i = database.Query<int>(new SqlCommand("select count(1) where 1 = @Foo", new { Foo = new UnhandledType(UnhandledTypeOptions.Default) })).First();
+                        }
+                        catch (Exception ex)
+                        {
+                            msg = ex.Message;
+                        }
 
-                //[Fact]
-                //public void TestUnexpectedButFilteredDataMessage()
-                //{
-                //    int i = database.Query<int>("select @Bar", new WithBizarreData { Foo = new GenericUriParser(GenericUriParserOptions.Default), Bar = 23 }).Single();
+                        Assert.Equal("The member Foo of type PeregrineDb.Tests.Databases.UnhandledType cannot be used as a parameter value", msg);
+                    }
+                }
 
-                //    Assert.Equal(23, i);
-                //}
+                [Fact]
+                public void TestUnexpectedButFilteredDataMessage()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var i = database.Query<int>(new SqlCommand("select @Bar", new { Foo = new UnhandledType(UnhandledTypeOptions.Default), Bar = 23 })).Single();
 
-                //private class WithBizarreData
-                //{
-                //    public GenericUriParser Foo { get; set; }
-                //    public int Bar { get; set; }
-                //}
-
+                        Assert.Equal(23, i);
+                    }
+                }
 
                 [Fact]
                 public void QueryBasicWithoutQuery()
@@ -2071,20 +1906,20 @@ select * from @data").ToDictionary(_ => _.Id);
             {
                 private static List<Microsoft.SqlServer.Server.SqlDataRecord> CreateSqlDataRecordList(IEnumerable<int> numbers)
                 {
-                    var number_list = new List<Microsoft.SqlServer.Server.SqlDataRecord>();
+                    var numberList = new List<Microsoft.SqlServer.Server.SqlDataRecord>();
 
                     // Create an SqlMetaData object that describes our table type.
-                    Microsoft.SqlServer.Server.SqlMetaData[] tvp_definition = { new Microsoft.SqlServer.Server.SqlMetaData("n", SqlDbType.Int) };
+                    Microsoft.SqlServer.Server.SqlMetaData[] tvpDefinition = { new Microsoft.SqlServer.Server.SqlMetaData("n", SqlDbType.Int) };
 
-                    foreach (int n in numbers)
+                    foreach (var n in numbers)
                     {
                         // Create a new record, using the metadata array above.
-                        var rec = new Microsoft.SqlServer.Server.SqlDataRecord(tvp_definition);
+                        var rec = new Microsoft.SqlServer.Server.SqlDataRecord(tvpDefinition);
                         rec.SetInt32(0, n); // Set the value.
-                        number_list.Add(rec); // Add it to the list.
+                        numberList.Add(rec); // Add it to the list.
                     }
 
-                    return number_list;
+                    return numberList;
                 }
 
                 private class IntDynamicParam : IDynamicParameters
@@ -2126,13 +1961,13 @@ select * from @data").ToDictionary(_ => _.Id);
                         var sqlCommand = (SqlClientCommand)command;
                         sqlCommand.CommandType = CommandType.StoredProcedure;
 
-                        var number_list = CreateSqlDataRecordList(this.numbers);
+                        var numberList = CreateSqlDataRecordList(this.numbers);
 
                         // Add the table parameter.
                         var p = sqlCommand.Parameters.Add(name, SqlDbType.Structured);
                         p.Direction = ParameterDirection.Input;
                         p.TypeName = "int_list_type";
-                        p.Value = number_list;
+                        p.Value = numberList;
                     }
                 }
 
