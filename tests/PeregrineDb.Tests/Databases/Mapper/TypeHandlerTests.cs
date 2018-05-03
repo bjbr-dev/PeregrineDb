@@ -68,14 +68,14 @@
                 // custom mapping
                 var map = new CustomPropertyTypeMap(typeof(TypeWithMapping),
                     (type, columnName) => type.GetProperties().FirstOrDefault(prop => GetDescriptionFromAttribute(prop) == columnName));
-                SqlMapper.SetTypeMap(typeof(TypeWithMapping), map);
+                TypeMapper.SetTypeMap(typeof(TypeWithMapping), map);
 
                 item = database.Query<TypeWithMapping>($"Select 'AVal' as A, 'BVal' as B").Single();
                 Assert.Equal("BVal", item.A);
                 Assert.Equal("AVal", item.B);
 
                 // reset to default
-                SqlMapper.SetTypeMap(typeof(TypeWithMapping), null);
+                TypeMapper.SetTypeMap(typeof(TypeWithMapping), null);
                 item = database.Query<TypeWithMapping>($"Select 'AVal' as A, 'BVal' as B").Single();
                 Assert.Equal("AVal", item.A);
                 Assert.Equal("BVal", item.B);

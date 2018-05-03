@@ -8,6 +8,7 @@
     using System.Globalization;
     using System.Threading;
     using System.Threading.Tasks;
+    using PeregrineDb.Mapping;
 
     internal static partial class SqlMapper
     {
@@ -29,7 +30,7 @@
                     var hash = GetColumnHash(reader);
                     if (tuple.Func == null || tuple.Hash != hash)
                     {
-                        tuple = info.Deserializer = new DeserializerState(hash, GetDeserializer(effectiveType, reader, 0, -1, false));
+                        tuple = info.Deserializer = new DeserializerState(hash, TypeMapper.GetDeserializer(effectiveType, reader, 0, -1, false));
                         QueryCache.SetQueryCache(identity, info);
                     }
 
@@ -89,7 +90,7 @@
                         var hash = GetColumnHash(reader);
                         if (tuple.Func == null || tuple.Hash != hash)
                         {
-                            tuple = info.Deserializer = new DeserializerState(hash, GetDeserializer(effectiveType, reader, 0, -1, false));
+                            tuple = info.Deserializer = new DeserializerState(hash, TypeMapper.GetDeserializer(effectiveType, reader, 0, -1, false));
                             if (true) QueryCache.SetQueryCache(identity, info);
                         }
 
@@ -224,7 +225,7 @@
                 cmd?.Dispose();
             }
 
-            return Parse<T>(result);
+            return TypeMapper.Parse<T>(result);
         }
     }
 }

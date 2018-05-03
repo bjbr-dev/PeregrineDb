@@ -16,6 +16,7 @@
     using PeregrineDb.Tests.Databases.Mapper.SharedTypes;
     using PeregrineDb.Tests.Utils;
     using Xunit;
+    using DynamicParameters = PeregrineDb.Mapping.DynamicParameters;
     using SqlClientCommand = System.Data.SqlClient.SqlCommand;
     using SqlCommand = PeregrineDb.SqlCommand;
 

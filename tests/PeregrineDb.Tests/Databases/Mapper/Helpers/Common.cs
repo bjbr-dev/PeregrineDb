@@ -5,6 +5,7 @@
     using PeregrineDb.Databases.Mapper;
     using PeregrineDb.Tests.Databases.Mapper.SharedTypes;
     using Xunit;
+    using DynamicParameters = PeregrineDb.Mapping.DynamicParameters;
 
     public static class Common
     {

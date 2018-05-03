@@ -5,7 +5,8 @@
     using System.Collections.Generic;
     using System.Data;
     using System.Text;
-    
+    using PeregrineDb.Mapping;
+
     internal class TypeDeserializerCache
     {
         private TypeDeserializerCache(Type type)
@@ -150,7 +151,7 @@
             {
                 if (this.readers.TryGetValue(key, out deser)) return deser;
             }
-            deser = SqlMapper.GetTypeDeserializerImpl(this.type, reader, startBound, length, returnNullIfFirstMissing);
+            deser = TypeMapper.GetTypeDeserializerImpl(this.type, reader, startBound, length, returnNullIfFirstMissing);
             // get a more expensive key: true means copy the values down so it can be used as a key later
             key = new DeserializerKey(hash, startBound, length, returnNullIfFirstMissing, reader, true);
             lock (this.readers)

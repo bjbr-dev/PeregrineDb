@@ -10,6 +10,7 @@
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
     using Xunit;
+    using DynamicParameters = PeregrineDb.Mapping.DynamicParameters;
 
     public abstract partial class DefaultDatabaseConnectionStatementsTests
     {

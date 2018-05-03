@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Databases.Mapper
+﻿namespace PeregrineDb.Mapping
 {
     using System.Data;
 

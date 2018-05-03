@@ -2,6 +2,7 @@
 {
     using PeregrineDb.Databases.Mapper;
     using Xunit;
+    using DynamicParameters = PeregrineDb.Mapping.DynamicParameters;
 
     public class DynamicParameterTests
     {

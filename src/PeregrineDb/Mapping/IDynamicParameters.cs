@@ -1,6 +1,7 @@
-﻿namespace PeregrineDb.Databases.Mapper
+﻿namespace PeregrineDb.Mapping
 {
     using System.Data;
+    using PeregrineDb.Databases.Mapper;
 
     /// <summary>
     /// Implement this interface to pass an arbitrary db specific set of parameters to Dapper

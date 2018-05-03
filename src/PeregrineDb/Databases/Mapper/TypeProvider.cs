@@ -216,7 +216,7 @@
 
             if (typeof(IEnumerable).IsAssignableFrom(type))
             {
-                return DynamicParameters.EnumerableMultiParameter;
+                return Mapping.DynamicParameters.EnumerableMultiParameter;
             }
 
             if (demand)

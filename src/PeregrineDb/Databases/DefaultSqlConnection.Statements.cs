@@ -5,6 +5,7 @@
     using System.Linq;
     using PeregrineDb.Databases.Mapper;
     using PeregrineDb.SqlCommands;
+    using DynamicParameters = PeregrineDb.Mapping.DynamicParameters;
 
     public partial class DefaultSqlConnection
     {

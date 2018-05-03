@@ -74,7 +74,7 @@
                 param = (IDbDataParameter)command.Parameters[name];
             }
 #pragma warning disable 0618
-            param.Value = SqlMapper.SanitizeParameterValue(this.Value);
+            param.Value = TypeMapper.SanitizeParameterValue(this.Value);
 #pragma warning restore 0618
             if (this.Length == -1 && this.Value != null && this.Value.Length <= DefaultLength)
             {

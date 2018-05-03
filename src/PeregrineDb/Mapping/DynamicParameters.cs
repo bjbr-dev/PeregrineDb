@@ -1,11 +1,10 @@
 ﻿
-namespace PeregrineDb.Databases.Mapper
+namespace PeregrineDb.Mapping
 {
     using System;
     using System.Collections.Generic;
     using System.Data;
-    using PeregrineDb.Mapping;
-
+    using PeregrineDb.Databases.Mapper;
 #if NETSTANDARD1_3
     using ApplicationException = System.InvalidOperationException;
 
@@ -14,15 +13,15 @@ namespace PeregrineDb.Databases.Mapper
     /// <summary>
     /// A bag of parameters that can be passed to the Dapper Query and Execute methods
     /// </summary>
-    internal partial class DynamicParameters
-        : IParameterLookup
+    internal class DynamicParameters
+        : IDynamicParameters
     {
         internal const DbType EnumerableMultiParameter = (DbType)(-1);
         private static readonly Dictionary<Identity, Action<IDbCommand, object>> paramReaderCache = new Dictionary<Identity, Action<IDbCommand, object>>();
         private readonly Dictionary<string, ParamInfo> parameters = new Dictionary<string, ParamInfo>();
         private List<object> templates;
 
-        object IParameterLookup.this[string name] => this.parameters.TryGetValue(name, out var param) ? param.Value : null;
+        object this[string name] => this.parameters.TryGetValue(name, out var param) ? param.Value : null;
 
         /// <summary>
         /// construct a dynamic parameter bag
@@ -150,7 +149,7 @@ namespace PeregrineDb.Databases.Mapper
                     {
                         if (!paramReaderCache.TryGetValue(newIdent, out appender))
                         {
-                            appender = SqlMapper.CreateParamInfoGenerator(newIdent, true, this.RemoveUnused);
+                            appender = TypeMapper.CreateParamInfoGenerator(newIdent, true, this.RemoveUnused);
                             paramReaderCache[newIdent] = appender;
                         }
                     }
@@ -206,7 +205,7 @@ namespace PeregrineDb.Databases.Mapper
 
                     if (dbType == EnumerableMultiParameter)
                     {
-                        SqlMapper.PackListParameters(command, name, val);
+                        TypeMapper.PackListParameters(command, name, val);
                     }
                     else
                     {
@@ -225,7 +224,7 @@ namespace PeregrineDb.Databases.Mapper
                         p.Direction = param.ParameterDirection;
                         if (converter == null)
                         {
-                            p.Value = SqlMapper.SanitizeParameterValue(val);
+                            p.Value = TypeMapper.SanitizeParameterValue(val);
                             if (dbType != null && p.DbType != dbType)
                             {
                                 p.DbType = dbType.Value;
@@ -316,6 +315,27 @@ namespace PeregrineDb.Databases.Mapper
 
             throw new ApplicationException(
                 "Attempting to cast a DBNull to a non nullable type! Note that out/return parameters will not have updated values until the data stream completes (after the 'foreach' for Query(..., buffered: false), or after the GridReader has been disposed for QueryMultiple)");
+        }
+
+        private sealed class ParamInfo
+        {
+            public string Name { get; set; }
+
+            public object Value { get; set; }
+
+            public ParameterDirection ParameterDirection { get; set; }
+
+            public DbType? DbType { get; set; }
+
+            public int? Size { get; set; }
+
+            public IDbDataParameter AttachedParam { get; set; }
+
+            internal bool CameFromTemplate { get; set; }
+
+            public byte? Precision { get; set; }
+
+            public byte? Scale { get; set; }
         }
     }
 }
