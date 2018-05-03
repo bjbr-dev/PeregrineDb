@@ -10,9 +10,8 @@
     {
         public IReadOnlyList<T> Query<T>(in SqlCommand command, int? commandTimeout = null)
         {
-            return this.connection.QueryImpl<T>(
-                           new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType), typeof(T))
-                       .ToList();
+            var definition = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
+            return this.connection.QueryImpl<T>(definition, typeof(T)).ToList();
         }
 
         public IReadOnlyList<T> Query<T>(FormattableString sql, int? commandTimeout = null)

@@ -8,6 +8,7 @@
     using System.Reflection;
     using System.Runtime.CompilerServices;
     using PeregrineDb.Databases.Mapper;
+    using PeregrineDb.Mapping;
     using PeregrineDb.Tests.Databases.Mapper.Helpers;
     using PeregrineDb.Tests.Utils;
     using Xunit;
@@ -102,7 +103,7 @@
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
             {
                 TypeProvider.ResetTypeHandlers();
-                TypeProvider.AddTypeHandler(typeof(LocalDate), LocalDateHandler.Default);
+                TypeProvider.AddTypeHandler(typeof(LocalDate), LocalDateConverter.Default);
                 var param = new LocalDateResult
                 {
                     NotNullable = new LocalDate { Year = 2014, Month = 7, Day = 25 },
@@ -115,20 +116,20 @@
                 var result = database.Query<LocalDateResult>(in command).Single();
 
                 TypeProvider.ResetTypeHandlers();
-                TypeProvider.AddTypeHandler(typeof(LocalDate?), LocalDateHandler.Default);
+                TypeProvider.AddTypeHandler(typeof(LocalDate?), LocalDateConverter.Default);
 
                 command = new SqlCommand("SELECT @NotNullable AS NotNullable, @NullableNotNull AS NullableNotNull, @NullableIsNull AS NullableIsNull", param);
                 result = database.Query<LocalDateResult>(in command).Single();
             }
         }
 
-        private class LocalDateHandler : TypeHandler<LocalDate>
+        private class LocalDateConverter : DbTypeConverter<LocalDate>
         {
-            private LocalDateHandler() { /* private constructor */ }
+            private LocalDateConverter() { /* private constructor */ }
 
             // Make the field type ITypeHandler to ensure it cannot be used with SqlMapper.AddTypeHandler<T>(TypeHandler<T>)
             // by mistake.
-            public static readonly ITypeHandler Default = new LocalDateHandler();
+            public static readonly IDbTypeConverter Default = new LocalDateConverter();
 
             public override LocalDate Parse(object value)
             {
@@ -372,13 +373,13 @@
             public int Id { get; set; }
         }
 
-        private class RatingValueHandler : TypeHandler<RatingValue>
+        private class RatingValueConverter : DbTypeConverter<RatingValue>
         {
-            private RatingValueHandler()
+            private RatingValueConverter()
             {
             }
 
-            public static readonly RatingValueHandler Default = new RatingValueHandler();
+            public static readonly RatingValueConverter Default = new RatingValueConverter();
 
             public override RatingValue Parse(object value)
             {
@@ -415,7 +416,7 @@
         {
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
             {
-                TypeProvider.AddTypeHandler(RatingValueHandler.Default);
+                TypeProvider.AddTypeHandler(RatingValueConverter.Default);
                 var foo = database.Query<MyResult>($"SELECT 'Foo' AS CategoryName, 200 AS CategoryRating").Single();
 
                 Assert.Equal("Foo", foo.CategoryName);
@@ -428,20 +429,20 @@
         {
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
             {
-                TypeProvider.AddTypeHandler(RatingValueHandler.Default);
+                TypeProvider.AddTypeHandler(RatingValueConverter.Default);
                 var foo = database.Query<RatingValue>($"SELECT 200 AS CategoryRating").Single();
 
                 Assert.Equal(200, foo.Value);
             }
         }
 
-        private class StringListTypeHandler : TypeHandler<List<string>>
+        private class StringListDbTypeConverter : DbTypeConverter<List<string>>
         {
-            private StringListTypeHandler()
+            private StringListDbTypeConverter()
             {
             }
 
-            public static readonly StringListTypeHandler Default = new StringListTypeHandler();
+            public static readonly StringListDbTypeConverter Default = new StringListDbTypeConverter();
             //Just a simple List<string> type handler implementation
             public override void SetValue(IDbDataParameter parameter, List<string> value)
             {
@@ -465,7 +466,7 @@
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
             {
                 TypeProvider.ResetTypeHandlers();
-                TypeProvider.AddTypeHandler(StringListTypeHandler.Default);
+                TypeProvider.AddTypeHandler(StringListDbTypeConverter.Default);
                 var foo = database.Query<MyObjectWithStringList>($"SELECT 'Sam,Kyro' AS Names").Single();
                 Assert.Equal(new[] { "Sam", "Kyro" }, foo.Names);
             }
@@ -477,7 +478,7 @@
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
             {
                 TypeProvider.ResetTypeHandlers();
-                TypeProvider.AddTypeHandler(StringListTypeHandler.Default);
+                TypeProvider.AddTypeHandler(StringListDbTypeConverter.Default);
 
                 database.Execute($"CREATE TABLE #Issue253 (Names VARCHAR(50) NOT NULL);");
                 try
@@ -494,8 +495,8 @@
             }
         }
 
-        private class RecordingTypeHandler<T>
-            : TypeHandler<T>
+        private class RecordingDbTypeConverter<T>
+            : DbTypeConverter<T>
         {
             public override void SetValue(IDbDataParameter parameter, T value)
             {
@@ -521,7 +522,7 @@
                 TypeProvider.ResetTypeHandlers();
                 TypeProvider.RemoveTypeMap(typeof(DateTime));
 
-                var dateTimeHandler = new RecordingTypeHandler<DateTime>();
+                var dateTimeHandler = new RecordingDbTypeConverter<DateTime>();
                 TypeProvider.AddTypeHandler(dateTimeHandler);
 
                 database.Execute($"CREATE TABLE #Test_RemoveTypeMap (x datetime NOT NULL);");
@@ -687,7 +688,7 @@
         {
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
             {
-                TypeProvider.AddTypeHandler(new Issue461_BlargHandler());
+                TypeProvider.AddTypeHandler(new Issue461BlargConverter());
 
                 database.Execute($@"CREATE TABLE #Issue461 (
                                       Id                int not null IDENTITY(1,1),
@@ -726,7 +727,7 @@
             }
         }
 
-        private class Issue461_BlargHandler : TypeHandler<Blarg>
+        private class Issue461BlargConverter : DbTypeConverter<Blarg>
         {
             public override void SetValue(IDbDataParameter parameter, Blarg value)
             {

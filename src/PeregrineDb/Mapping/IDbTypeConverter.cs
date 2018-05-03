@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Databases.Mapper
+﻿namespace PeregrineDb.Mapping
 {
     using System;
     using System.Data;
@@ -6,7 +6,7 @@
     /// <summary>
     /// Implement this interface to perform custom type-based parameter handling and value parsing
     /// </summary>
-    public interface ITypeHandler
+    public interface IDbTypeConverter
     {
         /// <summary>
         /// Assign the value of a parameter before a command executes

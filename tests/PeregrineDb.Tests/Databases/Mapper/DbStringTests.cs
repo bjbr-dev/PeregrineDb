@@ -1,6 +1,6 @@
 ﻿namespace PeregrineDb.Tests.Databases.Mapper
 {
-    using PeregrineDb.Databases.Mapper;
+    using PeregrineDb.Mapping;
     using Xunit;
 
     public class DbStringTests

@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Databases.Mapper
+﻿namespace PeregrineDb.Mapping
 {
     using System;
     using System.Data;
@@ -7,20 +7,20 @@
     /// Base-class for simple type-handlers that are based around strings
     /// </summary>
     /// <typeparam name="T">This <see cref="Type"/> this handler is for.</typeparam>
-    public abstract class StringTypeHandler<T>
-        : TypeHandler<T>
+    public abstract class StringDbTypeConverter<T>
+        : DbTypeConverter<T>
     {
         /// <summary>
         /// Parse a string into the expected type (the string will never be null)
         /// </summary>
-        /// <param name="xml">The string to parse.</param>
-        protected abstract T Parse(string xml);
+        /// <param name="value">The string to parse.</param>
+        protected abstract T Parse(string value);
 
         /// <summary>
         /// Format an instace into a string (the instance will never be null)
         /// </summary>
-        /// <param name="xml">The string to format.</param>
-        protected abstract string Format(T xml);
+        /// <param name="value">The string to format.</param>
+        protected abstract string Format(T value);
 
         /// <summary>
         /// Assign the value of a parameter before a command executes

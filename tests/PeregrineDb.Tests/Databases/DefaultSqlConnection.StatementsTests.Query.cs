@@ -11,6 +11,7 @@
     using System.Linq;
     using FluentAssertions;
     using PeregrineDb.Databases.Mapper;
+    using PeregrineDb.Mapping;
     using PeregrineDb.Tests.Databases.Mapper.Helpers;
     using PeregrineDb.Tests.Databases.Mapper.SharedTypes;
     using PeregrineDb.Tests.Utils;

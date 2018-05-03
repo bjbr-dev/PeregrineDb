@@ -10,6 +10,7 @@
     using System.Reflection.Emit;
     using System.Text;
     using System.Text.RegularExpressions;
+    using PeregrineDb.Mapping;
 
 #if NETSTANDARD1_3
     using DataException = System.InvalidOperationException;
@@ -368,9 +369,9 @@
             return GetStructDeserializer(type, underlyingType ?? type, startBound);
         }
 
-        private static Func<IDataReader, object> GetHandlerDeserializer(ITypeHandler handler, Type type, int startBound)
+        private static Func<IDataReader, object> GetHandlerDeserializer(IDbTypeConverter converter, Type type, int startBound)
         {
-            return reader => handler.Parse(type, reader.GetValue(startBound));
+            return reader => converter.Parse(type, reader.GetValue(startBound));
         }
 
         private static Exception MultiMapException(IDataRecord reader)
@@ -418,9 +419,17 @@
         /// <param name="value">The object to convert to a character.</param>
         public static char? ReadNullableChar(object value)
         {
-            if (value == null || value is DBNull) return null;
+            if (value == null || value is DBNull)
+            {
+                return null;
+            }
+
             var s = value as string;
-            if (s == null || s.Length != 1) throw new ArgumentException("A single-character was expected", nameof(value));
+            if (s == null || s.Length != 1)
+            {
+                throw new ArgumentException("A single-character was expected", nameof(value));
+            }
+
             return s[0];
         }
 

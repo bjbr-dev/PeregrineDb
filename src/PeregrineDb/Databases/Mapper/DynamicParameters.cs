@@ -4,6 +4,8 @@ namespace PeregrineDb.Databases.Mapper
     using System;
     using System.Collections.Generic;
     using System.Data;
+    using PeregrineDb.Mapping;
+
 #if NETSTANDARD1_3
     using ApplicationException = System.InvalidOperationException;
 
@@ -196,10 +198,10 @@ namespace PeregrineDb.Databases.Mapper
                 else
                 {
                     var dbType = param.DbType;
-                    ITypeHandler handler = null;
+                    IDbTypeConverter converter = null;
                     if (dbType == null && val != null)
                     {
-                        dbType = TypeProvider.LookupDbType(val.GetType(), name, true, out handler);
+                        dbType = TypeProvider.LookupDbType(val.GetType(), name, true, out converter);
                     }
 
                     if (dbType == EnumerableMultiParameter)
@@ -221,7 +223,7 @@ namespace PeregrineDb.Databases.Mapper
                         }
 
                         p.Direction = param.ParameterDirection;
-                        if (handler == null)
+                        if (converter == null)
                         {
                             p.Value = SqlMapper.SanitizeParameterValue(val);
                             if (dbType != null && p.DbType != dbType)
@@ -272,7 +274,7 @@ namespace PeregrineDb.Databases.Mapper
                                 p.Scale = param.Scale.Value;
                             }
 
-                            handler.SetValue(p, val ?? DBNull.Value);
+                            converter.SetValue(p, val ?? DBNull.Value);
                         }
 
                         if (add)

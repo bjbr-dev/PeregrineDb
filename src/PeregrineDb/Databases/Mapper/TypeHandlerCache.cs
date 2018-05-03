@@ -1,25 +1,26 @@
 ﻿namespace PeregrineDb.Databases.Mapper
 {
     using System.Data;
+    using PeregrineDb.Mapping;
 
     /// <typeparam name="T">The type to have a cache for.</typeparam>
     internal static class TypeHandlerCache<T>
     {
-        private static ITypeHandler handler;
+        private static IDbTypeConverter converter;
 
         /// <param name="value">The object to parse.</param>
-        public static T Parse(object value) => (T)handler.Parse(typeof(T), value);
+        public static T Parse(object value) => (T)converter.Parse(typeof(T), value);
 
         /// <param name="parameter">The parameter to set a value for.</param>
         /// <param name="value">The value to set.</param>
         public static void SetValue(IDbDataParameter parameter, object value)
         {
-            handler.SetValue(parameter, value);
+            converter.SetValue(parameter, value);
         }
 
-        internal static void SetHandler(ITypeHandler handler)
+        internal static void SetHandler(IDbTypeConverter converter)
         {
-            TypeHandlerCache<T>.handler = handler;
+            TypeHandlerCache<T>.converter = converter;
         }
     }
 }

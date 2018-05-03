@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Databases.Mapper
+﻿namespace PeregrineDb.Mapping
 {
     using System;
     using System.Data;
@@ -7,8 +7,8 @@
     /// Base-class for simple type-handlers
     /// </summary>
     /// <typeparam name="T">This <see cref="Type"/> this handler is for.</typeparam>
-    public abstract class TypeHandler<T>
-        : ITypeHandler
+    public abstract class DbTypeConverter<T>
+        : IDbTypeConverter
     {
         /// <summary>
         /// Assign the value of a parameter before a command executes
@@ -24,7 +24,7 @@
         /// <returns>The typed value</returns>
         public abstract T Parse(object value);
 
-        void ITypeHandler.SetValue(IDbDataParameter parameter, object value)
+        void IDbTypeConverter.SetValue(IDbDataParameter parameter, object value)
         {
             if (value is DBNull)
             {
@@ -36,7 +36,7 @@
             }
         }
 
-        object ITypeHandler.Parse(Type destinationType, object value)
+        object IDbTypeConverter.Parse(Type destinationType, object value)
         {
             return this.Parse(value);
         }
