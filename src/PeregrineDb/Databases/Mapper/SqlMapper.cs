@@ -353,12 +353,6 @@
 
         private static Func<IDataReader, object> GetDeserializer(Type type, IDataReader reader, int startBound, int length, bool returnNullIfFirstMissing)
         {
-            // dynamic is passed in as Object ... by c# design
-            if (type == typeof(object) || type == typeof(DapperRow))
-            {
-                return GetDapperRowDeserializer(reader, startBound, length, returnNullIfFirstMissing);
-            }
-
             Type underlyingType = null;
             if (!(TypeProvider.ContainsTypeMap(type) || type.IsEnum() || type.FullName == TypeProvider.LinqBinary
                   || (type.IsValueType() && (underlyingType = Nullable.GetUnderlyingType(type)) != null && underlyingType.IsEnum())))
@@ -397,69 +391,6 @@
             }
 
             return new InvalidOperationException("No columns were selected");
-        }
-
-        internal static Func<IDataReader, object> GetDapperRowDeserializer(IDataRecord reader, int startBound, int length, bool returnNullIfFirstMissing)
-        {
-            var fieldCount = reader.FieldCount;
-            if (length == -1)
-            {
-                length = fieldCount - startBound;
-            }
-
-            if (fieldCount <= startBound)
-            {
-                throw MultiMapException(reader);
-            }
-
-            var effectiveFieldCount = Math.Min(fieldCount - startBound, length);
-
-            DapperTable table = null;
-
-            return r =>
-            {
-                if (table == null)
-                {
-                    var names = new string[effectiveFieldCount];
-                    for (var i = 0; i < effectiveFieldCount; i++)
-                    {
-                        names[i] = r.GetName(i + startBound);
-                    }
-
-                    table = new DapperTable(names);
-                }
-
-                var values = new object[effectiveFieldCount];
-
-                if (returnNullIfFirstMissing)
-                {
-                    values[0] = r.GetValue(startBound);
-                    if (values[0] is DBNull)
-                    {
-                        return null;
-                    }
-                }
-
-                if (startBound == 0)
-                {
-                    for (var i = 0; i < values.Length; i++)
-                    {
-                        var val = r.GetValue(i);
-                        values[i] = val is DBNull ? null : val;
-                    }
-                }
-                else
-                {
-                    var begin = returnNullIfFirstMissing ? 1 : 0;
-                    for (var iter = begin; iter < effectiveFieldCount; ++iter)
-                    {
-                        var obj = r.GetValue(iter + startBound);
-                        values[iter] = obj is DBNull ? null : obj;
-                    }
-                }
-
-                return new DapperRow(table, values);
-            };
         }
 
         /// <summary>

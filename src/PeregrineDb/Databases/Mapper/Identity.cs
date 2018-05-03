@@ -8,12 +8,6 @@
     /// </summary>
     internal class Identity : IEquatable<Identity>
     {
-        internal Identity ForGrid(Type primaryType, int gridIndex) =>
-            new Identity(this.sql, this.commandType, this.connectionString, primaryType, this.parametersType, null, gridIndex);
-
-        internal Identity ForGrid(Type primaryType, Type[] otherTypes, int gridIndex) =>
-            new Identity(this.sql, this.commandType, this.connectionString, primaryType, this.parametersType, otherTypes, gridIndex);
-
         /// <summary>
         /// Create an identity for use with DynamicParameters, internal use only.
         /// </summary>

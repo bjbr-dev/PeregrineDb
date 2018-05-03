@@ -87,7 +87,9 @@
             {
                 ParameterInfo[] ctorParameters = ctor.GetParameters();
                 if (ctorParameters.Length == 0)
+                {
                     return ctor;
+                }
 
                 if (ctorParameters.Length != types.Length)
                     continue;
@@ -110,7 +112,9 @@
                 }
 
                 if (i == ctorParameters.Length)
+                {
                     return ctor;
+                }
             }
 
             return null;

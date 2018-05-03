@@ -10,7 +10,6 @@
     using System.Globalization;
     using System.Linq;
     using FluentAssertions;
-    using Microsoft.CSharp.RuntimeBinder;
     using PeregrineDb.Databases.Mapper;
     using PeregrineDb.Tests.Databases.Mapper.Helpers;
     using PeregrineDb.Tests.Databases.Mapper.SharedTypes;
@@ -516,12 +515,17 @@ SELECT * FROM @ExplicitConstructors"
                             };
 
                         var command = new SqlCommand("select Foo=@foo, Bar=@bar", args);
-                        var result = database.Query<dynamic>(in command).Single();
-                        int foo = result.Foo;
-                        string bar = result.Bar;
-                        Assert.Equal(123, foo);
-                        Assert.Equal("abc", bar);
+                        var result = database.Query<TestCustomParametersEntity>(in command).Single();
+                        Assert.Equal(123, result.Foo);
+                        Assert.Equal("abc", result.Bar);
                     }
+                }
+
+                private class TestCustomParametersEntity
+                {
+                    public int Foo { get; set; }
+
+                    public string Bar { get; set; }
                 }
 
                 [Fact]
@@ -645,13 +649,24 @@ SELECT * FROM @ExplicitConstructors"
                         p.AddDynamicParams(new { C = 3, D = 4 });
 
                         var command = new SqlCommand("select @A a,@B b,@C c,@D d", p);
-                        var result = database.Query<dynamic>(in command).Single();
+                        var result = database.Query<TestAppendingAnonClassesEntity>(in command).Single();
 
-                        Assert.Equal(1, (int)result.a);
-                        Assert.Equal(2, (int)result.b);
-                        Assert.Equal(3, (int)result.c);
-                        Assert.Equal(4, (int)result.d);
+                        Assert.Equal(1, result.A);
+                        Assert.Equal(2, result.B);
+                        Assert.Equal(3, result.C);
+                        Assert.Equal(4, result.D);
                     }
+                }
+
+                private class TestAppendingAnonClassesEntity
+                {
+                    public int A { get; set; }
+
+                    public int B { get; set; }
+
+                    public int C { get; set; }
+
+                    public int D { get; set; }
                 }
 
                 [Fact]
@@ -669,11 +684,18 @@ SELECT * FROM @ExplicitConstructors"
                         p.AddDynamicParams(dictionary);
 
                         var command = new SqlCommand("select @A a, @B b", p);
-                        var result = database.Query<dynamic>(in command).Single();
+                        var result = database.Query<TestAppendingADictionaryEntity>(in command).Single();
 
-                        Assert.Equal(1, (int)result.a);
-                        Assert.Equal("two", (string)result.b);
+                        Assert.Equal(1, result.a);
+                        Assert.Equal("two", result.b);
                     }
+                }
+
+                private class TestAppendingADictionaryEntity
+                {
+                    public int a { get; set; }
+
+                    public string b { get; set; }
                 }
 
                 [Fact(Skip = "Not working")]
@@ -984,40 +1006,6 @@ SELECT * FROM @ExplicitConstructors"
                 }
 
                 [Fact]
-                public void Issue151_ExpandoObjectArgsQuery()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        dynamic args = new ExpandoObject();
-                        args.Id = 123;
-                        args.Name = "abc";
-                        var command = new SqlCommand("select @Id as [Id], @Name as [Name]", args);
-                        var row = database.Query<dynamic>(in command).Single();
-                        ((int)row.Id).Equals(123);
-                        ((string)row.Name).Equals("abc");
-                    }
-                }
-
-                [Fact]
-                public void Issue151_ExpandoObjectArgsExec()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        dynamic args = new ExpandoObject();
-                        args.Id = 123;
-                        args.Name = "abc";
-                        database.Execute($"create table #issue151 (Id int not null, Name nvarchar(20) not null)");
-
-                        var command = new SqlCommand("insert #issue151 values(@Id, @Name)", (object)args);
-
-                        Assert.Equal(1, database.Execute(in command).NumRowsAffected);
-                        var row = database.Query<dynamic>($"select Id, Name from #issue151").Single();
-                        ((int)row.Id).Equals(123);
-                        ((string)row.Name).Equals("abc");
-                    }
-                }
-
-                [Fact]
                 public void Issue220_InParameterCanBeSpecifiedInAnyCase()
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
@@ -1197,20 +1185,6 @@ insert #users16726709 values ('Fred','Bloggs') insert #users16726709 values ('To
                 }
 
                 [Fact]
-                public void TestExpando()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var rows = database.Query<dynamic>($"select 1 A, 2 B union all select 3, 4").ToList();
-
-                        Assert.Equal(1, (int)rows[0].A);
-                        Assert.Equal(2, (int)rows[0].B);
-                        Assert.Equal(3, (int)rows[1].A);
-                        Assert.Equal(4, (int)rows[1].B);
-                    }
-                }
-
-                [Fact]
                 public void TestStringList()
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
@@ -1260,17 +1234,6 @@ where x = ANY ({values})")
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
                         Assert.Equal(10, database.Query<TestObj>($"select 10 as [Priv]").First()._priv);
-                    }
-                }
-
-                [Fact]
-                public void TestExpandWithNullableFields()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var row = database.Query<dynamic>($"select null A, 2 B").Single();
-                        Assert.Null((int?)row.A);
-                        Assert.Equal(2, (int?)row.B);
                     }
                 }
 
@@ -1377,27 +1340,35 @@ select * from @bar").Single();
                         var e = new DbString { Value = "abcde", IsAnsi = true };
                         var f = new DbString { Value = "abcde", IsAnsi = false };
 
-                        var obj = database.Query<dynamic>(
+                        var obj = database.Query<DbStringTestEntity>(
                                               $"select datalength({a}) as a, datalength({b}) as b, datalength({c}) as c, datalength({d}) as d, datalength({e}) as e, datalength({f}) as f")
                                           .First();
-                        Assert.Equal(10, (int)obj.a);
-                        Assert.Equal(20, (int)obj.b);
-                        Assert.Equal(5, (int)obj.c);
-                        Assert.Equal(10, (int)obj.d);
-                        Assert.Equal(5, (int)obj.e);
-                        Assert.Equal(10, (int)obj.f);
+
+                        obj.ShouldBeEquivalentTo(new DbStringTestEntity
+                            {
+                                A = 10,
+                                B = 20,
+                                C = 5,
+                                D = 10,
+                                E = 5,
+                                F = 10
+                            });
                     }
                 }
 
-                [Fact]
-                public void TestFastExpandoSupportsIDictionary()
+                private class DbStringTestEntity
                 {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var row = database.Query<dynamic>($"select 1 A, 'two' B").First() as IDictionary<string, object>;
-                        Assert.Equal(1, row["A"]);
-                        Assert.Equal("two", row["B"]);
-                    }
+                    public int A { get; set; }
+
+                    public int B { get; set; }
+
+                    public int C { get; set; }
+
+                    public int D { get; set; }
+
+                    public int E { get; set; }
+
+                    public int F { get; set; }
                 }
 
                 [Fact]
@@ -1601,38 +1572,6 @@ select * from @bar").Single();
                     public bool Active { get; set; }
                 }
 
-                [Fact]
-                public void TestDynamicMutation()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var obj = database.Query<dynamic>($"select 1 as [a], 2 as [b], 3 as [c]").Single();
-                        Assert.Equal(1, (int)obj.a);
-                        IDictionary<string, object> dict = obj;
-                        Assert.Equal(3, dict.Count);
-                        Assert.True(dict.Remove("a"));
-                        Assert.False(dict.Remove("d"));
-                        Assert.Equal(2, dict.Count);
-                        dict.Add("d", 4);
-                        Assert.Equal(3, dict.Count);
-                        Assert.Equal("b,c,d", string.Join(",", dict.Keys.OrderBy(x => x)));
-                        Assert.Equal("2,3,4", string.Join(",", dict.OrderBy(x => x.Key).Select(x => x.Value)));
-
-                        Assert.Equal(2, (int)obj.b);
-                        Assert.Equal(3, (int)obj.c);
-                        Assert.Equal(4, (int)obj.d);
-                        try
-                        {
-                            Assert.Equal(1, (int)obj.a);
-                            throw new InvalidOperationException("should have thrown");
-                        }
-                        catch (RuntimeBinderException)
-                        {
-                            // pass
-                        }
-                    }
-                }
-
                 // see https://stackoverflow.com/questions/13127886/dapper-returns-null-for-singleordefaultdatediff
                 [Fact]
                 public void TestNullFromInt_NoRows()
@@ -1648,28 +1587,6 @@ select * from @bar").Single();
                                              $"select DATEDIFF(day, GETUTCDATE(), {DateTime.UtcNow.AddDays(20)}) where 1 = 0")
                                          .SingleOrDefault();
                         Assert.Equal(0, result); // zero rows; default of int over zero rows is zero
-                    }
-                }
-
-                [Fact]
-                public void TestDapperTableMetadataRetrieval()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        // Test for a bug found in CS 51509960 where the following sequence would result in an InvalidOperationException being
-                        // thrown due to an attempt to access a disposed of DataReader:
-                        //
-                        // - Perform a dynamic query that yields no results
-                        // - Add data to the source of that query
-                        // - Perform a the same query again
-                        database.Execute($"CREATE TABLE #sut (value varchar(10) NOT NULL PRIMARY KEY)");
-                        Assert.Equal(Enumerable.Empty<dynamic>(), database.Query<dynamic>($"SELECT value FROM #sut"));
-
-                        Assert.Equal(1, database.Execute($"INSERT INTO #sut (value) VALUES ('test')").NumRowsAffected);
-                        var result = database.Query<dynamic>($"SELECT value FROM #sut");
-
-                        var first = result.First();
-                        Assert.Equal("test", (string)first.value);
                     }
                 }
 

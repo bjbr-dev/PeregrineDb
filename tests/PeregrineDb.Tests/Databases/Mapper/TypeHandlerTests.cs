@@ -649,25 +649,6 @@
         }
 
         [Fact]
-        public void Issue130_IConvertible()
-        {
-            using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-            {
-                dynamic row = database.Query<dynamic>($"select 1 as [a], '2' as [b]").Single();
-                int a = row.a;
-                string b = row.b;
-                Assert.Equal(1, a);
-                Assert.Equal("2", b);
-
-                row = database.Query<dynamic>($"select 3 as [a], '4' as [b]").Single();
-                a = row.a;
-                b = row.b;
-                Assert.Equal(3, a);
-                Assert.Equal("4", b);
-            }
-        }
-
-        [Fact]
         public void Issue149_TypeMismatch_SequentialAccess()
         {
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))

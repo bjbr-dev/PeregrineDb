@@ -20,8 +20,7 @@ namespace PeregrineDb.Databases.Mapper
         private readonly Dictionary<string, ParamInfo> parameters = new Dictionary<string, ParamInfo>();
         private List<object> templates;
 
-        object IParameterLookup.this[string name] =>
-            this.parameters.TryGetValue(name, out ParamInfo param) ? param.Value : null;
+        object IParameterLookup.this[string name] => this.parameters.TryGetValue(name, out var param) ? param.Value : null;
 
         /// <summary>
         /// construct a dynamic parameter bag
@@ -48,42 +47,43 @@ namespace PeregrineDb.Databases.Mapper
         /// <param name="param"></param>
         public void AddDynamicParams(object param)
         {
-            var obj = param;
-            if (obj != null)
+            if (param == null)
             {
-                if (!(obj is DynamicParameters subDynamic))
+                return;
+            }
+
+            if (param is DynamicParameters subDynamic)
+            {
+                if (subDynamic.parameters != null)
                 {
-                    if (!(obj is IEnumerable<KeyValuePair<string, object>> dictionary))
+                    foreach (var kvp in subDynamic.parameters)
                     {
-                        this.templates = this.templates ?? new List<object>();
-                        this.templates.Add(obj);
+                        this.parameters.Add(kvp.Key, kvp.Value);
                     }
-                    else
+                }
+
+                if (subDynamic.templates != null)
+                {
+                    this.templates = this.templates ?? new List<object>();
+                    foreach (var t in subDynamic.templates)
                     {
-                        foreach (var kvp in dictionary)
-                        {
-                            this.Add(kvp.Key, kvp.Value);
-                        }
+                        this.templates.Add(t);
+                    }
+                }
+            }
+            else
+            {
+                if (param is IEnumerable<KeyValuePair<string, object>> dictionary)
+                {
+                    foreach (var kvp in dictionary)
+                    {
+                        this.Add(kvp.Key, kvp.Value);
                     }
                 }
                 else
                 {
-                    if (subDynamic.parameters != null)
-                    {
-                        foreach (var kvp in subDynamic.parameters)
-                        {
-                            this.parameters.Add(kvp.Key, kvp.Value);
-                        }
-                    }
-
-                    if (subDynamic.templates != null)
-                    {
-                        this.templates = this.templates ?? new List<object>();
-                        foreach (var t in subDynamic.templates)
-                        {
-                            this.templates.Add(t);
-                        }
-                    }
+                    this.templates = this.templates ?? new List<object>();
+                    this.templates.Add(param);
                 }
             }
         }
