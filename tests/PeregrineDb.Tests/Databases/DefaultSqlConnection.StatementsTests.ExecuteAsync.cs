@@ -26,7 +26,7 @@
                         using (var unitOfWork = database.StartUnitOfWork())
                         {
                             var command = dialect.MakeInsertCommand(new Dog { Name = "Foo", Age = 4 });
-                            unitOfWork.Execute(in command);
+                            unitOfWork.RawExecute(command.CommandText, command.Parameters);
 
                             unitOfWork.SaveChanges();
                         }
@@ -46,7 +46,7 @@
                         using (var unitOfWork = database.StartUnitOfWork())
                         {
                             var command = dialect.MakeInsertCommand(new Dog { Name = "Foo", Age = 4 });
-                            unitOfWork.Execute(in command);
+                            unitOfWork.RawExecute(command.CommandText, command.Parameters);
                         }
 
                         // Assert
@@ -66,7 +66,7 @@
                             using (var unitOfWork = database.StartUnitOfWork())
                             {
                                 var command = dialect.MakeInsertCommand(new Dog { Name = "Foo", Age = 4 });
-                                unitOfWork.Execute(in command);
+                                unitOfWork.RawExecute(command.CommandText, command.Parameters);
 
                                 throw new Exception();
                             }

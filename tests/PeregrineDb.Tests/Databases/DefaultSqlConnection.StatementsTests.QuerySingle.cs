@@ -15,8 +15,7 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                 {
                     // regular parameter
-                    var command = new SqlCommand("select @æøå٦", new { æøå٦ = 42 });
-                    var result = database.QuerySingle<int>(in command);
+                    var result = database.RawQuerySingle<int>("select @æøå٦", new { æøå٦ = 42 });
                     Assert.Equal(42, result);
                 }
             }

@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Data;
+    using System.Data.Common;
     using System.Threading;
     using System.Threading.Tasks;
     using PeregrineDb.Databases.Mapper;
@@ -10,91 +11,137 @@
 
     public partial class DefaultSqlConnection
     {
-        public async Task<IReadOnlyList<T>> QueryAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<T>> RawQueryAsync<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var definition = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType, cancellationToken);
+            var definition = new CommandDefinition(sql, parameters, this.transaction, commandTimeout, commandType, cancellationToken);
             return await this.connection.QueryAsync<T>(typeof(T), definition).ConfigureAwait(false);
         }
 
         public Task<IReadOnlyList<T>> QueryAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var command = MakeCommand(sql);
-            return this.QueryAsync<T>(command, commandTimeout, cancellationToken);
+            return this.RawQueryAsync<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
-        public Task<T> QueryFirstAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
+        public Task<T> RawQueryFirstAsync<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             return this.connection.QueryRowAsync<T>(SqlMapper.Row.First, typeof(T),
-                new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType, cancellationToken));
+                new CommandDefinition(sql, parameters, this.transaction, commandTimeout, commandType, cancellationToken));
         }
 
         public Task<T> QueryFirstAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var command = MakeCommand(sql);
-            return this.QueryFirstAsync<T>(command, commandTimeout, cancellationToken);
+            return this.RawQueryFirstAsync<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
-        public Task<T> QueryFirstOrDefaultAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
+        public Task<T> RawQueryFirstOrDefaultAsync<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             return this.connection.QueryRowAsync<T>(SqlMapper.Row.FirstOrDefault, typeof(T),
-                new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType, cancellationToken));
+                new CommandDefinition(sql, parameters, this.transaction, commandTimeout, commandType, cancellationToken));
         }
 
         public Task<T> QueryFirstOrDefaultAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var command = MakeCommand(sql);
-            return this.QueryFirstOrDefaultAsync<T>(command, commandTimeout, cancellationToken);
+            return this.RawQueryFirstOrDefaultAsync<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
-        public Task<T> QuerySingleAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
+        public Task<T> RawQuerySingleAsync<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            string sql = command.CommandText;
-            object param = command.Parameters;
-            CommandType? commandType = command.CommandType;
-            return this.connection.QueryRowAsync<T>(SqlMapper.Row.Single, typeof(T), new CommandDefinition(sql, param, this.transaction, commandTimeout, commandType, cancellationToken));
+            return this.connection.QueryRowAsync<T>(SqlMapper.Row.Single, typeof(T), new CommandDefinition(sql, parameters, this.transaction, commandTimeout, commandType, cancellationToken));
         }
 
         public Task<T> QuerySingleAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var command = MakeCommand(sql);
-            return this.QuerySingleAsync<T>(command, commandTimeout, cancellationToken);
+            return this.RawQuerySingleAsync<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
-        public Task<T> QuerySingleOrDefaultAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
+        public Task<T> RawQuerySingleOrDefaultAsync<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             return this.connection.QueryRowAsync<T>(SqlMapper.Row.SingleOrDefault, typeof(T),
-                new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType, cancellationToken));
+                new CommandDefinition(sql, parameters, this.transaction, commandTimeout, commandType, cancellationToken));
         }
 
         public Task<T> QuerySingleOrDefaultAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var command = MakeCommand(sql);
-            return this.QuerySingleOrDefaultAsync<T>(command, commandTimeout, cancellationToken);
+            return this.RawQuerySingleOrDefaultAsync<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
-        public async Task<CommandResult> ExecuteAsync(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
+        public async Task<CommandResult> RawExecuteMultipleAsync<T>(
+            string sql,
+            IEnumerable<T> parameters,
+            CommandType commandType,
+            int? commandTimeout,
+            CancellationToken cancellationToken)
         {
-            var numRows = await this.connection.ExecuteAsync(new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout,
-                                        command.CommandType, cancellationToken))
-                                    .ConfigureAwait(false);
-            return new CommandResult(numRows);
+            var isFirst = true;
+            var total = 0;
+            CacheInfo info = null;
+            string masterSql = null;
+
+            using (var command = (DbCommand)this.MakeCommand(sql, null, commandType, commandTimeout, null))
+            {
+                foreach (var obj in parameters)
+                {
+                    if (isFirst)
+                    {
+                        masterSql = command.CommandText;
+                        isFirst = false;
+                        var identity = new Identity(sql, commandType, this.connection, null, obj.GetType(), null);
+                        info = SqlMapper.GetCacheInfo(identity, obj, true);
+                    }
+                    else
+                    {
+                        command.CommandText = masterSql; // because we do magic replaces on "in" etc
+                        command.Parameters.Clear(); // current code is Add-tastic
+                    }
+
+                    info.ParamReader(command, obj);
+                    total += await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                }
+            }
+
+            return new CommandResult(total);
+        }
+
+        public async Task<CommandResult> RawExecuteAsync<T>(
+            string sql,
+            T parameters,
+            CommandType commandType = CommandType.Text,
+            int? commandTimeout = null,
+            CancellationToken cancellationToken = default)
+        {
+            var identity = new Identity(sql, commandType, this.connection, null, parameters?.GetType(), null);
+            var info = SqlMapper.GetCacheInfo(identity, parameters, true);
+            using (var command = (DbCommand)this.MakeCommand(sql, parameters, commandType, commandTimeout, info))
+            {
+                return new CommandResult(await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false));
+            }
         }
 
         public Task<CommandResult> ExecuteAsync(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var command = MakeCommand(sql);
-            return this.ExecuteAsync(command, commandTimeout, cancellationToken);
+            return this.RawExecuteAsync(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
-        public Task<T> ExecuteScalarAsync<T>(SqlCommand command, int? commandTimeout = null, CancellationToken cancellationToken = default)
+        public Task<T> RawExecuteScalarAsync<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.connection.ExecuteScalarAsync<T>(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
+            return this.connection.ExecuteScalarAsync<T>(sql, parameters, this.transaction, commandTimeout, commandType, cancellationToken);
         }
 
         public Task<T> ExecuteScalarAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var command = MakeCommand(sql);
-            return this.ExecuteScalarAsync<T>(command, commandTimeout, cancellationToken);
+            return this.RawExecuteScalarAsync<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
+        }
+
+        private IDbCommand MakeCommand(string sql, object parameters, CommandType commandType, int? commandTimeout, CacheInfo info)
+        {
+            return this.connection.MakeCommand(this.transaction, sql, commandTimeout, commandType, parameters, info?.ParamReader);
         }
     }
 }

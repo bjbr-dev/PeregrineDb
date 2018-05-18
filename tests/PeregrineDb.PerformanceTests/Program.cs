@@ -9,10 +9,6 @@
     {
         public static void Main(string[] args)
         {
-#if DEBUG
-            WriteLineColor("Warning: DEBUG configuration; performance may be impacted!", ConsoleColor.Red);
-            Console.WriteLine();
-#endif
             Console.WriteLine("Using ConnectionString: " + GetBenchmarks.ConnectionString);
             EnsureDBSetup();
             Console.WriteLine("Database setup complete.");

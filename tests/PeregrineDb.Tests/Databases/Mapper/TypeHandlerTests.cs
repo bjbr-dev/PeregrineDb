@@ -111,15 +111,13 @@
                     NullableIsNull = null,
                 };
 
-                var command = new SqlCommand("SELECT @NotNullable AS NotNullable, @NullableNotNull AS NullableNotNull, @NullableIsNull AS NullableIsNull",
-                    param);
-                var result = database.Query<LocalDateResult>(in command).Single();
+                var result = database.RawQuery<LocalDateResult>("SELECT @NotNullable AS NotNullable, @NullableNotNull AS NullableNotNull, @NullableIsNull AS NullableIsNull",
+                    param).Single();
 
                 TypeProvider.ResetTypeHandlers();
                 TypeProvider.AddTypeHandler(typeof(LocalDate?), LocalDateConverter.Default);
 
-                command = new SqlCommand("SELECT @NotNullable AS NotNullable, @NullableNotNull AS NullableNotNull, @NullableIsNull AS NullableIsNull", param);
-                result = database.Query<LocalDateResult>(in command).Single();
+                result = database.RawQuery<LocalDateResult>("SELECT @NotNullable AS NotNullable, @NullableNotNull AS NullableNotNull, @NullableIsNull AS NullableIsNull", param).Single();
             }
         }
 
@@ -234,8 +232,7 @@
             {
                 string sql = "select " + string.Join(",", typeof(LotsOfNumerics).GetProperties().Select(
                                  x => "cast (1 as " + dbType + ") as [" + x.Name + "]"));
-                var command = new SqlCommand(sql);
-                var row = database.Query<LotsOfNumerics>(in command).Single();
+                var row = database.RawQuery<LotsOfNumerics>(sql, null).Single();
 
                 Assert.True(row.N_Bool);
                 Assert.Equal(row.N_SByte, (sbyte)1);

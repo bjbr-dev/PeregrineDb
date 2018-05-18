@@ -2,107 +2,174 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Data;
     using System.Linq;
     using PeregrineDb.Databases.Mapper;
     using PeregrineDb.SqlCommands;
-    using DynamicParameters = PeregrineDb.Mapping.DynamicParameters;
 
     public partial class DefaultSqlConnection
     {
-        public IReadOnlyList<T> Query<T>(in SqlCommand command, int? commandTimeout = null)
+        public IReadOnlyList<T> RawQuery<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
         {
-            var definition = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
+            var definition = new CommandDefinition(sql, parameters, this.transaction, commandTimeout, commandType);
             return this.connection.QueryImpl<T>(definition, typeof(T)).ToList();
         }
 
         public IReadOnlyList<T> Query<T>(FormattableString sql, int? commandTimeout = null)
         {
             var command = MakeCommand(sql);
-            return this.Query<T>(in command, commandTimeout);
+            return this.RawQuery<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
         }
 
-        public T QueryFirst<T>(in SqlCommand command, int? commandTimeout = null)
+        public T RawQueryFirst<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
         {
-            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
+            var command1 = new CommandDefinition(sql, parameters, this.transaction, commandTimeout, commandType);
             return SqlMapper.QueryRowImpl<T>(this.connection, SqlMapper.Row.First, ref command1, typeof(T));
         }
 
         public T QueryFirst<T>(FormattableString sql, int? commandTimeout = null)
         {
             var command = MakeCommand(sql);
-            return this.QueryFirst<T>(in command, commandTimeout);
+            return this.RawQueryFirst<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
         }
 
-        public T QueryFirstOrDefault<T>(in SqlCommand command, int? commandTimeout = null)
+        public T RawQueryFirstOrDefault<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
         {
-            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
+            var command1 = new CommandDefinition(sql, parameters, this.transaction, commandTimeout, commandType);
             return SqlMapper.QueryRowImpl<T>(this.connection, SqlMapper.Row.FirstOrDefault, ref command1, typeof(T));
         }
 
         public T QueryFirstOrDefault<T>(FormattableString sql, int? commandTimeout = null)
         {
             var command = MakeCommand(sql);
-            return this.QueryFirstOrDefault<T>(in command, commandTimeout);
+            return this.RawQueryFirstOrDefault<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
         }
 
-        public T QuerySingle<T>(in SqlCommand command, int? commandTimeout = null)
+        public T RawQuerySingle<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
         {
-            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
+            var command1 = new CommandDefinition(sql, parameters, this.transaction, commandTimeout, commandType);
             return SqlMapper.QueryRowImpl<T>(this.connection, SqlMapper.Row.Single, ref command1, typeof(T));
         }
 
         public T QuerySingle<T>(FormattableString sql, int? commandTimeout = null)
         {
             var command = MakeCommand(sql);
-            return this.QuerySingle<T>(in command, commandTimeout);
+            return this.RawQuerySingle<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
         }
 
-        public T QuerySingleOrDefault<T>(in SqlCommand command, int? commandTimeout = null)
+        public T RawQuerySingleOrDefault<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
         {
-            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
+            var command1 = new CommandDefinition(sql, parameters, this.transaction, commandTimeout, commandType);
             return SqlMapper.QueryRowImpl<T>(this.connection, SqlMapper.Row.SingleOrDefault, ref command1, typeof(T));
         }
 
         public T QuerySingleOrDefault<T>(FormattableString sql, int? commandTimeout = null)
         {
             var command = MakeCommand(sql);
-            return this.QuerySingleOrDefault<T>(in command, commandTimeout);
+            return this.RawQuerySingleOrDefault<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
         }
 
-        public CommandResult Execute(in SqlCommand command, int? commandTimeout = null)
+        public CommandResult RawExecuteMultiple<T>(string sql, IEnumerable<T> parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
         {
-            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
-            return new CommandResult(this.connection.ExecuteImpl(ref command1));
+            var command1 = new CommandDefinition(sql, parameters, this.transaction, commandTimeout, commandType);
+
+            var param = parameters;
+            var multiExec = SqlMapper.GetMultiExec(param);
+            Identity identity;
+            CacheInfo info = null;
+            if (multiExec != null)
+            {
+                var isFirst = true;
+                var total = 0;
+
+                using (var cmd = command1.SetupCommand(this.connection, null))
+                {
+                    string masterSql = null;
+                    foreach (var obj in multiExec)
+                    {
+                        if (isFirst)
+                        {
+                            masterSql = cmd.CommandText;
+                            isFirst = false;
+                            identity = new Identity(sql, cmd.CommandType, this.connection, null, obj.GetType(), null);
+                            info = SqlMapper.GetCacheInfo(identity, obj, true);
+                        }
+                        else
+                        {
+                            cmd.CommandText = masterSql; // because we do magic replaces on "in" etc
+                            cmd.Parameters.Clear(); // current code is Add-tastic
+                        }
+
+                        info.ParamReader(cmd, obj);
+                        total += cmd.ExecuteNonQuery();
+                    }
+                }
+
+                return new CommandResult(total);
+            }
+
+            // nice and simple
+            if (param != null)
+            {
+                identity = new Identity(sql, commandType, this.connection, null, param.GetType(), null);
+                info = SqlMapper.GetCacheInfo(identity, param, true);
+            }
+
+            using (var cmd = command1.SetupCommand(this.connection, param == null ? null : info.ParamReader))
+            {
+                return new CommandResult(cmd.ExecuteNonQuery());
+            }
+        }
+
+        public CommandResult RawExecute<T>(string sql, T parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
+        {
+            var command = new CommandDefinition(sql, parameters, this.transaction, commandTimeout, commandType);
+
+            CacheInfo info = null;
+
+            // nice and simple
+            if (parameters != null)
+            {
+                var identity = new Identity(sql, commandType, this.connection, null, parameters.GetType(), null);
+                info = SqlMapper.GetCacheInfo(identity, parameters, true);
+            }
+
+            using (var cmd = command.SetupCommand(this.connection, parameters == null ? null : info.ParamReader))
+            {
+                return new CommandResult(cmd.ExecuteNonQuery());
+            }
         }
 
         public CommandResult Execute(FormattableString sql, int? commandTimeout = null)
         {
             var command = MakeCommand(sql);
-            return this.Execute(in command, commandTimeout);
+            return this.RawExecute(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
         }
 
-        public T ExecuteScalar<T>(in SqlCommand command, int? commandTimeout = null)
+        public T RawExecuteScalar<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
         {
-            var command1 = new CommandDefinition(command.CommandText, command.Parameters, this.transaction, commandTimeout, command.CommandType);
+            var command1 = new CommandDefinition(sql, parameters, this.transaction, commandTimeout, commandType);
             return SqlMapper.ExecuteScalarImpl<T>(this.connection, ref command1);
         }
 
         public T ExecuteScalar<T>(FormattableString sql, int? commandTimeout = null)
         {
             var command = MakeCommand(sql);
-            return this.ExecuteScalar<T>(in command, commandTimeout);
+            return this.RawExecuteScalar<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
         }
 
-        private static SqlCommand MakeCommand(FormattableString sql)
+        private static (string CommandText, Dictionary<string, object> Parameters) MakeCommand(FormattableString sql)
         {
-            var parameters = new DynamicParameters();
+            var commandParameters = new Dictionary<string, object>();
+
+            var i = 0;
             var arguments = sql.GetArguments();
-            for (var i = 0; i < arguments.Length; i++)
+            foreach (var parameter in arguments)
             {
-                parameters.Add("@p" + i, arguments[i]);
+                commandParameters["p" + i++] = parameter;
             }
 
-            return SqlCommandBuilder.MakeCommand(sql);
+            return (SqlString.ParameterizePlaceholders(sql.Format, arguments.Length), commandParameters);
         }
     }
 }

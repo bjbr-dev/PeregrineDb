@@ -516,8 +516,7 @@ SELECT * FROM @ExplicitConstructors"
                                 new SqlParameter("bar", "abc")
                             };
 
-                        var command = new SqlCommand("select Foo=@foo, Bar=@bar", args);
-                        var result = database.Query<TestCustomParametersEntity>(in command).Single();
+                        var result = database.RawQuery<TestCustomParametersEntity>("select Foo=@foo, Bar=@bar", args).Single();
                         Assert.Equal(123, result.Foo);
                         Assert.Equal("abc", result.Bar);
                     }
@@ -631,8 +630,7 @@ SELECT * FROM @ExplicitConstructors"
                         {
                             CultureInfo.CurrentCulture = new CultureInfo("tr-TR");
 
-                            var sqlCommand = new SqlCommand("select @pid", new { PId = 1 });
-                            database.Query<int>(in sqlCommand).Single();
+                            database.RawQuery<int>("select @pid", new { PId = 1 }).Single();
                         }
                         finally
                         {
@@ -650,8 +648,7 @@ SELECT * FROM @ExplicitConstructors"
                         p.AddDynamicParams(new { A = 1, B = 2 });
                         p.AddDynamicParams(new { C = 3, D = 4 });
 
-                        var command = new SqlCommand("select @A a,@B b,@C c,@D d", p);
-                        var result = database.Query<TestAppendingAnonClassesEntity>(in command).Single();
+                        var result = database.RawQuery<TestAppendingAnonClassesEntity>("select @A a,@B b,@C c,@D d", p).Single();
 
                         Assert.Equal(1, result.A);
                         Assert.Equal(2, result.B);
@@ -685,8 +682,7 @@ SELECT * FROM @ExplicitConstructors"
                         var p = new DynamicParameters();
                         p.AddDynamicParams(dictionary);
 
-                        var command = new SqlCommand("select @A a, @B b", p);
-                        var result = database.Query<TestAppendingADictionaryEntity>(in command).Single();
+                        var result = database.RawQuery<TestAppendingADictionaryEntity>("select @A a, @B b", p).Single();
 
                         Assert.Equal(1, result.a);
                         Assert.Equal("two", result.b);
@@ -712,8 +708,7 @@ SELECT * FROM @ExplicitConstructors"
                         var p = new DynamicParameters();
                         p.AddDynamicParams(expando);
 
-                        var command = new SqlCommand("select @A a, @B b", p);
-                        var result = database.Query<dynamic>(in command).Single();
+                        var result = database.RawQuery<dynamic>("select @A a, @B b", p).Single();
 
                         Assert.Equal(1, (int)result.a);
                         Assert.Equal("two", (string)result.b);
@@ -728,8 +723,7 @@ SELECT * FROM @ExplicitConstructors"
                         var list = new int[] { 1, 2, 3 };
                         p.AddDynamicParams(new { list });
 
-                        var command = new SqlCommand("select * from (select 1 A union all select 2 union all select 3) X where A = ANY (@list)", p);
-                        var result = database.Query<int>(in command).ToList();
+                        var result = database.RawQuery<int>("select * from (select 1 A union all select 2 union all select 3) X where A = ANY (@list)", p).ToList();
 
                         Assert.Equal(1, result[0]);
                         Assert.Equal(2, result[1]);
@@ -747,8 +741,7 @@ SELECT * FROM @ExplicitConstructors"
                         var args = new Dictionary<string, object> { ["ids"] = list };
                         p.AddDynamicParams(args);
 
-                        var command = new SqlCommand("select * from (select 1 A union all select 2 union all select 3) X where A = ANY (@ids)", p);
-                        var result = database.Query<int>(in command).ToList();
+                        var result = database.RawQuery<int>("select * from (select 1 A union all select 2 union all select 3) X where A = ANY (@ids)", p).ToList();
 
                         Assert.Equal(1, result[0]);
                         Assert.Equal(2, result[1]);
@@ -765,8 +758,7 @@ SELECT * FROM @ExplicitConstructors"
                         var list = new int[] { 1, 2, 3 };
                         p.Add("ids", list);
 
-                        var command = new SqlCommand("select * from (select 1 A union all select 2 union all select 3) X where A = ANY (@ids)", p);
-                        var result = database.Query<int>(in command).ToList();
+                        var result = database.RawQuery<int>("select * from (select 1 A union all select 2 union all select 3) X where A = ANY (@ids)", p).ToList();
 
                         Assert.Equal(1, result[0]);
                         Assert.Equal(2, result[1]);
@@ -789,9 +781,7 @@ SELECT * FROM @ExplicitConstructors"
             SELECT @a
             END");
 
-                        var command = new SqlCommand("#TestProcWithTimeParameter", p, commandType: CommandType.StoredProcedure);
-
-                        Assert.Equal(database.Query<TimeSpan>(in command).First(),
+                        Assert.Equal(database.RawQuery<TimeSpan>("#TestProcWithTimeParameter", p, CommandType.StoredProcedure).First(),
                             new TimeSpan(10, 0, 0));
                     }
                 }
@@ -838,8 +828,7 @@ SELECT * FROM @ExplicitConstructors"
                         p.Add("name", "bob");
                         p.Add("age", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-                        var command = new SqlCommand("set @age = 11 select @name", p);
-                        Assert.Equal("bob", database.Query<string>(in command).First());
+                        Assert.Equal("bob", database.RawQuery<string>("set @age = 11 select @name", p).First());
                         Assert.Equal(11, p.Get<int>("age"));
                     }
                 }
@@ -852,8 +841,7 @@ SELECT * FROM @ExplicitConstructors"
                         dynamic p = new ExpandoObject();
                         p.name = "bob";
                         object parameters = p;
-                        var command = new SqlCommand("select @name", parameters);
-                        string result = database.Query<string>(in command).First();
+                        string result = database.RawQuery<string>("select @name", parameters).First();
                         Assert.Equal("bob", result);
                     }
                 }
@@ -869,8 +857,7 @@ SELECT * FROM @ExplicitConstructors"
                             };
 
                         var dynamicParams = new DynamicParameters(queryParams);
-                        var command = new SqlCommand(@"SELECT id FROM unnest (@myIds) as id", dynamicParams);
-                        var result = database.Query<int>(in command);
+                        var result = database.RawQuery<int>(@"SELECT id FROM unnest (@myIds) as id", dynamicParams);
                         result.ShouldAllBeEquivalentTo(new[] { 5, 6 });
                     }
                 }
@@ -883,8 +870,7 @@ SELECT * FROM @ExplicitConstructors"
                         var args = new DynamicParameters();
                         args.AddDynamicParams(new { Foo = 123 });
                         args.AddDynamicParams(new { Foo = 123 });
-                        var command = new SqlCommand("select @Foo", args);
-                        int i = database.Query<int>(in command).Single();
+                        int i = database.RawQuery<int>("select @Foo", args).Single();
                         Assert.Equal(123, i);
                     }
                 }
@@ -899,8 +885,7 @@ SELECT * FROM @ExplicitConstructors"
                         var args = new DynamicParameters();
                         args.AddDynamicParams(new { Foo = foo });
                         args.AddDynamicParams(new { Foo = foo });
-                        var command = new SqlCommand("select @Foo", args);
-                        int i = database.Query<int>(in command).Single();
+                        int i = database.RawQuery<int>("select @Foo", args).Single();
                         Assert.Equal(123, i);
                     }
                 }
@@ -915,8 +900,7 @@ SELECT * FROM @ExplicitConstructors"
                             ["param1"] = 0
                         };
 
-                        var command = new SqlCommand("SELECT @param1", parameters);
-                        database.Query<dynamic>(in command);
+                        database.RawQuery<dynamic>("SELECT @param1", parameters);
                     }
                 }
                 [Fact]
@@ -931,8 +915,7 @@ SELECT * FROM @ExplicitConstructors"
                 	select @A
                 end");
 
-                        var command = new SqlCommand("#TestProcWithIndexer", new ParameterWithIndexer(), commandType: CommandType.StoredProcedure);
-                        var item = database.Query<int>(in command).Single();
+                        var item = database.RawQuery<int>("#TestProcWithIndexer", new ParameterWithIndexer(), CommandType.StoredProcedure).Single();
                     }
                 }
 
@@ -989,8 +972,7 @@ SELECT * FROM @ExplicitConstructors"
 
                         var guid = Guid.NewGuid();
                         var orig = new Dyno { Name = "T Rex", Id = guid, Foo = 123L };
-                        var command = new SqlCommand("insert into #Dyno ([Id], [Name], [Foo]) values (@Id, @Name, @Foo);", orig);
-                        var result = database.Execute(in command);
+                        var result = database.RawExecute("insert into #Dyno ([Id], [Name], [Foo]) values (@Id, @Name, @Foo);", orig);
 
                         var fromDb = database.Query<Dyno>($"select * from #Dyno where Id={guid}").Single();
                         Assert.Equal((Guid)fromDb.Id, guid);
@@ -1013,8 +995,8 @@ SELECT * FROM @ExplicitConstructors"
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
                     {
                         // note this might fail if your database server is case-sensitive
-                        var command = new SqlCommand("select * from (select 1 as Id) as X where Id = ANY (@ids)", new { Ids = new[] { 1 } });
-                        Assert.Equal(new[] { 1 }, database.Query<int>(in command));
+                        Assert.Equal(new[] { 1 },
+                            database.RawQuery<int>("select * from (select 1 as Id) as X where Id = ANY (@ids)", new { Ids = new[] { 1 } }));
                     }
                 }
 
@@ -1059,8 +1041,7 @@ SELECT * FROM @ExplicitConstructors"
                     {
                         var car1 = new CarWithAllProps { Name = "Ford", Age = 21, Trap = Car.TrapEnum.B };
                         // note Car has Name as a field; parameters only respect properties at the moment
-                        var command = new SqlCommand("select @Name Name, @Age Age, @Trap Trap", car1);
-                        var car2 = database.Query<CarWithAllProps>(in command).First();
+                        var car2 = database.RawQuery<CarWithAllProps>("select @Name Name, @Age Age, @Trap Trap", car1).First();
 
                         Assert.Equal(car2.Name, car1.Name);
                         Assert.Equal(car2.Age, car1.Age);
@@ -1673,7 +1654,7 @@ select * from @bar").Single();
                         string msg = null;
                         try
                         {
-                            var i = database.Query<int>(new SqlCommand("select count(1) where 1 = @Foo", new { Foo = new UnhandledType(UnhandledTypeOptions.Default) })).First();
+                            var i = database.RawQuery<int>("select count(1) where 1 = @Foo", new { Foo = new UnhandledType(UnhandledTypeOptions.Default) }).First();
                         }
                         catch (Exception ex)
                         {
@@ -1689,7 +1670,7 @@ select * from @bar").Single();
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        var i = database.Query<int>(new SqlCommand("select @Bar", new { Foo = new UnhandledType(UnhandledTypeOptions.Default), Bar = 23 })).Single();
+                        var i = database.RawQuery<int>("select @Bar", new { Foo = new UnhandledType(UnhandledTypeOptions.Default), Bar = 23 }).Single();
 
                         Assert.Equal(23, i);
                     }
@@ -1759,8 +1740,7 @@ select * from @bar").Single();
                                                     })
                                                     .ToArray();
 
-                            var command2 = new SqlCommand(sql, parameters);
-                            var rowcount = (int)database.Query<dynamic>(in command2).Single().Foo;
+                            var rowcount = (int)database.RawQuery<dynamic>(sql, parameters).Single().Foo;
                             Assert.Equal(1, rowcount);
                         });
                         Assert.Equal("An enumerable sequence of parameters (arrays, lists, etc) is not allowed in this context", ex.Message);
@@ -1900,9 +1880,7 @@ select * from @data").ToDictionary(_ => _.Id);
                             database.Execute($"CREATE TYPE int_list_type AS TABLE (n int NOT NULL PRIMARY KEY)");
                             database.Execute($"CREATE PROC get_ints @integers int_list_type READONLY AS select * from @integers");
 
-                            var command = new SqlCommand("get_ints", new { integers = new IntCustomParam(new[] { 1, 2, 3 }) },
-                                CommandType.StoredProcedure);
-                            var nums = database.Query<int>(in command).ToList();
+                            var nums = database.RawQuery<int>("get_ints", new { integers = new IntCustomParam(new[] { 1, 2, 3 }) }, CommandType.StoredProcedure);
                             Assert.Equal(1, nums[0]);
                             Assert.Equal(2, nums[1]);
                             Assert.Equal(3, nums[2]);
@@ -1933,8 +1911,7 @@ select * from @data").ToDictionary(_ => _.Id);
                             database.Execute($"CREATE TYPE int_list_type AS TABLE (n int NOT NULL PRIMARY KEY)");
                             database.Execute($"CREATE PROC get_ints @ints int_list_type READONLY AS select * from @ints");
 
-                            var command = new SqlCommand("get_ints", new IntDynamicParam(new[] { 1, 2, 3 }));
-                            var nums = database.Query<int>(in command).ToList();
+                            var nums = database.RawQuery<int>("get_ints", new IntDynamicParam(new[] { 1, 2, 3 })).ToList();
                             Assert.Equal(1, nums[0]);
                             Assert.Equal(2, nums[1]);
                             Assert.Equal(3, nums[2]);

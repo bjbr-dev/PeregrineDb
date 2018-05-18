@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Data;
     using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
@@ -13,12 +14,14 @@
     {
         public Task<int> CountAsync<TEntity>(FormattableString conditions = null, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.ExecuteScalarAsync<int>(this.Dialect.MakeCountCommand<TEntity>(conditions), commandTimeout, cancellationToken);
+            var command = this.Dialect.MakeCountCommand<TEntity>(conditions);
+            return this.RawExecuteScalarAsync<int>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<int> CountAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.ExecuteScalarAsync<int>(this.Dialect.MakeCountCommand<TEntity>(conditions), commandTimeout, cancellationToken);
+            var command = this.Dialect.MakeCountCommand<TEntity>(conditions);
+            return this.RawExecuteScalarAsync<int>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public async Task<bool> ExistsAsync<TEntity>(FormattableString conditions = null, int? commandTimeout = null, CancellationToken cancellationToken = default)
@@ -35,7 +38,8 @@
 
         public Task<TEntity> FindAsync<TEntity>(object id, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.QueryFirstOrDefaultAsync<TEntity>(this.Dialect.MakeFindCommand<TEntity>(id), commandTimeout, cancellationToken);
+            var command = this.Dialect.MakeFindCommand<TEntity>(id);
+            return this.RawQueryFirstOrDefaultAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public async Task<TEntity> GetAsync<TEntity>(object id, int? commandTimeout = null, CancellationToken cancellationToken = default)
@@ -51,8 +55,8 @@
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
-            var sql = this.Dialect.MakeGetFirstNCommand<TEntity>(1, conditions, orderBy);
-            return this.QueryFirstOrDefaultAsync<TEntity>(sql, commandTimeout, cancellationToken);
+            var command = this.Dialect.MakeGetFirstNCommand<TEntity>(1, conditions, orderBy);
+            return this.RawQueryFirstOrDefaultAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<TEntity> FindFirstAsync<TEntity>(
@@ -62,7 +66,7 @@
             CancellationToken cancellationToken = default)
         {
             var command = this.Dialect.MakeGetFirstNCommand<TEntity>(1, conditions, orderBy);
-            return this.QueryFirstOrDefaultAsync<TEntity>(command, commandTimeout, cancellationToken);
+            return this.RawQueryFirstOrDefaultAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<TEntity> GetFirstAsync<TEntity>(
@@ -73,7 +77,7 @@
             where TEntity : class
         {
             var command = this.Dialect.MakeGetFirstNCommand<TEntity>(1, conditions, orderBy);
-            return this.QueryFirstAsync<TEntity>(command, commandTimeout, cancellationToken);
+            return this.RawQueryFirstAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<TEntity> GetFirstAsync<TEntity>(
@@ -84,7 +88,7 @@
             where TEntity : class
         {
             var command = this.Dialect.MakeGetFirstNCommand<TEntity>(1, conditions, orderBy);
-            return this.QueryFirstAsync<TEntity>(command, commandTimeout, cancellationToken);
+            return this.RawQueryFirstAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<TEntity> FindSingleAsync<TEntity>(
@@ -93,7 +97,7 @@
             CancellationToken cancellationToken = default)
         {
             var command = this.Dialect.MakeGetFirstNCommand<TEntity>(2, conditions, null);
-            return this.QuerySingleOrDefaultAsync<TEntity>(command, commandTimeout, cancellationToken);
+            return this.RawQuerySingleOrDefaultAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<TEntity> FindSingleAsync<TEntity>(
@@ -102,7 +106,7 @@
             CancellationToken cancellationToken = default)
         {
             var command = this.Dialect.MakeGetFirstNCommand<TEntity>(2, conditions, null);
-            return this.QuerySingleOrDefaultAsync<TEntity>(command, commandTimeout, cancellationToken);
+            return this.RawQuerySingleOrDefaultAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public async Task<TEntity> GetSingleAsync<TEntity>(
@@ -128,31 +132,31 @@
             CancellationToken cancellationToken = default)
         {
             var command = this.Dialect.MakeGetRangeCommand<TEntity>(conditions);
-            return this.QueryAsync<TEntity>(command, commandTimeout, cancellationToken);
+            return this.RawQueryAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<IReadOnlyList<TEntity>> GetRangeAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var command = this.Dialect.MakeGetRangeCommand<TEntity>(conditions);
-            return this.QueryAsync<TEntity>(command, commandTimeout, cancellationToken);
+            return this.RawQueryAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<IReadOnlyList<TEntity>> GetTopAsync<TEntity>(int count, string orderBy, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var command = this.Dialect.MakeGetFirstNCommand<TEntity>(count, orderBy);
-            return this.QueryAsync<TEntity>(command, commandTimeout, cancellationToken);
+            return this.RawQueryAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<IReadOnlyList<TEntity>> GetTopAsync<TEntity>(int count, FormattableString conditions, string orderBy, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var command = this.Dialect.MakeGetFirstNCommand<TEntity>(count, conditions, orderBy);
-            return this.QueryAsync<TEntity>(command, commandTimeout, cancellationToken);
+            return this.RawQueryAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<IReadOnlyList<TEntity>> GetTopAsync<TEntity>(int count, object conditions, string orderBy, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var command = this.Dialect.MakeGetFirstNCommand<TEntity>(count, conditions, orderBy);
-            return this.QueryAsync<TEntity>(command, commandTimeout, cancellationToken);
+            return this.RawQueryAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public async Task<PagedList<TEntity>> GetPageAsync<TEntity>(
@@ -170,7 +174,7 @@
             }
 
             var itemsCommand = this.Dialect.MakeGetPageCommand<TEntity>(page, conditions, orderBy);
-            var items = await this.QueryAsync<TEntity>(itemsCommand, commandTimeout, cancellationToken).ConfigureAwait(false);
+            var items = await this.RawQueryAsync<TEntity>(itemsCommand.CommandText, itemsCommand.Parameters, CommandType.Text, commandTimeout, cancellationToken).ConfigureAwait(false);
             return PagedList<TEntity>.Create(totalNumberOfItems, page, items);
         }
 
@@ -189,13 +193,14 @@
             }
 
             var itemsCommand = this.Dialect.MakeGetPageCommand<TEntity>(page, conditions, orderBy);
-            var items = await this.QueryAsync<TEntity>(itemsCommand, commandTimeout, cancellationToken).ConfigureAwait(false);
+            var items = await this.RawQueryAsync<TEntity>(itemsCommand.CommandText, itemsCommand.Parameters, CommandType.Text, commandTimeout, cancellationToken).ConfigureAwait(false);
             return PagedList<TEntity>.Create(totalNumberOfItems, page, items);
         }
 
         public Task<IReadOnlyList<TEntity>> GetAllAsync<TEntity>(int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.QueryAsync<TEntity>(this.Dialect.MakeGetRangeCommand<TEntity>(null), commandTimeout, cancellationToken);
+            var command = this.Dialect.MakeGetRangeCommand<TEntity>(null);
+            return this.RawQueryAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public async Task InsertAsync(
@@ -206,7 +211,7 @@
         {
             var command = this.Dialect.MakeInsertCommand(entity);
 
-            var result = await this.ExecuteAsync(command, commandTimeout, cancellationToken).ConfigureAwait(false);
+            var result = await this.RawExecuteAsync(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken).ConfigureAwait(false);
             if (this.Config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
             {
                 result.ExpectingAffectedRowCountToBe(1);
@@ -216,7 +221,7 @@
         public Task<TPrimaryKey> InsertAsync<TPrimaryKey>(object entity, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
             var command = this.Dialect.MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(entity);
-            return this.ExecuteScalarAsync<TPrimaryKey>(command, commandTimeout, cancellationToken);
+            return this.RawExecuteScalarAsync<TPrimaryKey>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<CommandResult> InsertRangeAsync<TEntity>(
@@ -224,8 +229,8 @@
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeInsertRangeCommand(entities);
-            return this.ExecuteAsync(command, commandTimeout, cancellationToken);
+            var (sql, parameters) = this.Dialect.MakeInsertRangeCommand(entities);
+            return this.RawExecuteMultipleAsync(sql, parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
@@ -240,8 +245,8 @@
 
             foreach (var entity in entities)
             {
-                var sql = this.Dialect.MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(entity);
-                var id = await this.ExecuteScalarAsync<TPrimaryKey>(sql, commandTimeout, cancellationToken).ConfigureAwait(false);
+                var command = this.Dialect.MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(entity);
+                var id = await this.RawExecuteScalarAsync<TPrimaryKey>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken).ConfigureAwait(false);
                 setPrimaryKey(entity, id);
             }
         }
@@ -253,7 +258,8 @@
             CancellationToken cancellationToken = default)
             where TEntity : class
         {
-            var result = await this.ExecuteAsync(this.Dialect.MakeUpdateCommand(entity), commandTimeout, cancellationToken)
+            var command = this.Dialect.MakeUpdateCommand(entity);
+            var result = await this.RawExecuteAsync(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken)
                                    .ConfigureAwait(false);
 
             if (this.Config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
@@ -268,8 +274,8 @@
             CancellationToken cancellationToken = default)
             where TEntity : class
         {
-            var command = this.Dialect.MakeUpdateRangeCommand(entities);
-            return this.ExecuteAsync(command, commandTimeout, cancellationToken);
+            var (sql, parameters) = this.Dialect.MakeUpdateRangeCommand(entities);
+            return this.RawExecuteMultipleAsync(sql, parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public async Task DeleteAsync<TEntity>(
@@ -279,7 +285,8 @@
             CancellationToken cancellationToken = default) 
             where TEntity : class
         {
-            var result = await this.ExecuteAsync(this.Dialect.MakeDeleteCommand(entity), commandTimeout, cancellationToken)
+            var command = this.Dialect.MakeDeleteCommand(entity);
+            var result = await this.RawExecuteAsync(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken)
                                    .ConfigureAwait(false);
 
             if (this.Config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
@@ -294,7 +301,8 @@
             bool? verifyAffectedRowCount = null,
             CancellationToken cancellationToken = default)
         {
-            var result = await this.ExecuteAsync(this.Dialect.MakeDeleteByPrimaryKeyCommand<TEntity>(id), commandTimeout, cancellationToken)
+            var command = this.Dialect.MakeDeleteByPrimaryKeyCommand<TEntity>(id);
+            var result = await this.RawExecuteAsync(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken)
                                    .ConfigureAwait(false);
 
             if (this.Config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
@@ -308,17 +316,20 @@
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
         {
-            return this.ExecuteAsync(this.Dialect.MakeDeleteRangeCommand<TEntity>(conditions), commandTimeout, cancellationToken);
+            var command = this.Dialect.MakeDeleteRangeCommand<TEntity>(conditions);
+            return this.RawExecuteAsync(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<CommandResult> DeleteRangeAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.ExecuteAsync(this.Dialect.MakeDeleteRangeCommand<TEntity>(conditions), commandTimeout, cancellationToken);
+            var command = this.Dialect.MakeDeleteRangeCommand<TEntity>(conditions);
+            return this.RawExecuteAsync(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<CommandResult> DeleteAllAsync<TEntity>(int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            return this.ExecuteAsync(this.Dialect.MakeDeleteAllCommand<TEntity>(), commandTimeout, cancellationToken);
+            var command = this.Dialect.MakeDeleteAllCommand<TEntity>();
+            return this.RawExecuteAsync(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
     }
 }

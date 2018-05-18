@@ -123,7 +123,7 @@
         public abstract SqlCommand MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(object entity);
 
         /// <inheritdoc />
-        public SqlCommand MakeInsertRangeCommand<TEntity>(IEnumerable<TEntity> entities)
+        public (string sql, IEnumerable<TEntity> parameters) MakeInsertRangeCommand<TEntity>(IEnumerable<TEntity> entities)
         {
             Ensure.NotNull(entities, nameof(entities));
             var tableSchema = this.GetTableSchema(typeof(TEntity));
@@ -133,7 +133,8 @@
 
             var sql = new SqlCommandBuilder("INSERT INTO ").Append(tableSchema.Name).Append(" (").AppendColumnNames(columns, Include).Append(")");
             sql.AppendClause("VALUES (").AppendParameterNames(columns, Include).Append(");");
-            return sql.ToCommand(entities);
+            var result = sql.ToCommand(entities);
+            return (result.CommandText, entities);
         }
 
         /// <inheritdoc />
@@ -153,7 +154,7 @@
             return sql.ToCommand();
         }
 
-        public SqlCommand MakeUpdateRangeCommand<TEntity>(IEnumerable<TEntity> entities)
+        public (string sql, IEnumerable<TEntity> parameters) MakeUpdateRangeCommand<TEntity>(IEnumerable<TEntity> entities)
             where TEntity : class
         {
             Ensure.NotNull(entities, nameof(entities));
@@ -165,7 +166,8 @@
             var sql = new SqlCommandBuilder("UPDATE ").Append(tableSchema.Name);
             sql.AppendClause("SET ").AppendColumnNamesEqualParameters(tableSchema.Columns, ", ", Include);
             sql.AppendWherePrimaryKeysClause(tableSchema.GetPrimaryKeys());
-            return sql.ToCommand(entities);
+            var result = sql.ToCommand(entities);
+            return (result.CommandText, entities);
         }
 
         /// <inheritdoc />

@@ -71,7 +71,7 @@
         /// </summary>
         SqlCommand MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(object entity);
 
-        SqlCommand MakeInsertRangeCommand<TEntity>(IEnumerable<TEntity> entities);
+        (string sql, IEnumerable<TEntity> parameters) MakeInsertRangeCommand<TEntity>(IEnumerable<TEntity> entities);
 
         /// <summary>
         /// Generates a SQL Update statement which chooses which row to update by its PrimaryKey.
@@ -79,7 +79,7 @@
         SqlCommand MakeUpdateCommand<TEntity>(TEntity entity)
             where TEntity : class;
 
-        SqlCommand MakeUpdateRangeCommand<TEntity>(IEnumerable<TEntity> entities)
+        (string sql, IEnumerable<TEntity> parameters) MakeUpdateRangeCommand<TEntity>(IEnumerable<TEntity> entities)
             where TEntity : class;
 
         /// <summary>

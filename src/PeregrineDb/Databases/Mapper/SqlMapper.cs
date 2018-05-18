@@ -34,7 +34,7 @@
             }
         }
 
-        private static IEnumerable GetMultiExec(object param)
+        public static IEnumerable GetMultiExec(object param)
         {
             return param is IEnumerable enumerable
                    && !(enumerable is string
@@ -61,56 +61,6 @@
             }
 
             return TypeMapper.Parse<T>(result);
-        }
-
-        public static int ExecuteImpl(this IDbConnection cnn, ref CommandDefinition command)
-        {
-            var param = command.Parameters;
-            var multiExec = GetMultiExec(param);
-            Identity identity;
-            CacheInfo info = null;
-            if (multiExec != null)
-            {
-                var isFirst = true;
-                var total = 0;
-
-                using (var cmd = command.SetupCommand(cnn, null))
-                {
-                    string masterSql = null;
-                    foreach (var obj in multiExec)
-                    {
-                        if (isFirst)
-                        {
-                            masterSql = cmd.CommandText;
-                            isFirst = false;
-                            identity = new Identity(command.CommandText, cmd.CommandType, cnn, null, obj.GetType(), null);
-                            info = GetCacheInfo(identity, obj, true);
-                        }
-                        else
-                        {
-                            cmd.CommandText = masterSql; // because we do magic replaces on "in" etc
-                            cmd.Parameters.Clear(); // current code is Add-tastic
-                        }
-
-                        info.ParamReader(cmd, obj);
-                        total += cmd.ExecuteNonQuery();
-                    }
-                }
-
-                return total;
-            }
-
-            // nice and simple
-            if (param != null)
-            {
-                identity = new Identity(command.CommandText, command.CommandType, cnn, null, param.GetType(), null);
-                info = GetCacheInfo(identity, param, true);
-            }
-
-            using (var cmd = command.SetupCommand(cnn, param == null ? null : info.ParamReader))
-            {
-                return cmd.ExecuteNonQuery();
-            }
         }
 
         public static IEnumerable<T> QueryImpl<T>(this IDbConnection cnn, CommandDefinition command, Type effectiveType)
@@ -320,7 +270,7 @@
             }
         }
 
-        private static CacheInfo GetCacheInfo(Identity identity, object exampleParameters, bool addToCache)
+        public static CacheInfo GetCacheInfo(Identity identity, object exampleParameters, bool addToCache)
         {
             if (!QueryCache.TryGetQueryCache(identity, out var info))
             {

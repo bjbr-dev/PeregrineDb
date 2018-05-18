@@ -21,8 +21,7 @@
             args.Add("v", AnEnum.B);
             args.Add("y", AnEnum.B);
             args.Add("z", null);
-            var command = new SqlCommand("select @v, @y, @z", args);
-            v = (AnEnum)connection.QuerySingle<int>(in command);
+            v = (AnEnum)connection.RawQuerySingle<int>("select @v, @y, @z", args);
             Assert.Equal(AnEnum.B, v);
 
             // test passing as int, reading as AnEnum
@@ -33,8 +32,7 @@
             args.Add("v", (int)AnEnum.B);
             args.Add("y", (int)AnEnum.B);
             args.Add("z", null);
-            var command2 = new SqlCommand("select @v, @y, @z", args);
-            k = (int)connection.QuerySingle<AnEnum>(in command2);
+            k = (int)connection.RawQuerySingle<AnEnum>("select @v, @y, @z", args);
             Assert.Equal(k, (int)AnEnum.B);
         }
 

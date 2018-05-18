@@ -124,68 +124,6 @@
         }
 
         /// <summary>
-        /// Execute a command asynchronously using .NET 4.5 Task.
-        /// </summary>
-        /// <param name="cnn">The connection to execute on.</param>
-        /// <param name="command">The command to execute on this connection.</param>
-        /// <returns>The number of rows affected.</returns>
-        public static Task<int> ExecuteAsync(this IDbConnection cnn, CommandDefinition command)
-        {
-            var param = command.Parameters;
-            var multiExec = GetMultiExec(param);
-            if (multiExec != null)
-            {
-                return ExecuteMultiImplAsync(cnn, command, multiExec);
-            }
-            else
-            {
-                return ExecuteImplAsync(cnn, command, param);
-            }
-        }
-
-        private static async Task<int> ExecuteMultiImplAsync(IDbConnection cnn, CommandDefinition command, IEnumerable multiExec)
-        {
-            var isFirst = true;
-            var total = 0;
-            CacheInfo info = null;
-            string masterSql = null;
-
-            using (var cmd = (DbCommand)command.SetupCommand(cnn, null))
-            {
-                foreach (var obj in multiExec)
-                {
-                    if (isFirst)
-                    {
-                        masterSql = cmd.CommandText;
-                        isFirst = false;
-                        var identity = new Identity(command.CommandText, cmd.CommandType, cnn, null, obj.GetType(), null);
-                        info = GetCacheInfo(identity, obj, true);
-                    }
-                    else
-                    {
-                        cmd.CommandText = masterSql; // because we do magic replaces on "in" etc
-                        cmd.Parameters.Clear(); // current code is Add-tastic
-                    }
-
-                    info.ParamReader(cmd, obj);
-                    total += await cmd.ExecuteNonQueryAsync(command.CancellationToken).ConfigureAwait(false);
-                }
-            }
-
-            return total;
-        }
-
-        private static async Task<int> ExecuteImplAsync(IDbConnection cnn, CommandDefinition command, object param)
-        {
-            var identity = new Identity(command.CommandText, command.CommandType, cnn, null, param?.GetType(), null);
-            var info = GetCacheInfo(identity, param, true);
-            using (var cmd = (DbCommand)command.SetupCommand(cnn, info.ParamReader))
-            {
-                return await cmd.ExecuteNonQueryAsync(command.CancellationToken).ConfigureAwait(false);
-            }
-        }
-
-        /// <summary>
         /// Execute parameterized SQL that selects a single value.
         /// </summary>
         /// <typeparam name="T">The type to return.</typeparam>
@@ -195,6 +133,7 @@
         /// <param name="transaction">The transaction to use for this command.</param>
         /// <param name="commandTimeout">Number of seconds before command execution timeout.</param>
         /// <param name="commandType">Is it a stored proc or a batch?</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>The first cell returned, as <typeparamref name="T"/>.</returns>
         public static async Task<T> ExecuteScalarAsync<T>(
             this IDbConnection cnn,

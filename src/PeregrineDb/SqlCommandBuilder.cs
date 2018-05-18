@@ -162,19 +162,5 @@
 
             return new SqlCommand(this.builder.ToString(), commandParameters);
         }
-
-        public static SqlCommand MakeCommand(FormattableString sql)
-        {
-            var commandParameters = new Dictionary<string, object>();
-
-            var i = 0;
-            var arguments = sql.GetArguments();
-            foreach (var parameter in arguments)
-            {
-                commandParameters["p" + i++] = parameter;
-            }
-
-            return new SqlCommand(SqlString.ParameterizePlaceholders(sql.Format, arguments.Length), commandParameters);
-        }
     }
 }

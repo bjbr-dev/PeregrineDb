@@ -11,8 +11,7 @@
         {
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
             {
-                var command = new SqlCommand($"select @id", (id: 42, name: "Fred"));
-                var ex = Assert.Throws<NotSupportedException>(() => database.QuerySingle<int>(in command));
+                var ex = Assert.Throws<NotSupportedException>(() => database.RawQuerySingle<int>($"select @id", (id: 42, name: "Fred")));
                 Assert.Equal(
                     "ValueTuple should not be used for parameters - the language-level names are not available to use as parameter names, and it adds unnecessary boxing",
                     ex.Message);
@@ -24,8 +23,7 @@
         {
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
             {
-                var command = new SqlCommand("select @Item1", Tuple.Create(42, "Fred"));
-                Assert.Equal(42, database.QuerySingle<int>(in command));
+                Assert.Equal(42, database.RawQuerySingle<int>("select @Item1", Tuple.Create(42, "Fred")));
             }
         }
 

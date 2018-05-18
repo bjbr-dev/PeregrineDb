@@ -66,26 +66,7 @@
 
         internal IDbCommand SetupCommand(IDbConnection cnn, Action<IDbCommand, object> paramReader)
         {
-            var cmd = cnn.CreateCommand();
-            if (this.Transaction != null)
-            {
-                cmd.Transaction = this.Transaction;
-            }
-
-            cmd.CommandText = this.CommandText;
-
-            if (this.CommandTimeout.HasValue)
-            {
-                cmd.CommandTimeout = this.CommandTimeout.Value;
-            }
-
-            if (this.CommandType.HasValue)
-            {
-                cmd.CommandType = this.CommandType.Value;
-            }
-
-            paramReader?.Invoke(cmd, this.Parameters);
-            return cmd;
+            return cnn.MakeCommand(this.Transaction, this.CommandText, this.CommandTimeout, this.CommandType, this.Parameters, paramReader);
         }
     }
 }

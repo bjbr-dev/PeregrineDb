@@ -1,7 +1,9 @@
 ﻿namespace PeregrineDb.Tests.Databases
 {
     using System;
+    using System.Collections.Generic;
     using System.Data;
+    using System.Linq;
     using FluentAssertions;
     using PeregrineDb.Dialects;
     using PeregrineDb.Mapping;
@@ -11,7 +13,7 @@
 
     public abstract partial class DefaultDatabaseConnectionStatementsTests
     {
-        public abstract class Execute
+        public abstract class ExecuteMultiple
             : DefaultDatabaseConnectionStatementsTests
         {
             public class Transactions
@@ -80,40 +82,77 @@
                 }
             }
 
-            public class NumRowsAffected
+            public class MultipleCommands
                 : Execute
             {
                 [Fact]
-                public void Returns_0_when_no_count_is_on()
+                public void TestExecuteMultipleCommand()
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        // Act
-                        var result = database.Execute($@"
-SET NOCOUNT ON
-INSERT INTO dogs (name, age)
-VALUES ('Rover', 5);
-SET NOCOUNT OFF");
+                        database.Execute($"create table #t(i int)");
+                        try
+                        {
+                            var tally = database.RawExecuteMultiple("insert #t (i) values(@a)", new[] { new { a = 1 }, new { a = 2 }, new { a = 3 }, new { a = 4 } });
+                            var sum = database.Query<int>($"select sum(i) from #t").First();
+                            Assert.Equal(4, tally.NumRowsAffected);
+                            Assert.Equal(10, sum);
+                        }
+                        finally
+                        {
+                            database.Execute($"drop table #t");
+                        }
+                    }
+                }
 
-                        // Assert
-                        result.NumRowsAffected.Should().Be(-1);
+                private class Student
+                {
+                    public string Name { get; set; }
+
+                    public int Age { get; set; }
+                }
+
+                [Fact]
+                public void TestExecuteMultipleCommandStrongType()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        database.Execute($"create table #t(Name nvarchar(max), Age int)");
+                        try
+                        {
+                            var tally = database.RawExecuteMultiple("insert #t (Name,Age) values(@Name, @Age)", new List<Student>
+                                {
+                                    new Student { Age = 1, Name = "sam" },
+                                    new Student { Age = 2, Name = "bob" }
+                                });
+
+                            var sum = database.Query<int>($"select sum(Age) from #t").First();
+                            Assert.Equal(2, tally.NumRowsAffected);
+                            Assert.Equal(3, sum);
+                        }
+                        finally
+                        {
+                            database.Execute($"drop table #t");
+                        }
                     }
                 }
 
                 [Fact]
-                public void Returns_number_of_rows_affected()
+                public void TestExecuteMultipleCommandObjectArray()
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        // Act
-                        var result = database.Execute($@"
-INSERT INTO dogs (name, age)
-VALUES ('Rover', 5);
-INSERT INTO dogs (name, age)
-VALUES ('Rex', 7);");
-
-                        // Assert
-                        result.NumRowsAffected.Should().Be(2);
+                        database.Execute($"create table #t(i int)");
+                        var tally = database.RawExecuteMultiple("insert #t (i) values(@a)", new object[]
+                            {
+                                new { a = 1 },
+                                new { a = 2 },
+                                new { a = 3 },
+                                new { a = 4 }
+                            });
+                        var sum = database.Query<int>($"select sum(i) from #t drop table #t").First();
+                        tally.NumRowsAffected.Should().Be(4);
+                        sum.Should().Be(10);
                     }
                 }
             }
@@ -122,85 +161,29 @@ VALUES ('Rex', 7);");
                 : Execute
             {
                 [Fact]
-                public void Executes_command_with_interpolated_arguments()
+                public void TestExecuteCommandWithHybridParameters()
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        // Act
-                        database.Execute($"INSERT INTO dogs (name, age) VALUES ({"Rover"}, {5})");
-
-                        // Assert
-                        database.GetAll<Dog>().ShouldAllBeEquivalentTo(new { Name = "Rover", Age = 5 }, o => o.Excluding(e => e.Id));
-                    }
-                }
-
-                [Fact]
-                public void Does_not_allow_sql_injection_through_interpolated_arguments()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        // Act
-                        database.Execute($"INSERT INTO dogs (name, age) VALUES ({"Rover) --"}, {5})");
-
-                        // Assert
-                        database.GetAll<Dog>().ShouldAllBeEquivalentTo(new { Name = "Rover) --", Age = 5 }, o => o.Excluding(e => e.Id));
-                    }
-                }
-
-                [Fact]
-                public void Executes_command_with_dynamic_parameters()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        // Act
-                        database.RawExecute("INSERT INTO dogs (name, age) VALUES (@Name, @Age)", new { Name = "Rover", Age = 5 });
-
-                        // Assert
-                        database.GetAll<Dog>().ShouldAllBeEquivalentTo(new { Name = "Rover", Age = 5 }, o => o.Excluding(e => e.Id));
-                    }
-                }
-
-                [Fact]
-                public void Does_not_allow_sql_injection_through_dynamic_parameters()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        // Act
-                        database.RawExecute("INSERT INTO dogs (name, age) VALUES (@Name, @Age)", new { Name = "Rover) --", Age = 5 });
-
-                        // Assert
-                        database.GetAll<Dog>().ShouldAllBeEquivalentTo(new { Name = "Rover) --", Age = 5 }, o => o.Excluding(e => e.Id));
-                    }
-                }
-
-                [Fact]
-                public void Can_use_output_parameters()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        // Act
                         var p = new DynamicParameters(new { a = 1, b = 2 });
                         p.Add("c", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
                         database.RawExecute("set @c = @a + @b", p);
-
-                        // Assert
-                        p.Get<int>("@c").Should().Be(3);
+                        Assert.Equal(3, p.Get<int>("@c"));
                     }
                 }
 
                 [Fact]
-                public void Output_parameter_can_be_set_to_null()
+                public void TestDynamicParamNullSupport()
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        // Act
                         var p = new DynamicParameters();
+
                         p.Add("@b", dbType: DbType.Int32, direction: ParameterDirection.Output);
                         database.RawExecute("select @b = null", p);
 
-                        // Assert
-                        p.Get<int?>("@b").Should().BeNull();
+                        Assert.Null(p.Get<int?>("@b"));
                     }
                 }
             }

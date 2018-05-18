@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Data;
     using System.Linq;
     using PeregrineDb.Schema.Relations;
 
@@ -13,7 +14,7 @@
 
             foreach (var statement in commands)
             {
-                connection.Execute(in statement, commandTimeout);
+                connection.RawExecute(statement.CommandText, statement.Parameters, CommandType.Text, commandTimeout);
             }
 
             return commands;
@@ -27,14 +28,14 @@
             }
 
             var allTablesStatement = dialect.MakeGetAllTablesStatement();
-            var tables = connection.Query<AllTablesQueryResult>(in allTablesStatement)
+            var tables = connection.RawQuery<AllTablesQueryResult>(allTablesStatement.CommandText, allTablesStatement.Parameters)
                                    .Select(t => t.Name)
                                    .Except(ignoredTables ?? Enumerable.Empty<string>())
                                    .OrderBy(t => t)
                                    .ToList();
 
             var allRelationsStatement = dialect.MakeGetAllRelationsStatement();
-            var relations = connection.Query<TableRelationsQueryResult>(in allRelationsStatement);
+            var relations = connection.RawQuery<TableRelationsQueryResult>(allRelationsStatement.CommandText, allRelationsStatement.Parameters);
 
             var schemaRelations = new SchemaRelations(tables);
 
