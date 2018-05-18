@@ -4,13 +4,16 @@
     using System.Collections.Generic;
     using System.Data;
     using System.Data.Common;
-    using System.Globalization;
     using System.Threading;
     using System.Threading.Tasks;
     using PeregrineDb.Databases.Mapper;
     using PeregrineDb.Mapping;
     using PeregrineDb.SqlCommands;
 
+    /// <remarks>
+    /// Originally copied from Dapper.Net (https://github.com/StackExchange/dapper-dot-net) under the apache 2 license (http://www.apache.org/licenses/LICENSE-2.0).
+    /// The code has been significantly altered.
+    /// </remarks>
     public partial class DefaultSqlConnection
     {
         public async Task<IReadOnlyList<T>> RawQueryAsync<T>(
@@ -27,34 +30,14 @@
 
             using (var command = (DbCommand)this.MakeCommand(sql, parameters, commandType, commandTimeout, info.ParamReader))
             {
-                DbDataReader reader = null;
-                try
+                using (var reader = await command.ExecuteReaderAsync(behavior, cancellationToken).ConfigureAwait(false))
                 {
-                    reader = await command.ExecuteReaderAsync(behavior, cancellationToken).ConfigureAwait(false);
-
-                    var tuple = info.Deserializer;
-                    var hash = SqlMapper.GetColumnHash(reader);
-                    if (tuple.Func == null || tuple.Hash != hash)
-                    {
-                        tuple = info.Deserializer = new DeserializerState(hash, TypeMapper.GetDeserializer(effectiveType, reader, 0, -1, false));
-                        QueryCache.SetQueryCache(identity, info);
-                    }
-
-                    var func = tuple.Func;
+                    var deserialzer = reader.MakeDeserializer<T>(info, effectiveType, identity);
 
                     var buffer = new List<T>();
-                    var convertToType = Nullable.GetUnderlyingType(effectiveType) ?? effectiveType;
                     while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
                     {
-                        var val = func(reader);
-                        if (val == null || val is T)
-                        {
-                            buffer.Add((T)val);
-                        }
-                        else
-                        {
-                            buffer.Add((T)Convert.ChangeType(val, convertToType, CultureInfo.InvariantCulture));
-                        }
+                        buffer.Add(deserialzer(reader));
                     }
 
                     while (await reader.NextResultAsync(cancellationToken).ConfigureAwait(false))
@@ -63,13 +46,6 @@
                     }
 
                     return buffer;
-                }
-                finally
-                {
-                    using (reader)
-                    {
-                        /* dispose if non-null */
-                    }
                 }
             }
         }
@@ -96,39 +72,22 @@
             {
                 using (var reader = await command.ExecuteReaderAsync(behavior, cancellationToken).ConfigureAwait(false))
                 {
-                    T result;
                     if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false) || reader.FieldCount == 0)
                     {
-                        throw new InvalidOperationException("Expected at least one row, but found none");
+                        throw new InvalidOperationException("Sequence contains no elements");
                     }
 
-                    var tuple = info.Deserializer;
-                    var hash = SqlMapper.GetColumnHash(reader);
-                    if (tuple.Func == null || tuple.Hash != hash)
-                    {
-                        tuple = info.Deserializer = new DeserializerState(hash, TypeMapper.GetDeserializer(effectiveType, reader, 0, -1, false));
-                        QueryCache.SetQueryCache(identity, info);
-                    }
-
-                    var val = tuple.Func(reader);
-                    if (val == null || val is T)
-                    {
-                        result = (T)val;
-                    }
-                    else
-                    {
-                        var convertToType = Nullable.GetUnderlyingType(effectiveType) ?? effectiveType;
-                        result = (T)Convert.ChangeType(val, convertToType, CultureInfo.InvariantCulture);
-                    }
+                    var deserialzer = reader.MakeDeserializer<T>(info, effectiveType, identity);
+                    var result = deserialzer(reader);
 
                     while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
                     {
-                        /* ignore rows after the first */
+                        /* ignore subsequent rows */
                     }
 
                     while (await reader.NextResultAsync(cancellationToken).ConfigureAwait(false))
                     {
-                        /* ignore result sets after the first */
+                        /* ignore subsequent result sets */
                     }
 
                     return result;
@@ -161,34 +120,18 @@
                     T result = default;
                     if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false) && reader.FieldCount != 0)
                     {
-                        var tuple = info.Deserializer;
-                        var hash = SqlMapper.GetColumnHash(reader);
-                        if (tuple.Func == null || tuple.Hash != hash)
-                        {
-                            tuple = info.Deserializer = new DeserializerState(hash, TypeMapper.GetDeserializer(effectiveType, reader, 0, -1, false));
-                            QueryCache.SetQueryCache(identity, info);
-                        }
-
-                        var val = tuple.Func(reader);
-                        if (val == null || val is T)
-                        {
-                            result = (T)val;
-                        }
-                        else
-                        {
-                            var convertToType = Nullable.GetUnderlyingType(effectiveType) ?? effectiveType;
-                            result = (T)Convert.ChangeType(val, convertToType, CultureInfo.InvariantCulture);
-                        }
+                        var deserialzer = reader.MakeDeserializer<T>(info, effectiveType, identity);
+                        result = deserialzer(reader);
 
                         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
                         {
-                            /* ignore rows after the first */
+                            /* ignore subsequent rows */
                         }
                     }
 
                     while (await reader.NextResultAsync(cancellationToken).ConfigureAwait(false))
                     {
-                        /* ignore result sets after the first */
+                        /* ignore subsequent result sets */
                     }
 
                     return result;
@@ -218,39 +161,22 @@
             {
                 using (var reader = await command.ExecuteReaderAsync(behavior, cancellationToken).ConfigureAwait(false))
                 {
-                    T result;
                     if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false) || reader.FieldCount == 0)
                     {
-                        throw new InvalidOperationException("Expected a single row, but found none");
+                        throw new InvalidOperationException("Sequence contains no elements");
                     }
 
-                    var tuple = info.Deserializer;
-                    var hash = SqlMapper.GetColumnHash(reader);
-                    if (tuple.Func == null || tuple.Hash != hash)
-                    {
-                        tuple = info.Deserializer = new DeserializerState(hash, TypeMapper.GetDeserializer(effectiveType, reader, 0, -1, false));
-                        QueryCache.SetQueryCache(identity, info);
-                    }
-
-                    var val = tuple.Func(reader);
-                    if (val == null || val is T)
-                    {
-                        result = (T)val;
-                    }
-                    else
-                    {
-                        var convertToType = Nullable.GetUnderlyingType(effectiveType) ?? effectiveType;
-                        result = (T)Convert.ChangeType(val, convertToType, CultureInfo.InvariantCulture);
-                    }
+                    var deserialzer = reader.MakeDeserializer<T>(info, effectiveType, identity);
+                    var result = deserialzer(reader);
 
                     if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
                     {
-                        throw new InvalidOperationException("Expected a single row, but found multiple");
+                        throw new InvalidOperationException("Sequence contains more than one element");
                     }
 
                     while (await reader.NextResultAsync(cancellationToken).ConfigureAwait(false))
                     {
-                        /* ignore result sets after the first */
+                        /* ignore subsequent result sets */
                     }
 
                     return result;
@@ -283,34 +209,18 @@
                     T result = default;
                     if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false) && reader.FieldCount != 0)
                     {
-                        var tuple = info.Deserializer;
-                        var hash = SqlMapper.GetColumnHash(reader);
-                        if (tuple.Func == null || tuple.Hash != hash)
-                        {
-                            tuple = info.Deserializer = new DeserializerState(hash, TypeMapper.GetDeserializer(effectiveType, reader, 0, -1, false));
-                            QueryCache.SetQueryCache(identity, info);
-                        }
-
-                        var val = tuple.Func(reader);
-                        if (val == null || val is T)
-                        {
-                            result = (T)val;
-                        }
-                        else
-                        {
-                            var convertToType = Nullable.GetUnderlyingType(effectiveType) ?? effectiveType;
-                            result = (T)Convert.ChangeType(val, convertToType, CultureInfo.InvariantCulture);
-                        }
+                        var deserialzer = reader.MakeDeserializer<T>(info, effectiveType, identity);
+                        result = deserialzer(reader);
 
                         if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
                         {
-                            throw new InvalidOperationException("Expected a single row, but found multiple");
+                            throw new InvalidOperationException("Sequence contains more than one element");
                         }
                     }
 
                     while (await reader.NextResultAsync(cancellationToken).ConfigureAwait(false))
                     {
-                        /* ignore result sets after the first */
+                        /* ignore subsequent result sets */
                     }
 
                     return result;
@@ -406,7 +316,22 @@
 
         private IDbCommand MakeCommand(string sql, object parameters, CommandType commandType, int? commandTimeout, Action<IDbCommand, object> paramReader)
         {
-            return this.connection.MakeCommand(this.transaction, sql, commandTimeout, commandType, parameters, paramReader);
+            var command = this.connection.CreateCommand();
+            command.CommandText = sql;
+            command.CommandType = commandType;
+
+            if (this.transaction != null)
+            {
+                command.Transaction = this.transaction;
+            }
+
+            if (commandTimeout.HasValue)
+            {
+                command.CommandTimeout = commandTimeout.Value;
+            }
+
+            paramReader?.Invoke(command, parameters);
+            return command;
         }
     }
 }

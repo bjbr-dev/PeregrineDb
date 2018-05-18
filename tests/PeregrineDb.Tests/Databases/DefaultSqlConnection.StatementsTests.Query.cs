@@ -1681,8 +1681,7 @@ select * from @bar").Single();
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        int? i = database.Query<int?>($"print 'not a query'").FirstOrDefault();
-                        Assert.Null(i);
+                        database.Query<int?>($"print 'not a query'").Should().BeEmpty();
                     }
                 }
 
@@ -1691,8 +1690,7 @@ select * from @bar").Single();
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        var obj = database.Query<Foo1>($"print 'not a query'").FirstOrDefault();
-                        Assert.Null(obj);
+                        database.Query<Foo1>($"print 'not a query'").Should().BeEmpty();
                     }
                 }
 
