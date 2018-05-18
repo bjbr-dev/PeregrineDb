@@ -10,12 +10,7 @@
     using System.Reflection.Emit;
     using System.Text.RegularExpressions;
     using PeregrineDb.Databases.Mapper;
-    using PeregrineDb.Mapping;
     using TypeExtensions = PeregrineDb.Databases.Mapper.TypeExtensions;
-
-#if NETSTANDARD1_3
-    using DataException = System.InvalidOperationException;
-#endif
 
     /// <remarks>
     /// Originally copied from Dapper.Net (https://github.com/StackExchange/dapper-dot-net) under the apache 2 license (http://www.apache.org/licenses/LICENSE-2.0)
@@ -267,7 +262,7 @@
             IEnumerable<PropertyInfo> props = null;
             // try to detect tuple patterns, e.g. anon-types, and use that to choose the order
             // otherwise: alphabetical
-            if (ctors.Length == 1 && propsList.Count == (ctorParams = ctors[0].GetParameters()).Length)
+            if (false) //ctors.Length == 1 && propsList.Count == (ctorParams = ctors[0].GetParameters()).Length)
             {
                 // check if reflection was kind enough to put everything in the right order for us
                 var ok = true;
@@ -1138,7 +1133,11 @@
 
         private static MethodInfo GetOperator(Type from, Type to)
         {
-            if (to == null) return null;
+            if (to == null)
+            {
+                return null;
+            }
+
             MethodInfo[] fromMethods, toMethods;
             return ResolveOperator(fromMethods = from.GetMethods(BindingFlags.Static | BindingFlags.Public), from, to, "op_Implicit")
                    ?? ResolveOperator(toMethods = to.GetMethods(BindingFlags.Static | BindingFlags.Public), from, to, "op_Implicit")
@@ -1268,12 +1267,12 @@
                     }
                 }
 
-                toThrow = new DataException($"Error parsing column {index} ({name}={formattedValue})", ex);
+                toThrow = new InvalidOperationException($"Error parsing column {index} ({name}={formattedValue})", ex);
             }
-            catch
+            catch (Exception inner)
             {
-                // throw the **original** exception, wrapped as DataException
-                toThrow = new DataException(ex.Message, ex);
+                // throw the **original** exception, wrapped as InvalidOperationException
+                toThrow = new AggregateException(ex, inner);
             }
 
             throw toThrow;

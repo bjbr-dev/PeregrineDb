@@ -5,10 +5,6 @@ namespace PeregrineDb.Mapping
     using System.Collections.Generic;
     using System.Data;
     using PeregrineDb.Databases.Mapper;
-#if NETSTANDARD1_3
-    using ApplicationException = System.InvalidOperationException;
-
-#endif
 
     /// <summary>
     /// A bag of parameters that can be passed to the Dapper Query and Execute methods
@@ -66,10 +62,7 @@ namespace PeregrineDb.Mapping
                 if (subDynamic.templates != null)
                 {
                     this.templates = this.templates ?? new List<object>();
-                    foreach (var t in subDynamic.templates)
-                    {
-                        this.templates.Add(t);
-                    }
+                    this.templates.AddRange(subDynamic.templates);
                 }
             }
             else
@@ -313,7 +306,7 @@ namespace PeregrineDb.Mapping
                 return default;
             }
 
-            throw new ApplicationException(
+            throw new InvalidOperationException(
                 "Attempting to cast a DBNull to a non nullable type! Note that out/return parameters will not have updated values until the data stream completes (after the 'foreach' for Query(..., buffered: false), or after the GridReader has been disposed for QueryMultiple)");
         }
 

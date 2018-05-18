@@ -5,12 +5,11 @@
     using System.Data;
     using System.Linq;
     using FluentAssertions;
-    using PeregrineDb.Databases.Mapper;
     using PeregrineDb.Dialects;
+    using PeregrineDb.Mapping;
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
     using Xunit;
-    using DynamicParameters = PeregrineDb.Mapping.DynamicParameters;
 
     public abstract partial class DefaultDatabaseConnectionStatementsTests
     {
@@ -83,58 +82,42 @@
                 }
             }
 
-            public class Parameters : Execute
+            public class SingleCommand
+                : Execute
             {
                 [Fact]
-                public void TestExecuteCommandWithHybridParameters()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var p = new DynamicParameters(new { a = 1, b = 2 });
-                        p.Add("c", dbType: DbType.Int32, direction: ParameterDirection.Output);
-
-                        var sqlCommand = new SqlCommand("set @c = @a + @b", p);
-                        database.Execute(in sqlCommand);
-                        Assert.Equal(3, p.Get<int>("@c"));
-                    }
-                }
-
-                [Fact]
-                public void TestDynamicParamNullSupport()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var p = new DynamicParameters();
-
-                        p.Add("@b", dbType: DbType.Int32, direction: ParameterDirection.Output);
-                        var command = new SqlCommand("select @b = null", p);
-                        database.Execute(in command);
-
-                        Assert.Null(p.Get<int?>("@b"));
-                    }
-                }
-
-            }
-
-            public class Misc : Execute
-            {
-                [Fact]
-                public void TestExecuteCommand()
+                public void Returns_0_when_no_count_is_on()
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
                         var result = database.Execute($@"
-    set nocount on 
-    create table #t(i int) 
-    set nocount off 
-    insert #t 
-    select {1} a union all select {2}
-    set nocount on 
-    drop table #t");
-                        Assert.Equal(2, result.NumRowsAffected);
+SET NOCOUNT ON
+INSERT INTO dogs (name, age)
+VALUES ('Rover', 5);
+SET NOCOUNT OFF");
+                        result.NumRowsAffected.Should().Be(-1);
                     }
                 }
 
+                [Fact]
+                public void Returns_number_of_rows_affected()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var result = database.Execute($@"
+INSERT INTO dogs (name, age)
+VALUES ('Rover', 5);
+INSERT INTO dogs (name, age)
+VALUES ('Rex', 7);");
+
+                        result.NumRowsAffected.Should().Be(2);
+                    }
+                }
+            }
+
+            public class MultipleCommands
+                : Execute
+            {
                 [Fact]
                 public void TestExecuteMultipleCommand()
                 {
@@ -156,9 +139,11 @@
                         }
                     }
                 }
+
                 private class Student
                 {
                     public string Name { get; set; }
+
                     public int Age { get; set; }
                 }
 
@@ -193,11 +178,50 @@
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
                         database.Execute($"create table #t(i int)");
-                        var command = new SqlCommand("insert #t (i) values(@a)", new object[] { new { a = 1 }, new { a = 2 }, new { a = 3 }, new { a = 4 } });
+                        var command = new SqlCommand("insert #t (i) values(@a)", new object[]
+                            {
+                                new { a = 1 },
+                                new { a = 2 },
+                                new { a = 3 },
+                                new { a = 4 }
+                            });
                         var tally = database.Execute(in command);
-                        int sum = database.Query<int>($"select sum(i) from #t drop table #t").First();
-                        Assert.Equal(4, tally.NumRowsAffected);
-                        Assert.Equal(10, sum);
+                        var sum = database.Query<int>($"select sum(i) from #t drop table #t").First();
+                        tally.NumRowsAffected.Should().Be(4);
+                        sum.Should().Be(10);
+                    }
+                }
+            }
+
+            public class Parameters
+                : Execute
+            {
+                [Fact]
+                public void TestExecuteCommandWithHybridParameters()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var p = new DynamicParameters(new { a = 1, b = 2 });
+                        p.Add("c", dbType: DbType.Int32, direction: ParameterDirection.Output);
+
+                        var sqlCommand = new SqlCommand("set @c = @a + @b", p);
+                        database.Execute(in sqlCommand);
+                        Assert.Equal(3, p.Get<int>("@c"));
+                    }
+                }
+
+                [Fact]
+                public void TestDynamicParamNullSupport()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var p = new DynamicParameters();
+
+                        p.Add("@b", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                        var command = new SqlCommand("select @b = null", p);
+                        database.Execute(in command);
+
+                        Assert.Null(p.Get<int?>("@b"));
                     }
                 }
             }
