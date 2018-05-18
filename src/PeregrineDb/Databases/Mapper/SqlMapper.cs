@@ -152,7 +152,7 @@
 
         private static readonly int[] ErrTwoRows = new int[2], ErrZeroRows = new int[0];
 
-        private static void ThrowMultipleRows(Row row)
+        public static void ThrowMultipleRows(Row row)
         {
             switch (row)
             {
@@ -168,7 +168,7 @@
             }
         }
 
-        private static void ThrowZeroRows(Row row)
+        public static void ThrowZeroRows(Row row)
         {
             switch (row)
             {
