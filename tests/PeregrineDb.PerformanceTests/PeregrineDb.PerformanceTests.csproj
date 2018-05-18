@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <AssemblyName>PeregrineDb.PerformanceTests</AssemblyName>
@@ -6,7 +6,7 @@
     <Description>PeregrineDb Performance Suite</Description>
     <OutputType>Exe</OutputType>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <TargetFrameworks>net462</TargetFrameworks>
+    <TargetFrameworks>net472</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <Configurations>Debug;Release;Debug (Standard)</Configurations>
   </PropertyGroup>
@@ -27,7 +27,7 @@
     <PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
     <PackageReference Include="PetaPoco.Core.Compiled" Version="5.1.289" />
     <PackageReference Include="System.Data.SQLite" Version="1.0.105.2" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.4.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.4.3" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.Linq" />

@@ -262,7 +262,7 @@
             IEnumerable<PropertyInfo> props = null;
             // try to detect tuple patterns, e.g. anon-types, and use that to choose the order
             // otherwise: alphabetical
-            if (false) //ctors.Length == 1 && propsList.Count == (ctorParams = ctors[0].GetParameters()).Length)
+            if (ctors.Length == 1 && propsList.Count == (ctorParams = ctors[0].GetParameters()).Length)
             {
                 // check if reflection was kind enough to put everything in the right order for us
                 var ok = true;
