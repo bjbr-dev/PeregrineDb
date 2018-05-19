@@ -7,9 +7,7 @@
         /// <summary>
         /// disable single result by default; prevents errors AFTER the select being detected properly
         /// </summary>
-        private const CommandBehavior DefaultAllowedCommandBehaviors = ~CommandBehavior.SingleResult;
-
-        public static MapperSettings Instance { get; set; } = new MapperSettings(DefaultAllowedCommandBehaviors);
+        public static MapperSettings Instance { get; set; } = new MapperSettings(~CommandBehavior.SingleResult);
 
         private readonly CommandBehavior allowedCommandBehaviors;
 
@@ -18,31 +16,9 @@
             this.allowedCommandBehaviors = allowedCommandBehaviours;
         }
 
-        private MapperSettings SetAllowedCommandBehaviors(CommandBehavior behavior, bool enabled)
+        public CommandBehavior GetBehavior(CommandBehavior behavior)
         {
-            if (enabled)
-            {
-                return new MapperSettings(this.allowedCommandBehaviors | behavior);
-            }
-            else
-            {
-                return new MapperSettings(this.allowedCommandBehaviors & ~behavior);
-            }
-        }
-
-        public MapperSettings UseSingleResultOptimization(bool enabled = true)
-        {
-            return this.SetAllowedCommandBehaviors(CommandBehavior.SingleResult, enabled);
-        }
-
-        public MapperSettings UseSingleRowOptimization(bool enabled = true)
-        {
-            return this.SetAllowedCommandBehaviors(CommandBehavior.SingleRow, enabled);
-        }
-
-        public CommandBehavior GetBehavior(CommandBehavior @default)
-        {
-            return @default & this.allowedCommandBehaviors;
+            return behavior & this.allowedCommandBehaviors;
         }
     }
 }

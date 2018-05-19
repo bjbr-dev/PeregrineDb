@@ -41,7 +41,130 @@
                 : Query
             {
                 [Fact]
-                public void TestAbstractInheritance()
+                public void Uses_public_parameterless_constructor()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        // Act
+                        var result = database.Query<PublicParameterlessConstructor>($"select 1 A").First();
+
+                        // Assert
+                        result.A.Should().Be(1);
+                    }
+                }
+
+                [Fact]
+                public void Ignores_non_parameterless_constructor()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        // Act
+                        var result = database.Query<MultipleConstructors>($"select 1 A").First();
+
+                        // Assert
+                        result.A.Should().Be(1);
+                    }
+                }
+
+                [Fact]
+                public void Errors_when_no_public_constructor_is_found()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        // Act
+                        Action act = () => database.Query<NoPublicConstructor>($"select 1 as A");
+
+                        // Assert
+                        act.ShouldThrow<InvalidOperationException>()
+                           .WithMessage(
+                               "PeregrineDb.Tests.Databases.DefaultDatabaseConnectionStatementsTests+Query+Constructors+NoPublicConstructor must have a public parameterless constructor");
+                    }
+                }
+
+                [Fact]
+                public void Errors_when_no_parameterless_constructor_is_found()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        // Act
+                        Action act = () => database.Query<NoParameterlessConstructor>($"select 1 as A");
+
+                        // Assert
+                        act.ShouldThrow<InvalidOperationException>()
+                           .WithMessage(
+                               "PeregrineDb.Tests.Databases.DefaultDatabaseConnectionStatementsTests+Query+Constructors+NoParameterlessConstructor must have a public parameterless constructor");
+                    }
+                }
+
+
+                private class MultipleConstructors
+                {
+                    public MultipleConstructors()
+                    {
+                    }
+
+                    public MultipleConstructors(int a)
+                    {
+                        this.A = a + 1;
+                    }
+
+                    public int A { get; set; }
+                }
+
+                private class PublicParameterlessConstructor
+                {
+                    public int A { get; set; }
+                }
+
+                private class NoPublicConstructor
+                {
+                    private NoPublicConstructor()
+                    {
+                    }
+
+                    public int A { get; set; }
+                }
+
+                private class NoParameterlessConstructor
+                {
+                    private NoParameterlessConstructor(int a)
+                    {
+                        this.A = a;
+                    }
+
+                    public int A { get; set; }
+                }
+            }
+
+            public class Inheritance
+            {
+
+                private class InheritanceTest1
+                {
+                    public string Base1 { get; set; }
+                }
+
+                private class InheritanceTest2 : InheritanceTest1
+                {
+                    public string Derived1 { get; set; }
+                }
+
+                [Fact]
+                public void TestInheritance()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        // Act
+                        var result = database.Query<InheritanceTest2>($"select 'One' as Derived1, 'Two' as Base1").First();
+
+                        // Assert
+                        Assert.Equal("One", result.Derived1);
+                        Assert.Equal("Two", result.Base1);
+                    }
+                }
+
+                [Fact]
+                public void Sets_property_inherited_from_base_class()
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
@@ -51,32 +174,6 @@
                         // Assert
                         Assert.Equal(3, order.Public);
                         Assert.Equal(4, order.Concrete);
-                    }
-                }
-
-                [Fact]
-                public void TestMultipleConstructors()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var mult = database.Query<MultipleConstructors>($"select 0 A, 'Dapper' b").First();
-                        Assert.Equal(0, mult.A);
-                        Assert.Equal("Dapper", mult.B);
-                    }
-                }
-
-                [Fact]
-                public void TestWithNonPublicConstructor()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        // Act
-                        Action act = () => database.Query<WithPrivateConstructor>($"select 1 as Foo");
-
-                        // Assert
-                        act.ShouldThrow<InvalidOperationException>()
-                           .WithMessage(
-                               "PeregrineDb.Tests.Databases.DefaultDatabaseConnectionStatementsTests+Query+Constructors+WithPrivateConstructor must have a public parameterless constructor");
                     }
                 }
 
@@ -92,36 +189,619 @@
                         public int Concrete { get; set; }
                     }
                 }
+            }
 
-                private class MultipleConstructors
+            public class Misc
+                : Query
+            {
+                [Fact]
+                public void QueryBasicWithoutQuery()
                 {
-                    public MultipleConstructors()
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
+                        database.Query<int?>($"print 'not a query'").Should().BeEmpty();
                     }
-
-                    public MultipleConstructors(int a, string b)
-                    {
-                        this.A = a + 1;
-                        this.B = b + "!";
-                    }
-
-                    public int A { get; set; }
-
-                    public string B { get; set; }
                 }
 
-                private class WithPrivateConstructor
+                [Fact]
+                public void QueryComplexWithoutQuery()
                 {
-                    public int Foo { get; set; }
-
-                    private WithPrivateConstructor()
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
+                        database.Query<Foo1>($"print 'not a query'").Should().BeEmpty();
+                    }
+                }
+
+                [FactLongRunning]
+                public void Issue263_Timeout()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var watch = Stopwatch.StartNew();
+                        var i = database.Query<int>($"waitfor delay '00:01:00'; select 42;", 300).Single();
+                        watch.Stop();
+                        Assert.Equal(42, i);
+                        var minutes = watch.ElapsedMilliseconds / 1000 / 60;
+                        Assert.True(minutes >= 0.95 && minutes <= 1.05);
+                    }
+                }
+
+                private class TestObj
+                {
+                    public int _internal;
+
+                    internal int Internal
+                    {
+                        set { this._internal = value; }
+                    }
+
+                    public int _priv;
+
+                    private int Priv
+                    {
+                        set { this._priv = value; }
+                    }
+
+                    private int PrivGet => this._priv;
+                }
+
+                [Fact]
+                public void TestSetInternal()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        Assert.Equal(default, database.Query<TestObj>($"select 10 as [Internal]").First()._internal);
+                    }
+                }
+
+                [Fact]
+                public void Does_not_set_private_properties()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        Assert.Equal(default, database.Query<TestObj>($"select 10 as [Priv]").First()._priv);
+                    }
+                }
+
+                [Fact]
+                public void Does_not_populate_fields()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var data = database.Query<TestFieldsEntity>($"select a=1,b=2,c=3").Single();
+                        Assert.Equal(default, data.a);
+                        Assert.Equal(5, data.b);
+                        Assert.Equal(default, data.GetC());
+                    }
+                }
+
+                private class TestFieldsEntity
+                {
+                    public int a;
+
+                    public int b = 5;
+
+                    private int c;
+
+                    public int GetC()
+                    {
+                        return c;
+                    }
+                }
+
+
+                [Fact]
+                public void TestSchemaChanged()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        database.Execute($"create table #dog(Age int, Name nvarchar(max)) insert #dog values(1, 'Alf')");
+                        try
+                        {
+                            var d = database.Query<Dog>($"select * from #dog").Single();
+                            Assert.Equal("Alf", d.Name);
+                            Assert.Equal(1, d.Age);
+                            database.Execute($"alter table #dog drop column Name");
+                            d = database.Query<Dog>($"select * from #dog").Single();
+                            Assert.Null(d.Name);
+                            Assert.Equal(1, d.Age);
+                        }
+                        finally
+                        {
+                            database.Execute($"drop table #dog");
+                        }
+                    }
+                }
+
+                [Fact]
+                public void TestExtraFields()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var guid = Guid.NewGuid();
+                        var dog = database.Query<Dog>($"select '' as Extra, 1 as Age, 0.1 as Name1 , Id = {guid}");
+
+                        Assert.Single(dog);
+                        Assert.Equal(1, dog.First().Age);
+                        Assert.Equal(dog.First().Id, guid);
+                    }
+                }
+            }
+
+            public class Parameters
+                : Query
+            {
+                [Fact]
+                public void TestParameterInclusionNotSensitiveToCurrentCulture()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        // note this might fail if your database server is case-sensitive
+                        var current = CultureInfo.CurrentCulture;
+                        try
+                        {
+                            CultureInfo.CurrentCulture = new CultureInfo("tr-TR");
+
+                            database.RawQuery<int>("select @pid", new { PId = 1 }).Single();
+                        }
+                        finally
+                        {
+                            CultureInfo.CurrentCulture = current;
+                        }
+                    }
+                }
+
+                [Fact]
+                public void SO30435185_InvalidTypeOwner()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var ex = Assert.Throws<InvalidOperationException>(() =>
+                        {
+                            const string sql = @"INSERT INTO #XXX
+                        (XXXId, AnotherId, ThirdId, Value, Comment)
+                        VALUES
+                        (@XXXId, @AnotherId, @ThirdId, @Value, @Comment); select @@rowcount as [Foo]";
+
+                            var command = new
+                                {
+                                    MyModels = new[]
+                                        {
+                                            new { XXXId = 1, AnotherId = 2, ThirdId = 3, Value = "abc", Comment = "def" }
+                                        }
+                                };
+                            var parameters = command.MyModels
+                                                    .Select(model => new
+                                                        {
+                                                            XXXId = model.XXXId,
+                                                            AnotherId = model.AnotherId,
+                                                            ThirdId = model.ThirdId,
+                                                            Value = model.Value,
+                                                            Comment = model.Comment
+                                                        })
+                                                    .ToArray();
+
+                            var rowcount = (int)database.RawQuery<dynamic>(sql, parameters).Single().Foo;
+                            Assert.Equal(1, rowcount);
+                        });
+                        Assert.Equal("An enumerable sequence of parameters (arrays, lists, etc) is not allowed in this context", ex.Message);
+                    }
+                }
+
+
+                [Fact]
+                public void TestParameterWithIndexer()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        database.Execute($@"create proc #TestProcWithIndexer 
+                	@A int
+                as 
+                begin
+                	select @A
+                end");
+
+                        var item = database.RawQuery<int>("#TestProcWithIndexer", new ParameterWithIndexer(), CommandType.StoredProcedure).Single();
+                    }
+                }
+
+                public class ParameterWithIndexer
+                {
+                    public int A { get; set; }
+
+                    public virtual string this[string columnName]
+                    {
+                        get { return null; }
+                        set { }
+                    }
+                }
+
+                [Fact]
+                public void TestMultipleParametersWithIndexer()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var order = database.Query<MultipleParametersWithIndexer>($"select 1 A,2 B").First();
+
+                        Assert.Equal(1, order.A);
+                        Assert.Equal(2, order.B);
+                    }
+                }
+
+                public class MultipleParametersWithIndexer : MultipleParametersWithIndexerDeclaringType
+                {
+                    public int A { get; set; }
+                }
+
+                public class MultipleParametersWithIndexerDeclaringType
+                {
+                    public object this[object field]
+                    {
+                        get { return null; }
+                        set { }
+                    }
+
+                    public object this[object field, int index]
+                    {
+                        get { return null; }
+                        set { }
+                    }
+
+                    public int B { get; set; }
+                }
+            }
+
+            public class Strings
+                : Query
+            {
+                [Fact]
+                public void TestMassiveStrings()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var str = new string('X', 20000);
+                        Assert.Equal(database.Query<string>($"select {str}").First(), str);
+                    }
+                }
+
+                [Fact]
+                public void TestStrings()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        Assert.Equal(new[] { "a", "b" }, database.Query<string>($"select 'a' a union select 'b'"));
+                    }
+                }
+
+                [Fact]
+                public void TestStringList()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
+                    {
+                        var values = new[] { "a", "b", "c" }.ToList();
+                        database.Query<string>(
+                                    $@"
+select * from (select 'a' as x union all select 'b' union all select 'c') as T 
+where x = ANY ({values})")
+                                .ShouldAllBeEquivalentTo(values);
+
+                        var emptyList = new string[0].ToList();
+                        database.Query<string>($"select * from (select 'a' as x union all select 'b' union all select 'c') as T where x = ANY ({emptyList})")
+                                .Should().BeEmpty();
+                    }
+                }
+
+            }
+
+            public class DbStrings
+                : Query
+            {
+                [Fact]
+                public void TestDbString()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var a = new DbString { Value = "abcde", IsFixedLength = true, Length = 10, IsAnsi = true };
+                        var b = new DbString { Value = "abcde", IsFixedLength = true, Length = 10, IsAnsi = false };
+                        var c = new DbString { Value = "abcde", IsFixedLength = false, Length = 10, IsAnsi = true };
+                        var d = new DbString { Value = "abcde", IsFixedLength = false, Length = 10, IsAnsi = false };
+                        var e = new DbString { Value = "abcde", IsAnsi = true };
+                        var f = new DbString { Value = "abcde", IsAnsi = false };
+
+                        var obj = database.Query<DbStringTestEntity>(
+                                              $"select datalength({a}) as a, datalength({b}) as b, datalength({c}) as c, datalength({d}) as d, datalength({e}) as e, datalength({f}) as f")
+                                          .First();
+
+                        obj.ShouldBeEquivalentTo(new DbStringTestEntity
+                            {
+                                A = 10,
+                                B = 20,
+                                C = 5,
+                                D = 10,
+                                E = 5,
+                                F = 10
+                            });
+                    }
+                }
+
+                private class DbStringTestEntity
+                {
+                    public int A { get; set; }
+
+                    public int B { get; set; }
+
+                    public int C { get; set; }
+
+                    public int D { get; set; }
+
+                    public int E { get; set; }
+
+                    public int F { get; set; }
+                }
+
+
+                [Fact]
+                public void DbStringAnsi()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var a = database.Query<int>($"select datalength({new DbString { Value = "abc", IsAnsi = true }})").Single();
+                        var b = database.Query<int>($"select datalength({new DbString { Value = "abc", IsAnsi = false }})").Single();
+                        Assert.Equal(3, a);
+                        Assert.Equal(6, b);
+                    }
+                }
+            }
+
+            public class Characters
+                : Query
+            {
+                private class WithCharValue
+                {
+                    public char Value { get; set; }
+                    public char? ValueNullable { get; set; }
+                }
+
+                [Fact]
+                public void TestCharInputAndOutput()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        const char test = '〠';
+                        char c = database.Query<char>($"select {test}").Single();
+
+                        Assert.Equal(c, test);
+
+                        var obj = database.Query<WithCharValue>($"select {c} as Value").Single();
+
+                        Assert.Equal(obj.Value, test);
+                    }
+                }
+
+                [Fact]
+                public void TestNullableCharInputAndOutputNonNull()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        char? test = '〠';
+                        char? c = database.Query<char?>($"select {test}").Single();
+
+                        Assert.Equal(c, test);
+
+                        var obj = database.Query<WithCharValue>($"select {c} as ValueNullable").Single();
+
+                        Assert.Equal(obj.ValueNullable, test);
+                    }
+                }
+
+                [Fact]
+                public void TestNullableCharInputAndOutputNull()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        char? test = null;
+                        char? c = database.Query<char?>($"select {test}").Single();
+
+                        Assert.Equal(c, test);
+
+                        var obj = database.Query<WithCharValue>($"select {c} as ValueNullable").Single();
+
+                        Assert.Equal(obj.ValueNullable, test);
+                    }
+                }
+            }
+
+            public class Integers
+                : Query
+            {
+                private class HasInt32
+                {
+                    public int Value { get; set; }
+                }
+
+                // https://stackoverflow.com/q/23696254/23354
+                [Fact]
+                public void DownwardIntegerConversion()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        int i = database.Query<HasInt32>($"select cast(42 as bigint) as Value").Single().Value;
+                        Assert.Equal(42, i);
+
+                        i = database.Query<int>($"select cast(42 as bigint) as Value").Single();
+                        Assert.Equal(42, i);
+                    }
+                }
+
+                [Fact]
+                public void SelectListInt()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        Assert.Equal(new[] { 1, 2, 3 }, database.Query<int>($"select 1 union all select 2 union all select 3"));
+                    }
+                }
+
+                [Fact]
+                public void TestNakedBigInt()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        const long foo = 12345;
+                        var result = database.Query<long>($"select {foo}").Single();
+                        Assert.Equal(foo, result);
+                    }
+                }
+
+                [Fact]
+                public void TestBigIntMember()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        const long foo = 12345;
+                        var result = database.Query<WithBigInt>($@"
+declare @bar table(Value bigint)
+insert @bar values ({foo})
+select * from @bar").Single();
+                        Assert.Equal(result.Value, foo);
+                    }
+                }
+
+                private class WithBigInt
+                {
+                    public long Value { get; set; }
+                }
+
+                [Fact]
+                public void WorkDespiteHavingWrongColumnTypes()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var hazInt = database.Query<CanHazInt>($"select cast(1 as bigint) Value").Single();
+                        hazInt.Value.Equals(1);
+                    }
+                }
+
+                private class CanHazInt
+                {
+                    public int Value { get; set; }
+                }
+
+
+
+                [Fact]
+                public void TestInt16Usage()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        Assert.Equal(database.Query<short>($"select cast(42 as smallint)").Single(), (short)42);
+                        Assert.Equal(database.Query<short?>($"select cast(42 as smallint)").Single(), (short?)42);
+                        Assert.Equal(database.Query<short?>($"select cast(null as smallint)").Single(), (short?)null);
+
+                        var row = database.Query<WithInt16Values>($"select cast(1 as smallint) as NonNullableInt16, cast(2 as smallint) as NullableInt16")
+                                          .Single();
+                        Assert.Equal(row.NonNullableInt16, (short)1);
+                        Assert.Equal(row.NullableInt16, (short)2);
+
+                        row = database.Query<WithInt16Values>($"select cast(5 as smallint) as NonNullableInt16, cast(null as smallint) as NullableInt16")
+                                      .Single();
+                        Assert.Equal(row.NonNullableInt16, (short)5);
+                        Assert.Equal(row.NullableInt16, (short?)null);
+                    }
+                }
+
+                [Fact]
+                public void TestInt32Usage()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        Assert.Equal(database.Query<int>($"select cast(42 as int)").Single(), (int)42);
+                        Assert.Equal(database.Query<int?>($"select cast(42 as int)").Single(), (int?)42);
+                        Assert.Equal(database.Query<int?>($"select cast(null as int)").Single(), (int?)null);
+
+                        var row = database.Query<WithInt32Values>($"select cast(1 as int) as NonNullableInt32, cast(2 as int) as NullableInt32")
+                                          .Single();
+                        Assert.Equal(row.NonNullableInt32, (int)1);
+                        Assert.Equal(row.NullableInt32, (int)2);
+
+                        row = database.Query<WithInt32Values>($"select cast(5 as int) as NonNullableInt32, cast(null as int) as NullableInt32")
+                                      .Single();
+                        Assert.Equal(row.NonNullableInt32, (int)5);
+                        Assert.Equal(row.NullableInt32, (int?)null);
+                    }
+                }
+
+                public class WithInt16Values
+                {
+                    public short NonNullableInt16 { get; set; }
+                    public short? NullableInt16 { get; set; }
+                }
+
+                public class WithInt32Values
+                {
+                    public int NonNullableInt32 { get; set; }
+                    public int? NullableInt32 { get; set; }
+                }
+
+                [Fact]
+                public void PassInIntArray()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
+                    {
+                        Assert.Equal(
+                            new[] { 1, 2, 3 },
+                            database.Query<int>(
+                                $"select * from (select 1 as Id union all select 2 union all select 3) as X where Id = ANY ({new[] { 1, 2, 3 }.AsEnumerable()})")
+                        );
+                    }
+                }
+
+                [Fact]
+                public void PassInEmptyIntArray()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
+                    {
+                        Assert.Equal(
+                            new int[0],
+                            database.Query<int>($"select * from (select 1 as Id union all select 2 union all select 3) as X where Id = ANY ({new int[0]})")
+                        );
+                    }
+                }
+
+                // see https://stackoverflow.com/questions/13127886/dapper-returns-null-for-singleordefaultdatediff
+                [Fact]
+                public void TestNullFromInt_NoRows()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var result = database.Query<int>( // case with rows
+                                                 $"select DATEDIFF(day, GETUTCDATE(), {DateTime.UtcNow.AddDays(20)})")
+                                             .SingleOrDefault();
+                        Assert.Equal(20, result);
+
+                        result = database.Query<int>( // case without rows
+                                             $"select DATEDIFF(day, GETUTCDATE(), {DateTime.UtcNow.AddDays(20)}) where 1 = 0")
+                                         .SingleOrDefault();
+                        Assert.Equal(0, result); // zero rows; default of int over zero rows is zero
+                    }
+                }
+            }
+
+            public class Doubles
+                : Query
+            {
+                [Fact]
+                public void TestDoubleParam()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        Assert.Equal(0.1d, database.Query<double>($"select {0.1d}").First());
                     }
                 }
             }
 
             public class Decimals
-                : Execute
+                : Query
             {
                 [Fact]
                 public void BasicDecimals()
@@ -139,7 +819,8 @@
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
                         var row = database.Query<HasDoubleDecimal>(
-                            $"select cast(1 as float) as A, cast(2 as float) as B, cast(3 as decimal) as C, cast(4 as decimal) as D").Single();
+                                              $"select cast(1 as float) as A, cast(2 as float) as B, cast(3 as decimal) as C, cast(4 as decimal) as D")
+                                          .Single();
                         row.A.Equals(1.0);
                         row.B.Equals(2.0);
                         row.C.Equals(3.0M);
@@ -153,7 +834,8 @@
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
                         var row = database.Query<HasDoubleDecimal>(
-                            $"select cast(1 as decimal) as A, cast(2 as decimal) as B, cast(3 as float) as C, cast(4 as float) as D").Single();
+                                              $"select cast(1 as decimal) as A, cast(2 as decimal) as B, cast(3 as float) as C, cast(4 as float) as D")
+                                          .Single();
                         row.A.Equals(1.0);
                         row.B.Equals(2.0);
                         row.C.Equals(3.0M);
@@ -167,8 +849,8 @@
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
                         var row = database.Query<HasDoubleDecimal>(
-                                          $"select cast(null as decimal) as A, cast(null as decimal) as B, cast(null as float) as C, cast(null as float) as D")
-                                      .Single();
+                                              $"select cast(null as decimal) as A, cast(null as decimal) as B, cast(null as float) as C, cast(null as float) as D")
+                                          .Single();
                         row.A.Equals(0.0);
                         Assert.Null(row.B);
                         row.C.Equals(0.0M);
@@ -183,6 +865,108 @@
                     public decimal C { get; set; }
                     public decimal? D { get; set; }
                 }
+            }
+
+            public class Booleans
+                : Query
+            {
+                [Fact]
+                public void TestBoolParam()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        Assert.False(database.Query<bool>($"select {false}").First());
+                    }
+                }
+
+                [Fact]
+                public void Issue_40_AutomaticBoolConversion()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var user = database.Query<Issue40_User>($"select UserId=1,Email='abc',Password='changeme',Active=cast(1 as tinyint)").Single();
+                        Assert.True(user.Active);
+                        Assert.Equal(1, user.UserID);
+                        Assert.Equal("abc", user.Email);
+                        Assert.Equal("changeme", user.Password);
+                    }
+                }
+
+                public class Issue40_User
+                {
+                    public Issue40_User()
+                    {
+                        this.Email = this.Password = string.Empty;
+                    }
+
+                    public int UserID { get; set; }
+                    public string Email { get; set; }
+                    public string Password { get; set; }
+                    public bool Active { get; set; }
+                }
+            }
+
+            public class Guids
+                : Query
+            {
+                [Fact]
+                public void TestNullableGuidSupport()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var guid = database.Query<Guid?>($"select null").First();
+                        Assert.Null(guid);
+
+                        guid = Guid.NewGuid();
+                        var guid2 = database.Query<Guid?>($"select {guid}").First();
+                        Assert.Equal(guid, guid2);
+                    }
+                }
+
+                [Fact]
+                public void TestNonNullableGuidSupport()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var guid = Guid.NewGuid();
+                        var guid2 = database.Query<Guid?>($"select {guid}").First();
+                        Assert.True(guid == guid2);
+                    }
+                }
+
+                [Fact]
+                public void TestUniqueIdentifier()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var guid = Guid.NewGuid();
+                        var result = database.Query<Guid>($"declare @foo uniqueidentifier set @foo = {guid} select @foo").Single();
+                        Assert.Equal(guid, result);
+                    }
+                }
+
+                [Fact]
+                public void TestNullableUniqueIdentifierNonNull()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        Guid? guid = Guid.NewGuid();
+                        var result = database.Query<Guid?>($"declare @foo uniqueidentifier set @foo = {guid} select @foo").Single();
+                        Assert.Equal(guid, result);
+                    }
+                }
+
+                [Fact]
+                public void TestNullableUniqueIdentifierNull()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        Guid? guid = null;
+                        var result = database.Query<Guid?>($"declare @foo uniqueidentifier set @foo = {guid} select @foo").Single();
+                        Assert.Equal(guid, result);
+                    }
+                }
+
             }
 
             public class Enums
@@ -230,9 +1014,7 @@
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        const EnumParam a = EnumParam.A;
-                        const EnumParam b = EnumParam.B, c = 0;
-                        var obj = database.Query<EnumParamObjectNonNullable>($"select {a} as A, {b} as B, {c} as C").Single();
+                        var obj = database.Query<EnumParamObjectNonNullable>($"select {EnumParam.A} as A, {EnumParam.B} as B, {(EnumParam)0} as C").Single();
                         Assert.Equal(EnumParam.A, obj.A);
                         Assert.Equal(EnumParam.B, obj.B);
                         Assert.Equal(obj.C, (EnumParam)0);
@@ -283,9 +1065,173 @@
                 {
                     public TestEnum EnumEnum { get; set; }
                 }
+
+
+                [Fact]
+                public void Issue142_FailsNamedStatus()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var row1 = database.Query<Issue142_Status>($"select {StatusType.Started} as [Status]").Single();
+                        Assert.Equal(StatusType.Started, row1.Status);
+
+                        var row2 = database.Query<Issue142_StatusType>($"select {StatusType.Started} as [Status]").Single();
+                        Assert.Equal(Status.Started, row2.Status);
+                    }
+                }
+
+                public class Issue142_Status
+                {
+                    public StatusType Status { get; set; }
+                }
+
+                public class Issue142_StatusType
+                {
+                    public Status Status { get; set; }
+                }
+
+                public enum StatusType : byte
+                {
+                    NotStarted = 1,
+                    Started = 2,
+                    Finished = 3
+                }
+
+                public enum Status : byte
+                {
+                    NotStarted = 1,
+                    Started = 2,
+                    Finished = 3
+                }
+
+                [Fact]
+                public void TestInt16Usage()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        Assert.Equal(database.Query<ShortEnum>($"select cast(42 as smallint)").Single(), (ShortEnum)42);
+                        Assert.Equal(database.Query<ShortEnum?>($"select cast(42 as smallint)").Single(), (ShortEnum?)42);
+                        Assert.Equal(database.Query<ShortEnum?>($"select cast(null as smallint)").Single(), (ShortEnum?)null);
+
+                        var row = database
+                                  .Query<WithInt16Values>($"select cast(3 as smallint) as NonNullableInt16Enum, cast(4 as smallint) as NullableInt16Enum")
+                                  .Single();
+                        Assert.Equal(ShortEnum.Three, row.NonNullableInt16Enum);
+                        Assert.Equal(ShortEnum.Four, row.NullableInt16Enum);
+
+                        row = database.Query<WithInt16Values>(
+                                          $"select cast(6 as smallint) as NonNullableInt16Enum, cast(null as smallint) as NullableInt16Enum")
+                                      .Single();
+                        Assert.Equal(ShortEnum.Six, row.NonNullableInt16Enum);
+                        Assert.Equal(row.NullableInt16Enum, (ShortEnum?)null);
+                    }
+                }
+
+                [Fact]
+                public void TestInt32Usage()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        Assert.Equal(database.Query<IntEnum>($"select cast(42 as int)").Single(), (IntEnum)42);
+                        Assert.Equal(database.Query<IntEnum?>($"select cast(42 as int)").Single(), (IntEnum?)42);
+                        Assert.Equal(database.Query<IntEnum?>($"select cast(null as int)").Single(), (IntEnum?)null);
+
+                        var row = database.Query<WithInt32Values>($"select cast(3 as int) as NonNullableInt32Enum, cast(4 as int) as NullableInt32Enum")
+                                          .Single();
+                        Assert.Equal(IntEnum.Three, row.NonNullableInt32Enum);
+                        Assert.Equal(IntEnum.Four, row.NullableInt32Enum);
+
+                        row = database.Query<WithInt32Values>($"select cast(6 as int) as NonNullableInt32Enum, cast(null as int) as NullableInt32Enum")
+                                      .Single();
+                        Assert.Equal(IntEnum.Six, row.NonNullableInt32Enum);
+                        Assert.Equal(row.NullableInt32Enum, (IntEnum?)null);
+                    }
+                }
+
+                public class WithInt16Values
+                {
+                    public ShortEnum NonNullableInt16Enum { get; set; }
+                    public ShortEnum? NullableInt16Enum { get; set; }
+                }
+
+                public class WithInt32Values
+                {
+                    public IntEnum NonNullableInt32Enum { get; set; }
+                    public IntEnum? NullableInt32Enum { get; set; }
+                }
+
+                public enum IntEnum : int
+                {
+                    Zero = 0,
+                    One = 1,
+                    Two = 2,
+                    Three = 3,
+                    Four = 4,
+                    Five = 5,
+                    Six = 6
+                }
             }
 
-            public class Parameters
+            public class DateTimes
+                : Query
+            {
+                [Fact]
+                public void TestSimpleNull()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        Assert.Null(database.Query<DateTime?>($"select null").First());
+                    }
+                }
+
+                /// <summary>
+                /// https://connect.microsoft.com/VisualStudio/feedback/details/381934/sqlparameter-dbtype-dbtype-time-sets-the-parameter-to-sqldbtype-datetime-instead-of-sqldbtype-time
+                /// </summary>
+                [Fact]
+                public void TestTimeSpanParam()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        Assert.Equal(database.Query<TimeSpan>($"select {TimeSpan.FromMinutes(42)}").First(), TimeSpan.FromMinutes(42));
+                    }
+                }
+
+                [Fact]
+                public void TestProcedureWithTimeParameter()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var p = new DynamicParameters();
+                        p.Add("a", TimeSpan.FromHours(10), dbType: DbType.Time);
+
+                        database.Execute($@"CREATE PROCEDURE #TestProcWithTimeParameter
+            @a TIME
+            AS 
+            BEGIN
+            SELECT @a
+            END");
+
+                        Assert.Equal(database.RawQuery<TimeSpan>("#TestProcWithTimeParameter", p, CommandType.StoredProcedure).First(),
+                            new TimeSpan(10, 0, 0));
+                    }
+                }
+            }
+
+            public class Binary
+                : Query
+            {
+                [Fact]
+                public void SelectBinary()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        database.Query<byte[]>($"select cast(1 as varbinary(4))").First().SequenceEqual(new byte[] { 1 });
+                    }
+                }
+            }
+
+            public class CustomDynamicParameters
+                : Query
             {
                 private class DbParams
                     : IDynamicParameters, IEnumerable<IDbDataParameter>
@@ -338,116 +1284,6 @@
                     public int Foo { get; set; }
 
                     public string Bar { get; set; }
-                }
-
-                [Fact]
-                public void TestDoubleParam()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        Assert.Equal(0.1d, database.Query<double>($"select {0.1d}").First());
-                    }
-                }
-
-                [Fact]
-                public void TestBoolParam()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        Assert.False(database.Query<bool>($"select {false}").First());
-                    }
-                }
-
-                /// <summary>
-                /// https://connect.microsoft.com/VisualStudio/feedback/details/381934/sqlparameter-dbtype-dbtype-time-sets-the-parameter-to-sqldbtype-datetime-instead-of-sqldbtype-time
-                /// </summary>
-                [Fact]
-                public void TestTimeSpanParam()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        Assert.Equal(database.Query<TimeSpan>($"select {TimeSpan.FromMinutes(42)}").First(), TimeSpan.FromMinutes(42));
-                    }
-                }
-
-                [Fact]
-                public void PassInIntArray()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
-                    {
-                        Assert.Equal(
-                            new[] { 1, 2, 3 },
-                            database.Query<int>(
-                                $"select * from (select 1 as Id union all select 2 union all select 3) as X where Id = ANY ({new[] { 1, 2, 3 }.AsEnumerable()})")
-                        );
-                    }
-                }
-
-                [Fact]
-                public void PassInEmptyIntArray()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
-                    {
-                        Assert.Equal(
-                            new int[0],
-                            database.Query<int>($"select * from (select 1 as Id union all select 2 union all select 3) as X where Id = ANY ({new int[0]})")
-                        );
-                    }
-                }
-
-                [Fact]
-                public void TestMassiveStrings()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var str = new string('X', 20000);
-                        Assert.Equal(database.Query<string>($"select {str}").First(), str);
-                    }
-                }
-
-                [Fact]
-                public void TestNullableGuidSupport()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var guid = database.Query<Guid?>($"select null").First();
-                        Assert.Null(guid);
-
-                        guid = Guid.NewGuid();
-                        var guid2 = database.Query<Guid?>($"select {guid}").First();
-                        Assert.Equal(guid, guid2);
-                    }
-                }
-
-                [Fact]
-                public void TestNonNullableGuidSupport()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var guid = Guid.NewGuid();
-                        var guid2 = database.Query<Guid?>($"select {guid}").First();
-                        Assert.True(guid == guid2);
-                    }
-                }
-
-                [Fact]
-                public void TestParameterInclusionNotSensitiveToCurrentCulture()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        // note this might fail if your database server is case-sensitive
-                        var current = CultureInfo.CurrentCulture;
-                        try
-                        {
-                            CultureInfo.CurrentCulture = new CultureInfo("tr-TR");
-
-                            database.RawQuery<int>("select @pid", new { PId = 1 }).Single();
-                        }
-                        finally
-                        {
-                            CultureInfo.CurrentCulture = current;
-                        }
-                    }
                 }
 
                 [Fact]
@@ -525,6 +1361,7 @@
                         Assert.Equal("two", (string)result.b);
                     }
                 }
+
                 [Fact]
                 public void TestAppendingAList()
                 {
@@ -534,7 +1371,8 @@
                         var list = new int[] { 1, 2, 3 };
                         p.AddDynamicParams(new { list });
 
-                        var result = database.RawQuery<int>("select * from (select 1 A union all select 2 union all select 3) X where A = ANY (@list)", p).ToList();
+                        var result = database.RawQuery<int>("select * from (select 1 A union all select 2 union all select 3) X where A = ANY (@list)", p)
+                                             .ToList();
 
                         Assert.Equal(1, result[0]);
                         Assert.Equal(2, result[1]);
@@ -552,7 +1390,8 @@
                         var args = new Dictionary<string, object> { ["ids"] = list };
                         p.AddDynamicParams(args);
 
-                        var result = database.RawQuery<int>("select * from (select 1 A union all select 2 union all select 3) X where A = ANY (@ids)", p).ToList();
+                        var result = database.RawQuery<int>("select * from (select 1 A union all select 2 union all select 3) X where A = ANY (@ids)", p)
+                                             .ToList();
 
                         Assert.Equal(1, result[0]);
                         Assert.Equal(2, result[1]);
@@ -569,64 +1408,12 @@
                         var list = new int[] { 1, 2, 3 };
                         p.Add("ids", list);
 
-                        var result = database.RawQuery<int>("select * from (select 1 A union all select 2 union all select 3) X where A = ANY (@ids)", p).ToList();
+                        var result = database.RawQuery<int>("select * from (select 1 A union all select 2 union all select 3) X where A = ANY (@ids)", p)
+                                             .ToList();
 
                         Assert.Equal(1, result[0]);
                         Assert.Equal(2, result[1]);
                         Assert.Equal(3, result[2]);
-                    }
-                }
-
-                [Fact]
-                public void TestProcedureWithTimeParameter()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var p = new DynamicParameters();
-                        p.Add("a", TimeSpan.FromHours(10), dbType: DbType.Time);
-
-                        database.Execute($@"CREATE PROCEDURE #TestProcWithTimeParameter
-            @a TIME
-            AS 
-            BEGIN
-            SELECT @a
-            END");
-
-                        Assert.Equal(database.RawQuery<TimeSpan>("#TestProcWithTimeParameter", p, CommandType.StoredProcedure).First(),
-                            new TimeSpan(10, 0, 0));
-                    }
-                }
-
-                [Fact]
-                public void TestUniqueIdentifier()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var guid = Guid.NewGuid();
-                        var result = database.Query<Guid>($"declare @foo uniqueidentifier set @foo = {guid} select @foo").Single();
-                        Assert.Equal(guid, result);
-                    }
-                }
-
-                [Fact]
-                public void TestNullableUniqueIdentifierNonNull()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        Guid? guid = Guid.NewGuid();
-                        var result = database.Query<Guid?>($"declare @foo uniqueidentifier set @foo = {guid} select @foo").Single();
-                        Assert.Equal(guid, result);
-                    }
-                }
-
-                [Fact]
-                public void TestNullableUniqueIdentifierNull()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        Guid? guid = null;
-                        var result = database.Query<Guid?>($"declare @foo uniqueidentifier set @foo = {guid} select @foo").Single();
-                        Assert.Equal(guid, result);
                     }
                 }
 
@@ -707,71 +1494,12 @@
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
                         var parameters = new Dictionary<string, object>
-                        {
-                            ["param1"] = 0
-                        };
+                            {
+                                ["param1"] = 0
+                            };
 
                         database.RawQuery<dynamic>("SELECT @param1", parameters);
                     }
-                }
-                [Fact]
-                public void TestParameterWithIndexer()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        database.Execute($@"create proc #TestProcWithIndexer 
-                	@A int
-                as 
-                begin
-                	select @A
-                end");
-
-                        var item = database.RawQuery<int>("#TestProcWithIndexer", new ParameterWithIndexer(), CommandType.StoredProcedure).Single();
-                    }
-                }
-
-                public class ParameterWithIndexer
-                {
-                    public int A { get; set; }
-                    public virtual string this[string columnName]
-                    {
-                        get { return null; }
-                        set { }
-                    }
-                }
-
-                [Fact]
-                public void TestMultipleParametersWithIndexer()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var order = database.Query<MultipleParametersWithIndexer>($"select 1 A,2 B").First();
-
-                        Assert.Equal(1, order.A);
-                        Assert.Equal(2, order.B);
-                    }
-                }
-
-                public class MultipleParametersWithIndexer : MultipleParametersWithIndexerDeclaringType
-                {
-                    public int A { get; set; }
-                }
-
-                public class MultipleParametersWithIndexerDeclaringType
-                {
-                    public object this[object field]
-                    {
-                        get { return null; }
-                        set { }
-                    }
-
-                    public object this[object field, int index]
-                    {
-                        get { return null; }
-                        set { }
-                    }
-
-                    public int B { get; set; }
                 }
 
                 [Fact]
@@ -808,672 +1536,6 @@
                         // note this might fail if your database server is case-sensitive
                         Assert.Equal(new[] { 1 },
                             database.RawQuery<int>("select * from (select 1 as Id) as X where Id = ANY (@ids)", new { Ids = new[] { 1 } }));
-                    }
-                }
-
-                [Fact]
-                public void SelectListInt()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        Assert.Equal(new[] { 1, 2, 3 }, database.Query<int>($"select 1 union all select 2 union all select 3"));
-                    }
-                }
-
-                [Fact]
-                public void SelectBinary()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        database.Query<byte[]>($"select cast(1 as varbinary(4))").First().SequenceEqual(new byte[] { 1 });
-                    }
-                }
-
-                [Fact]
-                public void TestSchemaChanged()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        database.Execute($"create table #dog(Age int, Name nvarchar(max)) insert #dog values(1, 'Alf')");
-                        try
-                        {
-                            var d = database.Query<Dog>($"select * from #dog").Single();
-                            Assert.Equal("Alf", d.Name);
-                            Assert.Equal(1, d.Age);
-                            database.Execute($"alter table #dog drop column Name");
-                            d = database.Query<Dog>($"select * from #dog").Single();
-                            Assert.Null(d.Name);
-                            Assert.Equal(1, d.Age);
-                        }
-                        finally
-                        {
-                            database.Execute($"drop table #dog");
-                        }
-                    }
-                }
-
-                [Fact]
-                public void TestStrings()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        Assert.Equal(new[] { "a", "b" }, database.Query<string>($"select 'a' a union select 'b'"));
-                    }
-                }
-
-                /// <summary>
-                /// see https://stackoverflow.com/questions/16726709/string-format-with-sql-wildcard-causing-dapper-query-to-break
-                /// </summary>
-                [Fact]
-                public void CheckComplexConcat()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        FormattableString end_wildcard = $@"
-SELECT * FROM #users16726709
-WHERE (first_name LIKE CONCAT({"F"}, '%') OR last_name LIKE CONCAT({"F"}, '%'));";
-
-                        FormattableString both_wildcards = $@"
-SELECT * FROM #users16726709
-WHERE (first_name LIKE CONCAT('%', {"F"}, '%') OR last_name LIKE CONCAT('%', {"F"}, '%'));";
-
-                        FormattableString formatted = $@"
-SELECT * FROM #users16726709
-WHERE (first_name LIKE CONCAT({"F"}, '%') OR last_name LIKE CONCAT({"F"}, '%'));";
-
-                        // if true, slower query due to not being able to use indices, but will allow searching inside strings 
-
-                        database.Execute($@"create table #users16726709 (first_name varchar(200), last_name varchar(200))
-insert #users16726709 values ('Fred','Bloggs') insert #users16726709 values ('Tony','Farcus') insert #users16726709 values ('Albert','TenoF')");
-
-                        // Using Dapper
-                        Assert.Equal(2, database.Query<dynamic>(end_wildcard).Count());
-                        Assert.Equal(3, database.Query<dynamic>(both_wildcards).Count());
-                        Assert.Equal(2, database.Query<dynamic>(formatted).Count());
-                    }
-                }
-                [Fact]
-                public void TestExtraFields()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var guid = Guid.NewGuid();
-                        var dog = database.Query<Dog>($"select '' as Extra, 1 as Age, 0.1 as Name1 , Id = {guid}");
-
-                        Assert.Single(dog);
-                        Assert.Equal(1, dog.First().Age);
-                        Assert.Equal(dog.First().Id, guid);
-                    }
-                }
-
-                [Fact]
-                public void TestStrongType()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var guid = Guid.NewGuid();
-                        var dog = database.Query<Dog>($"select Age = {(int?)null}, Id = {guid}");
-
-                        Assert.Single(dog);
-                        Assert.Null(dog.First().Age);
-                        Assert.Equal(dog.First().Id, guid);
-                    }
-                }
-
-                [Fact]
-                public void TestSimpleNull()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        Assert.Null(database.Query<DateTime?>($"select null").First());
-                    }
-                }
-
-                [Fact]
-                public void TestStringList()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
-                    {
-                        var values = new[] { "a", "b", "c" }.ToList();
-                        database.Query<string>(
-                                    $@"
-select * from (select 'a' as x union all select 'b' union all select 'c') as T 
-where x = ANY ({values})")
-                                .ShouldAllBeEquivalentTo(values);
-
-                        var emptyList = new string[0].ToList();
-                        database.Query<string>($"select * from (select 'a' as x union all select 'b' union all select 'c') as T where x = ANY ({emptyList})")
-                                .Should().BeEmpty();
-                    }
-                }
-
-                private class TestObj
-                {
-                    public int _internal;
-                    internal int Internal
-                    {
-                        set { this._internal = value; }
-                    }
-
-                    public int _priv;
-                    private int Priv
-                    {
-                        set { this._priv = value; }
-                    }
-
-                    private int PrivGet => this._priv;
-                }
-
-                [Fact]
-                public void TestSetInternal()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        Assert.Equal(default, database.Query<TestObj>($"select 10 as [Internal]").First()._internal);
-                    }
-                }
-
-                [Fact]
-                public void Does_not_set_private_properties()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        Assert.Equal(default, database.Query<TestObj>($"select 10 as [Priv]").First()._priv);
-                    }
-                }
-
-                [Fact]
-                public void TestNakedBigInt()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        const long foo = 12345;
-                        var result = database.Query<long>($"select {foo}").Single();
-                        Assert.Equal(foo, result);
-                    }
-                }
-
-                [Fact]
-                public void TestBigIntMember()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        const long foo = 12345;
-                        var result = database.Query<WithBigInt>($@"
-declare @bar table(Value bigint)
-insert @bar values ({foo})
-select * from @bar").Single();
-                        Assert.Equal(result.Value, foo);
-                    }
-                }
-
-                private class WithBigInt
-                {
-                    public long Value { get; set; }
-                }
-
-                [Fact]
-                public void Does_not_populate_fields()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var data = database.Query<TestFieldsEntity>($"select a=1,b=2,c=3").Single();
-                        Assert.Equal(default, data.a);
-                        Assert.Equal(5, data.b);
-                        Assert.Equal(default, data.GetC());
-                    }
-                }
-
-                private class TestFieldsEntity
-                {
-                    public int a;
-
-                    public int b = 5;
-
-                    private int c;
-
-                    public int GetC()
-                    {
-                        return c;
-                    }
-                }
-
-                private class InheritanceTest1
-                {
-                    public string Base1 { get; set; }
-                }
-
-                private class InheritanceTest2 : InheritanceTest1
-                {
-                    public string Derived1 { get; set; }
-                }
-
-                [Fact]
-                public void TestInheritance()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        // Act
-                        var result = database.Query<InheritanceTest2>($"select 'One' as Derived1, 'Two' as Base1").First();
-
-                        // Assert
-                        Assert.Equal("One", result.Derived1);
-                        Assert.Equal("Two", result.Base1);
-                    }
-                }
-
-                [Fact]
-                public void TestDbString()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var a = new DbString { Value = "abcde", IsFixedLength = true, Length = 10, IsAnsi = true };
-                        var b = new DbString { Value = "abcde", IsFixedLength = true, Length = 10, IsAnsi = false };
-                        var c = new DbString { Value = "abcde", IsFixedLength = false, Length = 10, IsAnsi = true };
-                        var d = new DbString { Value = "abcde", IsFixedLength = false, Length = 10, IsAnsi = false };
-                        var e = new DbString { Value = "abcde", IsAnsi = true };
-                        var f = new DbString { Value = "abcde", IsAnsi = false };
-
-                        var obj = database.Query<DbStringTestEntity>(
-                                              $"select datalength({a}) as a, datalength({b}) as b, datalength({c}) as c, datalength({d}) as d, datalength({e}) as e, datalength({f}) as f")
-                                          .First();
-
-                        obj.ShouldBeEquivalentTo(new DbStringTestEntity
-                            {
-                                A = 10,
-                                B = 20,
-                                C = 5,
-                                D = 10,
-                                E = 5,
-                                F = 10
-                            });
-                    }
-                }
-
-                private class DbStringTestEntity
-                {
-                    public int A { get; set; }
-
-                    public int B { get; set; }
-
-                    public int C { get; set; }
-
-                    public int D { get; set; }
-
-                    public int E { get; set; }
-
-                    public int F { get; set; }
-                }
-
-                private class WithCharValue
-                {
-                    public char Value { get; set; }
-                    public char? ValueNullable { get; set; }
-                }
-
-                [Fact]
-                public void TestCharInputAndOutput()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        const char test = '〠';
-                        char c = database.Query<char>($"select {test}").Single();
-
-                        Assert.Equal(c, test);
-
-                        var obj = database.Query<WithCharValue>($"select {c} as Value").Single();
-
-                        Assert.Equal(obj.Value, test);
-                    }
-                }
-
-                [Fact]
-                public void TestNullableCharInputAndOutputNonNull()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        char? test = '〠';
-                        char? c = database.Query<char?>($"select {test}").Single();
-
-                        Assert.Equal(c, test);
-
-                        var obj = database.Query<WithCharValue>($"select {c} as ValueNullable").Single();
-
-                        Assert.Equal(obj.ValueNullable, test);
-                    }
-                }
-
-                [Fact]
-                public void TestNullableCharInputAndOutputNull()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        char? test = null;
-                        char? c = database.Query<char?>($"select {test}").Single();
-
-                        Assert.Equal(c, test);
-
-                        var obj = database.Query<WithCharValue>($"select {c} as ValueNullable").Single();
-
-                        Assert.Equal(obj.ValueNullable, test);
-                    }
-                }
-
-                [Fact]
-                public void WorkDespiteHavingWrongColumnTypes()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var hazInt = database.Query<CanHazInt>($"select cast(1 as bigint) Value").Single();
-                        hazInt.Value.Equals(1);
-                    }
-                }
-
-                private class CanHazInt
-                {
-                    public int Value { get; set; }
-                }
-
-                [Fact]
-                public void TestInt16Usage()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        Assert.Equal(database.Query<short>($"select cast(42 as smallint)").Single(), (short)42);
-                        Assert.Equal(database.Query<short?>($"select cast(42 as smallint)").Single(), (short?)42);
-                        Assert.Equal(database.Query<short?>($"select cast(null as smallint)").Single(), (short?)null);
-
-                        Assert.Equal(database.Query<ShortEnum>($"select cast(42 as smallint)").Single(), (ShortEnum)42);
-                        Assert.Equal(database.Query<ShortEnum?>($"select cast(42 as smallint)").Single(), (ShortEnum?)42);
-                        Assert.Equal(database.Query<ShortEnum?>($"select cast(null as smallint)").Single(), (ShortEnum?)null);
-
-                        var row =
-                            database.Query<WithInt16Values>(
-                                    $"select cast(1 as smallint) as NonNullableInt16, cast(2 as smallint) as NullableInt16, cast(3 as smallint) as NonNullableInt16Enum, cast(4 as smallint) as NullableInt16Enum")
-                                .Single();
-                        Assert.Equal(row.NonNullableInt16, (short)1);
-                        Assert.Equal(row.NullableInt16, (short)2);
-                        Assert.Equal(ShortEnum.Three, row.NonNullableInt16Enum);
-                        Assert.Equal(ShortEnum.Four, row.NullableInt16Enum);
-
-                        row =
-                            database.Query<WithInt16Values>(
-                                    $"select cast(5 as smallint) as NonNullableInt16, cast(null as smallint) as NullableInt16, cast(6 as smallint) as NonNullableInt16Enum, cast(null as smallint) as NullableInt16Enum")
-                                .Single();
-                        Assert.Equal(row.NonNullableInt16, (short)5);
-                        Assert.Equal(row.NullableInt16, (short?)null);
-                        Assert.Equal(ShortEnum.Six, row.NonNullableInt16Enum);
-                        Assert.Equal(row.NullableInt16Enum, (ShortEnum?)null);
-                    }
-                }
-
-                [Fact]
-                public void TestInt32Usage()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        Assert.Equal(database.Query<int>($"select cast(42 as int)").Single(), (int)42);
-                        Assert.Equal(database.Query<int?>($"select cast(42 as int)").Single(), (int?)42);
-                        Assert.Equal(database.Query<int?>($"select cast(null as int)").Single(), (int?)null);
-
-                        Assert.Equal(database.Query<IntEnum>($"select cast(42 as int)").Single(), (IntEnum)42);
-                        Assert.Equal(database.Query<IntEnum?>($"select cast(42 as int)").Single(), (IntEnum?)42);
-                        Assert.Equal(database.Query<IntEnum?>($"select cast(null as int)").Single(), (IntEnum?)null);
-
-                        var row =
-                            database.Query<WithInt32Values>(
-                                    $"select cast(1 as int) as NonNullableInt32, cast(2 as int) as NullableInt32, cast(3 as int) as NonNullableInt32Enum, cast(4 as int) as NullableInt32Enum")
-                                .Single();
-                        Assert.Equal(row.NonNullableInt32, (int)1);
-                        Assert.Equal(row.NullableInt32, (int)2);
-                        Assert.Equal(IntEnum.Three, row.NonNullableInt32Enum);
-                        Assert.Equal(IntEnum.Four, row.NullableInt32Enum);
-
-                        row =
-                            database.Query<WithInt32Values>(
-                                    $"select cast(5 as int) as NonNullableInt32, cast(null as int) as NullableInt32, cast(6 as int) as NonNullableInt32Enum, cast(null as int) as NullableInt32Enum")
-                                .Single();
-                        Assert.Equal(row.NonNullableInt32, (int)5);
-                        Assert.Equal(row.NullableInt32, (int?)null);
-                        Assert.Equal(IntEnum.Six, row.NonNullableInt32Enum);
-                        Assert.Equal(row.NullableInt32Enum, (IntEnum?)null);
-                    }
-                }
-
-                public class WithInt16Values
-                {
-                    public short NonNullableInt16 { get; set; }
-                    public short? NullableInt16 { get; set; }
-                    public ShortEnum NonNullableInt16Enum { get; set; }
-                    public ShortEnum? NullableInt16Enum { get; set; }
-                }
-
-                public class WithInt32Values
-                {
-                    public int NonNullableInt32 { get; set; }
-                    public int? NullableInt32 { get; set; }
-                    public IntEnum NonNullableInt32Enum { get; set; }
-                    public IntEnum? NullableInt32Enum { get; set; }
-                }
-
-                public enum IntEnum : int
-                {
-                    Zero = 0, One = 1, Two = 2, Three = 3, Four = 4, Five = 5, Six = 6
-                }
-
-                [Fact]
-                public void Issue_40_AutomaticBoolConversion()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var user = database.Query<Issue40_User>($"select UserId=1,Email='abc',Password='changeme',Active=cast(1 as tinyint)").Single();
-                        Assert.True(user.Active);
-                        Assert.Equal(1, user.UserID);
-                        Assert.Equal("abc", user.Email);
-                        Assert.Equal("changeme", user.Password);
-                    }
-                }
-
-                public class Issue40_User
-                {
-                    public Issue40_User()
-                    {
-                        this.Email = this.Password = string.Empty;
-                    }
-
-                    public int UserID { get; set; }
-                    public string Email { get; set; }
-                    public string Password { get; set; }
-                    public bool Active { get; set; }
-                }
-
-                // see https://stackoverflow.com/questions/13127886/dapper-returns-null-for-singleordefaultdatediff
-                [Fact]
-                public void TestNullFromInt_NoRows()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var result = database.Query<int>( // case with rows
-                                                 $"select DATEDIFF(day, GETUTCDATE(), {DateTime.UtcNow.AddDays(20)})")
-                                             .SingleOrDefault();
-                        Assert.Equal(20, result);
-
-                        result = database.Query<int>( // case without rows
-                                             $"select DATEDIFF(day, GETUTCDATE(), {DateTime.UtcNow.AddDays(20)}) where 1 = 0")
-                                         .SingleOrDefault();
-                        Assert.Equal(0, result); // zero rows; default of int over zero rows is zero
-                    }
-                }
-
-                [Fact]
-                public void DbStringAnsi()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var a = database.Query<int>($"select datalength({new DbString { Value = "abc", IsAnsi = true }})").Single();
-                        var b = database.Query<int>($"select datalength({new DbString { Value = "abc", IsAnsi = false }})").Single();
-                        Assert.Equal(3, a);
-                        Assert.Equal(6, b);
-                    }
-                }
-
-                private class HasInt32
-                {
-                    public int Value { get; set; }
-                }
-
-                // https://stackoverflow.com/q/23696254/23354
-                [Fact]
-                public void DownwardIntegerConversion()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        FormattableString sql = $"select cast(42 as bigint) as Value";
-                        int i = database.Query<HasInt32>(sql).Single().Value;
-                        Assert.Equal(42, i);
-
-                        i = database.Query<int>(sql).Single();
-                        Assert.Equal(42, i);
-                    }
-                }
-
-                private T CheetViaDynamic<T>(T template, FormattableString sql)
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        return database.Query<T>(sql).SingleOrDefault();
-                    }
-                }
-
-                [Fact]
-                public void Issue142_FailsNamedStatus()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var row1 = database.Query<Issue142_Status>($"select {StatusType.Started} as [Status]").Single();
-                        Assert.Equal(StatusType.Started, row1.Status);
-
-                        var row2 = database.Query<Issue142_StatusType>($"select {StatusType.Started} as [Status]").Single();
-                        Assert.Equal(Status.Started, row2.Status);
-                    }
-                }
-
-                public class Issue142_Status
-                {
-                    public StatusType Status { get; set; }
-                }
-
-                public class Issue142_StatusType
-                {
-                    public Status Status { get; set; }
-                }
-
-                public enum StatusType : byte
-                {
-                    NotStarted = 1, Started = 2, Finished = 3
-                }
-
-                public enum Status : byte
-                {
-                    NotStarted = 1, Started = 2, Finished = 3
-                }
-
-                [Fact]
-                public void TestUnexpectedDataMessage()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        string msg = null;
-                        try
-                        {
-                            var i = database.RawQuery<int>("select count(1) where 1 = @Foo", new { Foo = new UnhandledType(UnhandledTypeOptions.Default) }).First();
-                        }
-                        catch (Exception ex)
-                        {
-                            msg = ex.Message;
-                        }
-
-                        Assert.Equal("The member Foo of type PeregrineDb.Tests.Databases.UnhandledType cannot be used as a parameter value", msg);
-                    }
-                }
-
-                [Fact]
-                public void TestUnexpectedButFilteredDataMessage()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var i = database.RawQuery<int>("select @Bar", new { Foo = new UnhandledType(UnhandledTypeOptions.Default), Bar = 23 }).Single();
-
-                        Assert.Equal(23, i);
-                    }
-                }
-
-                [Fact]
-                public void QueryBasicWithoutQuery()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        database.Query<int?>($"print 'not a query'").Should().BeEmpty();
-                    }
-                }
-
-                [Fact]
-                public void QueryComplexWithoutQuery()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        database.Query<Foo1>($"print 'not a query'").Should().BeEmpty();
-                    }
-                }
-
-                [FactLongRunning]
-                public void Issue263_Timeout()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var watch = Stopwatch.StartNew();
-                        var i = database.Query<int>($"waitfor delay '00:01:00'; select 42;", 300).Single();
-                        watch.Stop();
-                        Assert.Equal(42, i);
-                        var minutes = watch.ElapsedMilliseconds / 1000 / 60;
-                        Assert.True(minutes >= 0.95 && minutes <= 1.05);
-                    }
-                }
-
-                [Fact]
-                public void SO30435185_InvalidTypeOwner()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var ex = Assert.Throws<InvalidOperationException>(() =>
-                        {
-                            const string sql = @"INSERT INTO #XXX
-                        (XXXId, AnotherId, ThirdId, Value, Comment)
-                        VALUES
-                        (@XXXId, @AnotherId, @ThirdId, @Value, @Comment); select @@rowcount as [Foo]";
-
-                            var command = new
-                            {
-                                MyModels = new[]
-                                        {
-                                    new { XXXId = 1, AnotherId = 2, ThirdId = 3, Value = "abc", Comment = "def" }
-                                }
-                            };
-                            var parameters = command.MyModels
-                                                    .Select(model => new
-                                                    {
-                                                        XXXId = model.XXXId,
-                                                        AnotherId = model.AnotherId,
-                                                        ThirdId = model.ThirdId,
-                                                        Value = model.Value,
-                                                        Comment = model.Comment
-                                                    })
-                                                    .ToArray();
-
-                            var rowcount = (int)database.RawQuery<dynamic>(sql, parameters).Single().Foo;
-                            Assert.Equal(1, rowcount);
-                        });
-                        Assert.Equal("An enumerable sequence of parameters (arrays, lists, etc) is not allowed in this context", ex.Message);
                     }
                 }
 
@@ -1530,134 +1592,37 @@ select * from @data").ToDictionary(_ => _.Id);
                 }
             }
 
-            public class TableValuedParameters
-            : Query
+            public class UnhandledMethods
+                : Query
             {
-                private static List<Microsoft.SqlServer.Server.SqlDataRecord> CreateSqlDataRecordList(IEnumerable<int> numbers)
+                [Fact]
+                public void TestUnexpectedDataMessage()
                 {
-                    var numberList = new List<Microsoft.SqlServer.Server.SqlDataRecord>();
-
-                    // Create an SqlMetaData object that describes our table type.
-                    Microsoft.SqlServer.Server.SqlMetaData[] tvpDefinition = { new Microsoft.SqlServer.Server.SqlMetaData("n", SqlDbType.Int) };
-
-                    foreach (var n in numbers)
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        // Create a new record, using the metadata array above.
-                        var rec = new Microsoft.SqlServer.Server.SqlDataRecord(tvpDefinition);
-                        rec.SetInt32(0, n); // Set the value.
-                        numberList.Add(rec); // Add it to the list.
-                    }
+                        string msg = null;
+                        try
+                        {
+                            var i = database.RawQuery<int>("select count(1) where 1 = @Foo", new { Foo = new UnhandledType(UnhandledTypeOptions.Default) })
+                                            .First();
+                        }
+                        catch (Exception ex)
+                        {
+                            msg = ex.Message;
+                        }
 
-                    return numberList;
-                }
-
-                private class IntDynamicParam : IDynamicParameters
-                {
-                    private readonly IEnumerable<int> numbers;
-
-                    public IntDynamicParam(IEnumerable<int> numbers)
-                    {
-                        this.numbers = numbers;
-                    }
-
-                    public void AddParameters(IDbCommand command, Identity identity)
-                    {
-                        var sqlCommand = (SqlCommand)command;
-                        sqlCommand.CommandType = CommandType.StoredProcedure;
-
-                        var number_list = CreateSqlDataRecordList(this.numbers);
-
-                        // Add the table parameter.
-                        var p = sqlCommand.Parameters.Add("ints", SqlDbType.Structured);
-                        p.Direction = ParameterDirection.Input;
-                        p.TypeName = "int_list_type";
-                        p.Value = number_list;
-                    }
-                }
-
-                private class IntCustomParam
-                    : ICustomQueryParameter
-                {
-                    private readonly IEnumerable<int> numbers;
-
-                    public IntCustomParam(IEnumerable<int> numbers)
-                    {
-                        this.numbers = numbers;
-                    }
-
-                    public void AddParameter(IDbCommand command, string name)
-                    {
-                        var sqlCommand = (SqlCommand)command;
-                        sqlCommand.CommandType = CommandType.StoredProcedure;
-
-                        var numberList = CreateSqlDataRecordList(this.numbers);
-
-                        // Add the table parameter.
-                        var p = sqlCommand.Parameters.Add(name, SqlDbType.Structured);
-                        p.Direction = ParameterDirection.Input;
-                        p.TypeName = "int_list_type";
-                        p.Value = numberList;
+                        Assert.Equal("The member Foo of type PeregrineDb.Tests.Databases.UnhandledType cannot be used as a parameter value", msg);
                     }
                 }
 
                 [Fact]
-                public void TestTVPWithAnonymousObject()
+                public void TestUnexpectedButFilteredDataMessage()
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        try
-                        {
-                            database.Execute($"CREATE TYPE int_list_type AS TABLE (n int NOT NULL PRIMARY KEY)");
-                            database.Execute($"CREATE PROC get_ints @integers int_list_type READONLY AS select * from @integers");
+                        var i = database.RawQuery<int>("select @Bar", new { Foo = new UnhandledType(UnhandledTypeOptions.Default), Bar = 23 }).Single();
 
-                            var nums = database.RawQuery<int>("get_ints", new { integers = new IntCustomParam(new[] { 1, 2, 3 }) }, CommandType.StoredProcedure);
-                            Assert.Equal(1, nums[0]);
-                            Assert.Equal(2, nums[1]);
-                            Assert.Equal(3, nums[2]);
-                            Assert.Equal(3, nums.Count);
-                        }
-                        finally
-                        {
-                            try
-                            {
-                                database.Execute($"DROP PROC get_ints");
-                            }
-                            finally
-                            {
-                                database.Execute($"DROP TYPE int_list_type");
-                            }
-                        }
-                    }
-                }
-
-                // SQL Server specific test to demonstrate TVP 
-                [Fact]
-                public void TestTVP()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        try
-                        {
-                            database.Execute($"CREATE TYPE int_list_type AS TABLE (n int NOT NULL PRIMARY KEY)");
-                            database.Execute($"CREATE PROC get_ints @ints int_list_type READONLY AS select * from @ints");
-
-                            var nums = database.RawQuery<int>("get_ints", new IntDynamicParam(new[] { 1, 2, 3 })).ToList();
-                            Assert.Equal(1, nums[0]);
-                            Assert.Equal(2, nums[1]);
-                            Assert.Equal(3, nums[2]);
-                            Assert.Equal(3, nums.Count);
-                        }
-                        finally
-                        {
-                            try
-                            {
-                                database.Execute($"DROP PROC get_ints");
-                            }
-                            finally
-                            {
-                                database.Execute($"DROP TYPE int_list_type");
-                            }
-                        }
+                        Assert.Equal(23, i);
                     }
                 }
             }
