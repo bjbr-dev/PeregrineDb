@@ -23,26 +23,28 @@
             public int Compare(PropertyInfo x, PropertyInfo y) => string.CompareOrdinal(x.Name, y.Name);
         }
 
-        public static Func<IDataReader, object> GetDeserializer(Type type, IDataReader reader, int startBound, int length, bool returnNullIfFirstMissing)
+        public static Func<IDataReader, object> GetDeserializer(Type type, IDataReader reader)
         {
-            Type underlyingType = null;
-            if (!(TypeProvider.ContainsTypeMap(type) || type.IsEnum() || type.FullName == TypeProvider.LinqBinary
-                  || (type.IsValueType() && (underlyingType = Nullable.GetUnderlyingType(type)) != null && underlyingType.IsEnum())))
+            if (TypeProvider.ContainsTypeMap(type) || type.IsEnum())
             {
-                if (TypeProvider.TryGetHandler(type, out var handler))
-                {
-                    return GetHandlerDeserializer(handler, type, startBound);
-                }
-
-                return GetTypeDeserializer(type, reader, startBound, length, returnNullIfFirstMissing);
+                return GetStructDeserializer(type, type, 0);
             }
 
-            return GetStructDeserializer(type, underlyingType ?? type, startBound);
-        }
+            if (type.IsValueType())
+            {
+                var underlyingType = Nullable.GetUnderlyingType(type);
+                if (underlyingType != null && underlyingType.IsEnum())
+                {
+                    return GetStructDeserializer(type, underlyingType, 0);
+                }
+            }
 
-        private static Func<IDataReader, object> GetHandlerDeserializer(IDbTypeConverter converter, Type type, int startBound)
-        {
-            return reader => converter.Parse(type, reader.GetValue(startBound));
+            if (TypeProvider.TryGetHandler(type, out var handler))
+            {
+                return r => handler.Parse(type, r.GetValue(0));
+            }
+
+            return TypeDeserializerCache.GetReader(type, reader);
         }
 
         private static Exception MultiMapException(IDataRecord reader)
@@ -507,12 +509,11 @@
                         il.Emit(OpCodes.Stloc_1); // [string]
                     }
 
-                    if (prop.PropertyType.FullName == TypeProvider.LinqBinary)
+                    if (allDone != null)
                     {
-                        il.EmitCall(OpCodes.Callvirt, prop.PropertyType.GetMethod("ToArray", BindingFlags.Public | BindingFlags.Instance), null);
+                        il.MarkLabel(allDone.Value);
                     }
 
-                    if (allDone != null) il.MarkLabel(allDone.Value);
                     // relative stack [boxed value or DBNull]
                 }
 
@@ -573,11 +574,6 @@
             if (type == typeof(char?))
             {
                 return r => ReadNullableChar(r.GetValue(index));
-            }
-
-            if (type.FullName == TypeProvider.LinqBinary)
-            {
-                return r => Activator.CreateInstance(type, r.GetValue(index));
             }
 
             if (effectiveType.IsEnum())
@@ -704,19 +700,6 @@
             }
 
             QueryCache.PurgeQueryCacheByType(type);
-        }
-
-        /// <summary>
-        /// Internal use only
-        /// </summary>
-        public static Func<IDataReader, object> GetTypeDeserializer(
-            Type type,
-            IDataReader reader,
-            int startBound = 0,
-            int length = -1,
-            bool returnNullIfFirstMissing = false)
-        {
-            return TypeDeserializerCache.GetReader(type, reader, startBound, length, returnNullIfFirstMissing);
         }
 
         private static LocalBuilder GetTempLocal(ILGenerator il, ref Dictionary<Type, LocalBuilder> locals, Type type, bool initAndLoad)
@@ -913,11 +896,6 @@
                             {
                                 il.Emit(OpCodes.Newobj, memberType.GetConstructor(new[] { nullUnderlyingType })); // stack is now [target][target][typed-value]
                             }
-                        }
-                        else if (memberType.FullName == TypeProvider.LinqBinary)
-                        {
-                            il.Emit(OpCodes.Unbox_Any, typeof(byte[])); // stack is now [target][target][byte-array]
-                            il.Emit(OpCodes.Newobj, memberType.GetConstructor(new Type[] { typeof(byte[]) })); // stack is now [target][target][binary]
                         }
                         else
                         {

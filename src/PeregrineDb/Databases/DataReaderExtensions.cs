@@ -14,7 +14,7 @@
             var hash = SqlMapper.GetColumnHash(reader);
             if (tuple.Func == null || tuple.Hash != hash)
             {
-                tuple = info.Deserializer = new DeserializerState(hash, TypeMapper.GetDeserializer(effectiveType, reader, 0, -1, false));
+                tuple = info.Deserializer = new DeserializerState(hash, TypeMapper.GetDeserializer(effectiveType, reader));
                 QueryCache.SetQueryCache(identity, info);
             }
 

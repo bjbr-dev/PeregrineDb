@@ -9,7 +9,6 @@
 
     public static class TypeProvider
     {
-        internal const string LinqBinary = "System.Data.Linq.Binary";
         private static Dictionary<Type, DbType> typeMap;
         private static Dictionary<Type, IDbTypeConverter> typeHandlers;
 
@@ -202,11 +201,6 @@
             if (typeMap.TryGetValue(type, out var dbType))
             {
                 return dbType;
-            }
-
-            if (type.FullName == LinqBinary)
-            {
-                return DbType.Binary;
             }
 
             if (typeHandlers.TryGetValue(type, out converter))

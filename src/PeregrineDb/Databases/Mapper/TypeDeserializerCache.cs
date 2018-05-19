@@ -33,7 +33,7 @@
             }
         }
 
-        internal static Func<IDataReader, object> GetReader(Type type, IDataReader reader, int startBound, int length, bool returnNullIfFirstMissing)
+        internal static Func<IDataReader, object> GetReader(Type type, IDataReader reader)
         {
             var found = (TypeDeserializerCache)byType[type];
             if (found == null)
@@ -47,7 +47,7 @@
                     }
                 }
             }
-            return found.GetReader(reader, startBound, length, returnNullIfFirstMissing);
+            return found.GetReader(reader);
         }
 
         private readonly Dictionary<DeserializerKey, Func<IDataReader, object>> readers = new Dictionary<DeserializerKey, Func<IDataReader, object>>();
@@ -139,21 +139,20 @@
             }
         }
 
-        private Func<IDataReader, object> GetReader(IDataReader reader, int startBound, int length, bool returnNullIfFirstMissing)
+        private Func<IDataReader, object> GetReader(IDataReader reader)
         {
-            if (length < 0) length = reader.FieldCount - startBound;
-            var hash = SqlMapper.GetColumnHash(reader, startBound, length);
-            if (returnNullIfFirstMissing) hash *= -27;
+            var length = reader.FieldCount;
+            var hash = SqlMapper.GetColumnHash(reader, 0, length);
             // get a cheap key first: false means don't copy the values down
-            var key = new DeserializerKey(hash, startBound, length, returnNullIfFirstMissing, reader, false);
+            var key = new DeserializerKey(hash, 0, length, false, reader, false);
             Func<IDataReader, object> deser;
             lock (this.readers)
             {
                 if (this.readers.TryGetValue(key, out deser)) return deser;
             }
-            deser = TypeMapper.GetTypeDeserializerImpl(this.type, reader, startBound, length, returnNullIfFirstMissing);
+            deser = TypeMapper.GetTypeDeserializerImpl(this.type, reader, 0, length);
             // get a more expensive key: true means copy the values down so it can be used as a key later
-            key = new DeserializerKey(hash, startBound, length, returnNullIfFirstMissing, reader, true);
+            key = new DeserializerKey(hash, 0, length, false, reader, true);
             lock (this.readers)
             {
                 return this.readers[key] = deser;
