@@ -117,7 +117,7 @@
             if (type == null) throw new ArgumentNullException(nameof(type));
 
             Type secondary = null;
-            if (type.IsValueType())
+            if (type.IsValueType)
             {
                 var underlying = Nullable.GetUnderlyingType(type);
                 if (underlying == null)
@@ -193,7 +193,7 @@
             converter = null;
             var nullUnderlyingType = Nullable.GetUnderlyingType(type);
             if (nullUnderlyingType != null) type = nullUnderlyingType;
-            if (type.IsEnum() && !typeMap.ContainsKey(type))
+            if (type.IsEnum && !typeMap.ContainsKey(type))
             {
                 type = Enum.GetUnderlyingType(type);
             }

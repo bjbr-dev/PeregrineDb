@@ -10,7 +10,6 @@
     using System.Reflection.Emit;
     using System.Text.RegularExpressions;
     using PeregrineDb.Databases.Mapper;
-    using TypeExtensions = PeregrineDb.Databases.Mapper.TypeExtensions;
 
     /// <remarks>
     /// Originally copied from Dapper.Net (https://github.com/StackExchange/dapper-dot-net) under the apache 2 license (http://www.apache.org/licenses/LICENSE-2.0)
@@ -25,15 +24,15 @@
 
         public static Func<IDataReader, object> GetDeserializer(Type type, IDataReader reader)
         {
-            if (TypeProvider.ContainsTypeMap(type) || type.IsEnum())
+            if (TypeProvider.ContainsTypeMap(type) || type.IsEnum)
             {
                 return GetStructDeserializer(type, type, 0);
             }
 
-            if (type.IsValueType())
+            if (type.IsValueType)
             {
                 var underlyingType = Nullable.GetUnderlyingType(type);
-                if (underlyingType != null && underlyingType.IsEnum())
+                if (underlyingType != null && underlyingType.IsEnum)
                 {
                     return GetStructDeserializer(type, underlyingType, 0);
                 }
@@ -188,7 +187,7 @@
                              .ToList();
         }
 
-        private static bool IsValueTuple(Type type) => type?.IsValueType() == true && type.FullName.StartsWith("System.ValueTuple`", StringComparison.Ordinal);
+        private static bool IsValueTuple(Type type) => type?.IsValueType == true && type.FullName.StartsWith("System.ValueTuple`", StringComparison.Ordinal);
 
         private static List<IMemberMap> GetValueTupleMembers(Type type, string[] names)
         {
@@ -231,7 +230,7 @@
 
             var il = dm.GetILGenerator();
 
-            var isStruct = type.IsValueType();
+            var isStruct = type.IsValueType;
             var haveInt32Arg1 = false;
             il.Emit(OpCodes.Ldarg_1); // stack is now [untyped-param]
             if (isStruct)
@@ -347,7 +346,7 @@
                     il.Emit(OpCodes.Ldstr, prop.Name); // stack is now [parameters] [command] [name]
                     il.Emit(OpCodes.Ldloc_0); // stack is now [parameters] [command] [name] [typed-param]
                     il.Emit(callOpCode, prop.GetGetMethod()); // stack is [parameters] [command] [name] [typed-value]
-                    if (prop.PropertyType.IsValueType())
+                    if (prop.PropertyType.IsValueType)
                     {
                         il.Emit(OpCodes.Box, prop.PropertyType); // stack is [parameters] [command] [name] [boxed-value]
                     }
@@ -404,13 +403,13 @@
                 il.Emit(OpCodes.Ldloc_0); // stack is now [parameters] [[parameters]] [parameter] [parameter] [typed-param]
                 il.Emit(callOpCode, prop.GetGetMethod()); // stack is [parameters] [[parameters]] [parameter] [parameter] [typed-value]
                 bool checkForNull;
-                if (prop.PropertyType.IsValueType())
+                if (prop.PropertyType.IsValueType)
                 {
                     var propType = prop.PropertyType;
                     var nullType = Nullable.GetUnderlyingType(propType);
                     var callSanitize = false;
 
-                    if ((nullType ?? propType).IsEnum())
+                    if ((nullType ?? propType).IsEnum)
                     {
                         if (nullType != null)
                         {
@@ -422,7 +421,7 @@
                         {
                             checkForNull = false;
                             // non-nullable enum; we can do that! just box to the wrong type! (no, really)
-                            switch (TypeExtensions.GetTypeCode(Enum.GetUnderlyingType(propType)))
+                            switch (Type.GetTypeCode(Enum.GetUnderlyingType(propType)))
                             {
                                 case TypeCode.Byte:
                                     propType = typeof(byte);
@@ -576,7 +575,7 @@
                 return r => ReadNullableChar(r.GetValue(index));
             }
 
-            if (effectiveType.IsEnum())
+            if (effectiveType.IsEnum)
             {
                 // assume the value is returned as the correct type (int/byte/etc), but box back to the typed enum
                 return r =>
@@ -613,7 +612,7 @@
             if (value is T) return (T)value;
             var type = typeof(T);
             type = Nullable.GetUnderlyingType(type) ?? type;
-            if (type.IsEnum())
+            if (type.IsEnum)
             {
                 if (value is float || value is double || value is decimal)
                 {
@@ -709,7 +708,7 @@
             int length = -1,
             bool returnNullIfFirstMissing = false)
         {
-            var returnType = type.IsValueType() ? typeof(object) : type;
+            var returnType = type.IsValueType ? typeof(object) : type;
             var dm = new DynamicMethod("Deserialize" + Guid.NewGuid(), returnType, new[] { typeof(IDataReader) }, type, true);
             var il = dm.GetILGenerator();
             il.DeclareLocal(typeof(int));
@@ -733,7 +732,7 @@
 
             var index = startBound;
 
-            if (type.IsValueType())
+            if (type.IsValueType)
             {
                 il.Emit(OpCodes.Ldloca_S, (byte)1);
                 il.Emit(OpCodes.Initobj, type);
@@ -757,7 +756,7 @@
             }
 
             il.BeginExceptionBlock();
-            if (type.IsValueType())
+            if (type.IsValueType)
             {
                 il.Emit(OpCodes.Ldloca_S, (byte)1); // [target]
             }
@@ -809,9 +808,9 @@
                         // unbox nullable enums as the primitive, i.e. byte etc
 
                         var nullUnderlyingType = Nullable.GetUnderlyingType(memberType);
-                        var unboxType = nullUnderlyingType?.IsEnum() == true ? nullUnderlyingType : memberType;
+                        var unboxType = nullUnderlyingType?.IsEnum == true ? nullUnderlyingType : memberType;
 
-                        if (unboxType.IsEnum())
+                        if (unboxType.IsEnum)
                         {
                             var numericType = Enum.GetUnderlyingType(unboxType);
                             if (colType == typeof(string))
@@ -843,10 +842,10 @@
                         }
                         else
                         {
-                            TypeCode dataTypeCode = TypeExtensions.GetTypeCode(colType), unboxTypeCode = TypeExtensions.GetTypeCode(unboxType);
+                            TypeCode dataTypeCode = Type.GetTypeCode(colType), unboxTypeCode = Type.GetTypeCode(unboxType);
                             bool hasTypeHandler;
                             if ((hasTypeHandler = TypeProvider.ContainsHandler(unboxType)) || colType == unboxType || dataTypeCode == unboxTypeCode ||
-                                dataTypeCode == TypeExtensions.GetTypeCode(nullUnderlyingType))
+                                dataTypeCode == Type.GetTypeCode(nullUnderlyingType))
                             {
                                 if (hasTypeHandler)
                                 {
@@ -875,7 +874,7 @@
                     // Store the value in the property/field
                     if (item.Property != null)
                     {
-                        il.Emit(type.IsValueType() ? OpCodes.Call : OpCodes.Callvirt, item.Property.GetSetMethod(false));
+                        il.Emit(type.IsValueType ? OpCodes.Call : OpCodes.Callvirt, item.Property.GetSetMethod(false));
                     }
                     else
                     {
@@ -903,7 +902,7 @@
                 index++;
             }
 
-            if (type.IsValueType())
+            if (type.IsValueType)
             {
                 il.Emit(OpCodes.Pop);
             }
@@ -921,7 +920,7 @@
             il.EndExceptionBlock();
 
             il.Emit(OpCodes.Ldloc_1); // stack is [rval]
-            if (type.IsValueType())
+            if (type.IsValueType)
             {
                 il.Emit(OpCodes.Box, type);
             }
@@ -949,7 +948,7 @@
             {
                 var handled = false;
                 var opCode = default(OpCode);
-                switch (TypeExtensions.GetTypeCode(from))
+                switch (Type.GetTypeCode(@from))
                 {
                     case TypeCode.Boolean:
                     case TypeCode.Byte:
@@ -963,7 +962,7 @@
                     case TypeCode.Single:
                     case TypeCode.Double:
                         handled = true;
-                        switch (TypeExtensions.GetTypeCode(via ?? to))
+                        switch (Type.GetTypeCode(via ?? to))
                         {
                             case TypeCode.Byte:
                                 opCode = OpCodes.Conv_Ovf_I1_Un;
@@ -1154,7 +1153,7 @@
                         }
                         else
                         {
-                            formattedValue = Convert.ToString(value) + " - " + TypeExtensions.GetTypeCode(value.GetType());
+                            formattedValue = Convert.ToString(value) + " - " + Type.GetTypeCode(value.GetType());
                         }
                     }
                     catch (Exception valEx)
