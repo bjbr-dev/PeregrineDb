@@ -16,9 +16,6 @@
     using PeregrineDb.Tests.Databases.Mapper.SharedTypes;
     using PeregrineDb.Tests.Utils;
     using Xunit;
-    using DynamicParameters = PeregrineDb.Mapping.DynamicParameters;
-    using SqlClientCommand = System.Data.SqlClient.SqlCommand;
-    using SqlCommand = PeregrineDb.SqlCommand;
 
     public enum UnhandledTypeOptions
     {
@@ -48,10 +45,10 @@
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        var order = database.Query<AbstractInheritance.ConcreteOrder>($"select 1 Internal,2 Protected,3 [Public],4 Concrete").First();
+                        // Act
+                        var order = database.Query<AbstractInheritance.ConcreteOrder>($"select 3 [Public], 4 Concrete").First();
 
-                        Assert.Equal(1, order.Internal);
-                        Assert.Equal(2, order.ProtectedVal);
+                        // Assert
                         Assert.Equal(3, order.Public);
                         Assert.Equal(4, order.Concrete);
                     }
@@ -69,112 +66,17 @@
                 }
 
                 [Fact]
-                public void TestConstructorsWithAccessModifiers()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var value = database.Query<ConstructorsWithAccessModifiers>($"select 0 A, 'Dapper' b").First();
-                        Assert.Equal(1, value.A);
-                        Assert.Equal("Dapper!", value.B);
-                    }
-                }
-
-                [Fact]
-                public void TestNoDefaultConstructor()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var guid = Guid.NewGuid();
-                        var nodef = database.Query<NoDefaultConstructor>(
-                                                $"select CAST(NULL AS integer) A1,  CAST(NULL AS integer) b1, CAST(NULL AS real) f1, 'Dapper' s1, G1 = {guid}")
-                                            .First();
-                        Assert.Equal(0, nodef.A);
-                        Assert.Null(nodef.B);
-                        Assert.Equal(0, nodef.F);
-                        Assert.Equal("Dapper", nodef.S);
-                        Assert.Equal(nodef.G, guid);
-                    }
-                }
-
-                [Fact]
-                public void TestNoDefaultConstructorWithChar()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        const char c1 = 'ą';
-                        const char c3 = 'ó';
-                        var nodef = database.Query<NoDefaultConstructorWithChar>($"select {c1} c1, {default(char?)} c2, {c3} c3").First();
-                        Assert.Equal(nodef.Char1, c1);
-                        Assert.Null(nodef.Char2);
-                        Assert.Equal(nodef.Char3, c3);
-                    }
-                }
-
-                [Fact]
-                public void TestNoDefaultConstructorWithEnum()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var nodef = database.Query<NoDefaultConstructorWithEnum>(
-                                                $"select cast(2 as smallint) E1, cast(5 as smallint) n1, cast(null as smallint) n2")
-                                            .First();
-                        Assert.Equal(ShortEnum.Two, nodef.E);
-                        Assert.Equal(ShortEnum.Five, nodef.NE1);
-                        Assert.Null(nodef.NE2);
-                    }
-                }
-
-                [Fact]
-                public void ExplicitConstructors()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var rows = database.Query<_ExplicitConstructors>($@"
-declare @ExplicitConstructors table (
-    Field INT NOT NULL PRIMARY KEY IDENTITY(1,1),
-    Field_1 INT NOT NULL);
-insert @ExplicitConstructors(Field_1) values (1);
-SELECT * FROM @ExplicitConstructors"
-                        ).ToList();
-
-                        Assert.Single(rows);
-                        Assert.Equal(1, rows[0].Field);
-                        Assert.Equal(1, rows[0].Field_1);
-                        Assert.True(rows[0].GetWentThroughProperConstructor());
-                    }
-                }
-
-                [Fact]
                 public void TestWithNonPublicConstructor()
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        var output = database.Query<WithPrivateConstructor>($"select 1 as Foo").First();
-                        Assert.Equal(1, output.Foo);
-                    }
-                }
+                        // Act
+                        Action act = () => database.Query<WithPrivateConstructor>($"select 1 as Foo");
 
-                private class _ExplicitConstructors
-                {
-                    public int Field { get; set; }
-                    public int Field_1 { get; set; }
-
-                    private readonly bool WentThroughProperConstructor;
-
-                    public _ExplicitConstructors()
-                    {
-                        /* yep */
-                    }
-
-                    [ExplicitConstructor]
-                    public _ExplicitConstructors(string foo, int bar)
-                    {
-                        this.WentThroughProperConstructor = true;
-                    }
-
-                    public bool GetWentThroughProperConstructor()
-                    {
-                        return this.WentThroughProperConstructor;
+                        // Assert
+                        act.ShouldThrow<InvalidOperationException>()
+                           .WithMessage(
+                               "PeregrineDb.Tests.Databases.DefaultDatabaseConnectionStatementsTests+Query+Constructors+WithPrivateConstructor must have a public parameterless constructor");
                     }
                 }
 
@@ -182,11 +84,7 @@ SELECT * FROM @ExplicitConstructors"
                 {
                     public abstract class Order
                     {
-                        internal int Internal { get; set; }
-                        protected int Protected { get; set; }
                         public int Public { get; set; }
-
-                        public int ProtectedVal => this.Protected;
                     }
 
                     public class ConcreteOrder : Order
@@ -208,69 +106,8 @@ SELECT * FROM @ExplicitConstructors"
                     }
 
                     public int A { get; set; }
+
                     public string B { get; set; }
-                }
-
-                private class ConstructorsWithAccessModifiers
-                {
-                    private ConstructorsWithAccessModifiers()
-                    {
-                    }
-
-                    public ConstructorsWithAccessModifiers(int a, string b)
-                    {
-                        this.A = a + 1;
-                        this.B = b + "!";
-                    }
-
-                    public int A { get; set; }
-                    public string B { get; set; }
-                }
-
-                private class NoDefaultConstructor
-                {
-                    public NoDefaultConstructor(int a1, int? b1, float f1, string s1, Guid G1)
-                    {
-                        this.A = a1;
-                        this.B = b1;
-                        this.F = f1;
-                        this.S = s1;
-                        this.G = G1;
-                    }
-
-                    public int A { get; set; }
-                    public int? B { get; set; }
-                    public float F { get; set; }
-                    public string S { get; set; }
-                    public Guid G { get; set; }
-                }
-
-                private class NoDefaultConstructorWithChar
-                {
-                    public NoDefaultConstructorWithChar(char c1, char? c2, char? c3)
-                    {
-                        this.Char1 = c1;
-                        this.Char2 = c2;
-                        this.Char3 = c3;
-                    }
-
-                    public char Char1 { get; set; }
-                    public char? Char2 { get; set; }
-                    public char? Char3 { get; set; }
-                }
-
-                private class NoDefaultConstructorWithEnum
-                {
-                    public NoDefaultConstructorWithEnum(ShortEnum e1, ShortEnum? n1, ShortEnum? n2)
-                    {
-                        this.E = e1;
-                        this.NE1 = n1;
-                        this.NE2 = n2;
-                    }
-
-                    public ShortEnum E { get; set; }
-                    public ShortEnum? NE1 { get; set; }
-                    public ShortEnum? NE2 { get; set; }
                 }
 
                 private class WithPrivateConstructor
@@ -403,16 +240,6 @@ SELECT * FROM @ExplicitConstructors"
                 }
 
                 [Fact]
-                public void SO27024806_TestVarcharEnumMemberWithExplicitConstructor()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var foo = database.Query<SO27024806Class>($"SELECT 'Foo' AS myField").Single();
-                        Assert.Equal(SO27024806Enum.Foo, foo.MyField);
-                    }
-                }
-
-                [Fact]
                 public void DapperEnumValue_SqlServer()
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
@@ -455,22 +282,6 @@ SELECT * FROM @ExplicitConstructors"
                 private class TestEnumClassNoNull
                 {
                     public TestEnum EnumEnum { get; set; }
-                }
-
-                private enum SO27024806Enum
-                {
-                    Foo = 0,
-                    Bar = 1
-                }
-
-                private class SO27024806Class
-                {
-                    public SO27024806Class(SO27024806Enum myField)
-                    {
-                        this.MyField = myField;
-                    }
-
-                    public SO27024806Enum MyField { get; set; }
                 }
             }
 
@@ -1019,19 +830,12 @@ SELECT * FROM @ExplicitConstructors"
                         A = 1,
                         B = 2
                     }
-#pragma warning disable 0649
-                    public string Name;
-#pragma warning restore 0649
-                    public int Age { get; set; }
-                    public TrapEnum Trap { get; set; }
-                }
 
-                private struct CarWithAllProps
-                {
                     public string Name { get; set; }
+
                     public int Age { get; set; }
 
-                    public Car.TrapEnum Trap { get; set; }
+                    public TrapEnum Trap { get; set; }
                 }
 
                 [Fact]
@@ -1039,9 +843,9 @@ SELECT * FROM @ExplicitConstructors"
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        var car1 = new CarWithAllProps { Name = "Ford", Age = 21, Trap = Car.TrapEnum.B };
+                        var car1 = new Car { Name = "Ford", Age = 21, Trap = Car.TrapEnum.B };
                         // note Car has Name as a field; parameters only respect properties at the moment
-                        var car2 = database.RawQuery<CarWithAllProps>("select @Name Name, @Age Age, @Trap Trap", car1).First();
+                        var car2 = database.RawQuery<Car>("select @Name Name, @Age Age, @Trap Trap", car1).First();
 
                         Assert.Equal(car2.Name, car1.Name);
                         Assert.Equal(car2.Age, car1.Age);
@@ -1207,16 +1011,16 @@ where x = ANY ({values})")
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        Assert.Equal(10, database.Query<TestObj>($"select 10 as [Internal]").First()._internal);
+                        Assert.Equal(default, database.Query<TestObj>($"select 10 as [Internal]").First()._internal);
                     }
                 }
 
                 [Fact]
-                public void TestSetPrivate()
+                public void Does_not_set_private_properties()
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        Assert.Equal(10, database.Query<TestObj>($"select 10 as [Priv]").First()._priv);
+                        Assert.Equal(default, database.Query<TestObj>($"select 10 as [Priv]").First()._priv);
                     }
                 }
 
@@ -1251,50 +1055,39 @@ select * from @bar").Single();
                 }
 
                 [Fact]
-                public void TestFieldsAndPrivates()
+                public void Does_not_populate_fields()
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        var data = database.Query<TestFieldCaseAndPrivatesEntity>(
-                            $"select a=1,b=2,c=3,d=4,f='5'").Single();
-                        Assert.Equal(1, data.a);
-                        Assert.Equal(2, data.GetB());
-                        Assert.Equal(3, data.c);
-                        Assert.Equal(4, data.GetD());
-                        Assert.Equal(5, data.e);
+                        var data = database.Query<TestFieldsEntity>($"select a=1,b=2,c=3").Single();
+                        Assert.Equal(default, data.a);
+                        Assert.Equal(5, data.b);
+                        Assert.Equal(default, data.GetC());
                     }
                 }
 
-                private class TestFieldCaseAndPrivatesEntity
+                private class TestFieldsEntity
                 {
-#pragma warning disable IDE1006 // Naming Styles
-                    public int a { get; set; }
-                    private int b { get; set; }
-                    public int GetB() { return this.b; }
-                    public int c = 0;
-#pragma warning disable RCS1169 // Mark field as read-only.
-                    private int d = 0;
-#pragma warning restore RCS1169 // Mark field as read-only.
-                    public int GetD() { return this.d; }
-                    public int e { get; set; }
-                    private string f
+                    public int a;
+
+                    public int b = 5;
+
+                    private int c;
+
+                    public int GetC()
                     {
-                        get { return this.e.ToString(); }
-                        set { this.e = int.Parse(value); }
+                        return c;
                     }
-#pragma warning restore IDE1006 // Naming Styles
                 }
 
                 private class InheritanceTest1
                 {
                     public string Base1 { get; set; }
-                    public string Base2 { get; private set; }
                 }
 
                 private class InheritanceTest2 : InheritanceTest1
                 {
                     public string Derived1 { get; set; }
-                    public string Derived2 { get; private set; }
                 }
 
                 [Fact]
@@ -1302,12 +1095,12 @@ select * from @bar").Single();
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        // Test that inheritance works.
-                        var list = database.Query<InheritanceTest2>($"select 'One' as Derived1, 'Two' as Derived2, 'Three' as Base1, 'Four' as Base2");
-                        Assert.Equal("One", list.First().Derived1);
-                        Assert.Equal("Two", list.First().Derived2);
-                        Assert.Equal("Three", list.First().Base1);
-                        Assert.Equal("Four", list.First().Base2);
+                        // Act
+                        var result = database.Query<InheritanceTest2>($"select 'One' as Derived1, 'Two' as Base1").First();
+
+                        // Assert
+                        Assert.Equal("One", result.Derived1);
+                        Assert.Equal("Two", result.Base1);
                     }
                 }
 
@@ -1354,25 +1147,6 @@ select * from @bar").Single();
                     public int F { get; set; }
                 }
 
-                [Fact]
-                public void TestDapperSetsPrivates()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        Assert.Equal(1, database.Query<PrivateDan>($"select 'one' ShadowInDB").First().Shadow);
-
-                        Assert.Equal(1, database.QueryFirstOrDefault<PrivateDan>($"select 'one' ShadowInDB").Shadow);
-                    }
-                }
-
-                private class PrivateDan
-                {
-                    public int Shadow { get; set; }
-                    private string ShadowInDB
-                    {
-                        set { this.Shadow = value == "one" ? 1 : 0; }
-                    }
-                }
                 private class WithCharValue
                 {
                     public char Value { get; set; }
@@ -1830,7 +1604,7 @@ select * from @data").ToDictionary(_ => _.Id);
 
                     public void AddParameters(IDbCommand command, Identity identity)
                     {
-                        var sqlCommand = (SqlClientCommand)command;
+                        var sqlCommand = (SqlCommand)command;
                         sqlCommand.CommandType = CommandType.StoredProcedure;
 
                         var number_list = CreateSqlDataRecordList(this.numbers);
@@ -1855,7 +1629,7 @@ select * from @data").ToDictionary(_ => _.Id);
 
                     public void AddParameter(IDbCommand command, string name)
                     {
-                        var sqlCommand = (SqlClientCommand)command;
+                        var sqlCommand = (SqlCommand)command;
                         sqlCommand.CommandType = CommandType.StoredProcedure;
 
                         var numberList = CreateSqlDataRecordList(this.numbers);

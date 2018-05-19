@@ -27,10 +27,5 @@
         /// Target field
         /// </summary>
         FieldInfo Field { get; }
-
-        /// <summary>
-        /// Target constructor parameter
-        /// </summary>
-        ParameterInfo Parameter { get; }
     }
 }

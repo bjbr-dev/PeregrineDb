@@ -56,13 +56,13 @@
             }
 
             [Fact]
-            public void GetOnlyProperties()
+            public void Does_not_set_readonly_properties()
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                 {
                     var obj = database.QuerySingle<HazGetOnly>($"select 42 as [Id], 'def' as [Name];");
-                    Assert.Equal(42, obj.Id);
-                    Assert.Equal("def", obj.Name);
+                    Assert.Equal(default, obj.Id);
+                    Assert.Equal("abc", obj.Name);
                 }
             }
 

@@ -24,31 +24,6 @@
         }
 
         /// <summary>
-        /// Always returns default constructor
-        /// </summary>
-        /// <param name="names">DataReader column names</param>
-        /// <param name="types">DataReader column types</param>
-        /// <returns>Default constructor</returns>
-        public ConstructorInfo FindConstructor(string[] names, Type[] types) => this._type.GetConstructor(new Type[0]);
-
-        /// <summary>
-        /// Always returns null
-        /// </summary>
-        /// <returns></returns>
-        public ConstructorInfo FindExplicitConstructor() => null;
-
-        /// <summary>
-        /// Not implemented as far as default constructor used for all cases
-        /// </summary>
-        /// <param name="constructor"></param>
-        /// <param name="columnName"></param>
-        /// <returns></returns>
-        public IMemberMap GetConstructorParameter(ConstructorInfo constructor, string columnName)
-        {
-            throw new NotSupportedException();
-        }
-
-        /// <summary>
         /// Returns property based on selector strategy
         /// </summary>
         /// <param name="columnName">DataReader column name</param>

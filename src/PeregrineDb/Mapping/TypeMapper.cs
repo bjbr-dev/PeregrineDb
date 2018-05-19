@@ -702,27 +702,6 @@
             QueryCache.PurgeQueryCacheByType(type);
         }
 
-        private static LocalBuilder GetTempLocal(ILGenerator il, ref Dictionary<Type, LocalBuilder> locals, Type type, bool initAndLoad)
-        {
-            if (type == null) throw new ArgumentNullException(nameof(type));
-            locals = locals ?? new Dictionary<Type, LocalBuilder>();
-            if (!locals.TryGetValue(type, out var found))
-            {
-                found = il.DeclareLocal(type);
-                locals.Add(type, found);
-            }
-
-            if (initAndLoad)
-            {
-                il.Emit(OpCodes.Ldloca, (short)found.LocalIndex);
-                il.Emit(OpCodes.Initobj, type);
-                il.Emit(OpCodes.Ldloca, (short)found.LocalIndex);
-                il.Emit(OpCodes.Ldobj, type);
-            }
-
-            return found;
-        }
-
         internal static Func<IDataReader, object> GetTypeDeserializerImpl(
             Type type,
             IDataReader reader,
@@ -753,9 +732,7 @@
             var typeMap = GetTypeMap(type);
 
             var index = startBound;
-            ConstructorInfo specializedConstructor = null;
 
-            Dictionary<Type, LocalBuilder> structLocals = null;
             if (type.IsValueType())
             {
                 il.Emit(OpCodes.Ldloca_S, (byte)1);
@@ -769,45 +746,14 @@
                     types[i - startBound] = reader.GetFieldType(i);
                 }
 
-                var explicitConstr = typeMap.FindExplicitConstructor();
-                if (explicitConstr != null)
+                var ctor = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public).FirstOrDefault(c => c.GetParameters().Length == 0);
+                if (ctor == null)
                 {
-                    var consPs = explicitConstr.GetParameters();
-                    foreach (var p in consPs)
-                    {
-                        if (!p.ParameterType.IsValueType())
-                        {
-                            il.Emit(OpCodes.Ldnull);
-                        }
-                        else
-                        {
-                            GetTempLocal(il, ref structLocals, p.ParameterType, true);
-                        }
-                    }
-
-                    il.Emit(OpCodes.Newobj, explicitConstr);
-                    il.Emit(OpCodes.Stloc_1);
+                    throw new InvalidOperationException($"{type.FullName} must have a public parameterless constructor");
                 }
-                else
-                {
-                    var ctor = typeMap.FindConstructor(names, types);
-                    if (ctor == null)
-                    {
-                        var proposedTypes = "(" + string.Join(", ", types.Select((t, i) => t.FullName + " " + names[i]).ToArray()) + ")";
-                        throw new InvalidOperationException(
-                            $"A parameterless default constructor or one matching signature {proposedTypes} is required for {type.FullName} materialization");
-                    }
 
-                    if (ctor.GetParameters().Length == 0)
-                    {
-                        il.Emit(OpCodes.Newobj, ctor);
-                        il.Emit(OpCodes.Stloc_1);
-                    }
-                    else
-                    {
-                        specializedConstructor = ctor;
-                    }
-                }
+                il.Emit(OpCodes.Newobj, ctor);
+                il.Emit(OpCodes.Stloc_1);
             }
 
             il.BeginExceptionBlock();
@@ -815,16 +761,14 @@
             {
                 il.Emit(OpCodes.Ldloca_S, (byte)1); // [target]
             }
-            else if (specializedConstructor == null)
+            else
             {
                 il.Emit(OpCodes.Ldloc_1); // [target]
             }
 
             var members = IsValueTuple(type)
                 ? GetValueTupleMembers(type, names)
-                : (specializedConstructor != null
-                    ? names.Select(n => typeMap.GetConstructorParameter(specializedConstructor, n))
-                    : names.Select(n => typeMap.GetMember(n))).ToList();
+                : names.Select(n => typeMap.GetMember(n)).ToList();
 
             // stack is now [target]
 
@@ -835,8 +779,8 @@
             {
                 if (item != null)
                 {
-                    if (specializedConstructor == null)
-                        il.Emit(OpCodes.Dup); // stack is now [target][target]
+                    il.Emit(OpCodes.Dup); // stack is now [target][target]
+
                     var isDbNullLabel = il.DefineLabel();
                     var finishLabel = il.DefineLabel();
 
@@ -928,42 +872,21 @@
                         }
                     }
 
-                    if (specializedConstructor == null)
+                    // Store the value in the property/field
+                    if (item.Property != null)
                     {
-                        // Store the value in the property/field
-                        if (item.Property != null)
-                        {
-                            il.Emit(type.IsValueType() ? OpCodes.Call : OpCodes.Callvirt, DefaultTypeMap.GetPropertySetter(item.Property, type));
-                        }
-                        else
-                        {
-                            il.Emit(OpCodes.Stfld, item.Field); // stack is now [target]
-                        }
+                        il.Emit(type.IsValueType() ? OpCodes.Call : OpCodes.Callvirt, item.Property.GetSetMethod(false));
+                    }
+                    else
+                    {
+                        il.Emit(OpCodes.Stfld, item.Field); // stack is now [target]
                     }
 
                     il.Emit(OpCodes.Br_S, finishLabel); // stack is now [target]
 
                     il.MarkLabel(isDbNullLabel); // incoming stack: [target][target][value]
-                    if (specializedConstructor != null)
-                    {
-                        il.Emit(OpCodes.Pop);
-                        if (item.MemberType.IsValueType())
-                        {
-                            var localIndex = il.DeclareLocal(item.MemberType).LocalIndex;
-                            LoadLocalAddress(il, localIndex);
-                            il.Emit(OpCodes.Initobj, item.MemberType);
-                            LoadLocal(il, localIndex);
-                        }
-                        else
-                        {
-                            il.Emit(OpCodes.Ldnull);
-                        }
-                    }
-                    else
-                    {
-                        il.Emit(OpCodes.Pop); // stack is now [target][target]
-                        il.Emit(OpCodes.Pop); // stack is now [target]
-                    }
+                    il.Emit(OpCodes.Pop); // stack is now [target][target]
+                    il.Emit(OpCodes.Pop); // stack is now [target]
 
                     if (first && returnNullIfFirstMissing)
                     {
@@ -986,11 +909,6 @@
             }
             else
             {
-                if (specializedConstructor != null)
-                {
-                    il.Emit(OpCodes.Newobj, specializedConstructor);
-                }
-
                 il.Emit(OpCodes.Stloc_1); // stack is empty
             }
 
