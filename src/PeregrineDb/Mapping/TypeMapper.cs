@@ -46,26 +46,6 @@
             return TypeDeserializerCache.GetReader(type, reader);
         }
 
-        private static Exception MultiMapException(IDataRecord reader)
-        {
-            var hasFields = false;
-            try
-            {
-                hasFields = reader != null && reader.FieldCount != 0;
-            }
-            catch
-            {
-                /* don't throw when trying to throw */
-            }
-
-            if (hasFields)
-            {
-                return new ArgumentException("When using the multi-mapping APIs ensure you set the splitOn param if you have keys other than Id", "splitOn");
-            }
-
-            return new InvalidOperationException("No columns were selected");
-        }
-
         /// <summary>
         /// Internal use only.
         /// </summary>
@@ -153,10 +133,9 @@
                 return DBNull.Value;
             }
 
-            if (value is Enum)
+            if (value is Enum @enum)
             {
-                var typeCode = ((IConvertible)value).GetTypeCode();
-                switch (typeCode)
+                switch (@enum.GetTypeCode())
                 {
                     case TypeCode.Byte:
                         return (byte)value;
@@ -187,43 +166,12 @@
                              .ToList();
         }
 
-        private static bool IsValueTuple(Type type) => type?.IsValueType == true && type.FullName.StartsWith("System.ValueTuple`", StringComparison.Ordinal);
-
-        private static List<IMemberMap> GetValueTupleMembers(Type type, string[] names)
-        {
-            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
-            var result = new List<IMemberMap>(names.Length);
-            for (var i = 0; i < names.Length; i++)
-            {
-                FieldInfo field = null;
-                var name = "Item" + (i + 1).ToString(CultureInfo.InvariantCulture);
-                foreach (var test in fields)
-                {
-                    if (test.Name == name)
-                    {
-                        field = test;
-                        break;
-                    }
-                }
-
-                result.Add(field == null ? null : new SimpleMemberMap(string.IsNullOrWhiteSpace(names[i]) ? name : names[i], field));
-            }
-
-            return result;
-        }
-
         internal static Action<IDbCommand, object> CreateParamInfoGenerator(
             Identity identity,
             bool checkForDuplicates,
             bool removeUnused)
         {
             var type = identity.parametersType;
-
-            if (IsValueTuple(type))
-            {
-                throw new NotSupportedException(
-                    "ValueTuple should not be used for parameters - the language-level names are not available to use as parameter names, and it adds unnecessary boxing");
-            }
 
             var filterParams = removeUnused && identity.commandType.GetValueOrDefault(CommandType.Text) == CommandType.Text;
             var dm = new DynamicMethod("ParamInfo" + Guid.NewGuid(), null, new[] { typeof(IDbCommand), typeof(object) }, type, true);
@@ -630,153 +578,60 @@
             return (T)Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
         }
 
-        private static readonly MethodInfo
-            enumParse = typeof(Enum).GetMethod(nameof(Enum.Parse), new Type[] { typeof(Type), typeof(string), typeof(bool) }),
-            getItem = typeof(IDataRecord).GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                                         .Where(p => p.GetIndexParameters().Length > 0 && p.GetIndexParameters()[0].ParameterType == typeof(int))
-                                         .Select(p => p.GetGetMethod()).First();
+        private static readonly MethodInfo enumParse = typeof(Enum).GetMethod(nameof(Enum.Parse), new[] { typeof(Type), typeof(string), typeof(bool) });
 
-        /// <summary>
-        /// Gets type-map for the given type
-        /// </summary>
-        /// <returns>Type map instance, default is to create new instance of DefaultTypeMap</returns>
-        public static Func<Type, ITypeMap> TypeMapProvider = type => new DefaultTypeMap(type);
+        private static readonly MethodInfo getItem = typeof(IDataRecord).GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                                                                        .Where(p => p.GetIndexParameters().Length > 0 &&
+                                                                                    p.GetIndexParameters()[0].ParameterType == typeof(int))
+                                                                        .Select(p => p.GetGetMethod()).First();
 
-        /// <summary>
-        /// Gets type-map for the given <see cref="Type"/>.
-        /// </summary>
-        /// <param name="type">The type to get a map for.</param>
-        /// <returns>Type map implementation, DefaultTypeMap instance if no override present</returns>
-        public static ITypeMap GetTypeMap(Type type)
+        internal static Func<IDataReader, object> GetTypeDeserializerImpl(Type type,IDataReader reader, int length)
         {
-            if (type == null) throw new ArgumentNullException(nameof(type));
-            var map = (ITypeMap)_typeMaps[type];
-            if (map == null)
+            if (type.IsValueType)
             {
-                lock (_typeMaps)
-                {
-                    // double-checked; store this to avoid reflection next time we see this type
-                    // since multiple queries commonly use the same domain-entity/DTO/view-model type
-                    map = (ITypeMap)_typeMaps[type];
-
-                    if (map == null)
-                    {
-                        map = TypeMapProvider(type);
-                        _typeMaps[type] = map;
-                    }
-                }
+                throw new NotSupportedException("Deserializing complex value types is not supported.");
             }
 
-            return map;
-        }
-
-        // use Hashtable to get free lockless reading
-        private static readonly Hashtable _typeMaps = new Hashtable();
-
-        /// <summary>
-        /// Set custom mapping for type deserializers
-        /// </summary>
-        /// <param name="type">Entity type to override</param>
-        /// <param name="map">Mapping rules impementation, null to remove custom map</param>
-        public static void SetTypeMap(Type type, ITypeMap map)
-        {
-            if (type == null)
-                throw new ArgumentNullException(nameof(type));
-
-            if (map == null || map is DefaultTypeMap)
-            {
-                lock (_typeMaps)
-                {
-                    _typeMaps.Remove(type);
-                }
-            }
-            else
-            {
-                lock (_typeMaps)
-                {
-                    _typeMaps[type] = map;
-                }
-            }
-
-            QueryCache.PurgeQueryCacheByType(type);
-        }
-
-        internal static Func<IDataReader, object> GetTypeDeserializerImpl(
-            Type type,
-            IDataReader reader,
-            int startBound = 0,
-            int length = -1,
-            bool returnNullIfFirstMissing = false)
-        {
-            var returnType = type.IsValueType ? typeof(object) : type;
-            var dm = new DynamicMethod("Deserialize" + Guid.NewGuid(), returnType, new[] { typeof(IDataReader) }, type, true);
+            var dm = new DynamicMethod("Deserialize" + Guid.NewGuid(), type, new[] { typeof(IDataReader) }, type, true);
             var il = dm.GetILGenerator();
             il.DeclareLocal(typeof(int));
             il.DeclareLocal(type);
             il.Emit(OpCodes.Ldc_I4_0);
             il.Emit(OpCodes.Stloc_0);
 
-            if (length == -1)
+            if (length <= 0)
             {
-                length = reader.FieldCount - startBound;
+                throw new InvalidOperationException("No columns were selected");
             }
 
-            if (reader.FieldCount <= startBound)
+            var index = 0;
+            var types = new Type[length];
+            for (var i = 0; i < length; i++)
             {
-                throw MultiMapException(reader);
+                types[i - 0] = reader.GetFieldType(i);
             }
 
-            var names = Enumerable.Range(startBound, length).Select(i => reader.GetName(i)).ToArray();
-
-            var typeMap = GetTypeMap(type);
-
-            var index = startBound;
-
-            if (type.IsValueType)
+            var ctor = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public).FirstOrDefault(c => c.GetParameters().Length == 0);
+            if (ctor == null)
             {
-                il.Emit(OpCodes.Ldloca_S, (byte)1);
-                il.Emit(OpCodes.Initobj, type);
+                throw new InvalidOperationException($"{type.FullName} must have a public parameterless constructor");
             }
-            else
-            {
-                var types = new Type[length];
-                for (var i = startBound; i < startBound + length; i++)
-                {
-                    types[i - startBound] = reader.GetFieldType(i);
-                }
 
-                var ctor = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public).FirstOrDefault(c => c.GetParameters().Length == 0);
-                if (ctor == null)
-                {
-                    throw new InvalidOperationException($"{type.FullName} must have a public parameterless constructor");
-                }
-
-                il.Emit(OpCodes.Newobj, ctor);
-                il.Emit(OpCodes.Stloc_1);
-            }
+            il.Emit(OpCodes.Newobj, ctor);
+            il.Emit(OpCodes.Stloc_1);
 
             il.BeginExceptionBlock();
-            if (type.IsValueType)
-            {
-                il.Emit(OpCodes.Ldloca_S, (byte)1); // [target]
-            }
-            else
-            {
-                il.Emit(OpCodes.Ldloc_1); // [target]
-            }
-
-            var members = IsValueTuple(type)
-                ? GetValueTupleMembers(type, names)
-                : names.Select(n => typeMap.GetMember(n)).ToList();
+            il.Emit(OpCodes.Ldloc_1); // [target]
 
             // stack is now [target]
 
-            var first = true;
             var allDone = il.DefineLabel();
             int enumDeclareLocal = -1, valueCopyLocal = il.DeclareLocal(typeof(object)).LocalIndex;
-            foreach (var item in members)
+
+            var typeMap = new DefaultTypeMap(type);
+            foreach (var property in Enumerable.Range(0, length).Select(i => typeMap.GetMember(reader.GetName(i))).ToList())
             {
-                if (item != null)
+                if (property != null)
                 {
                     il.Emit(OpCodes.Dup); // stack is now [target][target]
 
@@ -791,7 +646,7 @@
                     il.Emit(OpCodes.Dup); // stack is now [target][target][value-as-object][value-as-object]
                     StoreLocal(il, valueCopyLocal);
                     var colType = reader.GetFieldType(index);
-                    var memberType = item.MemberType;
+                    var memberType = property.PropertyType;
 
                     if (memberType == typeof(char) || memberType == typeof(char?))
                     {
@@ -871,15 +726,8 @@
                         }
                     }
 
-                    // Store the value in the property/field
-                    if (item.Property != null)
-                    {
-                        il.Emit(type.IsValueType ? OpCodes.Call : OpCodes.Callvirt, item.Property.GetSetMethod(false));
-                    }
-                    else
-                    {
-                        il.Emit(OpCodes.Stfld, item.Field); // stack is now [target]
-                    }
+                    // Store the value in the property
+                    il.Emit(OpCodes.Callvirt, property.GetSetMethod(false));
 
                     il.Emit(OpCodes.Br_S, finishLabel); // stack is now [target]
 
@@ -887,29 +735,13 @@
                     il.Emit(OpCodes.Pop); // stack is now [target][target]
                     il.Emit(OpCodes.Pop); // stack is now [target]
 
-                    if (first && returnNullIfFirstMissing)
-                    {
-                        il.Emit(OpCodes.Pop);
-                        il.Emit(OpCodes.Ldnull); // stack is now [null]
-                        il.Emit(OpCodes.Stloc_1);
-                        il.Emit(OpCodes.Br, allDone);
-                    }
-
                     il.MarkLabel(finishLabel);
                 }
 
-                first = false;
                 index++;
             }
 
-            if (type.IsValueType)
-            {
-                il.Emit(OpCodes.Pop);
-            }
-            else
-            {
-                il.Emit(OpCodes.Stloc_1); // stack is empty
-            }
+            il.Emit(OpCodes.Stloc_1);
 
             il.MarkLabel(allDone);
             il.BeginCatchBlock(typeof(Exception)); // stack is Exception
@@ -920,14 +752,9 @@
             il.EndExceptionBlock();
 
             il.Emit(OpCodes.Ldloc_1); // stack is [rval]
-            if (type.IsValueType)
-            {
-                il.Emit(OpCodes.Box, type);
-            }
-
             il.Emit(OpCodes.Ret);
 
-            var funcType = System.Linq.Expressions.Expression.GetFuncType(typeof(IDataReader), returnType);
+            var funcType = System.Linq.Expressions.Expression.GetFuncType(typeof(IDataReader), type);
             return (Func<IDataReader, object>)dm.CreateDelegate(funcType);
         }
 
@@ -1112,20 +939,6 @@
                     }
 
                     break;
-            }
-        }
-
-        private static void LoadLocalAddress(ILGenerator il, int index)
-        {
-            if (index < 0 || index >= short.MaxValue) throw new ArgumentNullException(nameof(index));
-
-            if (index <= 255)
-            {
-                il.Emit(OpCodes.Ldloca_S, (byte)index);
-            }
-            else
-            {
-                il.Emit(OpCodes.Ldloca, (short)index);
             }
         }
 

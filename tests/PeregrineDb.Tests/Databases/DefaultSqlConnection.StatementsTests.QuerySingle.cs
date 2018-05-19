@@ -10,6 +10,15 @@
             : DefaultDatabaseConnectionStatementsTests
         {
             [Fact]
+            public void TupleClassParameter_Works()
+            {
+                using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                {
+                    Assert.Equal(42, database.RawQuerySingle<int>("select @Item1", Tuple.Create(42, "Fred")));
+                }
+            }
+
+            [Fact]
             public void Issue601_InternationalParameterNamesWork()
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))

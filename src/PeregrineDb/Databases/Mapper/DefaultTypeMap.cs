@@ -10,7 +10,6 @@
     /// Represents default type mapping strategy used by Dapper
     /// </summary>
     internal sealed class DefaultTypeMap 
-        : ITypeMap
     {
         /// <summary>
         /// Creates default type map
@@ -20,9 +19,7 @@
         {
             Ensure.NotNull(type, nameof(type));
 
-            this.Properties = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                                  .Where(p => p.GetSetMethod(false) != null)
-                                  .ToList();
+            this.Properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetSetMethod(false) != null).ToList();
         }
 
         /// <summary>
@@ -30,20 +27,19 @@
         /// </summary>
         /// <param name="columnName">DataReader column name</param>
         /// <returns>Mapping implementation</returns>
-        public IMemberMap GetMember(string columnName)
+        public PropertyInfo GetMember(string columnName)
         {
             var property = this.Properties.Find(p => string.Equals(p.Name, columnName, StringComparison.Ordinal))
-               ?? this.Properties.Find(p => string.Equals(p.Name, columnName, StringComparison.OrdinalIgnoreCase));
+                           ?? this.Properties.Find(p => string.Equals(p.Name, columnName, StringComparison.OrdinalIgnoreCase));
 
-            if (property == null && MatchNamesWithUnderscores)
+            if (property != null || !MatchNamesWithUnderscores)
             {
-                property = this.Properties.Find(p => string.Equals(p.Name, columnName.Replace("_", ""), StringComparison.Ordinal))
-                    ?? this.Properties.Find(p => string.Equals(p.Name, columnName.Replace("_", ""), StringComparison.OrdinalIgnoreCase));
+                return property;
             }
 
-            return property != null
-                ? new SimpleMemberMap(columnName, property)
-                : null;
+            var alternateColumnName = columnName.Replace("_", "");
+            return this.Properties.Find(p => string.Equals(p.Name, alternateColumnName, StringComparison.Ordinal))
+                   ?? this.Properties.Find(p => string.Equals(p.Name, alternateColumnName, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>

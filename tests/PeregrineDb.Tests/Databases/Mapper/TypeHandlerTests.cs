@@ -55,33 +55,6 @@
             }
         }
 
-        [Fact]
-        public void TestCustomTypeMap()
-        {
-            using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-            {
-                // default mapping
-                var item = database.Query<TypeWithMapping>($"Select 'AVal' as A, 'BVal' as B").Single();
-                Assert.Equal("AVal", item.A);
-                Assert.Equal("BVal", item.B);
-
-                // custom mapping
-                var map = new CustomPropertyTypeMap(typeof(TypeWithMapping),
-                    (type, columnName) => type.GetProperties().FirstOrDefault(prop => GetDescriptionFromAttribute(prop) == columnName));
-                TypeMapper.SetTypeMap(typeof(TypeWithMapping), map);
-
-                item = database.Query<TypeWithMapping>($"Select 'AVal' as A, 'BVal' as B").Single();
-                Assert.Equal("BVal", item.A);
-                Assert.Equal("AVal", item.B);
-
-                // reset to default
-                TypeMapper.SetTypeMap(typeof(TypeWithMapping), null);
-                item = database.Query<TypeWithMapping>($"Select 'AVal' as A, 'BVal' as B").Single();
-                Assert.Equal("AVal", item.A);
-                Assert.Equal("BVal", item.B);
-            }
-        }
-
         private static string GetDescriptionFromAttribute(MemberInfo member)
         {
             var data = member?.CustomAttributes.FirstOrDefault(x => x.AttributeType == typeof(DescriptionAttribute));

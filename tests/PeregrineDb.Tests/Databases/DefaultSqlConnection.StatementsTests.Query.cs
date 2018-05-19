@@ -812,48 +812,6 @@
                 }
 
                 [Fact]
-                public void TestStructs()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var car = database.Query<Car>($"select 'Ford' Name, 21 Age, 2 Trap").First();
-
-                        Assert.Equal(21, car.Age);
-                        Assert.Equal("Ford", car.Name);
-                        Assert.Equal(2, (int)car.Trap);
-                    }
-                }
-                private struct Car
-                {
-                    public enum TrapEnum : int
-                    {
-                        A = 1,
-                        B = 2
-                    }
-
-                    public string Name { get; set; }
-
-                    public int Age { get; set; }
-
-                    public TrapEnum Trap { get; set; }
-                }
-
-                [Fact]
-                public void TestStructAsParam()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var car1 = new Car { Name = "Ford", Age = 21, Trap = Car.TrapEnum.B };
-                        // note Car has Name as a field; parameters only respect properties at the moment
-                        var car2 = database.RawQuery<Car>("select @Name Name, @Age Age, @Trap Trap", car1).First();
-
-                        Assert.Equal(car2.Name, car1.Name);
-                        Assert.Equal(car2.Age, car1.Age);
-                        Assert.Equal(car2.Trap, car1.Trap);
-                    }
-                }
-
-                [Fact]
                 public void SelectListInt()
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
@@ -1202,7 +1160,7 @@ select * from @bar").Single();
                 }
 
                 [Fact]
-                public void WorkDespiteHavingWrongStructColumnTypes()
+                public void WorkDespiteHavingWrongColumnTypes()
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
@@ -1211,7 +1169,7 @@ select * from @bar").Single();
                     }
                 }
 
-                private struct CanHazInt
+                private class CanHazInt
                 {
                     public int Value { get; set; }
                 }

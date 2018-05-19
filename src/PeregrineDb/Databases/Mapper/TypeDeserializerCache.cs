@@ -9,6 +9,8 @@
 
     internal class TypeDeserializerCache
     {
+        private readonly Dictionary<DeserializerKey, Func<IDataReader, object>> readers = new Dictionary<DeserializerKey, Func<IDataReader, object>>();
+
         private TypeDeserializerCache(Type type)
         {
             this.type = type;
@@ -47,10 +49,29 @@
                     }
                 }
             }
+
             return found.GetReader(reader);
         }
 
-        private readonly Dictionary<DeserializerKey, Func<IDataReader, object>> readers = new Dictionary<DeserializerKey, Func<IDataReader, object>>();
+        private Func<IDataReader, object> GetReader(IDataReader reader)
+        {
+            var length = reader.FieldCount;
+            var hash = SqlMapper.GetColumnHash(reader, 0, length);
+            // get a cheap key first: false means don't copy the values down
+            var key = new DeserializerKey(hash, 0, length, false, reader, false);
+            Func<IDataReader, object> deser;
+            lock (this.readers)
+            {
+                if (this.readers.TryGetValue(key, out deser)) return deser;
+            }
+            deser = TypeMapper.GetTypeDeserializerImpl(this.type, reader, length);
+            // get a more expensive key: true means copy the values down so it can be used as a key later
+            key = new DeserializerKey(hash, 0, length, false, reader, true);
+            lock (this.readers)
+            {
+                return this.readers[key] = deser;
+            }
+        }
 
         private struct DeserializerKey : IEquatable<DeserializerKey>
         {
@@ -97,6 +118,7 @@
                 {
                     return string.Join(", ", this.names);
                 }
+
                 if (this.reader != null)
                 {
                     var sb = new StringBuilder();
@@ -108,12 +130,13 @@
                     }
                     return sb.ToString();
                 }
+
                 return base.ToString();
             }
 
             public override bool Equals(object obj)
             {
-                return obj is DeserializerKey && this.Equals((DeserializerKey)obj);
+                return obj is DeserializerKey key && this.Equals(key);
             }
 
             public bool Equals(DeserializerKey other)
@@ -136,26 +159,6 @@
                     }
                 }
                 return true;
-            }
-        }
-
-        private Func<IDataReader, object> GetReader(IDataReader reader)
-        {
-            var length = reader.FieldCount;
-            var hash = SqlMapper.GetColumnHash(reader, 0, length);
-            // get a cheap key first: false means don't copy the values down
-            var key = new DeserializerKey(hash, 0, length, false, reader, false);
-            Func<IDataReader, object> deser;
-            lock (this.readers)
-            {
-                if (this.readers.TryGetValue(key, out deser)) return deser;
-            }
-            deser = TypeMapper.GetTypeDeserializerImpl(this.type, reader, 0, length);
-            // get a more expensive key: true means copy the values down so it can be used as a key later
-            key = new DeserializerKey(hash, 0, length, false, reader, true);
-            lock (this.readers)
-            {
-                return this.readers[key] = deser;
             }
         }
     }
