@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases.Mapper.SharedTypes
+﻿namespace PeregrineDb.Tests.SharedTypes
 {
     public class Comment
     {

@@ -10,8 +10,8 @@
     using System.Linq;
     using FluentAssertions;
     using PeregrineDb.Mapping;
-    using PeregrineDb.Tests.Databases.Mapper.Helpers;
-    using PeregrineDb.Tests.Databases.Mapper.SharedTypes;
+    using PeregrineDb.Tests.SharedTypes;
+    using PeregrineDb.Tests.Testing;
     using PeregrineDb.Tests.Utils;
     using Xunit;
 
@@ -59,7 +59,7 @@
 
                         // Assert
                         act.ShouldThrow<InvalidOperationException>()
-                           .WithMessage("PeregrineDb.Tests.Databases.Mapper.SharedTypes.NoPublicConstructor must have a public parameterless constructor");
+                           .WithMessage("PeregrineDb.Tests.SharedTypes.NoPublicConstructor must have a public parameterless constructor");
                     }
                 }
 
@@ -73,8 +73,7 @@
 
                         // Assert
                         act.ShouldThrow<InvalidOperationException>()
-                           .WithMessage(
-                               "PeregrineDb.Tests.Databases.Mapper.SharedTypes.NoParameterlessConstructor must have a public parameterless constructor");
+                           .WithMessage("PeregrineDb.Tests.SharedTypes.NoParameterlessConstructor must have a public parameterless constructor");
                     }
                 }
             }
@@ -1176,8 +1175,7 @@
                             database.RawQuery<int>("select count(1) where 1 = @Foo", new { Foo = new UnhandledType(UnhandledTypeOptions.Default) });
 
                         act.ShouldThrow<Exception>()
-                           .WithMessage(
-                               "The member Foo of type PeregrineDb.Tests.Databases.Mapper.SharedTypes.UnhandledType cannot be used as a parameter value");
+                           .WithMessage("The member Foo of type PeregrineDb.Tests.SharedTypes.UnhandledType cannot be used as a parameter value");
                     }
                 }
 

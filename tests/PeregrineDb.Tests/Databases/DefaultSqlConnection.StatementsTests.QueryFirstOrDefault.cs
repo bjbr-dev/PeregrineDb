@@ -1,6 +1,6 @@
 ﻿namespace PeregrineDb.Tests.Databases
 {
-    using PeregrineDb.Tests.Databases.Mapper.SharedTypes;
+    using PeregrineDb.Tests.SharedTypes;
     using PeregrineDb.Tests.Utils;
     using Xunit;
 

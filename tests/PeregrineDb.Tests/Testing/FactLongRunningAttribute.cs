@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases.Mapper.Helpers
+﻿namespace PeregrineDb.Tests.Testing
 {
     using System;
     using Xunit;
