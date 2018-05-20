@@ -2,7 +2,6 @@
 {
     using System;
     using System.Data;
-    using PeregrineDb.Databases.Mapper;
 
     /// <summary>
     /// This class represents a SQL string, it can be used if you need to denote your parameter is a Char vs VarChar vs nVarChar vs nChar

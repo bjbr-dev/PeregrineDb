@@ -9,7 +9,6 @@
     using System.Runtime.CompilerServices;
     using PeregrineDb.Databases.Mapper;
     using PeregrineDb.Mapping;
-    using PeregrineDb.Tests.Databases.Mapper.Helpers;
     using PeregrineDb.Tests.Utils;
     using Xunit;
 
@@ -637,8 +636,31 @@
         {
             using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
             {
-                Common.TestDateTime(database);
+                DateTime? now = DateTime.UtcNow;
+                try { database.Execute($"DROP TABLE Persons"); } catch { /* don't care */ }
+                database.Execute($"CREATE TABLE Persons (id int not null, dob datetime null)");
+                database.Execute($"INSERT Persons (id, dob) values ({7}, {(DateTime?)null})");
+                database.Execute($"INSERT Persons (id, dob) values ({42}, {now})");
+
+                var row = database.QueryFirstOrDefault<NullableDatePerson>($"SELECT id, dob, dob as dob2 FROM Persons WHERE id={7}");
+                Assert.NotNull(row);
+                Assert.Equal(7, row.Id);
+                Assert.Null(row.DoB);
+                Assert.Null(row.DoB2);
+
+                row = database.QueryFirstOrDefault<NullableDatePerson>($"SELECT id, dob FROM Persons WHERE id={42}");
+                Assert.NotNull(row);
+                Assert.Equal(42, row.Id);
+                row.DoB.Equals(now);
+                row.DoB2.Equals(now);
             }
+        }
+
+        private class NullableDatePerson
+        {
+            public int Id { get; set; }
+            public DateTime? DoB { get; set; }
+            public DateTime? DoB2 { get; set; }
         }
 
         [Fact]

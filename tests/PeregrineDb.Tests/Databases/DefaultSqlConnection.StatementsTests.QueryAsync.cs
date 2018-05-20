@@ -5,8 +5,6 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using PeregrineDb.Databases.Mapper;
-    using PeregrineDb.Tests.Databases.Mapper.SharedTypes;
     using PeregrineDb.Tests.Utils;
     using Xunit;
 
