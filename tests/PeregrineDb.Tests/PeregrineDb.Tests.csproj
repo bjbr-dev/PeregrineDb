@@ -48,5 +48,7 @@
 
   <ItemGroup>
     <Compile Update="Databases\DefaultSqlConnection.StatementsTests.*.cs" DependentUpon="Databases\DefaultSqlConnection.StatementsTests.cs" />
+    <Compile Update="Databases\DefaultSqlConnection.CrudTests.*.cs" DependentUpon="Databases\DefaultSqlConnection.CrudTests.cs" />
+    <Compile Update="Databases\DefaultSqlConnection.CrudAsyncTests.*.cs" DependentUpon="Databases\DefaultSqlConnection.CrudAsyncTests.cs" />
   </ItemGroup>
 </Project>
