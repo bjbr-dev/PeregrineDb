@@ -120,7 +120,7 @@
                     {
                         // Act / Assert
                         database.Query<int?>($"print 'not a query'").Should().BeEmpty();
-                        database.Query<Foo1>($"print 'not a query'").Should().BeEmpty();
+                        database.Query<GenericEntity<int?>>($"print 'not a query'").Should().BeEmpty();
                     }
                 }
 
