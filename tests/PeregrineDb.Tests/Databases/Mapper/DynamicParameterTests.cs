@@ -1,6 +1,5 @@
 ﻿namespace PeregrineDb.Tests.Databases.Mapper
 {
-    using PeregrineDb.Databases.Mapper;
     using Xunit;
     using DynamicParameters = PeregrineDb.Mapping.DynamicParameters;
 

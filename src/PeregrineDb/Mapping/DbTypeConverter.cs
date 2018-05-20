@@ -26,7 +26,7 @@
 
         void IDbTypeConverter.SetValue(IDbDataParameter parameter, object value)
         {
-            if (value is DBNull)
+            if (Convert.IsDBNull(value))
             {
                 parameter.Value = value;
             }

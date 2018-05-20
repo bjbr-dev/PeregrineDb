@@ -9,6 +9,7 @@
     using System.Globalization;
     using System.Linq;
     using FluentAssertions;
+    using PeregrineDb.Databases.Mapper;
     using PeregrineDb.Mapping;
     using PeregrineDb.Tests.SharedTypes;
     using PeregrineDb.Tests.Testing;
@@ -389,6 +390,46 @@
                         database.Query<string>($"select {str}").ShouldAllBeEquivalentTo(new[] { str });
                     }
                 }
+
+                [Fact]
+                public void TestChangingDefaultStringTypeMappingToAnsiString()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var result01 = database.Query<string>($"SELECT SQL_VARIANT_PROPERTY(CONVERT(sql_variant, {"TestString"}),'BaseType') AS BaseType").FirstOrDefault();
+                        Assert.Equal("nvarchar", result01);
+
+                        QueryCache.Purge();
+
+                        TypeProvider.AddTypeMap(typeof(string), DbType.AnsiString); // Change Default String Handling to AnsiString
+                        var result02 = database.Query<string>($"SELECT SQL_VARIANT_PROPERTY(CONVERT(sql_variant, {"TestString"}),'BaseType') AS BaseType").FirstOrDefault();
+                        Assert.Equal("varchar", result02);
+
+                        QueryCache.Purge();
+                        TypeProvider.AddTypeMap(typeof(string), DbType.String); // Restore Default to Unicode String
+                    }
+                }
+
+                [Fact]
+                public void TestChangingDefaultStringTypeMappingToAnsiStringFirstOrDefault()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        var result01 = database.QueryFirstOrDefault<string>(
+                            $"SELECT SQL_VARIANT_PROPERTY(CONVERT(sql_variant, {"TestString"}),'BaseType') AS BaseType");
+                        Assert.Equal("nvarchar", result01);
+
+                        QueryCache.Purge();
+
+                        TypeProvider.AddTypeMap(typeof(string), DbType.AnsiString); // Change Default String Handling to AnsiString
+                        var result02 = database.QueryFirstOrDefault<string>(
+                            $"SELECT SQL_VARIANT_PROPERTY(CONVERT(sql_variant, {"TestString"}),'BaseType') AS BaseType");
+                        Assert.Equal("varchar", result02);
+
+                        QueryCache.Purge();
+                        TypeProvider.AddTypeMap(typeof(string), DbType.String); // Restore Default to Unicode String
+                    }
+                }
             }
 
             /// <summary>
@@ -749,6 +790,19 @@
                         database.Query<GenericEntity<Guid?>>($"select {(Guid?)null} AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (Guid?)null });
                     }
                 }
+
+                [Fact]
+                public void Does_not_auto_convert_strings_to_guids()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        // Act
+                        Action act = () => database.Query<GenericEntity<string>>($"select {Guid.Parse("cf0ef7ac-b6fe-4e24-aeda-a2b45bb5654e")} as Value");
+
+                        // Assert
+                        act.ShouldThrow<Exception>().WithMessage("Error parsing column 0 (Value=cf0ef7ac-b6fe-4e24-aeda-a2b45bb5654e - Object)");
+                    }
+                }
             }
 
             public class Enums
@@ -904,6 +958,112 @@
 
                         database.Query<GenericEntity<byte[]>>($"select {value} AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { value });
                         database.Query<GenericEntity<byte[]>>($"select {null} AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (byte[])null });
+                    }
+                }
+            }
+
+            public class CustomConverters
+                : Query
+            {
+                [Fact]
+                public void Errors_when_type_does_not_have_a_converter()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        Action act = () =>
+                            database.RawQuery<int>("select count(1) where 1 = @Foo", new { Foo = new UnhandledType(UnhandledTypeOptions.Default) });
+
+                        act.ShouldThrow<NotSupportedException>()
+                           .WithMessage("The member Foo of type PeregrineDb.Tests.SharedTypes.UnhandledType cannot be used as a parameter value");
+                    }
+                }
+
+                [Fact]
+                public void Does_not_error_when_unknown_parameter_is_not_used()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        database.RawQuery<int>("select @Bar", new { Foo = new UnhandledType(UnhandledTypeOptions.Default), Bar = 23 }).ShouldAllBeEquivalentTo(new[] { 23 });
+                    }
+                }
+
+                [Fact]
+                public void Can_use_converter_with_value_types()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        TypeProvider.ResetTypeHandlers();
+                        TypeProvider.AddTypeHandler(typeof(LocalDate), LocalDateConverter.Default);
+
+                        database.Query<LocalDate>($"SELECT {new LocalDate { Year = 2014, Month = 7, Day = 25 }}").ShouldAllBeEquivalentTo(new LocalDate { Year = 2014, Month = 7, Day = 25 });
+                        database.Query<LocalDate?>($"SELECT {new LocalDate { Year = 2014, Month = 7, Day = 25 }}").ShouldAllBeEquivalentTo(new LocalDate { Year = 2014, Month = 7, Day = 25 });
+                        ////TODO: database.Query<LocalDate?>($"SELECT {(LocalDate?)null}").ShouldAllBeEquivalentTo((LocalDate?)null);
+
+                        database.Query<GenericEntity<LocalDate>>($"SELECT {new LocalDate { Year = 2014, Month = 7, Day = 25 }} AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new LocalDate { Year = 2014, Month = 7, Day = 25 });
+                        database.Query<GenericEntity<LocalDate?>>($"SELECT {new LocalDate { Year = 2014, Month = 7, Day = 25 }} AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new LocalDate { Year = 2014, Month = 7, Day = 25 });
+                        database.Query<GenericEntity<LocalDate?>>($"SELECT {(LocalDate?)null} AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo((LocalDate?)null);
+
+                        TypeProvider.ResetTypeHandlers();
+                        TypeProvider.AddTypeHandler(typeof(LocalDate?), LocalDateConverter.Default);
+
+                        database.Query<LocalDate>($"SELECT {new LocalDate { Year = 2014, Month = 7, Day = 25 }}").ShouldAllBeEquivalentTo(new LocalDate { Year = 2014, Month = 7, Day = 25 });
+                        database.Query<LocalDate?>($"SELECT {new LocalDate { Year = 2014, Month = 7, Day = 25 }}").ShouldAllBeEquivalentTo(new LocalDate { Year = 2014, Month = 7, Day = 25 });
+                        ////TODO: database.Query<LocalDate?>($"SELECT {(LocalDate?)null}").ShouldAllBeEquivalentTo((LocalDate?)null);
+
+                        database.Query<GenericEntity<LocalDate>>($"SELECT {new LocalDate { Year = 2014, Month = 7, Day = 25 }} AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new LocalDate { Year = 2014, Month = 7, Day = 25 });
+                        database.Query<GenericEntity<LocalDate?>>($"SELECT {new LocalDate { Year = 2014, Month = 7, Day = 25 }} AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new LocalDate { Year = 2014, Month = 7, Day = 25 });
+                        database.Query<GenericEntity<LocalDate?>>($"SELECT {(LocalDate?)null} AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo((LocalDate?)null);
+                    }
+                }
+
+                [Fact]
+                public void Can_use_converter_with_classes()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        TypeProvider.AddTypeHandler(RatingValueConverter.Default);
+                        var foo = database.Query<GenericEntity<RatingValue>>($"SELECT 200 AS Value").Single();
+
+                        Assert.Equal(200, foo.Value.Value);
+                    }
+                }
+
+                [Fact]
+                public void Can_use_converter_to_parse_ienumerable()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        try
+                        {
+                            TypeProvider.ResetTypeHandlers();
+                            TypeProvider.AddTypeHandler(StringListConverter.Default);
+
+                            database.Query<GenericEntity<List<string>>>($"SELECT 'Sam,Kyro' AS Value").Select(e => e.Value)
+                                    .ShouldAllBeEquivalentTo(new[] { new List<string> { "Sam", "Kyro" } }, o => o.WithStrictOrdering());
+                        }
+                        finally
+                        {
+                            TypeProvider.ResetTypeHandlers();
+                        }
+                    }
+                }
+
+                [Fact]
+                public void Can_use_converter_to_set_parameter_value()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
+                    {
+                        TypeProvider.ResetTypeHandlers();
+                        TypeProvider.AddTypeHandler(StringListConverter.Default);
+
+                        try
+                        {
+                            database.Query<string>($"SELECT {new List<string> { "Sam", "Kyro" }}").ShouldAllBeEquivalentTo(new[] { "Sam,Kyro" });
+                        }
+                        finally
+                        {
+                            TypeProvider.ResetTypeHandlers();
+                        }
                     }
                 }
             }
@@ -1159,34 +1319,6 @@
                         // note this might fail if your database server is case-sensitive
                         Assert.Equal(new[] { 1 },
                             database.RawQuery<int>("select * from (select 1 as Id) as X where Id = ANY (@ids)", new { Ids = new[] { 1 } }));
-                    }
-                }
-            }
-
-            public class UnhandledMethods
-                : Query
-            {
-                [Fact]
-                public void TestUnexpectedDataMessage()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        Action act = () =>
-                            database.RawQuery<int>("select count(1) where 1 = @Foo", new { Foo = new UnhandledType(UnhandledTypeOptions.Default) });
-
-                        act.ShouldThrow<Exception>()
-                           .WithMessage("The member Foo of type PeregrineDb.Tests.SharedTypes.UnhandledType cannot be used as a parameter value");
-                    }
-                }
-
-                [Fact]
-                public void TestUnexpectedButFilteredDataMessage()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        var i = database.RawQuery<int>("select @Bar", new { Foo = new UnhandledType(UnhandledTypeOptions.Default), Bar = 23 }).Single();
-
-                        Assert.Equal(23, i);
                     }
                 }
             }

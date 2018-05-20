@@ -5,6 +5,7 @@
     using System.Globalization;
     using PeregrineDb.Databases.Mapper;
     using PeregrineDb.Mapping;
+    using PeregrineDb.Utils;
 
     internal static class DataReaderExtensions
     {
@@ -18,7 +19,7 @@
                 QueryCache.SetQueryCache(identity, info);
             }
 
-            var convertToType = Nullable.GetUnderlyingType(effectiveType) ?? effectiveType;
+            var convertToType = effectiveType.GetUnderlyingType();
             return r => Deserialze<T>(r, tuple, convertToType);
         }
 
