@@ -1,7 +1,6 @@
 ﻿namespace PeregrineDb.Tests.Databases
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.Data;
     using System.Data.SqlClient;
@@ -10,7 +9,6 @@
     using System.Globalization;
     using System.Linq;
     using FluentAssertions;
-    using PeregrineDb.Databases.Mapper;
     using PeregrineDb.Mapping;
     using PeregrineDb.Tests.Databases.Mapper.Helpers;
     using PeregrineDb.Tests.Databases.Mapper.SharedTypes;
@@ -61,8 +59,7 @@
 
                         // Assert
                         act.ShouldThrow<InvalidOperationException>()
-                           .WithMessage(
-                               "PeregrineDb.Tests.Databases.DefaultDatabaseConnectionStatementsTests+Query+Constructors+NoPublicConstructor must have a public parameterless constructor");
+                           .WithMessage("PeregrineDb.Tests.Databases.Mapper.SharedTypes.NoPublicConstructor must have a public parameterless constructor");
                     }
                 }
 
@@ -77,47 +74,8 @@
                         // Assert
                         act.ShouldThrow<InvalidOperationException>()
                            .WithMessage(
-                               "PeregrineDb.Tests.Databases.DefaultDatabaseConnectionStatementsTests+Query+Constructors+NoParameterlessConstructor must have a public parameterless constructor");
+                               "PeregrineDb.Tests.Databases.Mapper.SharedTypes.NoParameterlessConstructor must have a public parameterless constructor");
                     }
-                }
-
-
-                private class MultipleConstructors
-                {
-                    public MultipleConstructors()
-                    {
-                    }
-
-                    public MultipleConstructors(int a)
-                    {
-                        this.A = a + 1;
-                    }
-
-                    public int A { get; set; }
-                }
-
-                private class PublicParameterlessConstructor
-                {
-                    public int A { get; set; }
-                }
-
-                private class NoPublicConstructor
-                {
-                    private NoPublicConstructor()
-                    {
-                    }
-
-                    public int A { get; set; }
-                }
-
-                private class NoParameterlessConstructor
-                {
-                    private NoParameterlessConstructor(int a)
-                    {
-                        this.A = a;
-                    }
-
-                    public int A { get; set; }
                 }
             }
 
@@ -148,29 +106,6 @@
                         // Assert
                         Assert.Equal(3, order.Public);
                         Assert.Equal(4, order.Concrete);
-                    }
-                }
-
-                private class InheritanceTest1
-                {
-                    public string Base1 { get; set; }
-                }
-
-                private class InheritanceTest2 : InheritanceTest1
-                {
-                    public string Derived1 { get; set; }
-                }
-
-                public static class AbstractInheritance
-                {
-                    public abstract class Order
-                    {
-                        public int Public { get; set; }
-                    }
-
-                    public class ConcreteOrder : Order
-                    {
-                        public int Concrete { get; set; }
                     }
                 }
             }
@@ -309,39 +244,6 @@
                             });
                     }
                 }
-
-                private class TestObj
-                {
-                    public int _internal;
-
-                    internal int Internal
-                    {
-                        set { this._internal = value; }
-                    }
-
-                    public int _priv;
-
-                    private int Priv
-                    {
-                        set { this._priv = value; }
-                    }
-
-                    private int PrivGet => this._priv;
-                }
-
-                private class TestFieldsEntity
-                {
-                    public int a;
-
-                    public int b = 5;
-
-                    private int c;
-
-                    public int GetC()
-                    {
-                        return c;
-                    }
-                }
             }
 
             public class Parameters
@@ -395,17 +297,6 @@
 
                         // Assert
                         result.A.Should().Be(5);
-                    }
-                }
-
-                public class ParameterWithIndexer
-                {
-                    public int A { get; set; }
-
-                    public virtual string this[string columnName]
-                    {
-                        get { return null; }
-                        set { }
                     }
                 }
             }
@@ -545,21 +436,6 @@
                         Assert.Equal(3, a);
                         Assert.Equal(6, b);
                     }
-                }
-
-                private class DbStringTestEntity
-                {
-                    public int A { get; set; }
-
-                    public int B { get; set; }
-
-                    public int C { get; set; }
-
-                    public int D { get; set; }
-
-                    public int E { get; set; }
-
-                    public int F { get; set; }
                 }
             }
 
@@ -1036,35 +912,6 @@
             public class CustomDynamicParameters
                 : Query
             {
-                private class DbParams
-                    : IDynamicParameters, IEnumerable<IDbDataParameter>
-                {
-                    private readonly List<IDbDataParameter> parameters = new List<IDbDataParameter>();
-
-                    public IEnumerator<IDbDataParameter> GetEnumerator()
-                    {
-                        return this.parameters.GetEnumerator();
-                    }
-
-                    IEnumerator IEnumerable.GetEnumerator()
-                    {
-                        return this.GetEnumerator();
-                    }
-
-                    public void Add(IDbDataParameter value)
-                    {
-                        this.parameters.Add(value);
-                    }
-
-                    void IDynamicParameters.AddParameters(IDbCommand command, Identity identity)
-                    {
-                        foreach (var parameter in this.parameters)
-                        {
-                            command.Parameters.Add(parameter);
-                        }
-                    }
-                }
-
                 [Fact]
                 public void TestCustomParameters()
                 {
@@ -1107,17 +954,6 @@
                     }
                 }
 
-                private class TestAppendingAnonClassesEntity
-                {
-                    public int A { get; set; }
-
-                    public int B { get; set; }
-
-                    public int C { get; set; }
-
-                    public int D { get; set; }
-                }
-
                 [Fact]
                 public void TestAppendingADictionary()
                 {
@@ -1137,13 +973,6 @@
                         Assert.Equal(1, result.a);
                         Assert.Equal("two", result.b);
                     }
-                }
-
-                private class TestAppendingADictionaryEntity
-                {
-                    public int a { get; set; }
-
-                    public string b { get; set; }
                 }
 
                 [Fact(Skip = "Not working")]
@@ -1321,14 +1150,6 @@
                         Assert.Equal("T Rex", fromDb.Name);
                         Assert.Equal(123L, (long)fromDb.Foo);
                     }
-                }
-
-                public class Dyno
-                {
-                    public dynamic Id { get; set; }
-                    public string Name { get; set; }
-
-                    public object Foo { get; set; }
                 }
 
                 [Fact]
