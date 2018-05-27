@@ -14,7 +14,7 @@
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                 {
-                    var str = await database.QuerySingleAsync<string>($"select 'abc' as [Value]").ConfigureAwait(false);
+                    var str = await database.QuerySingleAsync<string>("select \'abc\' as [Value]").ConfigureAwait(false);
                     Assert.Equal("abc", str);
                 }
             }

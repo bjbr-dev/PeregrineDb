@@ -14,7 +14,7 @@
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                 {
-                    Assert.Equal(42, database.RawQuerySingle<int>("select @Item1", Tuple.Create(42, "Fred")));
+                    Assert.Equal(42, database.QuerySingle<int>("select @Item1", Tuple.Create(42, "Fred")));
                 }
             }
 
@@ -24,7 +24,7 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                 {
                     // regular parameter
-                    var result = database.RawQuerySingle<int>("select @æøå٦", new { æøå٦ = 42 });
+                    var result = database.QuerySingle<int>("select @æøå٦", new { æøå٦ = 42 });
                     Assert.Equal(42, result);
                 }
             }
@@ -34,7 +34,7 @@
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                 {
-                    FormattableString sql = $"select 0 where 1 = 0;"; // no rows
+                    var sql = "select 0 where 1 = 0;"; // no rows
 
                     var ex = Assert.Throws<InvalidOperationException>(() => database.QueryFirst<int>(sql));
                     Assert.Equal("Sequence contains no elements", ex.Message);
@@ -45,13 +45,13 @@
                     Assert.Equal(0, database.QueryFirstOrDefault<int>(sql));
                     Assert.Equal(0, database.QuerySingleOrDefault<int>(sql));
 
-                    sql = $"select 1;"; // one row
+                    sql = "select 1;"; // one row
                     Assert.Equal(1, database.QueryFirst<int>(sql));
                     Assert.Equal(1, database.QuerySingle<int>(sql));
                     Assert.Equal(1, database.QueryFirstOrDefault<int>(sql));
                     Assert.Equal(1, database.QuerySingleOrDefault<int>(sql));
 
-                    sql = $"select 2 union select 3 order by 1;"; // two rows
+                    sql = "select 2 union select 3 order by 1;"; // two rows
                     Assert.Equal(2, database.QueryFirst<int>(sql));
 
                     ex = Assert.Throws<InvalidOperationException>(() => database.QuerySingle<int>(sql));
@@ -69,7 +69,7 @@
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                 {
-                    var obj = database.QuerySingle<HazGetOnly>($"select 42 as [Id], 'def' as [Name];");
+                    var obj = database.QuerySingle<HazGetOnly>("select 42 as [Id], \'def\' as [Name];");
                     Assert.Equal(default, obj.Id);
                     Assert.Equal("abc", obj.Name);
                 }

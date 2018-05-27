@@ -9,6 +9,7 @@ namespace PeregrineDb.Schema
     using System.Data;
     using System.Linq;
     using System.Reflection;
+    using PeregrineDb.Databases.Mapper;
     using PeregrineDb.Utils;
 
     /// <summary>
@@ -25,7 +26,6 @@ namespace PeregrineDb.Schema
         private readonly ISqlNameEscaper nameEscaper;
         private readonly ITableNameConvention tableNameConvention;
         private readonly IColumnNameConvention columnNameConvention;
-        private readonly Dictionary<Type, DbType> sqlTypeMappings;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TableSchemaFactory"/> class.
@@ -33,8 +33,7 @@ namespace PeregrineDb.Schema
         public TableSchemaFactory(
             ISqlNameEscaper nameEscaper,
             ITableNameConvention tableNameConvention,
-            IColumnNameConvention columnNameConvention,
-            ImmutableDictionary<Type, DbType> sqlTypeMappings)
+            IColumnNameConvention columnNameConvention)
         {
             Ensure.NotNull(nameEscaper, nameof(nameEscaper));
             Ensure.NotNull(tableNameConvention, nameof(tableNameConvention));
@@ -43,7 +42,6 @@ namespace PeregrineDb.Schema
             this.nameEscaper = nameEscaper;
             this.tableNameConvention = tableNameConvention;
             this.columnNameConvention = columnNameConvention;
-            this.sqlTypeMappings = sqlTypeMappings.ToDictionary(k => k.Key, v => v.Value);
         }
 
         /// <summary>
@@ -115,13 +113,7 @@ namespace PeregrineDb.Schema
 
         private bool CouldBeColumn(PropertyInfo property)
         {
-            if (property.GetIndexParameters().Length != 0)
-            {
-                return false;
-            }
-
-            var propertyType = property.PropertyType.GetUnderlyingType();
-            return propertyType.GetTypeInfo().IsEnum || this.sqlTypeMappings.ContainsKey(propertyType);
+            return property.GetIndexParameters().Length == 0;
         }
 
         private static ColumnUsage GetColumnUsage(bool explicitKeyDefined, PropertySchema property)
@@ -228,13 +220,9 @@ namespace PeregrineDb.Schema
                 return new DbTypeEx(DbType.Int32, property.IsNullable, null);
             }
 
-            if (this.sqlTypeMappings.TryGetValue(property.EffectiveType, out var dbType))
-            {
-                var allowNull = property.IsNullable || (!property.Type.GetTypeInfo().IsValueType && property.FindAttribute<RequiredAttribute>() == null);
-                return new DbTypeEx(dbType, allowNull, this.GetMaxLength(property));
-            }
-
-            throw new NotSupportedException("Unknown property type: " + property.EffectiveType);
+            var dbType = TypeProvider.LookupDbType(property.EffectiveType, property.Name, true, out _);
+            var allowNull = property.IsNullable || (!property.Type.GetTypeInfo().IsValueType && property.FindAttribute<RequiredAttribute>() == null);
+            return new DbTypeEx(dbType, allowNull, this.GetMaxLength(property));
         }
 
         private int? GetMaxLength(PropertySchema property)

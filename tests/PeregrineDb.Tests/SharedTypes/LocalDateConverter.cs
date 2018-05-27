@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.SharedTypes
+namespace PeregrineDb.Tests.SharedTypes
 {
     using System;
     using System.Data;
@@ -20,16 +20,22 @@
         // by mistake.
         public static readonly IDbTypeConverter Default = new LocalDateConverter();
 
-        public override LocalDate Parse(object value)
-        {
-            var date = (DateTime)value;
-            return new LocalDate { Year = date.Year, Month = date.Month, Day = date.Day };
-        }
-
         public override void SetValue(IDbDataParameter parameter, LocalDate value)
         {
             parameter.DbType = DbType.DateTime;
             parameter.Value = new DateTime(value.Year, value.Month, value.Day);
+        }
+
+        public override void SetNullValue(IDbDataParameter parameter)
+        {
+            parameter.DbType = DbType.DateTime;
+            parameter.Value = DBNull.Value;
+        }
+
+        public override LocalDate Parse(object value)
+        {
+            var date = (DateTime)value;
+            return new LocalDate { Year = date.Year, Month = date.Month, Day = date.Day };
         }
     }
 }

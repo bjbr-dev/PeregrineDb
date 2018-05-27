@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Databases
+namespace PeregrineDb.Databases
 {
     using System;
     using System.Collections.Generic;
@@ -16,12 +16,7 @@
     /// </remarks>
     public partial class DefaultSqlConnection
     {
-        public async Task<IReadOnlyList<T>> RawQueryAsync<T>(
-            string sql,
-            object parameters,
-            CommandType commandType = CommandType.Text,
-            int? commandTimeout = null,
-            CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<T>> QueryAsync<T>(string sql, object parameters, CommandType commandType, int? commandTimeout, CancellationToken cancellationToken)
         {
             var effectiveType = typeof(T);
             var identity = new Identity(sql, commandType, this.connection, effectiveType, parameters?.GetType(), null);
@@ -50,18 +45,7 @@
             }
         }
 
-        public Task<IReadOnlyList<T>> QueryAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
-        {
-            var command = MakeCommand(sql);
-            return this.RawQueryAsync<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
-        }
-
-        public async Task<T> RawQueryFirstAsync<T>(
-            string sql,
-            object parameters,
-            CommandType commandType = CommandType.Text,
-            int? commandTimeout = null,
-            CancellationToken cancellationToken = default)
+        public async Task<T> QueryFirstAsync<T>(string sql, object parameters, CommandType commandType, int? commandTimeout, CancellationToken cancellationToken)
         {
             var effectiveType = typeof(T);
             var identity = new Identity(sql, commandType, this.connection, effectiveType, parameters?.GetType(), null);
@@ -95,18 +79,7 @@
             }
         }
 
-        public Task<T> QueryFirstAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
-        {
-            var command = MakeCommand(sql);
-            return this.RawQueryFirstAsync<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
-        }
-
-        public async Task<T> RawQueryFirstOrDefaultAsync<T>(
-            string sql,
-            object parameters,
-            CommandType commandType = CommandType.Text,
-            int? commandTimeout = null,
-            CancellationToken cancellationToken = default)
+        public async Task<T> QueryFirstOrDefaultAsync<T>(string sql, object parameters, CommandType commandType, int? commandTimeout, CancellationToken cancellationToken)
         {
             var effectiveType = typeof(T);
             var identity = new Identity(sql, commandType, this.connection, effectiveType, parameters?.GetType(), null);
@@ -139,18 +112,7 @@
             }
         }
 
-        public Task<T> QueryFirstOrDefaultAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
-        {
-            var command = MakeCommand(sql);
-            return this.RawQueryFirstOrDefaultAsync<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
-        }
-
-        public async Task<T> RawQuerySingleAsync<T>(
-            string sql,
-            object parameters,
-            CommandType commandType = CommandType.Text,
-            int? commandTimeout = null,
-            CancellationToken cancellationToken = default)
+        public async Task<T> QuerySingleAsync<T>(string sql, object parameters, CommandType commandType, int? commandTimeout, CancellationToken cancellationToken)
         {
             var effectiveType = typeof(T);
             var identity = new Identity(sql, commandType, this.connection, effectiveType, parameters?.GetType(), null);
@@ -184,18 +146,7 @@
             }
         }
 
-        public Task<T> QuerySingleAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
-        {
-            var command = MakeCommand(sql);
-            return this.RawQuerySingleAsync<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
-        }
-
-        public async Task<T> RawQuerySingleOrDefaultAsync<T>(
-            string sql,
-            object parameters,
-            CommandType commandType = CommandType.Text,
-            int? commandTimeout = null,
-            CancellationToken cancellationToken = default)
+        public async Task<T> QuerySingleOrDefaultAsync<T>(string sql, object parameters, CommandType commandType, int? commandTimeout, CancellationToken cancellationToken)
         {
             var effectiveType = typeof(T);
             var identity = new Identity(sql, commandType, this.connection, effectiveType, parameters?.GetType(), null);
@@ -228,18 +179,7 @@
             }
         }
 
-        public Task<T> QuerySingleOrDefaultAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
-        {
-            var command = MakeCommand(sql);
-            return this.RawQuerySingleOrDefaultAsync<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
-        }
-
-        public async Task<CommandResult> RawExecuteMultipleAsync<T>(
-            string sql,
-            IEnumerable<T> parameters,
-            CommandType commandType,
-            int? commandTimeout,
-            CancellationToken cancellationToken)
+        public async Task<CommandResult> ExecuteMultipleAsync<T>(string sql, IEnumerable<T> parameters, CommandType commandType, int? commandTimeout, CancellationToken cancellationToken)
         {
             var isFirst = true;
             var total = 0;
@@ -271,12 +211,7 @@
             return new CommandResult(total);
         }
 
-        public async Task<CommandResult> RawExecuteAsync<T>(
-            string sql,
-            T parameters,
-            CommandType commandType = CommandType.Text,
-            int? commandTimeout = null,
-            CancellationToken cancellationToken = default)
+        public async Task<CommandResult> ExecuteAsync(string sql, object parameters, CommandType commandType, int? commandTimeout, CancellationToken cancellationToken)
         {
             var identity = new Identity(sql, commandType, this.connection, null, parameters?.GetType(), null);
             var info = SqlMapper.GetCacheInfo(identity, parameters, true);
@@ -286,13 +221,7 @@
             }
         }
 
-        public Task<CommandResult> ExecuteAsync(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
-        {
-            var command = MakeCommand(sql);
-            return this.RawExecuteAsync(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
-        }
-
-        public async Task<T> RawExecuteScalarAsync<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null, CancellationToken cancellationToken = default)
+        public async Task<T> ExecuteScalarAsync<T>(string sql, object parameters, CommandType commandType, int? commandTimeout, CancellationToken cancellationToken)
         {
             Action<IDbCommand, object> paramReader = null;
             if (parameters != null)
@@ -306,12 +235,6 @@
                 var result = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
                 return TypeMapper.Parse<T>(result);
             }
-        }
-
-        public Task<T> ExecuteScalarAsync<T>(FormattableString sql, int? commandTimeout = null, CancellationToken cancellationToken = default)
-        {
-            var command = MakeCommand(sql);
-            return this.RawExecuteScalarAsync<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         private IDbCommand MakeCommand(string sql, object parameters, CommandType commandType, int? commandTimeout, Action<IDbCommand, object> paramReader)

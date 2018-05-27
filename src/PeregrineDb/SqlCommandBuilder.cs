@@ -1,9 +1,8 @@
-﻿namespace PeregrineDb
+namespace PeregrineDb
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Reflection;
     using System.Text;
     using PeregrineDb.Schema;
 
@@ -140,7 +139,7 @@
 
             var commandParameters = new Dictionary<string, object>();
 
-            foreach (var property in value.GetType().GetTypeInfo().DeclaredProperties.Where(p => p.GetIndexParameters().Length == 0))
+            foreach (var property in value.GetType().GetProperties().Where(p => p.GetIndexParameters().Length == 0))
             {
                 commandParameters[property.Name] = property.GetValue(value);
             }

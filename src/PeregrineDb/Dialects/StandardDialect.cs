@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Dialects
+namespace PeregrineDb.Dialects
 {
     using System;
     using System.Collections.Generic;
@@ -242,7 +242,7 @@
         }
 
         /// <inheritdoc />
-        public FormattableString MakeWhereClause(ImmutableArray<ConditionColumnSchema> conditionsSchema, object conditions)
+        protected FormattableString MakeWhereClause(ImmutableArray<ConditionColumnSchema> conditionsSchema, object conditions)
         {
             if (conditionsSchema.IsEmpty)
             {

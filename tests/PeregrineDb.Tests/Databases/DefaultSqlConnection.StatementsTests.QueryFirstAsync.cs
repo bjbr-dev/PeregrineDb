@@ -14,8 +14,7 @@
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                 {
-                    var str = await database.QueryFirstAsync<string>($"select 'abc' as [Value] union all select {"def"}").ConfigureAwait(false);
-                    Assert.Equal("abc", str);
+                    Assert.Equal("abc", await database.QueryFirstAsync<string>("select 'abc' as [Value] union all select @value", new { value = "def" }).ConfigureAwait(false));
                 }
             }
         }

@@ -3,11 +3,13 @@
     using System;
     using System.Data;
     using FluentAssertions;
+    using PeregrineDb.Databases.Mapper;
     using PeregrineDb.Dialects;
     using PeregrineDb.Mapping;
-    using PeregrineDb.Tests.ExampleEntities;
+    using PeregrineDb.Tests.SharedTypes;
     using PeregrineDb.Tests.Utils;
     using Xunit;
+    using Dog = PeregrineDb.Tests.ExampleEntities.Dog;
 
     public abstract partial class DefaultDatabaseConnectionStatementsTests
     {
@@ -27,7 +29,7 @@
                         using (var unitOfWork = database.StartUnitOfWork())
                         {
                             var command = dialect.MakeInsertCommand(new Dog { Name = "Foo", Age = 4 });
-                            unitOfWork.RawExecute(command.CommandText, command.Parameters);
+                            unitOfWork.Execute(command.CommandText, command.Parameters);
 
                             unitOfWork.SaveChanges();
                         }
@@ -47,7 +49,7 @@
                         using (var unitOfWork = database.StartUnitOfWork())
                         {
                             var command = dialect.MakeInsertCommand(new Dog { Name = "Foo", Age = 4 });
-                            unitOfWork.RawExecute(command.CommandText, command.Parameters);
+                            unitOfWork.Execute(command.CommandText, command.Parameters);
                         }
 
                         // Assert
@@ -67,7 +69,7 @@
                             using (var unitOfWork = database.StartUnitOfWork())
                             {
                                 var command = dialect.MakeInsertCommand(new Dog { Name = "Foo", Age = 4 });
-                                unitOfWork.RawExecute(command.CommandText, command.Parameters);
+                                unitOfWork.Execute(command.CommandText, command.Parameters);
 
                                 throw new Exception();
                             }
@@ -89,7 +91,7 @@
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
                         // Act
-                        var result = database.Execute($@"
+                        var result = database.Execute(@"
 SET NOCOUNT ON
 INSERT INTO dogs (name, age)
 VALUES ('Rover', 5);
@@ -106,7 +108,7 @@ SET NOCOUNT OFF");
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
                         // Act
-                        var result = database.Execute($@"
+                        var result = database.Execute(@"
 INSERT INTO dogs (name, age)
 VALUES ('Rover', 5);
 INSERT INTO dogs (name, age)
@@ -122,38 +124,12 @@ VALUES ('Rex', 7);");
                 : Execute
             {
                 [Fact]
-                public void Executes_command_with_interpolated_arguments()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        // Act
-                        database.Execute($"INSERT INTO dogs (name, age) VALUES ({"Rover"}, {5})");
-
-                        // Assert
-                        database.GetAll<Dog>().ShouldAllBeEquivalentTo(new { Name = "Rover", Age = 5 }, o => o.Excluding(e => e.Id));
-                    }
-                }
-
-                [Fact]
-                public void Does_not_allow_sql_injection_through_interpolated_arguments()
-                {
-                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
-                    {
-                        // Act
-                        database.Execute($"INSERT INTO dogs (name, age) VALUES ({"Rover) --"}, {5})");
-
-                        // Assert
-                        database.GetAll<Dog>().ShouldAllBeEquivalentTo(new { Name = "Rover) --", Age = 5 }, o => o.Excluding(e => e.Id));
-                    }
-                }
-
-                [Fact]
                 public void Executes_command_with_dynamic_parameters()
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
                         // Act
-                        database.RawExecute("INSERT INTO dogs (name, age) VALUES (@Name, @Age)", new { Name = "Rover", Age = 5 });
+                        database.Execute("INSERT INTO dogs (name, age) VALUES (@Name, @Age)", new { Name = "Rover", Age = 5 });
 
                         // Assert
                         database.GetAll<Dog>().ShouldAllBeEquivalentTo(new { Name = "Rover", Age = 5 }, o => o.Excluding(e => e.Id));
@@ -166,10 +142,24 @@ VALUES ('Rex', 7);");
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
                         // Act
-                        database.RawExecute("INSERT INTO dogs (name, age) VALUES (@Name, @Age)", new { Name = "Rover) --", Age = 5 });
+                        database.Execute("INSERT INTO dogs (name, age) VALUES (@Name, @Age)", new { Name = "Rover) --", Age = 5 });
 
                         // Assert
                         database.GetAll<Dog>().ShouldAllBeEquivalentTo(new { Name = "Rover) --", Age = 5 }, o => o.Excluding(e => e.Id));
+                    }
+                }
+
+                [Fact]
+                public void Can_use_custom_converter_in_interpolated_arguments()
+                {
+                    using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
+                    {
+                        // Arrange
+                        TypeProvider.AddTypeHandler(new CitextConverter());
+
+                        // Act
+                        database.Execute("INSERT INTO parameter_types(typname) SELECT typname FROM pg_type WHERE oid = pg_typeof(@foo) AND typname = 'citext'", new { foo = (Citext)"foo" }).ExpectingAffectedRowCountToBe(1);
+                        database.Execute("INSERT INTO parameter_types(typname) SELECT typname FROM pg_type WHERE oid = pg_typeof(@foo) AND typname = 'citext'", new { foo = (Citext)null }).ExpectingAffectedRowCountToBe(1);
                     }
                 }
 
@@ -182,7 +172,7 @@ VALUES ('Rex', 7);");
                         var p = new DynamicParameters(new { a = 1, b = 2 });
                         p.Add("c", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-                        database.RawExecute("set @c = @a + @b", p);
+                        database.Execute("set @c = @a + @b", p);
 
                         // Assert
                         p.Get<int>("@c").Should().Be(3);
@@ -197,7 +187,7 @@ VALUES ('Rex', 7);");
                         // Act
                         var p = new DynamicParameters();
                         p.Add("@b", dbType: DbType.Int32, direction: ParameterDirection.Output);
-                        database.RawExecute("select @b = null", p);
+                        database.Execute("select @b = null", p);
 
                         // Assert
                         p.Get<int?>("@b").Should().BeNull();

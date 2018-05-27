@@ -34,8 +34,7 @@
             private TableSchema PerformAct(Type entityType)
             {
                 var sqlNameEscaper = new TestSqlNameEscaper();
-                var schemaFactory = new TableSchemaFactory(sqlNameEscaper, this.sut.TableNameConvention, this.sut.ColumnNameConvention,
-                    PeregrineConfig.DefaultSqlTypeMapping);
+                var schemaFactory = new TableSchemaFactory(sqlNameEscaper, this.sut.TableNameConvention, this.sut.ColumnNameConvention);
                 return schemaFactory.GetTableSchema(entityType);
             }
 
@@ -437,7 +436,7 @@
             {
                 var sqlNameEscaper = new TestSqlNameEscaper();
                 var schemaFactory = new TableSchemaFactory(sqlNameEscaper, new AtttributeTableNameConvention(sqlNameEscaper),
-                    new AttributeColumnNameConvention(sqlNameEscaper), PeregrineConfig.DefaultSqlTypeMapping);
+                    new AttributeColumnNameConvention(sqlNameEscaper));
                 return schemaFactory.GetConditionsSchema(typeof(T), schema, typeof(T));
             }
 
@@ -445,7 +444,7 @@
             {
                 var sqlNameEscaper = new TestSqlNameEscaper();
                 var schemaFactory = new TableSchemaFactory(sqlNameEscaper, new AtttributeTableNameConvention(sqlNameEscaper),
-                    new AttributeColumnNameConvention(sqlNameEscaper), PeregrineConfig.DefaultSqlTypeMapping);
+                    new AttributeColumnNameConvention(sqlNameEscaper));
                 return schemaFactory.GetTableSchema(typeof(T));
             }
 

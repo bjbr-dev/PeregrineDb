@@ -14,7 +14,7 @@
 
             foreach (var statement in commands)
             {
-                connection.RawExecute(statement.CommandText, statement.Parameters, CommandType.Text, commandTimeout);
+                connection.Execute(statement.CommandText, statement.Parameters, CommandType.Text, commandTimeout);
             }
 
             return commands;
@@ -28,14 +28,14 @@
             }
 
             var allTablesStatement = dialect.MakeGetAllTablesStatement();
-            var tables = connection.RawQuery<AllTablesQueryResult>(allTablesStatement.CommandText, allTablesStatement.Parameters)
+            var tables = connection.Query<AllTablesQueryResult>(allTablesStatement.CommandText, allTablesStatement.Parameters)
                                    .Select(t => t.Name)
                                    .Except(ignoredTables ?? Enumerable.Empty<string>())
                                    .OrderBy(t => t)
                                    .ToList();
 
             var allRelationsStatement = dialect.MakeGetAllRelationsStatement();
-            var relations = connection.RawQuery<TableRelationsQueryResult>(allRelationsStatement.CommandText, allRelationsStatement.Parameters);
+            var relations = connection.Query<TableRelationsQueryResult>(allRelationsStatement.CommandText, allRelationsStatement.Parameters);
 
             var schemaRelations = new SchemaRelations(tables);
 

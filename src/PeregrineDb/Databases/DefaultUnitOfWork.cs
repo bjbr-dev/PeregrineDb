@@ -1,17 +1,13 @@
-﻿namespace PeregrineDb.Databases
+namespace PeregrineDb.Databases
 {
     using System.Data;
 
     public static class DefaultUnitOfWork
     {
         /// <summary>
-        /// Create a new, dynamic instance of <see cref="DefaultUnitOfWork{TConnection,TTransaction}"/>. This method is a light weight wrapper for generic inference.
+        /// Create a new, dynamic instance of <see cref="DefaultUnitOfWork{TConnection,TTransaction}"/>. This method is a light weight wrapper of <see cref="DefaultUnitOfWork{TConnection,TTransaction}(TConnection, TTransaction, PeregrineConfig, bool)"/> generic inference.
         /// </summary>
-        public static DefaultUnitOfWork<TConnection, TTransaction> From<TConnection, TTransaction>(
-            TConnection connection,
-            TTransaction transaction,
-            PeregrineConfig config,
-            bool leaveOpen = false)
+        public static DefaultUnitOfWork<TConnection, TTransaction> From<TConnection, TTransaction>(TConnection connection, TTransaction transaction, PeregrineConfig config, bool leaveOpen = false)
             where TConnection : IDbConnection
             where TTransaction : class, IDbTransaction
         {

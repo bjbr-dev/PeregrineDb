@@ -13,8 +13,7 @@
         : StandardDialect
     {
         public static TestDialect Instance { get; } = new TestDialect(new TableSchemaFactory(new TestSqlNameEscaper(),
-            new AtttributeTableNameConvention(new TestSqlNameEscaper()), new AttributeColumnNameConvention(new TestSqlNameEscaper()),
-            PeregrineConfig.DefaultSqlTypeMapping));
+            new AtttributeTableNameConvention(new TestSqlNameEscaper()), new AttributeColumnNameConvention(new TestSqlNameEscaper())));
 
         public TestDialect(TableSchemaFactory tableSchemaFactory)
             : base(tableSchemaFactory)

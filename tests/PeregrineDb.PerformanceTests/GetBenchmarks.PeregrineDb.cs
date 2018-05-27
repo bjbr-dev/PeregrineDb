@@ -21,28 +21,28 @@
         public Post QueryUnbuffered()
         {
             this.Step();
-            return this.database.Query<Post>($"select * from Posts where Id = {this.i}").First();
+            return this.database.Query<Post>("select * from Posts where Id = @id", new { id = this.i }).First();
         }
 
         [Benchmark(Description = "Query{dynamic}")]
         public dynamic QueryUnbufferedDynamic()
         {
             this.Step();
-            return this.database.Query<dynamic>($"select * from Posts where Id = {this.i}").First();
+            return this.database.Query<dynamic>("select * from Posts where Id = @id", new { id = this.i }).First();
         }
 
         [Benchmark(Description = "QueryFirstOrDefault{T}")]
         public Post QueryFirstOrDefault()
         {
             this.Step();
-            return this.database.QueryFirstOrDefault<Post>($"select * from Posts where Id = {this.i}");
+            return this.database.QueryFirstOrDefault<Post>("select * from Posts where Id = @id", new { id = this.i });
         }
 
         [Benchmark(Description = "QueryFirstOrDefault{dynamic}")]
         public dynamic QueryFirstOrDefaultDynamic()
         {
             this.Step();
-            return this.database.QueryFirstOrDefault<dynamic>($"select * from Posts where Id = {this.i}").First();
+            return this.database.QueryFirstOrDefault<dynamic>("select * from Posts where Id = @id", new { id = this.i }).First();
         }
 
         [Benchmark(Description = "Get{T}")]

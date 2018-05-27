@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Mapping
+namespace PeregrineDb.Mapping
 {
     using System;
     using System.Data;
@@ -17,6 +17,8 @@
         /// <param name="value">Parameter value</param>
         public abstract void SetValue(IDbDataParameter parameter, T value);
 
+        public abstract void SetNullValue(IDbDataParameter parameter);
+
         /// <summary>
         /// Parse a database value back to a typed value
         /// </summary>
@@ -28,7 +30,7 @@
         {
             if (Convert.IsDBNull(value))
             {
-                parameter.Value = value;
+                this.SetNullValue(parameter);
             }
             else
             {

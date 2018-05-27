@@ -37,7 +37,7 @@
                     throw new NotSupportedException("Unknown dialect: " + dialect.GetType().Name);
             }
 
-            DefaultDatabase<IDbConnection> OpenBlankDatabase(
+            IDatabase<IDbConnection> OpenBlankDatabase(
                 ObjectPool<string> pool,
                 Func<string, IDbConnection> makeConnection,
                 PeregrineConfig config)
@@ -86,7 +86,7 @@
 
                     using (var database = DefaultDatabase.From(con, PeregrineConfig.SqlServer2012))
                     {
-                        var databases = database.Query<string>($"SELECT name FROM sys.databases")
+                        var databases = database.Query<string>("SELECT name FROM sys.databases")
                                                 .Where(s => s.StartsWith(DatabasePrefix));
 
                         foreach (var databaseName in databases)
@@ -95,7 +95,7 @@
                             {
                                 try
                                 {
-                                    database.Execute(new SqlString($@"USE master; DROP DATABASE {databaseName};"));
+                                    database.Execute($@"USE master; DROP DATABASE {databaseName};");
                                 }
                                 catch (SqlException)
                                 {
@@ -113,7 +113,7 @@
 
                     using (var database = DefaultDatabase.From(con, PeregrineConfig.Postgres))
                     {
-                        var databases = database.Query<string>($"SELECT datname FROM pg_database")
+                        var databases = database.Query<string>("SELECT datname FROM pg_database")
                                                 .Where(s => s.StartsWith(DatabasePrefix));
 
                         foreach (var databaseName in databases)
@@ -122,7 +122,7 @@
                             {
                                 try
                                 {
-                                    database.Execute(new SqlString($@"DROP DATABASE {databaseName};"));
+                                    database.Execute($@"DROP DATABASE {databaseName};");
                                 }
                                 catch (NpgsqlException)
                                 {
@@ -148,7 +148,7 @@
 
                 using (var database = DefaultDatabase.From(con, PeregrineConfig.SqlServer2012))
                 {
-                    database.Execute(new SqlString("CREATE DATABASE " + databaseName));
+                    database.Execute("CREATE DATABASE " + databaseName);
                 }
             }
 
@@ -165,8 +165,8 @@
 
                 using (var database = DefaultDatabase.From(con, PeregrineConfig.SqlServer2012))
                 {
-                    database.Execute($"CREATE SCHEMA Other;");
-                    database.Execute(new SqlString(sql));
+                    database.Execute("CREATE SCHEMA Other;");
+                    database.Execute(sql);
                 }
             }
 
@@ -182,7 +182,7 @@
 
                 using (var database = DefaultDatabase.From(con, PeregrineConfig.Postgres))
                 {
-                    database.Execute(new SqlString("CREATE DATABASE " + databaseName));
+                    database.Execute("CREATE DATABASE " + databaseName);
                 }
             }
 
@@ -197,7 +197,8 @@
                 con.Open();
                 using (var database = DefaultDatabase.From(con, PeregrineConfig.Postgres))
                 {
-                    database.Execute(new SqlString(GetSql("CreatePostgreSql.sql")));
+                    database.Execute(GetSql("CreatePostgreSql.sql"));
+                    con.ReloadTypes();
                 }
             }
 

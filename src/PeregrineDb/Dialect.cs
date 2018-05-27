@@ -14,14 +14,12 @@
         /// Gets the Dialect for Microsoft SQL Server 2012
         /// </summary>
         public static IDialect SqlServer2012 { get; } = new SqlServer2012Dialect(new TableSchemaFactory(new SqlServer2012NameEscaper(),
-            new AtttributeTableNameConvention(new SqlServer2012NameEscaper()), new AttributeColumnNameConvention(new SqlServer2012NameEscaper()),
-            PeregrineConfig.DefaultSqlTypeMapping));
+            new AtttributeTableNameConvention(new SqlServer2012NameEscaper()), new AttributeColumnNameConvention(new SqlServer2012NameEscaper())));
 
         /// <summary>
         /// Gets the dialect for PostgreSQL.
         /// </summary>
         public static IDialect PostgreSql { get; } = new PostgreSqlDialect(new TableSchemaFactory(new PostgresNameEscaper(),
-            new PostgresAttributeTableNameConvention(new PostgresNameEscaper()), new PostgresAttributeColumnNameConvention(new PostgresNameEscaper()),
-            PeregrineConfig.DefaultSqlTypeMapping));
+            new PostgresAttributeTableNameConvention(new PostgresNameEscaper()), new PostgresAttributeColumnNameConvention(new PostgresNameEscaper())));
     }
 }

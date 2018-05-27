@@ -26,7 +26,7 @@
                         using (var unitOfWork = database.StartUnitOfWork())
                         {
                             var command = dialect.MakeInsertCommand(new Dog { Name = "Foo", Age = 4 });
-                            unitOfWork.RawExecute(command.CommandText, command.Parameters);
+                            unitOfWork.Execute(command.CommandText, command.Parameters);
 
                             unitOfWork.SaveChanges();
                         }
@@ -46,7 +46,7 @@
                         using (var unitOfWork = database.StartUnitOfWork())
                         {
                             var command = dialect.MakeInsertCommand(new Dog { Name = "Foo", Age = 4 });
-                            unitOfWork.RawExecute(command.CommandText, command.Parameters);
+                            unitOfWork.Execute(command.CommandText, command.Parameters);
                         }
 
                         // Assert
@@ -66,7 +66,7 @@
                             using (var unitOfWork = database.StartUnitOfWork())
                             {
                                 var command = dialect.MakeInsertCommand(new Dog { Name = "Foo", Age = 4 });
-                                unitOfWork.RawExecute(command.CommandText, command.Parameters);
+                                unitOfWork.Execute(command.CommandText, command.Parameters);
 
                                 throw new Exception();
                             }
@@ -84,9 +84,8 @@
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                 {
-                    var val = await database.ExecuteAsync($"declare @foo table(id int not null); insert @foo values({1});")
-                                            .ConfigureAwait(false);
-                    val.Equals(1);
+                    var val = await database.ExecuteAsync("declare @foo table(id int not null); insert @foo values(@value);", new { value = 1 }).ConfigureAwait(false);
+                    val.ExpectingAffectedRowCountToBe(1);
                 }
             }
         }

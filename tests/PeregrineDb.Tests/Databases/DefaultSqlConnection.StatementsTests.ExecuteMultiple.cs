@@ -29,7 +29,7 @@
                         using (var unitOfWork = database.StartUnitOfWork())
                         {
                             var command = dialect.MakeInsertCommand(new Dog { Name = "Foo", Age = 4 });
-                            unitOfWork.RawExecute(command.CommandText, command.Parameters);
+                            unitOfWork.Execute(command.CommandText, command.Parameters);
 
                             unitOfWork.SaveChanges();
                         }
@@ -49,7 +49,7 @@
                         using (var unitOfWork = database.StartUnitOfWork())
                         {
                             var command = dialect.MakeInsertCommand(new Dog { Name = "Foo", Age = 4 });
-                            unitOfWork.RawExecute(command.CommandText, command.Parameters);
+                            unitOfWork.Execute(command.CommandText, command.Parameters);
                         }
 
                         // Assert
@@ -69,7 +69,7 @@
                             using (var unitOfWork = database.StartUnitOfWork())
                             {
                                 var command = dialect.MakeInsertCommand(new Dog { Name = "Foo", Age = 4 });
-                                unitOfWork.RawExecute(command.CommandText, command.Parameters);
+                                unitOfWork.Execute(command.CommandText, command.Parameters);
 
                                 throw new Exception();
                             }
@@ -90,17 +90,17 @@
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        database.Execute($"create table #t(i int)");
+                        database.Execute("create table #t(i int)");
                         try
                         {
-                            var tally = database.RawExecuteMultiple("insert #t (i) values(@a)", new[] { new { a = 1 }, new { a = 2 }, new { a = 3 }, new { a = 4 } });
-                            var sum = database.Query<int>($"select sum(i) from #t").First();
+                            var tally = database.ExecuteMultiple("insert #t (i) values(@a)", new[] { new { a = 1 }, new { a = 2 }, new { a = 3 }, new { a = 4 } });
+                            var sum = database.Query<int>("select sum(i) from #t").First();
                             Assert.Equal(4, tally.NumRowsAffected);
                             Assert.Equal(10, sum);
                         }
                         finally
                         {
-                            database.Execute($"drop table #t");
+                            database.Execute("drop table #t");
                         }
                     }
                 }
@@ -117,22 +117,22 @@
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        database.Execute($"create table #t(Name nvarchar(max), Age int)");
+                        database.Execute("create table #t(Name nvarchar(max), Age int)");
                         try
                         {
-                            var tally = database.RawExecuteMultiple("insert #t (Name,Age) values(@Name, @Age)", new List<Student>
+                            var tally = database.ExecuteMultiple("insert #t (Name,Age) values(@Name, @Age)", new List<Student>
                                 {
                                     new Student { Age = 1, Name = "sam" },
                                     new Student { Age = 2, Name = "bob" }
                                 });
 
-                            var sum = database.Query<int>($"select sum(Age) from #t").First();
+                            var sum = database.Query<int>("select sum(Age) from #t").First();
                             Assert.Equal(2, tally.NumRowsAffected);
                             Assert.Equal(3, sum);
                         }
                         finally
                         {
-                            database.Execute($"drop table #t");
+                            database.Execute("drop table #t");
                         }
                     }
                 }
@@ -142,15 +142,15 @@
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        database.Execute($"create table #t(i int)");
-                        var tally = database.RawExecuteMultiple("insert #t (i) values(@a)", new object[]
+                        database.Execute("create table #t(i int)");
+                        var tally = database.ExecuteMultiple("insert #t (i) values(@a)", new object[]
                             {
                                 new { a = 1 },
                                 new { a = 2 },
                                 new { a = 3 },
                                 new { a = 4 }
                             });
-                        var sum = database.Query<int>($"select sum(i) from #t drop table #t").First();
+                        var sum = database.Query<int>("select sum(i) from #t drop table #t").First();
                         tally.NumRowsAffected.Should().Be(4);
                         sum.Should().Be(10);
                     }
@@ -168,7 +168,7 @@
                         var p = new DynamicParameters(new { a = 1, b = 2 });
                         p.Add("c", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-                        database.RawExecute("set @c = @a + @b", p);
+                        database.Execute("set @c = @a + @b", p);
                         Assert.Equal(3, p.Get<int>("@c"));
                     }
                 }
@@ -181,7 +181,7 @@
                         var p = new DynamicParameters();
 
                         p.Add("@b", dbType: DbType.Int32, direction: ParameterDirection.Output);
-                        database.RawExecute("select @b = null", p);
+                        database.Execute("select @b = null", p);
 
                         Assert.Null(p.Get<int?>("@b"));
                     }

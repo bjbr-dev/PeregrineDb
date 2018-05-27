@@ -202,7 +202,7 @@ WHERE id = @Id",
                 var sql = this.config.Dialect.MakeGetRangeCommand<Dog>(null);
 
                 // Assert
-                var expected = new SqlCommand($@"
+                var expected = new SqlCommand(@"
 SELECT id, name, age
 FROM dog");
 
@@ -281,7 +281,7 @@ FROM PropertyAlias");
                 var sql = this.config.Dialect.MakeGetRangeCommand<Dog>(new { Name = "Fido" });
 
                 // Assert
-                var expected = new SqlCommand($@"
+                var expected = new SqlCommand(@"
 SELECT id, name, age
 FROM dog
 WHERE name = @p1",

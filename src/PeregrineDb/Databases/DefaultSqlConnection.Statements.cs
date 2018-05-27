@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Databases
+namespace PeregrineDb.Databases
 {
     using System;
     using System.Collections.Generic;
@@ -14,7 +14,7 @@
     /// </remarks>
     public partial class DefaultSqlConnection
     {
-        public IReadOnlyList<T> RawQuery<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
+        public IReadOnlyList<T> Query<T>(string sql, object parameters, CommandType commandType, int? commandTimeout)
         {
             return Iterator().ToList();
 
@@ -49,13 +49,7 @@
             }
         }
 
-        public IReadOnlyList<T> Query<T>(FormattableString sql, int? commandTimeout = null)
-        {
-            var command = MakeCommand(sql);
-            return this.RawQuery<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
-        }
-
-        public T RawQueryFirst<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
+        public T QueryFirst<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
         {
             var effectiveType = typeof(T);
             var identity = new Identity(sql, commandType, this.connection, effectiveType, parameters?.GetType(), null);
@@ -89,13 +83,7 @@
             }
         }
 
-        public T QueryFirst<T>(FormattableString sql, int? commandTimeout = null)
-        {
-            var command = MakeCommand(sql);
-            return this.RawQueryFirst<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
-        }
-
-        public T RawQueryFirstOrDefault<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
+        public T QueryFirstOrDefault<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
         {
             var effectiveType = typeof(T);
             var identity = new Identity(sql, commandType, this.connection, effectiveType, parameters?.GetType(), null);
@@ -128,13 +116,7 @@
             }
         }
 
-        public T QueryFirstOrDefault<T>(FormattableString sql, int? commandTimeout = null)
-        {
-            var command = MakeCommand(sql);
-            return this.RawQueryFirstOrDefault<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
-        }
-
-        public T RawQuerySingle<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
+        public T QuerySingle<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
         {
             var effectiveType = typeof(T);
             var identity = new Identity(sql, commandType, this.connection, effectiveType, parameters?.GetType(), null);
@@ -163,13 +145,7 @@
             }
         }
 
-        public T QuerySingle<T>(FormattableString sql, int? commandTimeout = null)
-        {
-            var command = MakeCommand(sql);
-            return this.RawQuerySingle<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
-        }
-
-        public T RawQuerySingleOrDefault<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
+        public T QuerySingleOrDefault<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
         {
             var effectiveType = typeof(T);
             var identity = new Identity(sql, commandType, this.connection, effectiveType, parameters?.GetType(), null);
@@ -202,17 +178,7 @@
             }
         }
 
-        public T QuerySingleOrDefault<T>(FormattableString sql, int? commandTimeout = null)
-        {
-            var command = MakeCommand(sql);
-            return this.RawQuerySingleOrDefault<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
-        }
-
-        public CommandResult RawExecuteMultiple<T>(
-            string sql,
-            IEnumerable<T> parameters,
-            CommandType commandType = CommandType.Text,
-            int? commandTimeout = null)
+        public CommandResult ExecuteMultiple<T>(string sql, IEnumerable<T> parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
         {
             CacheInfo info = null;
             var isFirst = true;
@@ -242,7 +208,7 @@
             return new CommandResult(total);
         }
 
-        public CommandResult RawExecute<T>(string sql, T parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
+        public CommandResult Execute(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
         {
             Action<IDbCommand, object> paramReader = null;
             if (parameters != null)
@@ -257,13 +223,7 @@
             }
         }
 
-        public CommandResult Execute(FormattableString sql, int? commandTimeout = null)
-        {
-            var command = MakeCommand(sql);
-            return this.RawExecute(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
-        }
-
-        public T RawExecuteScalar<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
+        public T ExecuteScalar<T>(string sql, object parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null)
         {
             Action<IDbCommand, object> paramReader = null;
             if (parameters != null)
@@ -276,26 +236,6 @@
             {
                 return TypeMapper.Parse<T>(cmd.ExecuteScalar());
             }
-        }
-
-        public T ExecuteScalar<T>(FormattableString sql, int? commandTimeout = null)
-        {
-            var command = MakeCommand(sql);
-            return this.RawExecuteScalar<T>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
-        }
-
-        private static (string CommandText, Dictionary<string, object> Parameters) MakeCommand(FormattableString sql)
-        {
-            var commandParameters = new Dictionary<string, object>();
-
-            var i = 0;
-            var arguments = sql.GetArguments();
-            foreach (var parameter in arguments)
-            {
-                commandParameters["p" + i++] = parameter;
-            }
-
-            return (SqlString.ParameterizePlaceholders(sql.Format, arguments.Length), commandParameters);
         }
     }
 }

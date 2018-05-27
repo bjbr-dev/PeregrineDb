@@ -1,6 +1,8 @@
-﻿CREATE SCHEMA Other;
+﻿CREATE EXTENSION IF NOT EXISTS citext WITH SCHEMA public;
 
-CREATE TABLE Other.SchemaOther 
+CREATE SCHEMA Other;
+
+CREATE TABLE Other.SchemaOther
 (
 	Id serial NOT NULL PRIMARY KEY,
 	Name text NOT NULL
@@ -161,7 +163,7 @@ ADD CONSTRAINT CyclicForeignKeyA_ForeignId_fkey
 	FOREIGN KEY (Foreign_Id)
 	REFERENCES CyclicForeignKeyC(Id);
 
-CREATE TABLE Other.SchemaSimpleForeignKeys 
+CREATE TABLE Other.SchemaSimpleForeignKeys
 (
 	Id serial NOT NULL PRIMARY KEY,
 	schema_other_id int NOT NULL REFERENCES Other.SchemaOther(Id)
@@ -178,4 +180,9 @@ CREATE TABLE wipe_multiple_foreign_key_source
 	id serial NOT NULL PRIMARY KEY,
 	name_id int NOT NULL REFERENCES wipe_multiple_foreign_key_target,
 	optional_name_id int NULL REFERENCES wipe_multiple_foreign_key_target
+);
+
+CREATE TABLE parameter_types
+(
+	typname text NOT NULL
 );
