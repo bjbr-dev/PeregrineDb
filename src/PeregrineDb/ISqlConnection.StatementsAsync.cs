@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb
+// <copyright file="ISqlConnection.StatementsAsync.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb
 {
     using System.Collections.Generic;
     using System.Data;
@@ -32,7 +36,7 @@
         Task<T> QuerySingleOrDefaultAsync<T>(string sql, object parameters = null, CommandType commandType = CommandType.Text, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         Task<CommandResult> ExecuteMultipleAsync<T>(string sql, IEnumerable<T> parameters, CommandType commandType = CommandType.Text, int? commandTimeout = null, CancellationToken cancellationToken = default);
-        
+
         Task<CommandResult> ExecuteAsync(string sql, object parameters = null, CommandType commandType = CommandType.Text, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         Task<T> ExecuteScalarAsync<T>(string sql, object parameters = null, CommandType commandType = CommandType.Text, int? commandTimeout = null, CancellationToken cancellationToken = default);

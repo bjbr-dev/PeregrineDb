@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Schema
+﻿// <copyright file="ISqlNameEscaper.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Schema
 {
     public interface ISqlNameEscaper
     {

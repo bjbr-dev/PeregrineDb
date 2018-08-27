@@ -1,11 +1,15 @@
-﻿namespace PeregrineDb.PerformanceTests
+// <copyright file="GetBenchmarks.Dapper.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.PerformanceTests
 {
     using System.Linq;
     using BenchmarkDotNet.Attributes;
     using Dapper;
     using Dapper.Contrib.Extensions;
 
-    public class DapperGetBenchmarks 
+    public class DapperGetBenchmarks
         : GetBenchmarks
     {
         [GlobalSetup]

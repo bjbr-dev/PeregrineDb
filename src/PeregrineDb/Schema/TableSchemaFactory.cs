@@ -1,3 +1,7 @@
+// <copyright file="TableSchemaFactory.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
 namespace PeregrineDb.Schema
 {
     using System;

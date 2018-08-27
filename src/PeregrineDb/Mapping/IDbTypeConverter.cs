@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Mapping
+﻿// <copyright file="IDbTypeConverter.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Mapping
 {
     using System;
     using System.Data;

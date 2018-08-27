@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.SqlCommands
+﻿// <copyright file="AffectedRowCountException.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.SqlCommands
 {
     using System;
 

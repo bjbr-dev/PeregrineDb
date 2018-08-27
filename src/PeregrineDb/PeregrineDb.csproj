@@ -1,17 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <PackageId>PeregrineDb</PackageId>
+    <Title>PeregrineDb</Title>
     <Authors>Berkeleybross</Authors>
     <Company>Berkeleybross</Company>
-    <Title>PeregrineDb</Title>
     <Description>A high performance Micro-ORM library supporting SQL Server and PostgreSQL.</Description>
     <Copyright>Copyright ©  2017</Copyright>
     <PackageLicenseUrl>https://github.com/berkeleybross/PeregrineDb/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/berkeleybross/PeregrineDb</PackageProjectUrl>
     <RepositoryUrl>https://github.com/berkeleybross/PeregrineDb</RepositoryUrl>
     <PackageTags>micro-orm orm CRUD sql postgresql</PackageTags>
-    <LangVersion>7.2</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <TargetFrameworks>net472;netstandard2.0</TargetFrameworks>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
@@ -36,13 +40,23 @@
 
   <ItemGroup>
     <PackageReference Include="berkeleybross.Pagination" Version="1.0.24" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.0-beta008" PrivateAssets="all" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
     <PackageReference Include="System.Data.SqlClient" Version="4.4.3" />
     <PackageReference Include="System.Diagnostics.Tools" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <AdditionalFiles Include="..\..\stylecop.json" Link="stylecop.json" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <CodeAnalysisRuleSet>..\..\PeregrineDb.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+  <ItemGroup>
     <Compile Update="ISqlConnection.*.cs" DependentUpon="ISqlConnection.cs" />
     <Compile Update="Databases/DefaultSqlConnection.*.cs" DependentUpon="Databases/DefaultSqlConnection.cs" />
   </ItemGroup>
+
 </Project>

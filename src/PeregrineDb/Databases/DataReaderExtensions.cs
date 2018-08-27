@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Databases
+﻿// <copyright file="DataReaderExtensions.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Databases
 {
     using System;
     using System.Data;

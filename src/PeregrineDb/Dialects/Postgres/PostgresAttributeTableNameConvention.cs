@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Dialects.Postgres
+﻿// <copyright file="PostgresAttributeTableNameConvention.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Dialects.Postgres
 {
     using System;
     using System.ComponentModel.DataAnnotations.Schema;

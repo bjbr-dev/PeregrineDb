@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb
+// <copyright file="SqlCommand.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb
 {
     public struct SqlCommand
     {
@@ -9,7 +13,7 @@
         }
 
         public string CommandText { get; }
-        
+
         public object Parameters { get; }
     }
 }

@@ -1,8 +1,12 @@
-﻿namespace PeregrineDb.Databases.Mapper
+// <copyright file="DeserializerState.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Databases.Mapper
 {
     using System;
     using System.Data;
-    
+
     internal struct DeserializerState
     {
         public readonly int Hash;

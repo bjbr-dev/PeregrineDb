@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Dialects
+// <copyright file="IDialect.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Dialects
 {
     using System;
     using System.Collections.Generic;
@@ -86,7 +90,7 @@
         /// Generates a SQL Delete statement which chooses which row to delete its PrimaryKey.
         /// </summary>
         SqlCommand MakeDeleteCommand<TEntity>(TEntity entity)
-            where TEntity: class;
+            where TEntity : class;
 
         /// <summary>
         /// Generates a SQL Delete statement which chooses which row to delete its PrimaryKey.

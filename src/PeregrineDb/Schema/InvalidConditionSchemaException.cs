@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Schema
+﻿// <copyright file="InvalidConditionSchemaException.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Schema
 {
     using System;
 

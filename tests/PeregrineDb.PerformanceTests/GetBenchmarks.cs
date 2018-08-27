@@ -1,3 +1,7 @@
+// <copyright file="GetBenchmarks.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
 namespace PeregrineDb.PerformanceTests
 {
     using System.Configuration;

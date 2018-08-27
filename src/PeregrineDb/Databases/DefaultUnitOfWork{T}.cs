@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Databases
+// <copyright file="DefaultUnitOfWork{T}.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Databases
 {
     using System.Data;
     using PeregrineDb.Utils;
@@ -12,7 +16,7 @@
             : base(connection, transaction, config, leaveOpen)
         {
             Ensure.NotNull(transaction, nameof(transaction));
-            
+
             this.DbConnection = connection;
             this.Transaction = transaction;
         }

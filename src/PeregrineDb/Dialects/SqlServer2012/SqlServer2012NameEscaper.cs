@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Dialects.SqlServer2012
+﻿// <copyright file="SqlServer2012NameEscaper.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Dialects.SqlServer2012
 {
     using PeregrineDb.Schema;
 

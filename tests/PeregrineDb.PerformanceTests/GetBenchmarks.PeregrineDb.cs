@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.PerformanceTests
+﻿// <copyright file="GetBenchmarks.PeregrineDb.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.PerformanceTests
 {
     using System.Data.SqlClient;
     using System.Linq;

@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb
+﻿// <copyright file="ISqlConnection.Crud.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb
 {
     using System;
     using System.Collections.Generic;

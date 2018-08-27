@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Databases
+// <copyright file="DefaultSqlConnection.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Databases
 {
     using System;
     using System.Data;
@@ -9,7 +13,7 @@
     {
         private readonly IDbConnection connection;
         private readonly bool leaveOpen;
-        
+
         private readonly IDbTransaction transaction;
         private bool disposed;
 

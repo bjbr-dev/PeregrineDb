@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.PerformanceTests
+﻿// <copyright file="Post.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.PerformanceTests
 {
     using System;
     using System.ComponentModel.DataAnnotations.Schema;

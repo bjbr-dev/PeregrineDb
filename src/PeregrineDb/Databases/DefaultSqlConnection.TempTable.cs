@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Databases
+﻿// <copyright file="DefaultSqlConnection.TempTable.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Databases
 {
     using System.Collections.Generic;
     using System.Data;

@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb
+﻿// <copyright file="ISqlConnection.Statements.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb
 {
     using System.Collections.Generic;
     using System.Data;

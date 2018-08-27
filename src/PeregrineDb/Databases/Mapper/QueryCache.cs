@@ -1,7 +1,10 @@
-﻿using System;
+// <copyright file="QueryCache.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
 
 namespace PeregrineDb.Databases.Mapper
 {
+    using System;
     using System.Collections.Concurrent;
     using System.Threading;
 
@@ -18,6 +21,7 @@ namespace PeregrineDb.Databases.Mapper
             {
                 CollectCacheGarbage();
             }
+
             Items[key] = value;
         }
 
@@ -33,7 +37,6 @@ namespace PeregrineDb.Databases.Mapper
                     }
                 }
             }
-
             finally
             {
                 Interlocked.Exchange(ref collect, 0);
@@ -47,6 +50,7 @@ namespace PeregrineDb.Databases.Mapper
                 value.RecordHit();
                 return true;
             }
+
             value = null;
             return false;
         }
@@ -63,7 +67,9 @@ namespace PeregrineDb.Databases.Mapper
             foreach (var entry in Items)
             {
                 if (entry.Key.type == type)
+                {
                     Items.TryRemove(entry.Key, out var cache);
+                }
             }
 
             TypeDeserializerCache.Purge(type);

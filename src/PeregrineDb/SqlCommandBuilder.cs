@@ -1,3 +1,7 @@
+// <copyright file="SqlCommandBuilder.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
 namespace PeregrineDb
 {
     using System;

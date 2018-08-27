@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Mapping
+// <copyright file="DbString.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Mapping
 {
     using System;
     using System.Data;
@@ -10,11 +14,6 @@
         : ICustomQueryParameter
     {
         /// <summary>
-        /// Default value for IsAnsi.
-        /// </summary>
-        public static bool IsAnsiDefault { get; set; }
-
-        /// <summary>
         /// A value to set the default value of strings
         /// going through Dapper. Default is 4000, any value larger than this
         /// field will not have the default value applied.
@@ -22,7 +21,7 @@
         public const int DefaultLength = 4000;
 
         /// <summary>
-        /// Create a new DbString
+        /// Initializes a new instance of the <see cref="DbString"/> class.
         /// </summary>
         public DbString()
         {
@@ -31,7 +30,12 @@
         }
 
         /// <summary>
-        /// Ansi vs Unicode 
+        /// Default value for IsAnsi.
+        /// </summary>
+        public static bool IsAnsiDefault { get; set; }
+
+        /// <summary>
+        /// Ansi vs Unicode
         /// </summary>
         public bool IsAnsi { get; set; }
 
@@ -61,6 +65,7 @@
             {
                 throw new InvalidOperationException("If specifying IsFixedLength,  a Length must also be specified");
             }
+
             bool add = !command.Parameters.Contains(name);
             IDbDataParameter param;
             if (add)
@@ -83,6 +88,7 @@
             {
                 param.Size = this.Length;
             }
+
             param.DbType = this.IsAnsi ? (this.IsFixedLength ? DbType.AnsiStringFixedLength : DbType.AnsiString) : (this.IsFixedLength ? DbType.StringFixedLength : DbType.String);
             if (add)
             {

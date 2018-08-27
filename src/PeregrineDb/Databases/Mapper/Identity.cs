@@ -1,23 +1,21 @@
-﻿namespace PeregrineDb.Databases.Mapper
+// <copyright file="Identity.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Databases.Mapper
 {
     using System;
     using System.Data;
-    
+
     /// <summary>
     /// Identity of a cached query in Dapper, used for extensibility.
     /// </summary>
     internal class Identity : IEquatable<Identity>
     {
-        /// <summary>
-        /// Create an identity for use with DynamicParameters, internal use only.
-        /// </summary>
-        /// <param name="type">The parameters type to create an <see cref="Identity"/> for.</param>
-        /// <returns></returns>
-        public Identity ForDynamicParameters(Type type) =>
-            new Identity(this.sql, this.commandType, this.connectionString, this.type, type, null, -1);
-
         internal Identity(string sql, CommandType? commandType, IDbConnection connection, Type type, Type parametersType, Type[] otherTypes)
-            : this(sql, commandType, connection.ConnectionString, type, parametersType, otherTypes, 0) { /* base call */ }
+            : this(sql, commandType, connection.ConnectionString, type, parametersType, otherTypes, 0)
+        { /* base call */
+        }
 
         private Identity(string sql, CommandType? commandType, string connectionString, Type type, Type parametersType, Type[] otherTypes, int gridIndex)
         {
@@ -41,10 +39,17 @@
                         this.hashCode = (this.hashCode * 23) + (t?.GetHashCode() ?? 0);
                     }
                 }
+
                 this.hashCode = (this.hashCode * 23) + (connectionString == null ? 0 : SqlMapper.connectionStringComparer.GetHashCode(connectionString));
                 this.hashCode = (this.hashCode * 23) + (parametersType?.GetHashCode() ?? 0);
             }
         }
+
+        /// <summary>
+        /// Create an identity for use with DynamicParameters, internal use only.
+        /// </summary>
+        /// <param name="type">The parameters type to create an <see cref="Identity"/> for.</param>
+        public Identity ForDynamicParameters(Type type) => new Identity(this.sql, this.commandType, this.connectionString, this.type, type, null, -1);
 
         /// <summary>
         /// Whether this <see cref="Identity"/> equals another.

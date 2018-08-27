@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Schema
+﻿// <copyright file="ColumnSchema.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Schema
 {
     /// <summary>
     /// Represents a column in a <see cref="TableSchema"/>.

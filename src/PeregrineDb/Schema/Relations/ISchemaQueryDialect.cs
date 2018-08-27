@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Schema.Relations
+﻿// <copyright file="ISchemaQueryDialect.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Schema.Relations
 {
     using PeregrineDb.Dialects;
 

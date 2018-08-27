@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Dialects.Postgres
+﻿// <copyright file="PostgresNameEscaper.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Dialects.Postgres
 {
     using PeregrineDb.Schema;
 

@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Databases.Mapper
+// <copyright file="CacheInfo.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Databases.Mapper
 {
     using System;
     using System.Data;
@@ -11,7 +15,6 @@
         public DeserializerState Deserializer { get; set; }
 
         public Action<IDbCommand, object> ParamReader { get; set; }
-
 
         public int GetHitCount()
         {

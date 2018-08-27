@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Databases.Mapper
+// <copyright file="TypeProvider.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Databases.Mapper
 {
     using System;
     using System.Collections;
@@ -75,7 +79,10 @@
             // use clone, mutate, replace to avoid threading issues
             var snapshot = typeMap;
 
-            if (snapshot.TryGetValue(type, out var oldValue) && oldValue == dbType) return; // nothing to do
+            if (snapshot.TryGetValue(type, out var oldValue) && oldValue == dbType)
+            {
+                return; // nothing to do
+            }
 
             typeMap = new Dictionary<Type, DbType>(snapshot) { [type] = dbType };
         }
@@ -89,7 +96,10 @@
             // use clone, mutate, replace to avoid threading issues
             var snapshot = typeMap;
 
-            if (!snapshot.ContainsKey(type)) return; // nothing to do
+            if (!snapshot.ContainsKey(type))
+            {
+                return; // nothing to do
+            }
 
             var newCopy = new Dictionary<Type, DbType>(snapshot);
             newCopy.Remove(type);
@@ -114,7 +124,10 @@
         /// <param name="clone">Whether to clone the current type handler map.</param>
         private static void AddTypeHandlerImpl(Type type, IDbTypeConverter converter, bool clone)
         {
-            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (type == null)
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
 
             Type secondary = null;
             if (type.IsValueType)
@@ -123,7 +136,6 @@
                 if (underlying == null)
                 {
                     secondary = typeof(Nullable<>).MakeGenericType(type); // the Nullable<T>
-                    // type is already the T
                 }
                 else
                 {
@@ -133,7 +145,10 @@
             }
 
             var snapshot = typeHandlers;
-            if (snapshot.TryGetValue(type, out var oldValue) && converter == oldValue) return; // nothing to do
+            if (snapshot.TryGetValue(type, out var oldValue) && converter == oldValue)
+            {
+                return; // nothing to do
+            }
 
             var newCopy = clone ? new Dictionary<Type, IDbTypeConverter>(snapshot) : snapshot;
 
@@ -149,12 +164,18 @@
             if (converter == null)
             {
                 newCopy.Remove(type);
-                if (secondary != null) newCopy.Remove(secondary);
+                if (secondary != null)
+                {
+                    newCopy.Remove(secondary);
+                }
             }
             else
             {
                 newCopy[type] = converter;
-                if (secondary != null) newCopy[secondary] = converter;
+                if (secondary != null)
+                {
+                    newCopy[secondary] = converter;
+                }
             }
 
             typeHandlers = newCopy;
@@ -192,7 +213,11 @@
         {
             converter = null;
             var nullUnderlyingType = Nullable.GetUnderlyingType(type);
-            if (nullUnderlyingType != null) type = nullUnderlyingType;
+            if (nullUnderlyingType != null)
+            {
+                type = nullUnderlyingType;
+            }
+
             if (type.IsEnum && !typeMap.ContainsKey(type))
             {
                 type = Enum.GetUnderlyingType(type);

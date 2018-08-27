@@ -1,4 +1,7 @@
-﻿
+// <copyright file="DynamicParameters.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
 namespace PeregrineDb.Mapping
 {
     using System;
@@ -17,10 +20,8 @@ namespace PeregrineDb.Mapping
         private readonly Dictionary<string, ParamInfo> parameters = new Dictionary<string, ParamInfo>();
         private List<object> templates;
 
-        object this[string name] => this.parameters.TryGetValue(name, out var param) ? param.Value : null;
-
         /// <summary>
-        /// construct a dynamic parameter bag
+        /// Initializes a new instance of the <see cref="DynamicParameters"/> class.
         /// </summary>
         public DynamicParameters()
         {
@@ -28,7 +29,7 @@ namespace PeregrineDb.Mapping
         }
 
         /// <summary>
-        /// construct a dynamic parameter bag
+        /// Initializes a new instance of the <see cref="DynamicParameters"/> class.
         /// </summary>
         /// <param name="template">can be an anonymous type or a DynamicParameters bag</param>
         public DynamicParameters(object template)
@@ -37,11 +38,17 @@ namespace PeregrineDb.Mapping
             this.AddDynamicParams(template);
         }
 
+        public object this[string name] => this.parameters.TryGetValue(name, out var param) ? param.Value : null;
+
+        /// <summary>
+        /// If true, the command-text is inspected and only values that are clearly used are included on the connection.
+        /// </summary>
+        public bool RemoveUnused { get; set; }
+
         /// <summary>
         /// Append a whole object full of params to the dynamic
-        /// EG: AddDynamicParams(new {A = 1, B = 2}) // will add property A and B to the dynamic
+        /// EG: AddDynamicParams(new {A = 1, B = 2}) // will add property A and B to the dynamic.
         /// </summary>
-        /// <param name="param"></param>
         public void AddDynamicParams(object param)
         {
             if (param == null)
@@ -279,11 +286,6 @@ namespace PeregrineDb.Mapping
                 }
             }
         }
-
-        /// <summary>
-        /// If true, the command-text is inspected and only values that are clearly used are included on the connection
-        /// </summary>
-        public bool RemoveUnused { get; set; }
 
         /// <summary>
         /// Get the value of a parameter

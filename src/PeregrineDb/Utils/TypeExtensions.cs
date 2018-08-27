@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Utils
+﻿// <copyright file="TypeExtensions.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Utils
 {
     using System;
 

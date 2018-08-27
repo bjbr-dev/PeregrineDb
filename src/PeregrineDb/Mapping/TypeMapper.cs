@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Mapping
+// <copyright file="TypeMapper.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Mapping
 {
     using System;
     using System.Collections;
@@ -12,16 +16,10 @@
     using PeregrineDb.Databases.Mapper;
 
     /// <remarks>
-    /// Originally copied from Dapper.Net (https://github.com/StackExchange/dapper-dot-net) under the apache 2 license (http://www.apache.org/licenses/LICENSE-2.0)
+    /// Originally copied from Dapper.Net (https://github.com/StackExchange/dapper-dot-net) under the apache 2 license (http://www.apache.org/licenses/LICENSE-2.0).
     /// </remarks>
     internal class TypeMapper
     {
-        private class PropertyInfoByNameComparer
-            : IComparer<PropertyInfo>
-        {
-            public int Compare(PropertyInfo x, PropertyInfo y) => string.CompareOrdinal(x.Name, y.Name);
-        }
-
         public static Func<IDataReader, object> GetDeserializer(Type type, IDataReader reader)
         {
             if (TypeProvider.ContainsTypeMap(type) || type.IsEnum)
@@ -123,7 +121,7 @@
         }
 
         /// <summary>
-        /// OBSOLETE: For internal usage only. Sanitizes the paramter value with proper type casting.
+        /// OBSOLETE: For internal usage only. Sanitizes the parameter value with proper type casting.
         /// </summary>
         /// <param name="value">The value to sanitize.</param>
         public static object SanitizeParameterValue(object value)
@@ -161,15 +159,11 @@
 
         private static IEnumerable<PropertyInfo> FilterParameters(IEnumerable<PropertyInfo> parameters, string sql)
         {
-            return parameters.Where(p => Regex.IsMatch(sql, @"[?@:]" + p.Name + @"([^\p{L}\p{N}_]+|$)",
-                                 RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant))
+            return parameters.Where(p => Regex.IsMatch(sql, @"[?@:]" + p.Name + @"([^\p{L}\p{N}_]+|$)", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant))
                              .ToList();
         }
 
-        internal static Action<IDbCommand, object> CreateParamInfoGenerator(
-            Identity identity,
-            bool checkForDuplicates,
-            bool removeUnused)
+        internal static Action<IDbCommand, object> CreateParamInfoGenerator(Identity identity, bool checkForDuplicates, bool removeUnused)
         {
             var type = identity.parametersType;
 
@@ -203,12 +197,15 @@
             {
                 var p = allTypeProps[i];
                 if (p.GetIndexParameters().Length == 0)
+                {
                     propsList.Add(p);
+                }
             }
 
             var ctors = type.GetConstructors();
             ParameterInfo[] ctorParams;
             IEnumerable<PropertyInfo> props = null;
+
             // try to detect tuple patterns, e.g. anon-types, and use that to choose the order
             // otherwise: alphabetical
             if (ctors.Length == 1 && propsList.Count == (ctorParams = ctors[0].GetParameters()).Length)
@@ -323,10 +320,13 @@
                     il.EmitCall(OpCodes.Callvirt, typeof(IDataParameter).GetProperty(nameof(IDataParameter.ParameterName)).GetSetMethod(), null); // stack is now [parameters] [parameters] [parameter]
                 }
 
-                if (dbType != DbType.Time && handler == null) // https://connect.microsoft.com/VisualStudio/feedback/details/381934/sqlparameter-dbtype-dbtype-time-sets-the-parameter-to-sqldbtype-datetime-instead-of-sqldbtype-time
+                // https://connect.microsoft.com/VisualStudio/feedback/details/381934/sqlparameter-dbtype-dbtype-time-sets-the-parameter-to-sqldbtype-datetime-instead-of-sqldbtype-time
+                if (dbType != DbType.Time && handler == null)
                 {
                     il.Emit(OpCodes.Dup); // stack is now [parameters] [[parameters]] [parameter] [parameter]
-                    if (dbType == DbType.Object && prop.PropertyType == typeof(object)) // includes dynamic
+
+                    // includes dynamic
+                    if (dbType == DbType.Object && prop.PropertyType == typeof(object))
                     {
                         // look it up from the param value
                         il.Emit(OpCodes.Ldloc_0); // stack is now [parameters] [[parameters]] [parameter] [parameter] [typed-param]
@@ -344,8 +344,7 @@
 
                 il.Emit(OpCodes.Dup); // stack is now [parameters] [[parameters]] [parameter] [parameter]
                 EmitInt32(il, (int)ParameterDirection.Input); // stack is now [parameters] [[parameters]] [parameter] [parameter] [dir]
-                il.EmitCall(OpCodes.Callvirt, typeof(IDataParameter).GetProperty(nameof(IDataParameter.Direction)).GetSetMethod(),
-                    null); // stack is now [parameters] [[parameters]] [parameter]
+                il.EmitCall(OpCodes.Callvirt, typeof(IDataParameter).GetProperty(nameof(IDataParameter.Direction)).GetSetMethod(), null); // stack is now [parameters] [[parameters]] [parameter]
 
                 il.Emit(OpCodes.Dup); // stack is now [parameters] [[parameters]] [parameter] [parameter]
                 il.Emit(OpCodes.Ldloc_0); // stack is now [parameters] [[parameters]] [parameter] [parameter] [typed-param]
@@ -368,6 +367,7 @@
                         else
                         {
                             checkForNull = false;
+
                             // non-nullable enum; we can do that! just box to the wrong type! (no, really)
                             switch (Type.GetTypeCode(Enum.GetUnderlyingType(propType)))
                             {
@@ -407,8 +407,7 @@
                     if (callSanitize)
                     {
                         checkForNull = false; // handled by sanitize
-                        il.EmitCall(OpCodes.Call, typeof(TypeMapper).GetMethod(nameof(SanitizeParameterValue)), null);
-                        // stack is [parameters] [[parameters]] [parameter] [parameter] [boxed-value]
+                        il.EmitCall(OpCodes.Call, typeof(TypeMapper).GetMethod(nameof(SanitizeParameterValue)), null); // stack is [parameters] [[parameters]] [parameter] [parameter] [boxed-value]
                     }
                 }
                 else
@@ -428,8 +427,7 @@
                     il.Emit(OpCodes.Dup); // relative stack: [boxed value] [boxed value]
                     var notNull = il.DefineLabel();
                     var allDone = (dbType == DbType.String || dbType == DbType.AnsiString) ? il.DefineLabel() : (Label?)null;
-                    il.Emit(OpCodes.Brtrue_S, notNull);
-                    // relative stack [boxed value = null]
+                    il.Emit(OpCodes.Brtrue_S, notNull); // relative stack [boxed value = null]
                     il.Emit(OpCodes.Pop); // relative stack empty
                     il.Emit(OpCodes.Ldsfld, typeof(DBNull).GetField(nameof(DBNull.Value))); // relative stack [DBNull]
                     if (dbType == DbType.String || dbType == DbType.AnsiString)
@@ -438,7 +436,11 @@
                         il.Emit(OpCodes.Stloc_1);
                     }
 
-                    if (allDone != null) il.Emit(OpCodes.Br_S, allDone.Value);
+                    if (allDone != null)
+                    {
+                        il.Emit(OpCodes.Br_S, allDone.Value);
+                    }
+
                     il.MarkLabel(notNull);
                     if (prop.PropertyType == typeof(string))
                     {
@@ -476,14 +478,14 @@
                 if (prop.PropertyType == typeof(string))
                 {
                     var endOfSize = il.DefineLabel();
+
                     // don't set if 0
                     il.Emit(OpCodes.Ldloc_1); // [parameters] [[parameters]] [parameter] [size]
                     il.Emit(OpCodes.Brfalse_S, endOfSize); // [parameters] [[parameters]] [parameter]
 
                     il.Emit(OpCodes.Dup); // stack is now [parameters] [[parameters]] [parameter] [parameter]
                     il.Emit(OpCodes.Ldloc_1); // stack is now [parameters] [[parameters]] [parameter] [parameter] [size]
-                    il.EmitCall(OpCodes.Callvirt, typeof(IDbDataParameter).GetProperty(nameof(IDbDataParameter.Size)).GetSetMethod(),
-                        null); // stack is now [parameters] [[parameters]] [parameter]
+                    il.EmitCall(OpCodes.Callvirt, typeof(IDbDataParameter).GetProperty(nameof(IDbDataParameter.Size)).GetSetMethod(), null); // stack is now [parameters] [[parameters]] [parameter]
 
                     il.MarkLabel(endOfSize);
                 }
@@ -556,8 +558,16 @@
 
         public static T Parse<T>(object value)
         {
-            if (value == null || value is DBNull) return default(T);
-            if (value is T) return (T)value;
+            if (value == null || value is DBNull)
+            {
+                return default(T);
+            }
+
+            if (value is T result)
+            {
+                return result;
+            }
+
             var type = typeof(T);
             type = Nullable.GetUnderlyingType(type) ?? type;
             if (type.IsEnum)
@@ -585,7 +595,7 @@
                                                                                     p.GetIndexParameters()[0].ParameterType == typeof(int))
                                                                         .Select(p => p.GetGetMethod()).First();
 
-        internal static Func<IDataReader, object> GetTypeDeserializerImpl(Type type,IDataReader reader, int length)
+        internal static Func<IDataReader, object> GetTypeDeserializerImpl(Type type, IDataReader reader, int length)
         {
             if (type.IsValueType)
             {
@@ -624,7 +634,6 @@
             il.Emit(OpCodes.Ldloc_1); // [target]
 
             // stack is now [target]
-
             var allDone = il.DefineLabel();
             int enumDeclareLocal = -1, valueCopyLocal = il.DeclareLocal(typeof(object)).LocalIndex;
 
@@ -650,9 +659,7 @@
 
                     if (memberType == typeof(char) || memberType == typeof(char?))
                     {
-                        il.EmitCall(OpCodes.Call, typeof(TypeMapper).GetMethod(
-                            memberType == typeof(char) ? nameof(ReadChar) : nameof(ReadNullableChar),
-                            BindingFlags.Static | BindingFlags.Public), null); // stack is now [target][target][typed-value]
+                        il.EmitCall(OpCodes.Call, typeof(TypeMapper).GetMethod(memberType == typeof(char) ? nameof(ReadChar) : nameof(ReadNullableChar), BindingFlags.Static | BindingFlags.Public), null); // stack is now [target][target][typed-value]
                     }
                     else
                     {
@@ -661,7 +668,6 @@
                         il.Emit(OpCodes.Brtrue_S, isDbNullLabel); // stack is now [target][target][value-as-object]
 
                         // unbox nullable enums as the primitive, i.e. byte etc
-
                         var nullUnderlyingType = Nullable.GetUnderlyingType(memberType);
                         var unboxType = nullUnderlyingType?.IsEnum == true ? nullUnderlyingType : memberType;
 
@@ -678,8 +684,7 @@
                                 il.Emit(OpCodes.Castclass, typeof(string)); // stack is now [target][target][string]
                                 StoreLocal(il, enumDeclareLocal); // stack is now [target][target]
                                 il.Emit(OpCodes.Ldtoken, unboxType); // stack is now [target][target][enum-type-token]
-                                il.EmitCall(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle)),
-                                    null); // stack is now [target][target][enum-type]
+                                il.EmitCall(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle)), null); // stack is now [target][target][enum-type]
                                 LoadLocal(il, enumDeclareLocal); // stack is now [target][target][enum-type][string]
                                 il.Emit(OpCodes.Ldc_I4_1); // stack is now [target][target][enum-type][string][true]
                                 il.EmitCall(OpCodes.Call, enumParse, null); // stack is now [target][target][enum-as-object]
@@ -704,9 +709,7 @@
                             {
                                 if (hasTypeHandler)
                                 {
-                                    il.EmitCall(OpCodes.Call,
-                                        typeof(TypeHandlerCache<>).MakeGenericType(unboxType).GetMethod(nameof(TypeHandlerCache<int>.Parse)),
-                                        null); // stack is now [target][target][typed-value]
+                                    il.EmitCall(OpCodes.Call, typeof(TypeHandlerCache<>).MakeGenericType(unboxType).GetMethod(nameof(TypeHandlerCache<int>.Parse)), null); // stack is now [target][target][typed-value]
                                 }
                                 else
                                 {
@@ -719,8 +722,7 @@
                                 FlexibleConvertBoxedFromHeadOfStack(il, colType, nullUnderlyingType ?? unboxType, null);
                                 if (nullUnderlyingType != null)
                                 {
-                                    il.Emit(OpCodes.Newobj,
-                                        unboxType.GetConstructor(new[] { nullUnderlyingType })); // stack is now [target][target][typed-value]
+                                    il.Emit(OpCodes.Newobj, unboxType.GetConstructor(new[] { nullUnderlyingType })); // stack is now [target][target][typed-value]
                                 }
                             }
                         }
@@ -871,9 +873,17 @@
         {
             for (var i = 0; i < methods.Length; i++)
             {
-                if (methods[i].Name != name || methods[i].ReturnType != to) continue;
+                if (methods[i].Name != name || methods[i].ReturnType != to)
+                {
+                    continue;
+                }
+
                 var args = methods[i].GetParameters();
-                if (args.Length != 1 || args[0].ParameterType != from) continue;
+                if (args.Length != 1 || args[0].ParameterType != from)
+                {
+                    continue;
+                }
+
                 return methods[i];
             }
 
@@ -882,7 +892,11 @@
 
         private static void LoadLocal(ILGenerator il, int index)
         {
-            if (index < 0 || index >= short.MaxValue) throw new ArgumentNullException(nameof(index));
+            if (index < 0 || index >= short.MaxValue)
+            {
+                throw new ArgumentNullException(nameof(index));
+            }
+
             switch (index)
             {
                 case 0:
@@ -913,7 +927,11 @@
 
         private static void StoreLocal(ILGenerator il, int index)
         {
-            if (index < 0 || index >= short.MaxValue) throw new ArgumentNullException(nameof(index));
+            if (index < 0 || index >= short.MaxValue)
+            {
+                throw new ArgumentNullException(nameof(index));
+            }
+
             switch (index)
             {
                 case 0:
@@ -1034,5 +1052,10 @@
             }
         }
 
+        private class PropertyInfoByNameComparer
+            : IComparer<PropertyInfo>
+        {
+            public int Compare(PropertyInfo x, PropertyInfo y) => string.CompareOrdinal(x.Name, y.Name);
+        }
     }
 }

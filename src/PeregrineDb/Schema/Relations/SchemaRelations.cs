@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Schema.Relations
+// <copyright file="SchemaRelations.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Schema.Relations
 {
     using System;
     using System.Collections.Generic;
@@ -95,6 +99,7 @@
                 {
                     throw new InvalidOperationException("Could not remove relation: " + relation);
                 }
+
                 return new RelationCollection(relationships);
             }
 

@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Databases.Mapper
+// <copyright file="TypeDeserializerCache.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Databases.Mapper
 {
     using System;
     using System.Collections;
@@ -9,6 +13,7 @@
 
     internal class TypeDeserializerCache
     {
+        private static readonly Hashtable byType = new Hashtable();
         private readonly Dictionary<DeserializerKey, Func<IDataReader, object>> readers = new Dictionary<DeserializerKey, Func<IDataReader, object>>();
 
         private TypeDeserializerCache(Type type)
@@ -16,7 +21,6 @@
             this.type = type;
         }
 
-        private static readonly Hashtable byType = new Hashtable();
         private readonly Type type;
 
         internal static void Purge(Type type)
@@ -57,14 +61,20 @@
         {
             var length = reader.FieldCount;
             var hash = SqlMapper.GetColumnHash(reader, 0, length);
+
             // get a cheap key first: false means don't copy the values down
             var key = new DeserializerKey(hash, 0, length, false, reader, false);
             Func<IDataReader, object> deser;
             lock (this.readers)
             {
-                if (this.readers.TryGetValue(key, out deser)) return deser;
+                if (this.readers.TryGetValue(key, out deser))
+                {
+                    return deser;
+                }
             }
+
             deser = TypeMapper.GetTypeDeserializerImpl(this.type, reader, length);
+
             // get a more expensive key: true means copy the values down so it can be used as a key later
             key = new DeserializerKey(hash, 0, length, false, reader, true);
             lock (this.readers)
@@ -75,7 +85,8 @@
 
         private struct DeserializerKey : IEquatable<DeserializerKey>
         {
-            private readonly int startBound, length;
+            private readonly int startBound;
+            private readonly int length;
             private readonly bool returnNullIfFirstMissing;
             private readonly IDataReader reader;
             private readonly string[] names;
@@ -125,9 +136,14 @@
                     var index = this.startBound;
                     for (var i = 0; i < this.length; i++)
                     {
-                        if (i != 0) sb.Append(", ");
+                        if (i != 0)
+                        {
+                            sb.Append(", ");
+                        }
+
                         sb.Append(this.reader.GetName(index++));
                     }
+
                     return sb.ToString();
                 }
 
@@ -148,16 +164,17 @@
                 {
                     return false; // clearly different
                 }
+
                 for (var i = 0; i < this.length; i++)
                 {
                     if ((this.names?[i] ?? this.reader?.GetName(this.startBound + i)) != (other.names?[i] ?? other.reader?.GetName(this.startBound + i))
                         ||
-                        (this.types?[i] ?? this.reader?.GetFieldType(this.startBound + i)) != (other.types?[i] ?? other.reader?.GetFieldType(this.startBound + i))
-                    )
+                        (this.types?[i] ?? this.reader?.GetFieldType(this.startBound + i)) != (other.types?[i] ?? other.reader?.GetFieldType(this.startBound + i)))
                     {
                         return false; // different column name or type
                     }
                 }
+
                 return true;
             }
         }

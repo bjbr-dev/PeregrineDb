@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.PerformanceTests.EntityFrameworkCore
+﻿// <copyright file="EFCoreContext.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.PerformanceTests.EntityFrameworkCore
 {
     using Microsoft.EntityFrameworkCore;
 

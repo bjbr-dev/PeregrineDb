@@ -1,3 +1,7 @@
+// <copyright file="DefaultUnitOfWork.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
 namespace PeregrineDb.Databases
 {
     using System.Data;

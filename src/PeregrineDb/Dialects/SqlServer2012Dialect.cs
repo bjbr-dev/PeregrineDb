@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.Dialects
+﻿// <copyright file="SqlServer2012Dialect.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.Dialects
 {
     using System;
     using System.Collections.Immutable;

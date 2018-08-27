@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb
+// <copyright file="PeregrineConfig.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb
 {
     using System;
     using System.Collections.Generic;
@@ -55,14 +59,20 @@
                 [typeof(object)] = DbType.Object
             }.ToImmutableDictionary();
 
+        private readonly ISqlNameEscaper sqlNameEscaper;
+
         public static PeregrineConfig SqlServer2012
         {
             get
             {
                 var nameEscaper = new SqlServer2012NameEscaper();
                 return new PeregrineConfig(
-                    PeregrineDb.Dialect.SqlServer2012, nameEscaper, new AtttributeTableNameConvention(nameEscaper),
-                    new AttributeColumnNameConvention(nameEscaper), true, DefaultSqlTypeMapping);
+                    PeregrineDb.Dialect.SqlServer2012,
+                    nameEscaper,
+                    new AtttributeTableNameConvention(nameEscaper),
+                    new AttributeColumnNameConvention(nameEscaper),
+                    true,
+                    DefaultSqlTypeMapping);
             }
         }
 
@@ -72,12 +82,14 @@
             {
                 var nameEscaper = new PostgresNameEscaper();
                 return new PeregrineConfig(
-                    PeregrineDb.Dialect.PostgreSql, nameEscaper, new PostgresAttributeTableNameConvention(nameEscaper),
-                    new PostgresAttributeColumnNameConvention(nameEscaper), true, DefaultSqlTypeMapping);
+                    PeregrineDb.Dialect.PostgreSql,
+                    nameEscaper,
+                    new PostgresAttributeTableNameConvention(nameEscaper),
+                    new PostgresAttributeColumnNameConvention(nameEscaper),
+                    true,
+                    DefaultSqlTypeMapping);
             }
         }
-
-        private readonly ISqlNameEscaper sqlNameEscaper;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PeregrineConfig"/> class.

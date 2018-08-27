@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.PerformanceTests.Helpers
+﻿// <copyright file="OrmColum.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.PerformanceTests.Helpers
 {
     using BenchmarkDotNet.Columns;
     using BenchmarkDotNet.Reports;

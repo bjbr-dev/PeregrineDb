@@ -4,16 +4,15 @@
     <AssemblyName>PeregrineDb.PerformanceTests</AssemblyName>
     <Title>PeregrineDb.PerformanceTests</Title>
     <Description>PeregrineDb Performance Suite</Description>
-    <OutputType>Exe</OutputType>
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <TargetFrameworks>net472</TargetFrameworks>
-    <IsPackable>false</IsPackable>
-    <Configurations>Debug;Release;Debug (Standard)</Configurations>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\PeregrineDb\PeregrineDb.csproj" />
-  </ItemGroup>
+  <PropertyGroup>
+    <TargetFrameworks>net472</TargetFrameworks>
+    <LangVersion>7.2</LangVersion>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.10.9" />
@@ -26,8 +25,10 @@
     <PackageReference Include="Microsoft.SqlServer.Compact" Version="4.0.8876.1" />
     <PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.314.76" />
     <PackageReference Include="PetaPoco.Core.Compiled" Version="5.1.289" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.0-beta008" PrivateAssets="all" />
     <PackageReference Include="System.Data.SQLite" Version="1.0.105.2" />
     <PackageReference Include="System.Data.SqlClient" Version="4.4.3" />
+    <ProjectReference Include="..\..\src\PeregrineDb\PeregrineDb.csproj" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.Linq" />
@@ -36,6 +37,14 @@
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="..\..\stylecop.json" Link="stylecop.json" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <CodeAnalysisRuleSet>..\..\PeregrineDb.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
 
   <ItemGroup>
     <Compile Update="GetBenchmarks.*.cs" DependentUpon="GetBenchmarks.cs" />

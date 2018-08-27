@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb.PerformanceTests
+﻿// <copyright file="Program.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb.PerformanceTests
 {
     using System;
     using System.Data.SqlClient;

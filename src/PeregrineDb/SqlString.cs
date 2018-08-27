@@ -1,4 +1,8 @@
-﻿namespace PeregrineDb
+// <copyright file="SqlString.cs" company="Berkeleybross">
+// Copyright (c) Berkeleybross. All rights reserved.
+// </copyright>
+
+namespace PeregrineDb
 {
     using System;
     using System.Linq;
@@ -18,6 +22,10 @@
             this.arguments = arguments ?? new object[0];
         }
 
+        public override string Format { get; }
+
+        public override int ArgumentCount => this.arguments.Length;
+
         public override object[] GetArguments()
         {
             return this.arguments;
@@ -32,11 +40,6 @@
         {
             return string.Format(this.Format, this.arguments.Select((v, i) => $"{{{i}={v}}}").ToArray<object>());
         }
-
-        public override string Format { get; }
-
-        public override int ArgumentCount => this.arguments.Length;
-
 
         internal static string ParameterizePlaceholders(FormattableString sql)
         {
@@ -69,7 +72,8 @@
 
                     if (ch == '}')
                     {
-                        if (index < len && format[index] == '}') // Treat as escape character for }}
+                        // Treat as escape character for }}
+                        if (index < len && format[index] == '}')
                         {
                             index++;
                         }
@@ -80,7 +84,8 @@
                     }
                     else if (ch == '{')
                     {
-                        if (index < len && format[index] == '{') // Treat as escape character for {{
+                        // Treat as escape character for {{
+                        if (index < len && format[index] == '{')
                         {
                             index++;
                         }
@@ -108,7 +113,7 @@
                 var placeholderPosition = 0;
                 do
                 {
-                    placeholderPosition = placeholderPosition * 10 + ch - '0';
+                    placeholderPosition = (placeholderPosition * 10) + ch - '0';
                     index++;
                     if (index == len)
                     {
