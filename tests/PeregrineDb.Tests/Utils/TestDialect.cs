@@ -1,6 +1,8 @@
-﻿namespace PeregrineDb.Tests.Utils
+namespace PeregrineDb.Tests.Utils
 {
     using System;
+    using System.Collections.Generic;
+    using System.Data;
     using Pagination;
     using PeregrineDb.Dialects;
     using PeregrineDb.Schema;
@@ -13,7 +15,7 @@
         : StandardDialect
     {
         public static TestDialect Instance { get; } = new TestDialect(new TableSchemaFactory(new TestSqlNameEscaper(),
-            new AtttributeTableNameConvention(new TestSqlNameEscaper()), new AttributeColumnNameConvention(new TestSqlNameEscaper())));
+            new AtttributeTableNameConvention(new TestSqlNameEscaper()), new AttributeColumnNameConvention(new TestSqlNameEscaper()), new Dictionary<Type, DbType>()));
 
         public TestDialect(TableSchemaFactory tableSchemaFactory)
             : base(tableSchemaFactory)

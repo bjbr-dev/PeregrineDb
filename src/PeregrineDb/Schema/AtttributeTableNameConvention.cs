@@ -11,7 +11,7 @@ namespace PeregrineDb.Schema
     /// <summary>
     /// If class has <see cref="TableAttribute"/> then it returns <see cref="TableAttribute.Name"/> without manipulating it. Otherwise;
     /// - Removes the specified suffix, if any (so classes can be called e.g. DogEntity)
-    /// - Converts the class name into snake_case
+    /// - Converts the class name into snake_case.
     /// </summary>
     public class AtttributeTableNameConvention
         : ITableNameConvention

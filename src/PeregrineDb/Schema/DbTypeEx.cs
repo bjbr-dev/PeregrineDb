@@ -1,4 +1,4 @@
-﻿// <copyright file="DbTypeEx.cs" company="Berkeleybross">
+// <copyright file="DbTypeEx.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 
@@ -7,7 +7,7 @@ namespace PeregrineDb.Schema
     using System.Data;
 
     /// <summary>
-    /// Wraps <see cref="DbType"/> and adds extra properties
+    /// Wraps <see cref="DbType"/> and adds extra properties.
     /// </summary>
     public class DbTypeEx
     {
@@ -22,12 +22,12 @@ namespace PeregrineDb.Schema
         }
 
         /// <summary>
-        /// Gets the type of the column
+        /// Gets the type of the column.
         /// </summary>
         public DbType Type { get; }
 
         /// <summary>
-        /// Gets a value indicating whether the type allows nulls
+        /// Gets a value indicating whether the type allows nulls.
         /// </summary>
         public bool AllowNull { get; }
 

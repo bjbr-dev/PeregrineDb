@@ -1,4 +1,4 @@
-﻿// <copyright file="ISqlConnection.CrudAsync.cs" company="Berkeleybross">
+// <copyright file="ISqlConnection.CrudAsync.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 
@@ -75,7 +75,7 @@ namespace PeregrineDb
         Task<TEntity> FindAsync<TEntity>(object id, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Gets a single entity from the <typeparamref name="TEntity"/> table by it's primary key, or throws an exception if not found
+        /// Gets a single entity from the <typeparamref name="TEntity"/> table by it's primary key, or throws an exception if not found.
         /// </summary>
         /// <example>
         /// <code>
@@ -236,7 +236,7 @@ namespace PeregrineDb
         Task<IReadOnlyList<TEntity>> GetRangeAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Gets the first <see cref="count"/> entities from the <typeparamref name="TEntity"/> table.
+        /// Gets the first <parmref name="count"/> entities from the <typeparamref name="TEntity"/> table.
         /// </summary>
         /// <example>
         /// <code>
@@ -248,7 +248,7 @@ namespace PeregrineDb
         Task<IReadOnlyList<TEntity>> GetTopAsync<TEntity>(int count, string orderBy, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Gets the first <see cref="count"/> entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
+        /// Gets the first <parmref name="count"/> entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
         /// </summary>
         /// <example>
         /// <code>
@@ -261,7 +261,7 @@ namespace PeregrineDb
         Task<IReadOnlyList<TEntity>> GetTopAsync<TEntity>(int count, FormattableString conditions, string orderBy, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Gets the first <see cref="count"/> entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
+        /// Gets the first <parmref name="count"/> entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
         /// </summary>
         /// <example>
         /// <code>
@@ -328,7 +328,7 @@ namespace PeregrineDb
         Task InsertAsync(object entity, int? commandTimeout = null, bool? verifyAffectedRowCount = null, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Inserts the <paramref name="entity"/> into the databaseConnection, and returns the auto-generated identity (or the default if invalid)
+        /// Inserts the <paramref name="entity"/> into the databaseConnection, and returns the auto-generated identity (or the default if invalid).
         /// </summary>
         /// <example>
         /// <code>

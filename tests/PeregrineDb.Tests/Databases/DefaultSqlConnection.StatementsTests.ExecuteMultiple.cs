@@ -1,12 +1,12 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System;
     using System.Collections.Generic;
     using System.Data;
     using System.Linq;
+    using Dapper;
     using FluentAssertions;
     using PeregrineDb.Dialects;
-    using PeregrineDb.Mapping;
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
     using Xunit;

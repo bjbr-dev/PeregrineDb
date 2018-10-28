@@ -1,4 +1,4 @@
-﻿// <copyright file="PropertySchema.cs" company="Berkeleybross">
+// <copyright file="PropertySchema.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 
@@ -14,7 +14,7 @@ namespace PeregrineDb.Schema
     public class PropertySchema
     {
         /// <summary>
-        /// Gets or sets the name of the property
+        /// Gets or sets the name of the property.
         /// </summary>
         public string Name { get; set; }
 
@@ -36,12 +36,12 @@ namespace PeregrineDb.Schema
         public Type Type { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether the type of the property is a Nullable&lt;T&gt;
+        /// Gets or sets a value indicating whether the type of the property is a Nullable&lt;T&gt;.
         /// </summary>
         public bool IsNullable { get; set; }
 
         /// <summary>
-        /// Gets or sets the effective type of the property -
+        /// Gets or sets the effective type of the property.
         /// </summary>
         public Type EffectiveType { get; set; }
 
@@ -65,7 +65,7 @@ namespace PeregrineDb.Schema
         }
 
         /// <summary>
-        /// Gets the first attribute of type T or null
+        /// Gets the first attribute of type T or null.
         /// </summary>
         public T FindAttribute<T>()
             where T : Attribute

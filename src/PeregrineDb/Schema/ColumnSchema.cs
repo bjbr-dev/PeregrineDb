@@ -1,4 +1,4 @@
-﻿// <copyright file="ColumnSchema.cs" company="Berkeleybross">
+// <copyright file="ColumnSchema.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 
@@ -35,7 +35,7 @@ namespace PeregrineDb.Schema
         public string PropertyName { get; }
 
         /// <summary>
-        /// Gets the name of the column in the database
+        /// Gets the name of the column in the database.
         /// </summary>
         public string ColumnName { get; }
 
@@ -56,7 +56,7 @@ namespace PeregrineDb.Schema
         public ColumnUsage Usage { get; }
 
         /// <summary>
-        /// Gets the type of this column
+        /// Gets the type of this column.
         /// </summary>
         public DbTypeEx ColumnType { get; }
     }

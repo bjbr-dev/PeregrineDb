@@ -1,4 +1,4 @@
-﻿// <copyright file="SqlBuilderExtensions.cs" company="Berkeleybross">
+// <copyright file="SqlBuilderExtensions.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 
@@ -9,7 +9,7 @@ namespace PeregrineDb.Dialects
     using PeregrineDb.Schema;
 
     /// <summary>
-    /// Helpers to generate SQL statements
+    /// Helpers to generate SQL statements.
     /// </summary>
     internal static class SqlBuilderExtensions
     {
@@ -23,7 +23,7 @@ namespace PeregrineDb.Dialects
         }
 
         /// <summary>
-        /// Appends a SQL clause which lists all the propertys and their aliases
+        /// Appends a SQL clause which lists all the properties and their aliases.
         /// </summary>
         public static SqlCommandBuilder AppendSelectPropertiesClause(
             this SqlCommandBuilder sql,

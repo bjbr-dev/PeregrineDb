@@ -13,7 +13,6 @@ namespace PeregrineDb.Schema
     using System.Data;
     using System.Linq;
     using System.Reflection;
-    using PeregrineDb.Databases.Mapper;
     using PeregrineDb.Utils;
 
     /// <summary>
@@ -30,6 +29,7 @@ namespace PeregrineDb.Schema
         private readonly ISqlNameEscaper nameEscaper;
         private readonly ITableNameConvention tableNameConvention;
         private readonly IColumnNameConvention columnNameConvention;
+        private readonly IDictionary<Type, DbType> typeMapping;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TableSchemaFactory"/> class.
@@ -37,7 +37,8 @@ namespace PeregrineDb.Schema
         public TableSchemaFactory(
             ISqlNameEscaper nameEscaper,
             ITableNameConvention tableNameConvention,
-            IColumnNameConvention columnNameConvention)
+            IColumnNameConvention columnNameConvention,
+            IDictionary<Type, DbType> typeMapping)
         {
             Ensure.NotNull(nameEscaper, nameof(nameEscaper));
             Ensure.NotNull(tableNameConvention, nameof(tableNameConvention));
@@ -46,6 +47,7 @@ namespace PeregrineDb.Schema
             this.nameEscaper = nameEscaper;
             this.tableNameConvention = tableNameConvention;
             this.columnNameConvention = columnNameConvention;
+            this.typeMapping = typeMapping;
         }
 
         /// <summary>
@@ -86,7 +88,7 @@ namespace PeregrineDb.Schema
         }
 
         /// <summary>
-        /// Create the table schema for an entity
+        /// Create the table schema for an entity.
         /// </summary>
         public TableSchema MakeTableSchema(Type entityType)
         {
@@ -224,7 +226,11 @@ namespace PeregrineDb.Schema
                 return new DbTypeEx(DbType.Int32, property.IsNullable, null);
             }
 
-            var dbType = TypeProvider.LookupDbType(property.EffectiveType, property.Name, true, out _);
+            if (!this.typeMapping.TryGetValue(property.EffectiveType, out var dbType))
+            {
+                throw new NotSupportedException("Unknown property type: " + property.EffectiveType);
+            }
+
             var allowNull = property.IsNullable || (!property.Type.GetTypeInfo().IsValueType && property.FindAttribute<RequiredAttribute>() == null);
             return new DbTypeEx(dbType, allowNull, this.GetMaxLength(property));
         }

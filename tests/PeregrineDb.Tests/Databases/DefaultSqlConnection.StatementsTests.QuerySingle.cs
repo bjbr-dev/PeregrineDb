@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System;
     using PeregrineDb.Tests.Utils;
@@ -64,7 +64,7 @@
                 }
             }
 
-            [Fact]
+            [Fact(Skip = "Not implemented")]
             public void Does_not_set_readonly_properties()
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))

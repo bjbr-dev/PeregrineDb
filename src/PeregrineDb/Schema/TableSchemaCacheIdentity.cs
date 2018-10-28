@@ -1,4 +1,4 @@
-﻿// <copyright file="TableSchemaCacheIdentity.cs" company="Berkeleybross">
+// <copyright file="TableSchemaCacheIdentity.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 
@@ -7,7 +7,7 @@ namespace PeregrineDb.Schema
     using System;
 
     /// <summary>
-    /// Represents the identity of a table schema when cached
+    /// Represents the identity of a table schema when cached.
     /// </summary>
     internal class TableSchemaCacheIdentity
         : IEquatable<TableSchemaCacheIdentity>

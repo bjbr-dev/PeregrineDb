@@ -1,4 +1,4 @@
-﻿// <copyright file="CommandResult.cs" company="Berkeleybross">
+// <copyright file="CommandResult.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 
@@ -18,12 +18,12 @@ namespace PeregrineDb.SqlCommands
         }
 
         /// <summary>
-        /// Gets the number of rows affected
+        /// Gets the number of rows affected.
         /// </summary>
         public int NumRowsAffected { get; }
 
         /// <summary>
-        /// Throws an exception if the <see cref="NumRowsAffected"/> does not match the <paramref name="expectedCount"/>
+        /// Throws an exception if the <see cref="NumRowsAffected"/> does not match the <paramref name="expectedCount"/>.
         /// </summary>
         public void ExpectingAffectedRowCountToBe(int expectedCount)
         {

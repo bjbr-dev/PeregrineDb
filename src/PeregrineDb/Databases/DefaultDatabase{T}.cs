@@ -1,4 +1,4 @@
-﻿// <copyright file="DefaultDatabase{T}.cs" company="Berkeleybross">
+// <copyright file="DefaultDatabase{T}.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 

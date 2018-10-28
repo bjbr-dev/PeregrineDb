@@ -61,6 +61,25 @@ namespace PeregrineDb
 
         private readonly ISqlNameEscaper sqlNameEscaper;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PeregrineConfig"/> class.
+        /// </summary>
+        public PeregrineConfig(
+            IDialect dialect,
+            ISqlNameEscaper sqlNameEscaper,
+            ITableNameConvention tableNameConvention,
+            IColumnNameConvention columnNameConvention,
+            bool verifyAffectedRowCount,
+            ImmutableDictionary<Type, DbType> sqlTypeMappings)
+        {
+            this.Dialect = dialect ?? throw new ArgumentNullException(nameof(dialect));
+            this.TableNameConvention = tableNameConvention ?? throw new ArgumentNullException(nameof(tableNameConvention));
+            this.ColumnNameConvention = columnNameConvention ?? throw new ArgumentNullException(nameof(columnNameConvention));
+            this.VerifyAffectedRowCount = verifyAffectedRowCount;
+            this.SqlTypeMappings = sqlTypeMappings ?? throw new ArgumentNullException(nameof(sqlTypeMappings));
+            this.sqlNameEscaper = sqlNameEscaper ?? throw new ArgumentNullException(nameof(sqlNameEscaper));
+        }
+
         public static PeregrineConfig SqlServer2012
         {
             get
@@ -92,26 +111,7 @@ namespace PeregrineDb
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PeregrineConfig"/> class.
-        /// </summary>
-        public PeregrineConfig(
-            IDialect dialect,
-            ISqlNameEscaper sqlNameEscaper,
-            ITableNameConvention tableNameConvention,
-            IColumnNameConvention columnNameConvention,
-            bool verifyAffectedRowCount,
-            ImmutableDictionary<Type, DbType> sqlTypeMappings)
-        {
-            this.Dialect = dialect ?? throw new ArgumentNullException(nameof(dialect));
-            this.TableNameConvention = tableNameConvention ?? throw new ArgumentNullException(nameof(tableNameConvention));
-            this.ColumnNameConvention = columnNameConvention ?? throw new ArgumentNullException(nameof(columnNameConvention));
-            this.VerifyAffectedRowCount = verifyAffectedRowCount;
-            this.SqlTypeMappings = sqlTypeMappings ?? throw new ArgumentNullException(nameof(sqlTypeMappings));
-            this.sqlNameEscaper = sqlNameEscaper ?? throw new ArgumentNullException(nameof(sqlNameEscaper));
-        }
-
-        /// <summary>
-        /// Gets the dialect
+        /// Gets the dialect.
         /// </summary>
         public IDialect Dialect { get; }
 

@@ -13,14 +13,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="berkeleybross.Pagination" Version="1.0.24" />
+    <PackageReference Include="berkeleybross.Pagination" Version="1.0.25" />
     <PackageReference Include="FluentAssertions" Version="4.19.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
     <PackageReference Include="Moq" Version="4.8.2" />
     <PackageReference Include="Npgsql" Version="3.2.0" />
     <PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
     <PackageReference Include="System.Collections.NonGeneric" Version="4.3.0" />
-    <PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
     <PackageReference Include="System.Data.Common" Version="4.3.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.4.3" />
     <PackageReference Include="System.Diagnostics.Tools" Version="4.3.0" />

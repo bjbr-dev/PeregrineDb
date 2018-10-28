@@ -1,4 +1,4 @@
-﻿// <copyright file="ConditionColumnSchema.cs" company="Berkeleybross">
+// <copyright file="ConditionColumnSchema.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 
@@ -24,7 +24,7 @@ namespace PeregrineDb.Schema
         }
 
         /// <summary>
-        /// Gets the column being compared to
+        /// Gets the column being compared to.
         /// </summary>
         public ColumnSchema Column { get; }
 

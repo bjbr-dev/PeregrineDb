@@ -1,4 +1,4 @@
-﻿// <copyright file="PostgresAttributeColumnNameConvention.cs" company="Berkeleybross">
+// <copyright file="PostgresAttributeColumnNameConvention.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 
@@ -10,7 +10,7 @@ namespace PeregrineDb.Dialects.Postgres
 
     /// <summary>
     /// If property has <see cref="ColumnAttribute"/> then it returns <see cref="ColumnAttribute.Name"/> without manipulating it.
-    ///  Otherwise it converts the property name into snake_case
+    ///  Otherwise it converts the property name into snake_case.
     /// </summary>
     public class PostgresAttributeColumnNameConvention
         : AttributeColumnNameConvention

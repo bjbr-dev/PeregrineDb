@@ -1,13 +1,12 @@
-﻿namespace PeregrineDb.Tests.SharedTypes
+namespace PeregrineDb.Tests.SharedTypes
 {
     using System.Collections;
     using System.Collections.Generic;
     using System.Data;
-    using PeregrineDb.Databases.Mapper;
-    using PeregrineDb.Mapping;
+    using Dapper;
 
     internal class DbParams
-        : IDynamicParameters, IEnumerable<IDbDataParameter>
+        : SqlMapper.IDynamicParameters, IEnumerable<IDbDataParameter>
     {
         private readonly List<IDbDataParameter> parameters = new List<IDbDataParameter>();
 
@@ -26,7 +25,7 @@
             this.parameters.Add(value);
         }
 
-        void IDynamicParameters.AddParameters(IDbCommand command, Identity identity)
+        void SqlMapper.IDynamicParameters.AddParameters(IDbCommand command, SqlMapper.Identity identity)
         {
             foreach (var parameter in this.parameters)
             {

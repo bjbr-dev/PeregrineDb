@@ -1,4 +1,4 @@
-﻿// <copyright file="SqlServer2012Dialect.cs" company="Berkeleybross">
+// <copyright file="SqlServer2012Dialect.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 
@@ -13,7 +13,7 @@ namespace PeregrineDb.Dialects
     using PeregrineDb.Utils;
 
     /// <summary>
-    /// Implementation of <see cref="IDialect"/> for SQL Server 2012 and above
+    /// Implementation of <see cref="IDialect"/> for SQL Server 2012 and above.
     /// </summary>
     public class SqlServer2012Dialect
         : StandardDialect, ISchemaQueryDialect

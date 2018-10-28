@@ -1,4 +1,4 @@
-﻿// <copyright file="ISqlConnection.Crud.cs" company="Berkeleybross">
+// <copyright file="ISqlConnection.Crud.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 
@@ -74,7 +74,7 @@ namespace PeregrineDb
         TEntity Find<TEntity>(object id, int? commandTimeout = null);
 
         /// <summary>
-        /// Gets a single entity from the <typeparamref name="TEntity"/> table by it's primary key, or throws an exception if not found
+        /// Gets a single entity from the <typeparamref name="TEntity"/> table by it's primary key, or throws an exception if not found.
         /// </summary>
         /// <example>
         /// <code>
@@ -225,7 +225,7 @@ namespace PeregrineDb
         IReadOnlyList<TEntity> GetRange<TEntity>(object conditions, int? commandTimeout = null);
 
         /// <summary>
-        /// Gets the first <see cref="count"/> entities from the <typeparamref name="TEntity"/> table.
+        /// Gets the first <parmref name="count"/> entities from the <typeparamref name="TEntity"/> table.
         /// </summary>
         /// <example>
         /// <code>
@@ -237,7 +237,7 @@ namespace PeregrineDb
         IReadOnlyList<TEntity> GetTop<TEntity>(int count, string orderBy, int? commandTimeout = null);
 
         /// <summary>
-        /// Gets the first <see cref="count"/> entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
+        /// Gets the first <parmref name="count"/> entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
         /// </summary>
         /// <example>
         /// <code>
@@ -250,7 +250,7 @@ namespace PeregrineDb
         IReadOnlyList<TEntity> GetTop<TEntity>(int count, FormattableString conditions, string orderBy, int? commandTimeout = null);
 
         /// <summary>
-        /// Gets the first <see cref="count"/> entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
+        /// Gets the first <parmref name="count"/> entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
         /// </summary>
         /// <example>
         /// <code>
@@ -308,7 +308,7 @@ namespace PeregrineDb
         void Insert(object entity, int? commandTimeout = null, bool? verifyAffectedRowCount = null);
 
         /// <summary>
-        /// Inserts the <paramref name="entity"/> into the databaseConnection, and returns the auto-generated identity (or the default if invalid)
+        /// Inserts the <paramref name="entity"/> into the databaseConnection, and returns the auto-generated identity (or the default if invalid).
         /// </summary>
         /// <example>
         /// <code>

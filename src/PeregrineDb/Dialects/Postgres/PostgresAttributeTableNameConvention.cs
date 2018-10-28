@@ -1,4 +1,4 @@
-﻿// <copyright file="PostgresAttributeTableNameConvention.cs" company="Berkeleybross">
+// <copyright file="PostgresAttributeTableNameConvention.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 
@@ -13,7 +13,7 @@ namespace PeregrineDb.Dialects.Postgres
     ///  Otherwise it:
     /// - Removes the specified suffix, if any (so classes can be called e.g. DogEntity)
     /// - Converts the class name into lowercase snake_case
-    /// - Escapes it using the <see cref="ISqlNameEscaper"/>
+    /// - Escapes it using the <see cref="ISqlNameEscaper"/>.
     /// </summary>
     public class PostgresAttributeTableNameConvention
         : AtttributeTableNameConvention

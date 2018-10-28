@@ -56,12 +56,12 @@ namespace PeregrineDb.Dialects
         SqlCommand MakeGetRangeCommand<TEntity>(object conditions);
 
         /// <summary>
-        /// Generates a SQL statement to select a page of rows, in a specific order
+        /// Generates a SQL statement to select a page of rows, in a specific order.
         /// </summary>
         SqlCommand MakeGetPageCommand<TEntity>(Page page, FormattableString conditions, string orderBy);
 
         /// <summary>
-        /// Generates a SQL statement to select a page of rows, in a specific order
+        /// Generates a SQL statement to select a page of rows, in a specific order.
         /// </summary>
         SqlCommand MakeGetPageCommand<TEntity>(Page page, object conditions, string orderBy);
 

@@ -1,9 +1,11 @@
-﻿namespace PeregrineDb.Tests.Schema
+namespace PeregrineDb.Tests.Schema
 {
     using System;
+    using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
+    using System.Data;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using FluentAssertions;
@@ -34,7 +36,7 @@
             private TableSchema PerformAct(Type entityType)
             {
                 var sqlNameEscaper = new TestSqlNameEscaper();
-                var schemaFactory = new TableSchemaFactory(sqlNameEscaper, this.sut.TableNameConvention, this.sut.ColumnNameConvention);
+                var schemaFactory = new TableSchemaFactory(sqlNameEscaper, this.sut.TableNameConvention, this.sut.ColumnNameConvention, PeregrineConfig.DefaultSqlTypeMapping);
                 return schemaFactory.GetTableSchema(entityType);
             }
 
@@ -436,7 +438,7 @@
             {
                 var sqlNameEscaper = new TestSqlNameEscaper();
                 var schemaFactory = new TableSchemaFactory(sqlNameEscaper, new AtttributeTableNameConvention(sqlNameEscaper),
-                    new AttributeColumnNameConvention(sqlNameEscaper));
+                    new AttributeColumnNameConvention(sqlNameEscaper), PeregrineConfig.DefaultSqlTypeMapping);
                 return schemaFactory.GetConditionsSchema(typeof(T), schema, typeof(T));
             }
 
@@ -444,7 +446,7 @@
             {
                 var sqlNameEscaper = new TestSqlNameEscaper();
                 var schemaFactory = new TableSchemaFactory(sqlNameEscaper, new AtttributeTableNameConvention(sqlNameEscaper),
-                    new AttributeColumnNameConvention(sqlNameEscaper));
+                    new AttributeColumnNameConvention(sqlNameEscaper), PeregrineConfig.DefaultSqlTypeMapping);
                 return schemaFactory.GetTableSchema(typeof(T));
             }
 
