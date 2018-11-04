@@ -1,20 +1,46 @@
 // <copyright file="DefaultDatabase.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
-
 namespace PeregrineDb.Databases
 {
     using System.Data;
 
-    public static class DefaultDatabase
+    public class DefaultDatabase
+        : DefaultSqlConnection, IDatabase
     {
-        /// <summary>
-        /// Create a new, dynamic instance of <see cref="DefaultDatabase{T}"/>. This method is a light weight wrapper of <see cref="DefaultDatabase{TConnection}(TConnection, PeregrineConfig, bool)"/> for generic inference.
-        /// </summary>
-        public static IDatabase<TConnection> From<TConnection>(TConnection connection, PeregrineConfig config, bool leaveOpen = false)
-            where TConnection : IDbConnection
+        public DefaultDatabase(IDbConnection connection, PeregrineConfig config, bool leaveOpen = false)
+            : base(connection, null, config, leaveOpen)
         {
-            return new DefaultDatabase<TConnection>(connection, config, leaveOpen);
+        }
+
+        public ISqlUnitOfWork StartUnitOfWork(bool leaveOpen = true)
+        {
+            IDbTransaction transaction = null;
+            try
+            {
+                transaction = this.DbConnection.BeginTransaction();
+                return new DefaultUnitOfWork(this.DbConnection, transaction, this.Config, leaveOpen);
+            }
+            catch
+            {
+                transaction?.Dispose();
+                throw;
+            }
+        }
+
+        public ISqlUnitOfWork StartUnitOfWork(IsolationLevel isolationLevel, bool leaveOpen = true)
+        {
+            IDbTransaction transaction = null;
+            try
+            {
+                transaction = this.DbConnection.BeginTransaction(isolationLevel);
+                return new DefaultUnitOfWork(this.DbConnection, transaction, this.Config, leaveOpen);
+            }
+            catch
+            {
+                transaction?.Dispose();
+                throw;
+            }
         }
     }
 }

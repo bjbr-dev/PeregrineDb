@@ -1,4 +1,4 @@
-﻿// <copyright file="GetBenchmarks.PeregrineDb.cs" company="Berkeleybross">
+// <copyright file="GetBenchmarks.PeregrineDb.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 
@@ -12,13 +12,13 @@ namespace PeregrineDb.PerformanceTests
     public class PeregrineDbGetBenchmarks
         : GetBenchmarks
     {
-        private IDatabase<SqlConnection> database;
+        private IDatabase database;
 
         [GlobalSetup]
         public void Setup()
         {
             this.BaseSetup();
-            this.database = DefaultDatabase.From(this.Connection, PeregrineConfig.SqlServer2012, true);
+            this.database = new DefaultDatabase(this.Connection, PeregrineConfig.SqlServer2012, true);
         }
 
         [Benchmark(Description = "Query{T}")]

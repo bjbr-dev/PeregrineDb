@@ -1,4 +1,4 @@
-﻿// <copyright file="IDatabase.cs" company="Berkeleybross">
+// <copyright file="IDatabase.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 
@@ -6,52 +6,28 @@ namespace PeregrineDb
 {
     using System.Data;
 
-    public interface IDatabase<out TConnection>
-        : ISqlConnection<TConnection>
-        where TConnection : IDbConnection
+    public interface IDatabase
+        : ISqlConnection
     {
         /// <summary>
-        /// Starts a new <see cref="ISqlUnitOfWork{TConnection, TTransaction}"/> with the default <see cref="IsolationLevel"/>.
+        /// Starts a new <see cref="ISqlUnitOfWork"/> with the default <see cref="IsolationLevel"/>.
         /// </summary>
         /// <param name="leaveOpen">
-        /// When true (default), the created <see cref="ISqlUnitOfWork{TConnection, TTransaction}"/> will leave the underlying connection open when it is disposed.
-        /// When false, the created <see cref="ISqlUnitOfWork{TConnection, TTransaction}"/> will take ownership of the connection and dispose it when it itself is disposed.
-        /// This allows you to let the the current <see cref="IDatabase{TConnection}"/> instance fall out of scope safely.
+        /// When true (default), the created <see cref="ISqlUnitOfWork"/> will leave the underlying connection open when it is disposed.
+        /// When false, the created <see cref="ISqlUnitOfWork"/> will take ownership of the connection and dispose it when it itself is disposed.
+        /// This allows you to let the the current <see cref="IDatabase"/> instance fall out of scope safely.
         /// </param>
-        ISqlUnitOfWork<TConnection, IDbTransaction> StartUnitOfWork(bool leaveOpen = true);
+        ISqlUnitOfWork StartUnitOfWork(bool leaveOpen = true);
 
         /// <summary>
-        /// Starts a new <see cref="ISqlUnitOfWork{TConnection, TTransaction}"/> with the specified <paramref name="isolationLevel"/>.
+        /// Starts a new <see cref="ISqlUnitOfWork"/> with the specified <paramref name="isolationLevel"/>.
         /// </summary>
         /// <param name="isolationLevel"></param>
         /// <param name="leaveOpen">
-        /// When true (default), the created <see cref="ISqlUnitOfWork{TConnection, TTransaction}"/> will leave the underlying connection open when it is disposed.
-        /// When false, the created <see cref="ISqlUnitOfWork{TConnection, TTransaction}"/> will take ownership of the connection and dispose it when it itself is disposed.
-        /// This allows you to let the the current <see cref="IDatabase{TConnection}"/> instance fall out of scope safely.
+        /// When true (default), the created <see cref="ISqlUnitOfWork"/> will leave the underlying connection open when it is disposed.
+        /// When false, the created <see cref="ISqlUnitOfWork"/> will take ownership of the connection and dispose it when it itself is disposed.
+        /// This allows you to let the the current <see cref="IDatabase"/> instance fall out of scope safely.
         /// </param>
-        ISqlUnitOfWork<TConnection, IDbTransaction> StartUnitOfWork(IsolationLevel isolationLevel, bool leaveOpen = true);
-
-        /// <summary>
-        /// Starts a new <see cref="ISqlUnitOfWork{TConnection, TTransaction}"/> with the default <see cref="IsolationLevel"/>.
-        /// </summary>
-        /// <param name="leaveOpen">
-        /// When true (default), the created <see cref="ISqlUnitOfWork{TConnection, TTransaction}"/> will leave the underlying connection open when it is disposed.
-        /// When false, the created <see cref="ISqlUnitOfWork{TConnection, TTransaction}"/> will take ownership of the connection and dispose it when it itself is disposed.
-        /// This allows you to let the the current <see cref="IDatabase{TConnection}"/> instance fall out of scope safely.
-        /// </param>
-        ISqlUnitOfWork<TConnection, TTransaction> StartUnitOfWork<TTransaction>(bool leaveOpen = true)
-            where TTransaction : class, IDbTransaction;
-
-        /// <summary>
-        /// Starts a new <see cref="ISqlUnitOfWork{TConnection, TTransaction}"/> with the specified <paramref name="isolationLevel"/>.
-        /// </summary>
-        /// <param name="isolationLevel"></param>
-        /// <param name="leaveOpen">
-        /// When true (default), the created <see cref="ISqlUnitOfWork{TConnection, TTransaction}"/> will leave the underlying connection open when it is disposed.
-        /// When false, the created <see cref="ISqlUnitOfWork{TConnection, TTransaction}"/> will take ownership of the connection and dispose it when it itself is disposed.
-        /// This allows you to let the the current <see cref="IDatabase{TConnection}"/> instance fall out of scope safely.
-        /// </param>
-        ISqlUnitOfWork<TConnection, TTransaction> StartUnitOfWork<TTransaction>(IsolationLevel isolationLevel, bool leaveOpen = true)
-            where TTransaction : class, IDbTransaction;
+        ISqlUnitOfWork StartUnitOfWork(IsolationLevel isolationLevel, bool leaveOpen = true);
     }
 }

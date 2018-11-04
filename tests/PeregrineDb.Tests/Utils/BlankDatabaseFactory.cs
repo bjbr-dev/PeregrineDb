@@ -23,7 +23,7 @@ namespace PeregrineDb.Tests.Utils
         private static readonly object Sync = new object();
         private static bool cleanedUp;
 
-        public static IDatabase<IDbConnection> MakeDatabase(IDialect dialect)
+        public static IDatabase MakeDatabase(IDialect dialect)
         {
             CleanUp();
 
@@ -37,7 +37,7 @@ namespace PeregrineDb.Tests.Utils
                     throw new NotSupportedException("Unknown dialect: " + dialect.GetType().Name);
             }
 
-            IDatabase<IDbConnection> OpenBlankDatabase(
+            IDatabase OpenBlankDatabase(
                 ObjectPool<string> pool,
                 Func<string, IDbConnection> makeConnection,
                 PeregrineConfig config)
@@ -52,7 +52,7 @@ namespace PeregrineDb.Tests.Utils
                         dbConnection.Open();
 
                         IDbConnection pooledConnection = new PooledConnection<IDbConnection>(pooledConnectionString, dbConnection);
-                        var database = DefaultDatabase.From(pooledConnection, config);
+                        var database = new DefaultDatabase(pooledConnection, config);
 
                         DataWiper.ClearAllData(database);
                         return database;
@@ -84,7 +84,7 @@ namespace PeregrineDb.Tests.Utils
                 {
                     con.Open();
 
-                    using (var database = DefaultDatabase.From(con, PeregrineConfig.SqlServer2012))
+                    using (ISqlConnection database = new DefaultDatabase(con, PeregrineConfig.SqlServer2012))
                     {
                         var databases = database.Query<string>("SELECT name FROM sys.databases")
                                                 .Where(s => s.StartsWith(DatabasePrefix));
@@ -111,7 +111,7 @@ namespace PeregrineDb.Tests.Utils
                 {
                     con.Open();
 
-                    using (var database = DefaultDatabase.From(con, PeregrineConfig.Postgres))
+                    using (ISqlConnection database = new DefaultDatabase(con, PeregrineConfig.Postgres))
                     {
                         var databases = database.Query<string>("SELECT datname FROM pg_database")
                                                 .Where(s => s.StartsWith(DatabasePrefix));
@@ -146,7 +146,7 @@ namespace PeregrineDb.Tests.Utils
             {
                 con.Open();
 
-                using (var database = DefaultDatabase.From(con, PeregrineConfig.SqlServer2012))
+                using (ISqlConnection database = new DefaultDatabase(con, PeregrineConfig.SqlServer2012))
                 {
                     database.Execute("CREATE DATABASE " + databaseName);
                 }
@@ -163,7 +163,7 @@ namespace PeregrineDb.Tests.Utils
             {
                 con.Open();
 
-                using (var database = DefaultDatabase.From(con, PeregrineConfig.SqlServer2012))
+                using (ISqlConnection database = new DefaultDatabase(con, PeregrineConfig.SqlServer2012))
                 {
                     database.Execute("CREATE SCHEMA Other;");
                     database.Execute(sql);
@@ -180,7 +180,7 @@ namespace PeregrineDb.Tests.Utils
             {
                 con.Open();
 
-                using (var database = DefaultDatabase.From(con, PeregrineConfig.Postgres))
+                using (ISqlConnection database = new DefaultDatabase(con, PeregrineConfig.Postgres))
                 {
                     database.Execute("CREATE DATABASE " + databaseName);
                 }
@@ -195,7 +195,7 @@ namespace PeregrineDb.Tests.Utils
             using (var con = new NpgsqlConnection(connectionString))
             {
                 con.Open();
-                using (var database = DefaultDatabase.From(con, PeregrineConfig.Postgres))
+                using (ISqlConnection database = new DefaultDatabase(con, PeregrineConfig.Postgres))
                 {
                     database.Execute(GetSql("CreatePostgreSql.sql"));
                     con.ReloadTypes();

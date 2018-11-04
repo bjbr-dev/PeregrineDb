@@ -14,13 +14,12 @@ namespace PeregrineDb.Databases
         private readonly IDbConnection connection;
         private readonly bool leaveOpen;
 
-        private readonly IDbTransaction transaction;
         private bool disposed;
 
         protected DefaultSqlConnection(IDbConnection connection, IDbTransaction transaction, PeregrineConfig config, bool leaveOpen)
         {
             this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
-            this.transaction = transaction;
+            this.Transaction = transaction;
             this.leaveOpen = leaveOpen;
             this.Config = config ?? throw new ArgumentNullException(nameof(config));
         }
@@ -33,6 +32,8 @@ namespace PeregrineDb.Databases
                 return this.connection;
             }
         }
+
+        protected IDbTransaction Transaction { get; }
 
         public PeregrineConfig Config { get; }
 

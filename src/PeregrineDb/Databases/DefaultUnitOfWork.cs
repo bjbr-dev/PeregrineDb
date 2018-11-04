@@ -5,17 +5,32 @@
 namespace PeregrineDb.Databases
 {
     using System.Data;
+    using PeregrineDb.Utils;
 
-    public static class DefaultUnitOfWork
+    public class DefaultUnitOfWork
+        : DefaultSqlConnection, ISqlUnitOfWork
     {
-        /// <summary>
-        /// Create a new, dynamic instance of <see cref="DefaultUnitOfWork{TConnection,TTransaction}"/>. This method is a light weight wrapper of <see cref="DefaultUnitOfWork{TConnection,TTransaction}(TConnection, TTransaction, PeregrineConfig, bool)"/> generic inference.
-        /// </summary>
-        public static DefaultUnitOfWork<TConnection, TTransaction> From<TConnection, TTransaction>(TConnection connection, TTransaction transaction, PeregrineConfig config, bool leaveOpen = false)
-            where TConnection : IDbConnection
-            where TTransaction : class, IDbTransaction
+        public DefaultUnitOfWork(IDbConnection connection, IDbTransaction transaction, PeregrineConfig config, bool leaveOpen = false)
+            : base(connection, transaction, config, leaveOpen)
         {
-            return new DefaultUnitOfWork<TConnection, TTransaction>(connection, transaction, config, leaveOpen);
+            Ensure.NotNull(transaction, nameof(transaction));
+        }
+
+        public new IDbTransaction Transaction => base.Transaction;
+
+        public void SaveChanges()
+        {
+            this.Transaction.Commit();
+        }
+
+        public void Rollback()
+        {
+            this.Transaction.Rollback();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            this.Transaction.Dispose();
         }
     }
 }
