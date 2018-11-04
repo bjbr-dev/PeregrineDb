@@ -76,7 +76,7 @@ namespace PeregrineDb.Tests.Databases
                         };
 
                         // Assert
-                        act.ShouldThrow<Exception>();
+                        act.Should().Throw<Exception>();
                         database.Count<Dog>().Should().Be(0);
                     }
                 }

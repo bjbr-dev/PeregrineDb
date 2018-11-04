@@ -1,4 +1,4 @@
-﻿// <copyright file="PostgreSqlDialect.cs" company="Berkeleybross">
+// <copyright file="PostgreSqlDialect.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 
@@ -73,35 +73,11 @@ namespace PeregrineDb.Dialects
             var sql = new SqlCommandBuilder("INSERT INTO ").Append(tableSchema.Name).Append(" (").AppendColumnNames(columns, include).Append(")");
             sql.AppendClause("VALUES (").AppendParameterNames(columns, include).Append(")");
             sql.AppendClause("RETURNING ").AppendSelectPropertiesClause(tableSchema.PrimaryKeyColumns);
-            sql.AddParameters(entity);
-            return sql.ToCommand();
+            return sql.ToCommand(entity);
         }
 
-        public override SqlCommand MakeGetFirstNCommand<TEntity>(int take, string orderBy)
+        public override SqlCommand MakeGetFirstNCommand<TEntity>(int take, string conditions, object parameters, string orderBy)
         {
-            var entityType = typeof(TEntity);
-            var tableSchema = this.GetTableSchema(entityType);
-
-            if (!tableSchema.CanOrderBy(orderBy))
-            {
-                throw new ArgumentException("Unknown column name: " + orderBy, nameof(orderBy));
-            }
-
-            var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
-            sql.AppendClause("FROM ").Append(tableSchema.Name);
-            if (!string.IsNullOrWhiteSpace(orderBy))
-            {
-                sql.AppendClause("ORDER BY ").Append(orderBy);
-            }
-
-            sql.AppendLine().Append("LIMIT ").Append(take);
-            return sql.ToCommand();
-        }
-
-        public override SqlCommand MakeGetFirstNCommand<TEntity>(int take, FormattableString conditions, string orderBy)
-        {
-            Ensure.NotNull(conditions, nameof(conditions));
-
             var entityType = typeof(TEntity);
             var tableSchema = this.GetTableSchema(entityType);
 
@@ -114,7 +90,7 @@ namespace PeregrineDb.Dialects
             }
 
             sql.AppendLine().Append("LIMIT ").Append(take);
-            return sql.ToCommand();
+            return sql.ToCommand(parameters);
         }
 
         public override SqlCommand MakeGetFirstNCommand<TEntity>(int take, object conditions, string orderBy)
@@ -134,11 +110,11 @@ namespace PeregrineDb.Dialects
             }
 
             sql.AppendLine().Append("LIMIT ").Append(take);
-            return sql.ToCommand();
+            return sql.ToCommand(conditions);
         }
 
         /// <inheritdoc />
-        public override SqlCommand MakeGetPageCommand<TEntity>(Page page, FormattableString conditions, string orderBy)
+        public override SqlCommand MakeGetPageCommand<TEntity>(Page page, string conditions, object parameters, string orderBy)
         {
             if (string.IsNullOrWhiteSpace(orderBy))
             {
@@ -152,7 +128,7 @@ namespace PeregrineDb.Dialects
             sql.AppendClause(conditions);
             sql.AppendClause("ORDER BY ").Append(orderBy);
             sql.AppendLine().AppendFormat("LIMIT {1} OFFSET {0}", page.FirstItemIndex, page.PageSize);
-            return sql.ToCommand();
+            return sql.ToCommand(parameters);
         }
 
         /// <inheritdoc />
@@ -172,7 +148,7 @@ namespace PeregrineDb.Dialects
             sql.AppendClause(this.MakeWhereClause(conditionsSchema, conditions));
             sql.AppendClause("ORDER BY ").Append(orderBy);
             sql.AppendLine().AppendFormat("LIMIT {1} OFFSET {0}", page.FirstItemIndex, page.PageSize);
-            return sql.ToCommand();
+            return sql.ToCommand(conditions);
         }
 
         /// <inheritdoc />
@@ -204,7 +180,7 @@ namespace PeregrineDb.Dialects
 
             sql.AppendLine();
             sql.Append(")");
-            return sql.ToCommand();
+            return sql.ToCommand(null);
         }
 
         /// <inheritdoc />
@@ -276,7 +252,7 @@ WHERE constraint_type = 'FOREIGN KEY';");
         {
             var sql = new SqlCommandBuilder("UPDATE ").Append(tableName);
             sql.AppendClause("SET ").Append(columnName).Append(" = NULL");
-            return sql.ToCommand();
+            return sql.ToCommand(null);
         }
 
         public SqlCommand MakeDeleteAllCommand(string tableName)

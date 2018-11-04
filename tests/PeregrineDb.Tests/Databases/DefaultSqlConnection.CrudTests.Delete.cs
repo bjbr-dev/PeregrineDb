@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
@@ -136,11 +136,8 @@
             {
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
-                    // Arrange
-                    var actualCondition = conditions != null ? new SqlString(conditions) : null;
-
                     // Act / Assert
-                    Assert.Throws<ArgumentException>(() => database.DeleteRange<Dog>(actualCondition));
+                    Assert.Throws<ArgumentException>(() => database.DeleteRange<Dog>(conditions));
                 }
             }
 
@@ -154,10 +151,10 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Act
-                    Action act = () => database.DeleteRange<Dog>(new SqlString(conditions));
+                    Action act = () => database.DeleteRange<Dog>(conditions);
 
                     // Assert
-                    act.ShouldNotThrow();
+                    act.Should().NotThrow();
                 }
             }
 

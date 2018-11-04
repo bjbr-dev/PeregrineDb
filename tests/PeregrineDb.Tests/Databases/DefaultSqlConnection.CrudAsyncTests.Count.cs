@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
@@ -91,7 +91,7 @@
                     Func<Task> act = async () => await database.CountAsync<Dog>((object)null);
 
                     // Assert
-                    act.ShouldThrow<ArgumentNullException>();
+                    act.Should().Throw<ArgumentNullException>();
                 }
             }
 

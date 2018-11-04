@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
@@ -28,7 +28,7 @@
                     database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var entities = database.GetRange<Dog>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
+                    var entities = database.GetRange<Dog>("WHERE Name LIKE CONCAT(@Name, '%') and Age = @Age", new { Name = "Some Name", Age = 10 });
 
                     // Assert
                     entities.Count().Should().Be(3);
@@ -141,7 +141,7 @@
                     Action act = () => database.GetRange<Dog>(new { Ages = 10 });
 
                     // Assert
-                    act.ShouldThrow<InvalidConditionSchemaException>();
+                    act.Should().Throw<InvalidConditionSchemaException>();
                 }
             }
 

@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
@@ -32,7 +32,7 @@
                     var entities = await database.GetAllAsync<Dog>();
 
                     // Assert
-                    entities.Count().Should().Be(4);
+                    entities.Should().HaveCount(4);
                 }
             }
         }

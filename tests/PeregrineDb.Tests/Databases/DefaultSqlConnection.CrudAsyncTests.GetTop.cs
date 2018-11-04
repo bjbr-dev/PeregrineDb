@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
@@ -53,12 +53,12 @@
                     var entities = await database.GetTopAsync<Dog>(2, orderBy);
 
                     // Assert
-                    entities.ShouldAllBeEquivalentTo(new[]
+                    entities.Should().BeEquivalentTo(new[]
                             {
-                                new Dog { Name = "Some Name 1", Age = 10 },
-                                new Dog { Name = "Some Name 2", Age = 10 }
+                                new { Name = "Some Name 1", Age = 10 },
+                                new { Name = "Some Name 2", Age = 10 }
                             },
-                        o => o.WithStrictOrdering().Excluding(e => e.Id));
+                        o => o.WithStrictOrdering());
                 }
             }
 
@@ -78,10 +78,10 @@
                     database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    Func<Task> act = async () => await database.GetTopAsync<Dog>(2, $"WHERE Age = {10}");
+                    Func<Task> act = async () => await database.GetTopAsync<Dog>(2, "WHERE Age = 10");
 
                     // Assert
-                    act.ShouldThrow<ArgumentException>().WithMessage("Unknown column name: WHERE Age = 10" + Environment.NewLine + "Parameter name: orderBy");
+                    act.Should().Throw<Exception>();
                 }
             }
         }
@@ -102,10 +102,10 @@
                     database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var entities = await database.GetTopAsync<Dog>(2, $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}", "name");
+                    var entities = await database.GetTopAsync<Dog>(2, "name", "WHERE Name LIKE CONCAT(@Name, '%') and Age = @Age", new { Name = "Some Name", Age = 10 });
 
                     // Assert
-                    entities.Count().Should().Be(2);
+                    entities.Should().HaveCount(2);
                 }
             }
         }
@@ -126,15 +126,15 @@
                     database.Insert(new Dog { Name = "Some Name 4", Age = 10 });
 
                     // Act
-                    var entities = await database.GetTopAsync<Dog>(2, new { Age = 10 }, "name");
+                    var entities = await database.GetTopAsync<Dog>(2, "name", new { Age = 10 });
 
                     // Assert
-                    entities.ShouldAllBeEquivalentTo(new[]
+                    entities.Should().BeEquivalentTo(new[]
                             {
-                                new Dog { Name = "Some Name 2", Age = 10 },
-                                new Dog { Name = "Some Name 3", Age = 10 }
+                                new { Name = "Some Name 2", Age = 10 },
+                                new { Name = "Some Name 3", Age = 10 }
                             },
-                        o => o.WithStrictOrdering().Excluding(e => e.Id));
+                        o => o.WithStrictOrdering());
                 }
             }
         }

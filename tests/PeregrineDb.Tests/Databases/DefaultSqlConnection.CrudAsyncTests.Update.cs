@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
@@ -111,7 +111,7 @@
                     // Assert
                     result.NumRowsAffected.Should().Be(2);
 
-                    var updatedEntities = database.GetRange<Dog>($"WHERE Name = {"Other name"}");
+                    var updatedEntities = database.GetRange<Dog>(new { Name = "Other name" });
                     updatedEntities.Count().Should().Be(2);
                 }
             }

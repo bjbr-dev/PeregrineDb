@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System;
     using FluentAssertions;
@@ -87,7 +87,7 @@
                     Action act = () => database.Count<Dog>((object)null);
 
                     // Assert
-                    act.ShouldThrow<ArgumentNullException>();
+                    act.Should().Throw<ArgumentNullException>();
                 }
             }
 

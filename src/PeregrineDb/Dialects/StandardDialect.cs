@@ -5,10 +5,9 @@
 namespace PeregrineDb.Dialects
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Collections.Immutable;
-    using System.Linq;
-    using System.Reflection;
     using System.Text;
     using Pagination;
     using PeregrineDb.Schema;
@@ -28,14 +27,14 @@ namespace PeregrineDb.Dialects
         }
 
         /// <inheritdoc />
-        public SqlCommand MakeCountCommand<TEntity>(FormattableString conditions)
+        public SqlCommand MakeCountCommand<TEntity>(string conditions, object parameters)
         {
             var schema = this.GetTableSchema(typeof(TEntity));
 
             var sql = new SqlCommandBuilder("SELECT COUNT(*)");
             sql.AppendClause("FROM ").Append(schema.Name);
             sql.AppendClause(conditions);
-            return sql.ToCommand();
+            return sql.ToCommand(parameters);
         }
 
         /// <inheritdoc />
@@ -50,7 +49,7 @@ namespace PeregrineDb.Dialects
             var sql = new SqlCommandBuilder("SELECT COUNT(*)");
             sql.AppendClause("FROM ").Append(tableSchema.Name);
             sql.AppendClause(this.MakeWhereClause(conditionsSchema, conditions));
-            return sql.ToCommand();
+            return sql.ToCommand(conditions);
         }
 
         /// <inheritdoc />
@@ -63,28 +62,24 @@ namespace PeregrineDb.Dialects
             var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(schema.Columns);
             sql.AppendClause("FROM ").Append(schema.Name);
             sql.AppendWherePrimaryKeysClause(primaryKeys);
-            sql.AddPrimaryKeyParameter(schema, id);
-            return sql.ToCommand();
+            return sql.ToPrimaryKeySql(schema, id);
         }
 
         /// <inheritdoc />
-        public abstract SqlCommand MakeGetFirstNCommand<TEntity>(int take, string orderBy);
-
-        /// <inheritdoc />
-        public abstract SqlCommand MakeGetFirstNCommand<TEntity>(int take, FormattableString conditions, string orderBy);
+        public abstract SqlCommand MakeGetFirstNCommand<TEntity>(int take, string conditions, object parameters, string orderBy);
 
         /// <inheritdoc />
         public abstract SqlCommand MakeGetFirstNCommand<TEntity>(int take, object conditions, string orderBy);
 
         /// <inheritdoc />
-        public SqlCommand MakeGetRangeCommand<TEntity>(FormattableString conditions)
+        public SqlCommand MakeGetRangeCommand<TEntity>(string conditions, object parameters)
         {
             var tableSchema = this.GetTableSchema(typeof(TEntity));
 
             var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
             sql.AppendClause(conditions);
-            return sql.ToCommand();
+            return sql.ToCommand(parameters);
         }
 
         /// <inheritdoc />
@@ -99,11 +94,11 @@ namespace PeregrineDb.Dialects
             var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
             sql.AppendClause(this.MakeWhereClause(conditionsSchema, conditions));
-            return sql.ToCommand();
+            return sql.ToCommand(conditions);
         }
 
         /// <inheritdoc />
-        public abstract SqlCommand MakeGetPageCommand<TEntity>(Page page, FormattableString conditions, string orderBy);
+        public abstract SqlCommand MakeGetPageCommand<TEntity>(Page page, string conditions, object parameters, string orderBy);
 
         /// <inheritdoc />
         public abstract SqlCommand MakeGetPageCommand<TEntity>(Page page, object conditions, string orderBy);
@@ -119,17 +114,15 @@ namespace PeregrineDb.Dialects
 
             var sql = new SqlCommandBuilder("INSERT INTO ").Append(tableSchema.Name).Append(" (").AppendColumnNames(columns, Include).Append(")");
             sql.AppendClause("VALUES (").AppendParameterNames(columns, Include).Append(");");
-            sql.AddParameters(entity);
-            return sql.ToCommand();
+            return sql.ToCommand(entity);
         }
 
         /// <inheritdoc />
         public abstract SqlCommand MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(object entity);
 
         /// <inheritdoc />
-        public (string sql, IEnumerable<TEntity> parameters) MakeInsertRangeCommand<TEntity>(IEnumerable<TEntity> entities)
+        public SqlMultipleCommand<TEntity> MakeInsertRangeCommand<TEntity>(IEnumerable<TEntity> entities)
         {
-            Ensure.NotNull(entities, nameof(entities));
             var tableSchema = this.GetTableSchema(typeof(TEntity));
 
             bool Include(ColumnSchema p) => p.Usage.IncludeInInsertStatements;
@@ -137,8 +130,7 @@ namespace PeregrineDb.Dialects
 
             var sql = new SqlCommandBuilder("INSERT INTO ").Append(tableSchema.Name).Append(" (").AppendColumnNames(columns, Include).Append(")");
             sql.AppendClause("VALUES (").AppendParameterNames(columns, Include).Append(");");
-            var result = sql.ToCommand(entities);
-            return (result.CommandText, entities);
+            return sql.ToMultipleCommand(entities);
         }
 
         /// <inheritdoc />
@@ -154,15 +146,12 @@ namespace PeregrineDb.Dialects
             var sql = new SqlCommandBuilder("UPDATE ").Append(tableSchema.Name);
             sql.AppendClause("SET ").AppendColumnNamesEqualParameters(tableSchema.Columns, ", ", Include);
             sql.AppendWherePrimaryKeysClause(tableSchema.GetPrimaryKeys());
-            sql.AddParameters(entity);
-            return sql.ToCommand();
+            return sql.ToCommand(entity);
         }
 
-        public (string sql, IEnumerable<TEntity> parameters) MakeUpdateRangeCommand<TEntity>(IEnumerable<TEntity> entities)
+        public SqlMultipleCommand<TEntity> MakeUpdateRangeCommand<TEntity>(IEnumerable<TEntity> entities)
             where TEntity : class
         {
-            Ensure.NotNull(entities, nameof(entities));
-
             var tableSchema = this.GetTableSchema(typeof(TEntity));
 
             bool Include(ColumnSchema p) => p.Usage.IncludeInUpdateStatements;
@@ -170,8 +159,7 @@ namespace PeregrineDb.Dialects
             var sql = new SqlCommandBuilder("UPDATE ").Append(tableSchema.Name);
             sql.AppendClause("SET ").AppendColumnNamesEqualParameters(tableSchema.Columns, ", ", Include);
             sql.AppendWherePrimaryKeysClause(tableSchema.GetPrimaryKeys());
-            var result = sql.ToCommand(entities);
-            return (result.CommandText, entities);
+            return sql.ToMultipleCommand(entities);
         }
 
         /// <inheritdoc />
@@ -184,8 +172,7 @@ namespace PeregrineDb.Dialects
 
             var sql = new SqlCommandBuilder("DELETE FROM ").Append(tableSchema.Name);
             sql.AppendWherePrimaryKeysClause(tableSchema.GetPrimaryKeys());
-            sql.AddParameters(entity);
-            return sql.ToCommand();
+            return sql.ToCommand(entity);
         }
 
         /// <inheritdoc />
@@ -196,16 +183,15 @@ namespace PeregrineDb.Dialects
             var sql = new SqlCommandBuilder("DELETE FROM ").Append(schema.Name);
             var primaryKeys = schema.GetPrimaryKeys();
             sql.AppendWherePrimaryKeysClause(primaryKeys);
-            sql.AddPrimaryKeyParameter(schema, id);
-            return sql.ToCommand();
+            return sql.ToPrimaryKeySql(schema, id);
         }
 
         /// <summary>
         /// Generates a SQL Delete statement which chooses which row to delete by the <paramref name="conditions"/>.
         /// </summary>
-        public SqlCommand MakeDeleteRangeCommand<TEntity>(FormattableString conditions)
+        public SqlCommand MakeDeleteRangeCommand<TEntity>(string conditions, object parameters)
         {
-            if (conditions == null || conditions.Format.IndexOf("WHERE ", StringComparison.OrdinalIgnoreCase) < 0)
+            if (conditions == null || conditions.IndexOf("WHERE ", StringComparison.OrdinalIgnoreCase) < 0)
             {
                 throw new ArgumentException(
                     "DeleteRange<TEntity> requires a WHERE clause, use DeleteAll<TEntity> to delete everything.");
@@ -215,7 +201,7 @@ namespace PeregrineDb.Dialects
 
             var sql = new SqlCommandBuilder("DELETE FROM ").Append(tableSchema.Name);
             sql.AppendClause(conditions);
-            return sql.ToCommand();
+            return sql.ToCommand(parameters);
         }
 
         public SqlCommand MakeDeleteAllCommand<TEntity>()
@@ -242,15 +228,14 @@ namespace PeregrineDb.Dialects
 
             var sql = new SqlCommandBuilder("DELETE FROM ").Append(tableSchema.Name);
             sql.AppendClause(this.MakeWhereClause(conditionsSchema, conditions));
-            return sql.ToCommand();
+            return sql.ToCommand(conditions);
         }
 
-        /// <inheritdoc />
-        protected FormattableString MakeWhereClause(ImmutableArray<ConditionColumnSchema> conditionsSchema, object conditions)
+        protected string MakeWhereClause(ImmutableArray<ConditionColumnSchema> conditionsSchema, object conditions)
         {
             if (conditionsSchema.IsEmpty)
             {
-                return new SqlString(string.Empty);
+                return string.Empty;
             }
 
             var sql = new StringBuilder("WHERE ");
@@ -269,13 +254,13 @@ namespace PeregrineDb.Dialects
                 }
                 else
                 {
-                    sql.Append(condition.Column.ColumnName).Append(" = {").Append(condition.Column.Index).Append("}");
+                    sql.Append(condition.Column.ColumnName).Append(" = @").Append(condition.Column.ParameterName);
                 }
 
                 isFirst = false;
             }
 
-            return new SqlString(sql.ToString(), GetArguments(conditionsSchema.Select(s => s.Column).ToList(), conditions));
+            return sql.ToString();
         }
 
         /// <inheritdoc />
@@ -307,33 +292,6 @@ namespace PeregrineDb.Dialects
         public override int GetHashCode()
         {
             return this.GetType().Name.GetHashCode();
-        }
-
-        private static object[] GetArguments(IReadOnlyCollection<ColumnSchema> columns, object entity)
-        {
-            var properties = entity.GetType().GetTypeInfo().DeclaredProperties;
-            var arguments = new object[columns.Max(c => c.Index) + 1];
-
-            foreach (var prop in properties)
-            {
-                var propertyName = prop.Name;
-                var possibleColumns = columns.Where(c => string.Equals(c.PropertyName, propertyName, StringComparison.OrdinalIgnoreCase)).ToList();
-                if (possibleColumns.Count > 1)
-                {
-                    possibleColumns = columns.Where(c => string.Equals(c.PropertyName, propertyName, StringComparison.Ordinal)).ToList();
-                    if (possibleColumns.Count > 1)
-                    {
-                        throw new InvalidOperationException("Ambiguous column: " + propertyName);
-                    }
-                }
-
-                if (possibleColumns.Count == 1)
-                {
-                    arguments[possibleColumns.Single().Index] = prop.GetValue(entity);
-                }
-            }
-
-            return arguments;
         }
 
         protected TableSchema GetTableSchema(Type entityType)

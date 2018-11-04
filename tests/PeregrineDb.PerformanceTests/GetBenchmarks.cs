@@ -7,15 +7,15 @@ namespace PeregrineDb.PerformanceTests
     using System.Configuration;
     using System.Data.SqlClient;
     using BenchmarkDotNet.Attributes;
-    using BenchmarkDotNet.Attributes.Columns;
     using BenchmarkDotNet.Configs;
     using BenchmarkDotNet.Diagnosers;
     using BenchmarkDotNet.Exporters.Json;
     using BenchmarkDotNet.Jobs;
+    using BenchmarkDotNet.Mathematics;
     using BenchmarkDotNet.Order;
     using PeregrineDb.PerformanceTests.Helpers;
 
-    [OrderProvider(SummaryOrderPolicy.FastestToSlowest)]
+    [Orderer(SummaryOrderPolicy.FastestToSlowest)]
     [RankColumn]
     [Config(typeof(Config))]
     public abstract class GetBenchmarks
@@ -52,9 +52,8 @@ namespace PeregrineDb.PerformanceTests
                             .WithUnrollFactor(50)
                             .WithLaunchCount(1)
                             .WithWarmupCount(0)
-                            .WithTargetCount(5)
-                            .WithRemoveOutliers(true)
-                );
+                            .WithIterationCount(5)
+                            .WithOutlierMode(OutlierMode.All));
             }
         }
     }

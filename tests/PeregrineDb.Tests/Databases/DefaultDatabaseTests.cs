@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System;
     using System.Data;
@@ -43,7 +43,7 @@
                 Action act = () => sut.StartUnitOfWork();
 
                 // Assert
-                act.ShouldThrowExactly<ArgumentNullException>();
+                act.Should().ThrowExactly<ArgumentNullException>();
                 database.Verify(d => d.Dispose(), Times.Never);
             }
 
@@ -98,7 +98,7 @@
                 Action act = () => sut.StartUnitOfWork(IsolationLevel.ReadCommitted);
 
                 // Assert
-                act.ShouldThrowExactly<ArgumentNullException>();
+                act.Should().ThrowExactly<ArgumentNullException>();
                 database.Verify(d => d.Dispose(), Times.Never);
             }
 

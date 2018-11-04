@@ -22,7 +22,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        int Count<TEntity>(FormattableString conditions = null, int? commandTimeout = null);
+        int Count<TEntity>(string conditions = null, object parameters = null, int? commandTimeout = null);
 
         /// <summary>
         /// Counts how many entities in the <typeparamref name="TEntity"/> table match the <paramref name="conditions"/>.
@@ -47,7 +47,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        bool Exists<TEntity>(FormattableString conditions = null, int? commandTimeout = null);
+        bool Exists<TEntity>(string conditions = null, object parameters = null, int? commandTimeout = null);
 
         /// <summary>
         /// Gets whether an entity in the <typeparamref name="TEntity"/> table matches the <paramref name="conditions"/>.
@@ -99,7 +99,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        TEntity FindFirst<TEntity>(FormattableString conditions, string orderBy, int? commandTimeout = null);
+        TEntity FindFirst<TEntity>(string orderBy, string conditions = null, object parameters = null, int? commandTimeout = null);
 
         /// <summary>
         /// Gets the first matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
@@ -112,7 +112,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        TEntity FindFirst<TEntity>(object conditions, string orderBy, int? commandTimeout = null);
+        TEntity FindFirst<TEntity>(string orderBy, object conditions, int? commandTimeout = null);
 
         /// <summary>
         /// Gets the first matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
@@ -126,7 +126,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        TEntity GetFirst<TEntity>(FormattableString conditions, string orderBy, int? commandTimeout = null)
+        TEntity GetFirst<TEntity>(string orderBy, string conditions = null, object parameters = null, int? commandTimeout = null)
             where TEntity : class;
 
         /// <summary>
@@ -140,7 +140,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        TEntity GetFirst<TEntity>(object conditions, string orderBy, int? commandTimeout = null)
+        TEntity GetFirst<TEntity>(string orderBy, object conditions, int? commandTimeout = null)
             where TEntity : class;
 
         /// <summary>
@@ -155,7 +155,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        TEntity FindSingle<TEntity>(FormattableString conditions, int? commandTimeout = null);
+        TEntity FindSingle<TEntity>(string conditions = null, object parameters = null, int? commandTimeout = null);
 
         /// <summary>
         /// Gets the only matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
@@ -182,7 +182,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        TEntity GetSingle<TEntity>(FormattableString conditions, int? commandTimeout = null)
+        TEntity GetSingle<TEntity>(string conditions = null, object parameters = null, int? commandTimeout = null)
             where TEntity : class;
 
         /// <summary>
@@ -210,7 +210,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        IReadOnlyList<TEntity> GetRange<TEntity>(FormattableString conditions, int? commandTimeout = null);
+        IReadOnlyList<TEntity> GetRange<TEntity>(string conditions = null, object parameters = null, int? commandTimeout = null);
 
         /// <summary>
         /// Gets a collection of entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
@@ -225,18 +225,6 @@ namespace PeregrineDb
         IReadOnlyList<TEntity> GetRange<TEntity>(object conditions, int? commandTimeout = null);
 
         /// <summary>
-        /// Gets the first <parmref name="count"/> entities from the <typeparamref name="TEntity"/> table.
-        /// </summary>
-        /// <example>
-        /// <code>
-        /// <![CDATA[
-        /// var dogs = databaseConnection.GetTop<DogEntity>(5, "id");
-        /// ]]>
-        /// </code>
-        /// </example>
-        IReadOnlyList<TEntity> GetTop<TEntity>(int count, string orderBy, int? commandTimeout = null);
-
-        /// <summary>
         /// Gets the first <parmref name="count"/> entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
         /// </summary>
         /// <example>
@@ -247,7 +235,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        IReadOnlyList<TEntity> GetTop<TEntity>(int count, FormattableString conditions, string orderBy, int? commandTimeout = null);
+        IReadOnlyList<TEntity> GetTop<TEntity>(int count, string orderBy, string conditions = null, object parameters = null, int? commandTimeout = null);
 
         /// <summary>
         /// Gets the first <parmref name="count"/> entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
@@ -259,7 +247,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        IReadOnlyList<TEntity> GetTop<TEntity>(int count, object conditions, string orderBy, int? commandTimeout = null);
+        IReadOnlyList<TEntity> GetTop<TEntity>(int count, string orderBy, object conditions, int? commandTimeout = null);
 
         /// <summary>
         /// Gets a collection of entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
@@ -273,7 +261,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        PagedList<TEntity> GetPage<TEntity>(IPageBuilder pageBuilder, FormattableString conditions, string orderBy, int? commandTimeout = null);
+        PagedList<TEntity> GetPage<TEntity>(IPageBuilder pageBuilder, string orderBy, string conditions = null, object parameters = null, int? commandTimeout = null);
 
         /// <summary>
         /// Gets a collection of entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
@@ -287,7 +275,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        PagedList<TEntity> GetPage<TEntity>(IPageBuilder pageBuilder, object conditions, string orderBy, int? commandTimeout = null);
+        PagedList<TEntity> GetPage<TEntity>(IPageBuilder pageBuilder, string orderBy, object conditions, int? commandTimeout = null);
 
         /// <summary>
         /// Gets all the entities in the <typeparamref name="TEntity"/> table.
@@ -452,7 +440,7 @@ namespace PeregrineDb
         /// </code>
         /// </example>
         /// <returns>The number of deleted entities.</returns>
-        CommandResult DeleteRange<TEntity>(FormattableString conditions, int? commandTimeout = null);
+        CommandResult DeleteRange<TEntity>(string conditions = null, object parameters = null, int? commandTimeout = null);
 
         /// <summary>
         /// <para>Deletes all the entities in the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.</para>

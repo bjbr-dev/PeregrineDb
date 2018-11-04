@@ -4,7 +4,6 @@
 
 namespace PeregrineDb.Dialects
 {
-    using System;
     using System.Collections.Generic;
     using Pagination;
 
@@ -17,7 +16,7 @@ namespace PeregrineDb.Dialects
         /// Creates a command which counts how many rows match the <paramref name="conditions"/>.
         /// The statement should return an Int32 Scalar.
         /// </summary>
-        SqlCommand MakeCountCommand<TEntity>(FormattableString conditions);
+        SqlCommand MakeCountCommand<TEntity>(string conditions, object parameters);
 
         /// <summary>
         /// Creates a command which counts how many rows match the <paramref name="conditions"/>.
@@ -31,14 +30,9 @@ namespace PeregrineDb.Dialects
         SqlCommand MakeFindCommand<TEntity>(object id);
 
         /// <summary>
-        /// Generates a SQL statement to select the first N records.
-        /// </summary>
-        SqlCommand MakeGetFirstNCommand<TEntity>(int take, string orderBy);
-
-        /// <summary>
         /// Generates a SQL statement to select the first N records which match the <paramref name="conditions"/>.
         /// </summary>
-        SqlCommand MakeGetFirstNCommand<TEntity>(int take, FormattableString conditions, string orderBy);
+        SqlCommand MakeGetFirstNCommand<TEntity>(int take, string conditions, object parameters, string orderBy);
 
         /// <summary>
         /// Generates a SQL statement to select the first N records which match the <paramref name="conditions"/>.
@@ -48,7 +42,7 @@ namespace PeregrineDb.Dialects
         /// <summary>
         /// Generates a SQL statement to select multiple rows.
         /// </summary>
-        SqlCommand MakeGetRangeCommand<TEntity>(FormattableString conditions);
+        SqlCommand MakeGetRangeCommand<TEntity>(string conditions, object parameters);
 
         /// <summary>
         /// Generates a SQL statement to select multiple rows.
@@ -58,7 +52,7 @@ namespace PeregrineDb.Dialects
         /// <summary>
         /// Generates a SQL statement to select a page of rows, in a specific order.
         /// </summary>
-        SqlCommand MakeGetPageCommand<TEntity>(Page page, FormattableString conditions, string orderBy);
+        SqlCommand MakeGetPageCommand<TEntity>(Page page, string conditions, object parameters, string orderBy);
 
         /// <summary>
         /// Generates a SQL statement to select a page of rows, in a specific order.
@@ -75,7 +69,7 @@ namespace PeregrineDb.Dialects
         /// </summary>
         SqlCommand MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(object entity);
 
-        (string sql, IEnumerable<TEntity> parameters) MakeInsertRangeCommand<TEntity>(IEnumerable<TEntity> entities);
+        SqlMultipleCommand<TEntity> MakeInsertRangeCommand<TEntity>(IEnumerable<TEntity> entities);
 
         /// <summary>
         /// Generates a SQL Update statement which chooses which row to update by its PrimaryKey.
@@ -83,7 +77,7 @@ namespace PeregrineDb.Dialects
         SqlCommand MakeUpdateCommand<TEntity>(TEntity entity)
             where TEntity : class;
 
-        (string sql, IEnumerable<TEntity> parameters) MakeUpdateRangeCommand<TEntity>(IEnumerable<TEntity> entities)
+        SqlMultipleCommand<TEntity> MakeUpdateRangeCommand<TEntity>(IEnumerable<TEntity> entities)
             where TEntity : class;
 
         /// <summary>
@@ -100,7 +94,7 @@ namespace PeregrineDb.Dialects
         /// <summary>
         /// Generates a SQL Delete statement which chooses which row to delete by the <paramref name="conditions"/>.
         /// </summary>
-        SqlCommand MakeDeleteRangeCommand<TEntity>(FormattableString conditions);
+        SqlCommand MakeDeleteRangeCommand<TEntity>(string conditions, object parameters);
 
         SqlCommand MakeDeleteRangeCommand<TEntity>(object conditions);
 

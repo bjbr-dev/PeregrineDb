@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
@@ -30,7 +30,7 @@
                     Func<Task> act = async () => await database.GetAsync<NoKey>("Some Name");
 
                     // Assert
-                    act.ShouldThrow<InvalidPrimaryKeyException>();
+                    act.Should().Throw<InvalidPrimaryKeyException>();
                 }
             }
 
@@ -45,7 +45,7 @@
                     Func<Task> act = async () => await database.GetAsync<KeyInt32>(5);
 
                     // Assert
-                    act.ShouldThrow<InvalidOperationException>();
+                    act.Should().Throw<InvalidOperationException>();
                 }
             }
 

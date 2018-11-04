@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.SharedTypes
+namespace PeregrineDb.Tests.SharedTypes
 {
     internal class TestFieldsEntity
     {

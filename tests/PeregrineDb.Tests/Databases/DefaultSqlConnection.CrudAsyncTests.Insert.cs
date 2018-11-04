@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
@@ -84,7 +84,7 @@
                     Func<Task> act = async () => await database.InsertAsync(entity);
 
                     // Assert
-                    act.ShouldThrow<Exception>();
+                    act.Should().Throw<Exception>();
                 }
             }
 
@@ -120,7 +120,7 @@
                     Func<Task> act = async () => await database.InsertAsync(entity);
 
                     // Assert
-                    act.ShouldThrow<Exception>();
+                    act.Should().Throw<Exception>();
                 }
             }
 
@@ -210,7 +210,7 @@
                     Func<Task> act = async () => await database.InsertAsync<int>(new NoKey());
 
                     // Assert
-                    act.ShouldThrow<InvalidPrimaryKeyException>();
+                    act.Should().Throw<InvalidPrimaryKeyException>();
                 }
             }
 
@@ -225,7 +225,7 @@
                     Func<Task> act = async () => await database.InsertAsync<int>(new CompositeKeys());
 
                     // Assert
-                    act.ShouldThrow<InvalidPrimaryKeyException>();
+                    act.Should().Throw<InvalidPrimaryKeyException>();
                 }
             }
 
@@ -243,7 +243,7 @@
                     Func<Task> act = async () => await database.InsertAsync<string>(entity);
 
                     // Assert
-                    act.ShouldThrow<InvalidPrimaryKeyException>();
+                    act.Should().Throw<InvalidPrimaryKeyException>();
                 }
             }
 
@@ -261,7 +261,7 @@
                     Func<Task> act = async () => await database.InsertAsync<Guid>(entity);
 
                     // Assert
-                    act.ShouldThrow<InvalidPrimaryKeyException>();
+                    act.Should().Throw<InvalidPrimaryKeyException>();
                 }
             }
 
@@ -502,7 +502,7 @@
                     Func<Task> act = async () => await database.InsertRangeAsync<NoKey, int>(entities, (e, k) => { });
 
                     // Assert
-                    act.ShouldThrow<InvalidPrimaryKeyException>();
+                    act.Should().Throw<InvalidPrimaryKeyException>();
                 }
             }
 
@@ -523,7 +523,7 @@
                     Func<Task> act = async () => await database.InsertRangeAsync<CompositeKeys, int>(entities, (e, k) => { });
 
                     // Assert
-                    act.ShouldThrow<InvalidPrimaryKeyException>();
+                    act.Should().Throw<InvalidPrimaryKeyException>();
                 }
             }
 
@@ -544,7 +544,7 @@
                     Func<Task> act = async () => await database.InsertRangeAsync<KeyString, string>(entities, (e, k) => { });
 
                     // Assert
-                    act.ShouldThrow<InvalidPrimaryKeyException>();
+                    act.Should().Throw<InvalidPrimaryKeyException>();
                 }
             }
 
@@ -565,7 +565,7 @@
                     Func<Task> act = async () => await database.InsertRangeAsync<KeyGuid, Guid>(entities, (e, k) => { });
 
                     // Assert
-                    act.ShouldThrow<InvalidPrimaryKeyException>();
+                    act.Should().Throw<InvalidPrimaryKeyException>();
                 }
             }
 

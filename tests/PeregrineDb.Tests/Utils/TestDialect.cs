@@ -41,27 +41,10 @@ namespace PeregrineDb.Tests.Utils
             var sql = new SqlCommandBuilder("INSERT INTO ").Append(tableSchema.Name).Append(" (").AppendColumnNames(columns, include).Append(")");
             sql.AppendClause("VALUES (").AppendParameterNames(columns, include).Append(")");
             sql.AppendClause("GET IDENTITY");
-            sql.AddParameters(entity);
-            return sql.ToCommand();
+            return sql.ToCommand(entity);
         }
 
-        public override SqlCommand MakeGetFirstNCommand<TEntity>(int take, string orderBy)
-        {
-            var entityType = typeof(TEntity);
-            var tableSchema = this.GetTableSchema(entityType);
-
-            var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
-            sql.AppendClause("FROM ").Append(tableSchema.Name);
-            if (!string.IsNullOrWhiteSpace(orderBy))
-            {
-                sql.AppendClause("ORDER BY ").Append(orderBy);
-            }
-
-            sql.AppendLine().AppendFormat("TAKE {0}", take);
-            return new SqlCommand(sql.ToString());
-        }
-
-        public override SqlCommand MakeGetFirstNCommand<TEntity>(int take, FormattableString conditions, string orderBy)
+        public override SqlCommand MakeGetFirstNCommand<TEntity>(int take, string conditions, object parameters, string orderBy)
         {
             Ensure.NotNull(conditions, nameof(conditions));
 
@@ -101,7 +84,7 @@ namespace PeregrineDb.Tests.Utils
         }
 
         /// <inheritdoc />
-        public override SqlCommand MakeGetPageCommand<TEntity>(Page page, FormattableString conditions, string orderBy)
+        public override SqlCommand MakeGetPageCommand<TEntity>(Page page, string conditions, object parameters, string orderBy)
         {
             if (string.IsNullOrWhiteSpace(orderBy))
             {
@@ -115,7 +98,7 @@ namespace PeregrineDb.Tests.Utils
             sql.AppendClause(conditions);
             sql.AppendClause("ORDER BY ").Append(orderBy);
             sql.AppendLine().AppendFormat("SKIP {0} TAKE {1}", page.FirstItemIndex, page.PageSize);
-            return sql.ToCommand();
+            return sql.ToCommand(parameters);
         }
 
         /// <inheritdoc />
@@ -135,7 +118,7 @@ namespace PeregrineDb.Tests.Utils
             sql.AppendClause(this.MakeWhereClause(conditionsSchema, conditions));
             sql.AppendClause("ORDER BY ").Append(orderBy);
             sql.AppendLine().AppendFormat("SKIP {0} TAKE {1}", page.FirstItemIndex, page.PageSize);
-            return sql.ToCommand();
+            return sql.ToCommand(conditions);
         }
 
         public override SqlCommand MakeCreateTempTableCommand<TEntity>()

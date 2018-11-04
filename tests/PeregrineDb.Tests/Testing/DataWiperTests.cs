@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Testing
+namespace PeregrineDb.Tests.Testing
 {
     using System;
     using System.Collections.Generic;
@@ -12,7 +12,7 @@
 
     public abstract class DataWiperTests
     {
-        public static IEnumerable<object> TestDialects => new[]
+        public static IEnumerable<object[]> TestDialects => new[]
             {
                 new[] { Dialect.SqlServer2012 },
                 new[] { Dialect.PostgreSql }
@@ -119,7 +119,7 @@
                     Action act = () => DataWiper.ClearAllData(database, new HashSet<string> { tableName });
 
                     // Assert
-                    act.ShouldThrow<Exception>();
+                    act.Should().Throw<Exception>();
 
                     // Cleanup
                     database.DeleteAll<SimpleForeignKey>();

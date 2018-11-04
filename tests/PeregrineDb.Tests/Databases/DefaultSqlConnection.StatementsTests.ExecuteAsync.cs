@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System;
     using System.Threading.Tasks;
@@ -73,7 +73,7 @@
                         };
 
                         // Assert
-                        act.ShouldThrow<Exception>();
+                        act.Should().Throw<Exception>();
                         database.Count<Dog>().Should().Be(0);
                     }
                 }

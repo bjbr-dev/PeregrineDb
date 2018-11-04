@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System;
     using System.Linq;
@@ -69,7 +69,7 @@
 
                     // Assert
                     Action act = () => database.GetAll<TempNoKey>();
-                    act.ShouldThrow<Exception>();
+                    act.Should().Throw<Exception>();
                 }
             }
         }

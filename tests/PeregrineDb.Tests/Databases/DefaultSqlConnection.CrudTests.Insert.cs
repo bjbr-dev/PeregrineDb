@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
@@ -79,7 +79,7 @@
                     Action act = () => database.Insert(entity);
 
                     // Assert
-                    act.ShouldThrow<Exception>();
+                    act.Should().Throw<Exception>();
                 }
             }
 
@@ -114,7 +114,7 @@
                     Action act = () => database.Insert(entity);
 
                     // Assert
-                    act.ShouldThrow<Exception>();
+                    act.Should().Throw<Exception>();
                 }
             }
 

@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Dialects
+namespace PeregrineDb.Tests.Dialects
 {
     using System;
     using System.Collections.Generic;
@@ -23,21 +23,21 @@
             public void Selects_from_given_table()
             {
                 // Act
-                var sql = this.config.Dialect.MakeCountCommand<Dog>(null);
+                var command = this.config.Dialect.MakeCountCommand<Dog>(null, null);
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT COUNT(*)
 FROM dog");
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Adds_conditions()
             {
                 // Act
-                var sql = this.config.Dialect.MakeCountCommand<Dog>($"WHERE Foo IS NOT NULL");
+                var command = this.config.Dialect.MakeCountCommand<Dog>("WHERE Foo IS NOT NULL", null);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -45,7 +45,7 @@ SELECT COUNT(*)
 FROM dog
 WHERE Foo IS NOT NULL");
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
         }
         public class MakeCountStatementFromParameters
@@ -58,27 +58,23 @@ WHERE Foo IS NOT NULL");
                 Action act = () => this.config.Dialect.MakeCountCommand<Dog>((object)null);
 
                 // Assert
-                act.ShouldThrow<ArgumentNullException>();
+                act.Should().Throw<ArgumentNullException>();
             }
 
             [Fact]
             public void Adds_conditions()
             {
                 // Act
-                var sql = this.config.Dialect.MakeCountCommand<Dog>(new { Name = (string)null });
+                var command = this.config.Dialect.MakeCountCommand<Dog>(new { Name = (string)null });
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT COUNT(*)
 FROM dog
 WHERE name IS NULL",
-                    new Dictionary<string, object>
-                    {
-                        ["p0"] = null,
-                        ["p1"] = null
-                    });
+                    new { Name = (string)null });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
         }
 
@@ -92,14 +88,14 @@ WHERE name IS NULL",
                 Action act = () => this.config.Dialect.MakeFindCommand<Dog>(null);
 
                 // Assert
-                act.ShouldThrow<ArgumentNullException>();
+                act.Should().Throw<ArgumentNullException>();
             }
 
             [Fact]
             public void Selects_from_given_table()
             {
                 // Act
-                var sql = this.config.Dialect.MakeFindCommand<Dog>(5);
+                var command = this.config.Dialect.MakeFindCommand<Dog>(5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -111,14 +107,14 @@ WHERE id = @Id",
                         ["Id"] = 5
                     });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Uses_non_default_primary_key_name()
             {
                 // Act
-                var sql = this.config.Dialect.MakeFindCommand<KeyExplicit>(5);
+                var command = this.config.Dialect.MakeFindCommand<KeyExplicit>(5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -130,34 +126,30 @@ WHERE key = @Key",
                         ["Key"] = 5
                     });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Uses_each_key_in_composite_key()
             {
                 // Act
-                var sql = this.config.Dialect.MakeFindCommand<CompositeKeys>(new { key1 = 2, key2 = 3 });
+                var command = this.config.Dialect.MakeFindCommand<CompositeKeys>(new { key1 = 2, key2 = 3 });
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT key1, key2, name
 FROM CompositeKeys
 WHERE key1 = @Key1 AND key2 = @Key2",
-                    new Dictionary<string, object>
-                    {
-                        ["key1"] = 2,
-                        ["key2"] = 3
-                    });
+                    new { key1 = 2, key2 = 3 });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Adds_alias_when_primary_key_is_aliased()
             {
                 // Act
-                var sql = this.config.Dialect.MakeFindCommand<KeyAlias>(5);
+                var command = this.config.Dialect.MakeFindCommand<KeyAlias>(5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -169,14 +161,14 @@ WHERE Key = @Id",
                         ["Id"] = 5
                     });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Act
-                var sql = this.config.Dialect.MakeFindCommand<PropertyAlias>(5);
+                var command = this.config.Dialect.MakeFindCommand<PropertyAlias>(5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -188,7 +180,7 @@ WHERE id = @Id",
                         ["Id"] = 5
                     });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
         }
 
@@ -199,75 +191,72 @@ WHERE id = @Id",
             public void Selects_from_given_table()
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetRangeCommand<Dog>(null);
+                var command = this.config.Dialect.MakeGetRangeCommand<Dog>(null, null);
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, name, age
 FROM dog");
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Adds_conditions_clause()
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetRangeCommand<Dog>($"WHERE Age > {10}");
+                var command = this.config.Dialect.MakeGetRangeCommand<Dog>("WHERE Age > @Age", new { Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, name, age
 FROM dog
-WHERE Age > @p0",
-                    new Dictionary<string, object>
-                    {
-                        ["p0"] = 10
-                    });
+WHERE Age > @Age",
+                    new { Age = 10 });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Uses_explicit_primary_key_name()
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetRangeCommand<KeyExplicit>(null);
+                var command = this.config.Dialect.MakeGetRangeCommand<KeyExplicit>(null, null);
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT key, name
 FROM KeyExplicit");
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Adds_alias_when_primary_key_is_aliased()
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetRangeCommand<KeyAlias>(null);
+                var command = this.config.Dialect.MakeGetRangeCommand<KeyAlias>(null, null);
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT Key AS Id, name
 FROM KeyAlias");
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetRangeCommand<PropertyAlias>(null);
+                var command = this.config.Dialect.MakeGetRangeCommand<PropertyAlias>(null, null);
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, YearsOld AS Age
 FROM PropertyAlias");
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
         }
 
@@ -278,80 +267,64 @@ FROM PropertyAlias");
             public void Selects_from_given_table()
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetRangeCommand<Dog>(new { Name = "Fido" });
+                var command = this.config.Dialect.MakeGetRangeCommand<Dog>(new { Name = "Fido" });
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, name, age
 FROM dog
-WHERE name = @p1",
-                    new Dictionary<string, object>
-                    {
-                        ["p0"] = null,
-                        ["p1"] = "Fido"
-                    });
+WHERE name = @Name",
+                    new { Name = "Fido" });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Uses_explicit_primary_key_name()
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetRangeCommand<KeyExplicit>(new { Name = "Fido" });
+                var command = this.config.Dialect.MakeGetRangeCommand<KeyExplicit>(new { Name = "Fido" });
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT key, name
 FROM KeyExplicit
-WHERE name = @p1",
-                    new Dictionary<string, object>
-                    {
-                        ["p0"] = null,
-                        ["p1"] = "Fido"
-                    });
+WHERE name = @Name",
+                    new { Name = "Fido" });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Adds_alias_when_primary_key_is_aliased()
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetRangeCommand<KeyAlias>(new { Name = "Fido" });
+                var command = this.config.Dialect.MakeGetRangeCommand<KeyAlias>(new { Name = "Fido" });
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT Key AS Id, name
 FROM KeyAlias
-WHERE name = @p1",
-                    new Dictionary<string, object>
-                    {
-                        ["p0"] = null,
-                        ["p1"] = "Fido"
-                    });
+WHERE name = @Name",
+                    new { Name = "Fido" });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetRangeCommand<PropertyAlias>(new { Age = 5 });
+                var command = this.config.Dialect.MakeGetRangeCommand<PropertyAlias>(new { Age = 5 });
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, YearsOld AS Age
 FROM PropertyAlias
-WHERE YearsOld = @p1",
-                    new Dictionary<string, object>
-                    {
-                        ["p0"] = null,
-                        ["p1"] = 5
-                    });
+WHERE YearsOld = @Age",
+                    new { Age = 5 });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
         }
 
@@ -362,42 +335,36 @@ WHERE YearsOld = @p1",
             public void Adds_conditions_clause()
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetFirstNCommand<Dog>(1, $"WHERE Name LIKE {"Foo%"}", "Name");
+                var command = this.config.Dialect.MakeGetFirstNCommand<Dog>(1, "WHERE Name LIKE @Name", new { Name = "Foo%" }, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, name, age
 FROM dog
-WHERE Name LIKE @p0
+WHERE Name LIKE @Name
 ORDER BY Name
 LIMIT 1",
-                    new Dictionary<string, object>
-                    {
-                        ["p0"] = "Foo%"
-                    });
+                    new { Name = "Foo%" });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetFirstNCommand<PropertyAlias>(1, $"WHERE Name LIKE {"Foo%"}", "Name");
+                var command = this.config.Dialect.MakeGetFirstNCommand<PropertyAlias>(1, "WHERE Name LIKE @Name", new { Name = "Foo%" }, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, YearsOld AS Age
 FROM PropertyAlias
-WHERE Name LIKE @p0
+WHERE Name LIKE @Name
 ORDER BY Name
 LIMIT 1",
-                    new Dictionary<string, object>
-                    {
-                        ["p0"] = "Foo%"
-                    });
+                    new { Name = "Foo%" });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Theory]
@@ -407,20 +374,17 @@ LIMIT 1",
             public void Does_not_order_when_no_orderby_given(string orderBy)
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetFirstNCommand<Dog>(1, $"WHERE Name LIKE {"Foo%"}", orderBy);
+                var command = this.config.Dialect.MakeGetFirstNCommand<Dog>(1, "WHERE Name LIKE @Name", new { Name = "Foo%" }, orderBy);
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, name, age
 FROM dog
-WHERE Name LIKE @p0
+WHERE Name LIKE @Name
 LIMIT 1",
-                    new Dictionary<string, object>
-                    {
-                        ["p0"] = "Foo%"
-                    });
+                    new { Name = "Foo%" });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
         }
 
@@ -431,44 +395,36 @@ LIMIT 1",
             public void Selects_from_given_table()
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetFirstNCommand<Dog>(1, new { Name = "Fido" }, "Name");
+                var command = this.config.Dialect.MakeGetFirstNCommand<Dog>(1, new { Name = "Fido" }, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, name, age
 FROM dog
-WHERE name = @p1
+WHERE name = @Name
 ORDER BY Name
 LIMIT 1",
-                    new Dictionary<string, object>
-                    {
-                        ["p0"] = null,
-                        ["p1"] = "Fido"
-                    });
+                    new { Name = "Fido" });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetFirstNCommand<PropertyAlias>(1, new { Age = 5 }, "Name");
+                var command = this.config.Dialect.MakeGetFirstNCommand<PropertyAlias>(1, new { Age = 5 }, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, YearsOld AS Age
 FROM PropertyAlias
-WHERE YearsOld = @p1
+WHERE YearsOld = @Age
 ORDER BY Name
 LIMIT 1",
-                    new Dictionary<string, object>
-                    {
-                        ["p0"] = null,
-                        ["p1"] = 5
-                    });
+                    new { Age = 5 });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Theory]
@@ -478,21 +434,17 @@ LIMIT 1",
             public void Does_not_order_when_no_orderby_given(string orderBy)
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetFirstNCommand<Dog>(1, new { Name = "Fido" }, orderBy);
+                var command = this.config.Dialect.MakeGetFirstNCommand<Dog>(1, new { Name = "Fido" }, orderBy);
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, name, age
 FROM dog
-WHERE name = @p1
+WHERE name = @Name
 LIMIT 1",
-                    new Dictionary<string, object>
-                    {
-                        ["p0"] = null,
-                        ["p1"] = "Fido"
-                    });
+                    new { Name = "Fido" });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
         }
 
@@ -514,7 +466,7 @@ LIMIT 1",
             public void Selects_from_given_table()
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetPageCommand<Dog>(new Page(1, 10, true, 0, 9), null, "Name");
+                var command = this.config.Dialect.MakeGetPageCommand<Dog>(new Page(1, 10, true, 0, 9), null, null, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -523,35 +475,32 @@ FROM dog
 ORDER BY Name
 LIMIT 10 OFFSET 0");
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Adds_conditions_clause()
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetPageCommand<Dog>(new Page(1, 10, true, 0, 9), $"WHERE Name LIKE {"Foo%"}", "Name");
+                var command = this.config.Dialect.MakeGetPageCommand<Dog>(new Page(1, 10, true, 0, 9), "WHERE Name LIKE @Name", new { Name = "Foo%" }, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT id, name, age
 FROM dog
-WHERE Name LIKE @p0
+WHERE Name LIKE @Name
 ORDER BY Name
 LIMIT 10 OFFSET 0",
-                    new Dictionary<string, object>
-                    {
-                        ["p0"] = "Foo%"
-                    });
+                    new { Name = "Foo%" });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetPageCommand<PropertyAlias>(new Page(1, 10, true, 0, 9), null, "Name");
+                var command = this.config.Dialect.MakeGetPageCommand<PropertyAlias>(new Page(1, 10, true, 0, 9), null, null, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -560,14 +509,14 @@ FROM PropertyAlias
 ORDER BY Name
 LIMIT 10 OFFSET 0");
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Selects_second_page()
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetPageCommand<Dog>(new Page(2, 10, true, 10, 19), null, "Name");
+                var command = this.config.Dialect.MakeGetPageCommand<Dog>(new Page(2, 10, true, 10, 19), null, null, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -576,14 +525,14 @@ FROM dog
 ORDER BY Name
 LIMIT 10 OFFSET 10");
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Selects_appropriate_number_of_rows()
             {
                 // Act
-                var sql = this.config.Dialect.MakeGetPageCommand<Dog>(new Page(2, 5, true, 5, 9), null, "Name");
+                var command = this.config.Dialect.MakeGetPageCommand<Dog>(new Page(2, 5, true, 5, 9), null, null, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -592,7 +541,7 @@ FROM dog
 ORDER BY Name
 LIMIT 5 OFFSET 5");
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
         }
 
@@ -603,79 +552,60 @@ LIMIT 5 OFFSET 5");
             public void Inserts_into_given_table()
             {
                 // Act
-                var sql = this.config.Dialect.MakeInsertCommand(new Dog { Name = "Foo", Age = 10 });
+                var command = this.config.Dialect.MakeInsertCommand(new Dog { Name = "Foo", Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
 INSERT INTO dog (name, age)
 VALUES (@Name, @Age);",
-                    new Dictionary<string, object>
-                    {
-                        ["Id"] = 0,
-                        ["Name"] = "Foo",
-                        ["Age"] = 10
-                    });
+                    new Dog { Name = "Foo", Age = 10 });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Adds_primary_key_if_its_not_generated_by_database()
             {
                 // Act
-                var sql = this.config.Dialect.MakeInsertCommand(new KeyNotGenerated { Id = 6, Name = "Foo" });
+                var command = this.config.Dialect.MakeInsertCommand(new KeyNotGenerated { Id = 6, Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
 INSERT INTO KeyNotGenerated (id, name)
 VALUES (@Id, @Name);",
-                    new Dictionary<string, object>
-                    {
-                        ["Id"] = 6,
-                        ["Name"] = "Foo"
-                    });
+                    new KeyNotGenerated { Id = 6, Name = "Foo" });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Does_not_include_computed_columns()
             {
                 // Act
-                var sql = this.config.Dialect.MakeInsertCommand(new PropertyComputed { Name = "Foo" });
+                var command = this.config.Dialect.MakeInsertCommand(new PropertyComputed { Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
 INSERT INTO PropertyComputed (name)
 VALUES (@Name);",
-                    new Dictionary<string, object>
-                    {
-                        ["Id"] = 0,
-                        ["Name"] = "Foo",
-                        ["LastUpdated"] = default(DateTime)
-                    });
+                    new PropertyComputed { Name = "Foo" });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Does_not_include_generated_columns()
             {
                 // Act
-                var sql = this.config.Dialect.MakeInsertCommand(new PropertyGenerated { Name = "Foo" });
+                var command = this.config.Dialect.MakeInsertCommand(new PropertyGenerated { Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
 INSERT INTO PropertyGenerated (name)
 VALUES (@Name);",
-                    new Dictionary<string, object>
-                    {
-                        ["Id"] = 0,
-                        ["Name"] = "Foo",
-                        ["Created"] = default(DateTime)
-                    });
+                    new PropertyGenerated { Name = "Foo" });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
         }
 
@@ -686,83 +616,64 @@ VALUES (@Name);",
             public void Inserts_into_given_table()
             {
                 // Act
-                var sql = this.config.Dialect.MakeInsertReturningPrimaryKeyCommand<int>(new Dog { Name = "Foo", Age = 10 });
+                var command = this.config.Dialect.MakeInsertReturningPrimaryKeyCommand<int>(new Dog { Name = "Foo", Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
 INSERT INTO dog (name, age)
 VALUES (@Name, @Age)
 RETURNING id",
-                    new Dictionary<string, object>
-                    {
-                        ["Id"] = 0,
-                        ["Age"] = 10,
-                        ["Name"] = "Foo"
-                    });
+                    new Dog { Name = "Foo", Age = 10 });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Adds_primary_key_if_its_not_generated_by_database()
             {
                 // Act
-                var sql = this.config.Dialect.MakeInsertReturningPrimaryKeyCommand<int>(new KeyNotGenerated { Id = 10, Name = "Foo" });
+                var command = this.config.Dialect.MakeInsertReturningPrimaryKeyCommand<int>(new KeyNotGenerated { Id = 10, Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
 INSERT INTO KeyNotGenerated (id, name)
 VALUES (@Id, @Name)
 RETURNING id",
-                    new Dictionary<string, object>
-                    {
-                        ["Id"] = 10,
-                        ["Name"] = "Foo"
-                    });
+                    new KeyNotGenerated { Id = 10, Name = "Foo" });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Does_not_include_computed_columns()
             {
                 // Act
-                var sql = this.config.Dialect.MakeInsertReturningPrimaryKeyCommand<int>(new PropertyComputed { Name = "Foo" });
+                var command = this.config.Dialect.MakeInsertReturningPrimaryKeyCommand<int>(new PropertyComputed { Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
 INSERT INTO PropertyComputed (name)
 VALUES (@Name)
 RETURNING id",
-                    new Dictionary<string, object>
-                    {
-                        ["Id"] = 0,
-                        ["Name"] = "Foo",
-                        ["LastUpdated"] = default(DateTime)
-                    });
+                    new PropertyComputed { Name = "Foo" });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Does_not_include_generated_columns()
             {
                 // Act
-                var sql = this.config.Dialect.MakeInsertReturningPrimaryKeyCommand<int>(new PropertyGenerated { Name = "Foo" });
+                var command = this.config.Dialect.MakeInsertReturningPrimaryKeyCommand<int>(new PropertyGenerated { Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
 INSERT INTO PropertyGenerated (name)
 VALUES (@Name)
 RETURNING id",
-                    new Dictionary<string, object>
-                    {
-                        ["Id"] = 0,
-                        ["Name"] = "Foo",
-                        ["Created"] = default(DateTime)
-                    });
+                    new PropertyGenerated { Name = "Foo" });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
         }
 
@@ -773,164 +684,128 @@ RETURNING id",
             public void Updates_given_table()
             {
                 // Act
-                var sql = this.config.Dialect.MakeUpdateCommand(new Dog { Id = 5, Name = "Foo", Age = 10 });
+                var command = this.config.Dialect.MakeUpdateCommand(new Dog { Id = 5, Name = "Foo", Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
 UPDATE dog
 SET name = @Name, age = @Age
 WHERE id = @Id",
-                    new Dictionary<string, object>
-                    {
-                        ["Id"] = 5,
-                        ["Name"] = "Foo",
-                        ["Age"] = 10
-                    });
+                    new Dog { Id = 5, Name = "Foo", Age = 10 });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Uses_each_key_in_composite_key()
             {
                 // Act
-                var sql = this.config.Dialect.MakeUpdateCommand(new CompositeKeys { Key1 = 7, Key2 = 8, Name = "Foo" });
+                var command = this.config.Dialect.MakeUpdateCommand(new CompositeKeys { Key1 = 7, Key2 = 8, Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
 UPDATE CompositeKeys
 SET name = @Name
 WHERE key1 = @Key1 AND key2 = @Key2",
-                    new Dictionary<string, object>
-                    {
-                        ["Key1"] = 7,
-                        ["Key2"] = 8,
-                        ["Name"] = "Foo"
-                    });
+                    new CompositeKeys { Key1 = 7, Key2 = 8, Name = "Foo" });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Does_not_update_primary_key_even_if_its_not_auto_generated()
             {
                 // Act
-                var sql = this.config.Dialect.MakeUpdateCommand(new KeyNotGenerated { Id = 7, Name = "Foo" });
+                var command = this.config.Dialect.MakeUpdateCommand(new KeyNotGenerated { Id = 7, Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
 UPDATE KeyNotGenerated
 SET name = @Name
 WHERE id = @Id",
-                    new Dictionary<string, object>
-                    {
-                        ["Id"] = 7,
-                        ["Name"] = "Foo"
-                    });
+                    new KeyNotGenerated { Id = 7, Name = "Foo" });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Uses_aliased_property_names()
             {
                 // Act
-                var sql = this.config.Dialect.MakeUpdateCommand(new PropertyAlias { Id = 5, Age = 10 });
+                var command = this.config.Dialect.MakeUpdateCommand(new PropertyAlias { Id = 5, Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
 UPDATE PropertyAlias
 SET YearsOld = @Age
 WHERE id = @Id",
-                    new Dictionary<string, object>
-                    {
-                        ["Id"] = 5,
-                        ["Age"] = 10
-                    });
+                    new PropertyAlias { Id = 5, Age = 10 });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Uses_aliased_key_name()
             {
                 // Act
-                var sql = this.config.Dialect.MakeUpdateCommand(new KeyAlias { Name = "Foo", Id = 10 });
+                var command = this.config.Dialect.MakeUpdateCommand(new KeyAlias { Name = "Foo", Id = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
 UPDATE KeyAlias
 SET name = @Name
 WHERE Key = @Id",
-                    new Dictionary<string, object>
-                    {
-                        ["Id"] = 10,
-                        ["Name"] = "Foo"
-                    });
+                    new KeyAlias { Name = "Foo", Id = 10 });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Uses_explicit_key_name()
             {
                 // Act
-                var sql = this.config.Dialect.MakeUpdateCommand(new KeyExplicit { Name = "Foo", Key = 10 });
+                var command = this.config.Dialect.MakeUpdateCommand(new KeyExplicit { Name = "Foo", Key = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
 UPDATE KeyExplicit
 SET name = @Name
 WHERE key = @Key",
-                    new Dictionary<string, object>
-                    {
-                        ["Key"] = 10,
-                        ["Name"] = "Foo"
-                    });
+                    new KeyExplicit { Name = "Foo", Key = 10 });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Does_not_include_computed_columns()
             {
                 // Act
-                var sql = this.config.Dialect.MakeUpdateCommand(new PropertyComputed { Name = "Foo", Id = 10 });
+                var command = this.config.Dialect.MakeUpdateCommand(new PropertyComputed { Name = "Foo", Id = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
 UPDATE PropertyComputed
 SET name = @Name
 WHERE id = @Id",
-                    new Dictionary<string, object>
-                    {
-                        ["Id"] = 10,
-                        ["Name"] = "Foo",
-                        ["LastUpdated"] = default(DateTime)
-                    });
+                    new PropertyComputed { Name = "Foo", Id = 10 });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Includes_generated_columns()
             {
                 // Act
-                var sql = this.config.Dialect.MakeUpdateCommand(new PropertyGenerated { Id = 5, Name = "Foo", Created = new DateTime(2018, 4, 1) });
+                var command = this.config.Dialect.MakeUpdateCommand(new PropertyGenerated { Id = 5, Name = "Foo", Created = new DateTime(2018, 4, 1) });
 
                 // Assert
                 var expected = new SqlCommand(@"
 UPDATE PropertyGenerated
 SET name = @Name, created = @Created
 WHERE id = @Id",
-                    new Dictionary<string, object>
-                    {
-                        ["Id"] = 5,
-                        ["Name"] = "Foo",
-                        ["Created"] = new DateTime(2018, 4, 1)
-                    });
+                    new PropertyGenerated { Id = 5, Name = "Foo", Created = new DateTime(2018, 4, 1) });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
         }
 
@@ -941,7 +816,7 @@ WHERE id = @Id",
             public void Deletes_from_given_table()
             {
                 // Act
-                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyCommand<Dog>(5);
+                var command = this.config.Dialect.MakeDeleteByPrimaryKeyCommand<Dog>(5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -952,69 +827,65 @@ WHERE id = @Id",
                         ["Id"] = 5
                     });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Uses_each_key_in_composite_key()
             {
                 // Act
-                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyCommand<CompositeKeys>(new { Key1 = 1, Key2 = 2 });
+                var command = this.config.Dialect.MakeDeleteByPrimaryKeyCommand<CompositeKeys>(new { Key1 = 1, Key2 = 2 });
 
                 // Assert
                 var expected = new SqlCommand(@"
 DELETE FROM CompositeKeys
 WHERE key1 = @Key1 AND key2 = @Key2",
-                    new Dictionary<string, object>
-                    {
-                        ["Key1"] = 1,
-                        ["Key2"] = 2
-                    });
+                    new { Key1 = 1, Key2 = 2 });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Uses_primary_key_even_if_its_not_auto_generated()
             {
                 // Act
-                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyCommand<KeyNotGenerated>(5);
+                var command = this.config.Dialect.MakeDeleteByPrimaryKeyCommand<KeyNotGenerated>(5);
 
                 // Assert
                 var expected = new SqlCommand(@"
 DELETE FROM KeyNotGenerated
 WHERE id = @Id",
                     new Dictionary<string, object>
-                    {
-                        ["Id"] = 5
-                    });
+                        {
+                            ["Id"] = 5
+                        });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Uses_aliased_key_name()
             {
                 // Act
-                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyCommand<KeyAlias>(5);
+                var command = this.config.Dialect.MakeDeleteByPrimaryKeyCommand<KeyAlias>(5);
 
                 // Assert
                 var expected = new SqlCommand(@"
 DELETE FROM KeyAlias
 WHERE Key = @Id",
                     new Dictionary<string, object>
-                    {
-                        ["Id"] = 5
-                    });
+                        {
+                            ["Id"] = 5
+                        });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
 
             [Fact]
             public void Uses_explicit_key_name()
             {
                 // Act
-                var sql = this.config.Dialect.MakeDeleteByPrimaryKeyCommand<KeyExplicit>(5);
+                var command = this.config.Dialect.MakeDeleteByPrimaryKeyCommand<KeyExplicit>(5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -1025,7 +896,7 @@ WHERE key = @Key",
                         ["Key"] = 5
                     });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
         }
 
@@ -1036,18 +907,15 @@ WHERE key = @Key",
             public void Deletes_from_given_table()
             {
                 // Act
-                var sql = this.config.Dialect.MakeDeleteRangeCommand<Dog>($"WHERE [Age] > {10}");
+                var command = this.config.Dialect.MakeDeleteRangeCommand<Dog>("WHERE [Age] > @Age", new { Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
 DELETE FROM dog
-WHERE [Age] > @p0",
-                    new Dictionary<string, object>
-                    {
-                        ["p0"] = 10
-                    });
+WHERE [Age] > @Age",
+                    new { Age = 10 });
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
         }
 
@@ -1070,7 +938,7 @@ WHERE [Age] > @p0",
             public void Creates_table_with_all_possible_types()
             {
                 // Act
-                var sql = this.config.Dialect.MakeCreateTempTableCommand<TempAllPossibleTypes>();
+                var command = this.config.Dialect.MakeCreateTempTableCommand<TempAllPossibleTypes>();
 
                 // Assert
                 var expected = new SqlCommand(@"CREATE TEMP TABLE TempAllPossibleTypes
@@ -1106,7 +974,7 @@ WHERE [Age] > @p0",
     nullable_color INT NULL
 )");
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
         }
 
@@ -1117,12 +985,12 @@ WHERE [Age] > @p0",
             public void Drops_temporary_tables()
             {
                 // Act
-                var sql = this.config.Dialect.MakeDropTempTableCommand<Dog>();
+                var command = this.config.Dialect.MakeDropTempTableCommand<Dog>();
 
                 // Assert
                 var expected = new SqlCommand(@"DROP TABLE dog");
 
-                Assert.Equal(expected, sql, SqlCommandComparer.Instance);
+                command.Should().Be(expected);
             }
         }
     }

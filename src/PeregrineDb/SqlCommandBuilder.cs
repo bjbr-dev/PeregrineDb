@@ -4,7 +4,6 @@
 
 namespace PeregrineDb
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
@@ -13,7 +12,6 @@ namespace PeregrineDb
     public class SqlCommandBuilder
     {
         private readonly StringBuilder builder = new StringBuilder();
-        private Dictionary<string, object> parameters;
 
         public SqlCommandBuilder(string value)
         {
@@ -69,7 +67,7 @@ namespace PeregrineDb
         }
 
         /// <summary>
-        /// Appends an arbtitrary clause of SQL to the string. Adds a new line at the start if <paramref name="clause"/> is not empty.
+        /// Appends an arbitrary clause of SQL to the string. Adds a new line at the start if <paramref name="clause"/> is not empty.
         /// </summary>
         public SqlCommandBuilder AppendClause(string clause)
         {
@@ -81,89 +79,28 @@ namespace PeregrineDb
             return this;
         }
 
-        /// <summary>
-        /// Appends an arbtitrary clause of SQL to the string. Adds a new line at the start if <paramref name="clause"/> is not empty.
-        /// Placeholders within the <see cref="FormattableString"/> will be automatically incremented.
-        /// </summary>
-        public SqlCommandBuilder AppendClause(FormattableString clause)
-        {
-            if (!string.IsNullOrEmpty(clause?.Format))
-            {
-                this.builder.AppendLine().Append(SqlString.ParameterizePlaceholders(clause));
-
-                if (clause.ArgumentCount > 0)
-                {
-                    if (this.parameters != null)
-                    {
-                        throw new NotImplementedException();
-                    }
-
-                    var commandParameters = new Dictionary<string, object>();
-
-                    var i = 0;
-                    foreach (var parameter in clause.GetArguments())
-                    {
-                        commandParameters["p" + i++] = parameter;
-                    }
-
-                    this.parameters = commandParameters;
-                }
-            }
-
-            return this;
-        }
-
-        public void AddPrimaryKeyParameter(TableSchema schema, object value)
+        public SqlCommand ToPrimaryKeySql(TableSchema schema, object value)
         {
             var primaryKeys = schema.GetPrimaryKeys();
             if (primaryKeys.Length == 1)
             {
-                this.parameters = new Dictionary<string, object>
+                return this.ToCommand(new Dictionary<string, object>
                     {
                         [primaryKeys.Single().ParameterName] = value
-                    };
+                    });
             }
-            else
-            {
-                this.AddParameters(value);
-            }
+
+            return this.ToCommand(value);
         }
 
-        public void AddParameters(object value)
+        public SqlCommand ToCommand(object parameters)
         {
-            if (value == null)
-            {
-                return;
-            }
-
-            if (this.parameters != null)
-            {
-                throw new NotImplementedException();
-            }
-
-            var commandParameters = new Dictionary<string, object>();
-
-            foreach (var property in value.GetType().GetProperties().Where(p => p.GetIndexParameters().Length == 0))
-            {
-                commandParameters[property.Name] = property.GetValue(value);
-            }
-
-            this.parameters = commandParameters;
+            return new SqlCommand(this.builder.ToString(), parameters);
         }
 
-        public SqlCommand ToCommand()
+        public SqlMultipleCommand<T> ToMultipleCommand<T>(IEnumerable<T> parameters)
         {
-            return new SqlCommand(this.builder.ToString(), this.parameters);
-        }
-
-        public SqlCommand ToCommand(object commandParameters)
-        {
-            if (this.parameters != null)
-            {
-                throw new NotImplementedException();
-            }
-
-            return new SqlCommand(this.builder.ToString(), commandParameters);
+            return new SqlMultipleCommand<T>(this.builder.ToString(), parameters);
         }
     }
 }

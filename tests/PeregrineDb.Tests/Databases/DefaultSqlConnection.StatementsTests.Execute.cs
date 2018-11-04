@@ -74,7 +74,7 @@ namespace PeregrineDb.Tests.Databases
                         };
 
                         // Assert
-                        act.ShouldThrow<Exception>();
+                        act.Should().Throw<Exception>();
                         database.Count<Dog>().Should().Be(0);
                     }
                 }
@@ -130,7 +130,7 @@ VALUES ('Rex', 7);");
                         database.Execute("INSERT INTO dogs (name, age) VALUES (@Name, @Age)", new { Name = "Rover", Age = 5 });
 
                         // Assert
-                        database.GetAll<Dog>().ShouldAllBeEquivalentTo(new { Name = "Rover", Age = 5 }, o => o.Excluding(e => e.Id));
+                        database.GetAll<Dog>().Should().BeEquivalentTo(new { Name = "Rover", Age = 5 });
                     }
                 }
 
@@ -143,7 +143,7 @@ VALUES ('Rex', 7);");
                         database.Execute("INSERT INTO dogs (name, age) VALUES (@Name, @Age)", new { Name = "Rover) --", Age = 5 });
 
                         // Assert
-                        database.GetAll<Dog>().ShouldAllBeEquivalentTo(new { Name = "Rover) --", Age = 5 }, o => o.Excluding(e => e.Id));
+                        database.GetAll<Dog>().Should().BeEquivalentTo(new { Name = "Rover) --", Age = 5 });
                     }
                 }
 

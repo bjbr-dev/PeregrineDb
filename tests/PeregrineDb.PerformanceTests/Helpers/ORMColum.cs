@@ -1,4 +1,4 @@
-﻿// <copyright file="OrmColum.cs" company="Berkeleybross">
+// <copyright file="OrmColum.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 
@@ -17,11 +17,11 @@ namespace PeregrineDb.PerformanceTests.Helpers
 
         public string Legend => "The object/relational mapper being tested";
 
-        public bool IsDefault(Summary summary, Benchmark benchmark) => false;
+        public bool IsDefault(Summary summary, BenchmarkCase benchmark) => false;
 
-        public string GetValue(Summary summary, Benchmark benchmark) => benchmark.Target.Method.DeclaringType.Name.Replace("Benchmarks", string.Empty);
+        public string GetValue(Summary summary, BenchmarkCase benchmark) => benchmark.Descriptor.WorkloadMethod.DeclaringType.Name.Replace("Benchmarks", string.Empty);
 
-        public string GetValue(Summary summary, Benchmark benchmark, ISummaryStyle style) => benchmark.Target.Method.DeclaringType.Name.Replace("Benchmarks", string.Empty);
+        public string GetValue(Summary summary, BenchmarkCase benchmark, ISummaryStyle style) => benchmark.Descriptor.WorkloadMethod.DeclaringType.Name.Replace("Benchmarks", string.Empty);
 
         public bool IsAvailable(Summary summary) => true;
 

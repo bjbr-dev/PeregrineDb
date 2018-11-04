@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System;
     using System.Data;
@@ -76,7 +76,7 @@
                 Action act = () => sut.Dispose();
 
                 // Assert
-                act.ShouldThrow<CustomException>();
+                act.Should().Throw<CustomException>();
                 database.Verify(d => d.Dispose());
                 transaction.Verify(t => t.Dispose());
             }

@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Schema
+namespace PeregrineDb.Tests.Schema
 {
     using System;
     using System.Linq;
@@ -35,7 +35,7 @@
                 var result = sut.GetClearDataCommands();
 
                 // Assert
-                result.ShouldAllBeEquivalentTo(new[]
+                result.Should().BeEquivalentTo(new[]
                         {
                             new ClearTableCommand("A")
                         },
@@ -52,7 +52,7 @@
                 var result = sut.GetClearDataCommands();
 
                 // Assert
-                result.ShouldAllBeEquivalentTo(new[]
+                result.Should().BeEquivalentTo(new[]
                         {
                             new ClearTableCommand("Foo"),
                             new ClearTableCommand("Bar")
@@ -77,7 +77,7 @@
                 var result = sut.GetClearDataCommands();
 
                 // Assert
-                result.ShouldAllBeEquivalentTo(new[]
+                result.Should().BeEquivalentTo(new[]
                         {
                             new ClearTableCommand("Bar"),
                             new ClearTableCommand("Foo")
@@ -102,7 +102,7 @@
                 var result = sut.GetClearDataCommands();
 
                 // Assert
-                result.ShouldAllBeEquivalentTo(new[]
+                result.Should().BeEquivalentTo(new[]
                         {
                             new ClearTableCommand("Baz"),
                             new ClearTableCommand("Bar"),
@@ -129,7 +129,7 @@
                 var result = sut.GetClearDataCommands();
 
                 // Assert
-                result.ShouldAllBeEquivalentTo(new[]
+                result.Should().BeEquivalentTo(new[]
                         {
                             new ClearTableCommand("B"),
                             new ClearTableCommand("C"),
@@ -155,7 +155,7 @@
                 var result = sut.GetClearDataCommands();
 
                 // Assert
-                result.ShouldAllBeEquivalentTo(new object[]
+                result.Should().BeEquivalentTo(new object[]
                         {
                             new NullColumnCommand("A", "A ~> B"),
                             new ClearTableCommand("B"),
@@ -180,7 +180,7 @@
                 var result = sut.GetClearDataCommands();
 
                 // Assert
-                result.ShouldAllBeEquivalentTo(new object[]
+                result.Should().BeEquivalentTo(new object[]
                         {
                             new ClearTableCommand("C"),
                             new NullColumnCommand("A", "A ~> B"),
@@ -208,7 +208,7 @@
                 var result = sut.GetClearDataCommands();
 
                 // Assert
-                result.ShouldAllBeEquivalentTo(new object[]
+                result.Should().BeEquivalentTo(new object[]
                         {
                             new ClearTableCommand("C"),
                             new NullColumnCommand("A", "A ~> B"),
@@ -233,7 +233,7 @@
                 Action act = () => sut.GetClearDataCommands();
 
                 // Assert
-                act.ShouldThrow<InvalidOperationException>();
+                act.Should().Throw<InvalidOperationException>();
             }
 
             /// <summary>
@@ -254,7 +254,7 @@
                 var result = sut.GetClearDataCommands();
 
                 // Assert
-                result.ShouldAllBeEquivalentTo(new object[]
+                result.Should().BeEquivalentTo(new object[]
                         {
                             new NullColumnCommand("A", "A ~> B"),
                             new NullColumnCommand("C", "C ~> B"),
@@ -282,7 +282,7 @@
                 var result = sut.GetClearDataCommands();
 
                 // Assert
-                result.ShouldAllBeEquivalentTo(new object[]
+                result.Should().BeEquivalentTo(new object[]
                         {
                             new NullColumnCommand("B", "B ~> A"),
                             new ClearTableCommand("A"),
@@ -310,7 +310,7 @@
                 var result = sut.GetClearDataCommands();
 
                 // Assert
-                result.ShouldAllBeEquivalentTo(new object[]
+                result.Should().BeEquivalentTo(new object[]
                         {
                             new NullColumnCommand("B", "B ~> A"),
                             new ClearTableCommand("A"),
@@ -337,7 +337,7 @@
                 var result = sut.GetClearDataCommands();
 
                 // Assert
-                result.ShouldAllBeEquivalentTo(new object[]
+                result.Should().BeEquivalentTo(new object[]
                         {
                             new ClearTableCommand("A"),
                             new ClearTableCommand("B")
@@ -362,7 +362,7 @@
                 var result = sut.GetClearDataCommands();
 
                 // Assert
-                result.ShouldAllBeEquivalentTo(new object[]
+                result.Should().BeEquivalentTo(new object[]
                         {
                             new ClearTableCommand("A"),
                             new ClearTableCommand("B"),
@@ -390,7 +390,7 @@
                 var result = sut.GetClearDataCommands();
 
                 // Assert
-                result.ShouldAllBeEquivalentTo(new object[]
+                result.Should().BeEquivalentTo(new object[]
                         {
                             new ClearTableCommand("public.test_run"),
                             new ClearTableCommand("public.test"),

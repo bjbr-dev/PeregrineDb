@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
@@ -31,8 +31,7 @@
                     database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var dogs = await database.GetRangeAsync<Dog>(
-                        $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
+                    var dogs = await database.GetRangeAsync<Dog>("WHERE Name LIKE CONCAT(@Name, '%') and Age = @Age", new { Name = "Some Name", Age = 10 });
 
                     // Assert
                     dogs.Should().HaveCount(3);
@@ -73,7 +72,7 @@
                     Func<Task> act = async () => await database.GetRangeAsync<Dog>((object)null);
 
                     // Assert
-                    act.ShouldThrow<ArgumentNullException>();
+                    act.Should().Throw<ArgumentNullException>();
                 }
             }
 
@@ -152,7 +151,7 @@
                     Func<Task> act = async () => await database.GetRangeAsync<Dog>(new { Ages = 10 });
 
                     // Assert
-                    act.ShouldThrow<InvalidConditionSchemaException>();
+                    act.Should().Throw<InvalidConditionSchemaException>();
                 }
             }
 

@@ -23,7 +23,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        Task<int> CountAsync<TEntity>(FormattableString conditions = null, int? commandTimeout = null, CancellationToken cancellationToken = default);
+        Task<int> CountAsync<TEntity>(string conditions = null, object parameters = null, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Counts how many entities in the <typeparamref name="TEntity"/> table match the <paramref name="conditions"/>.
@@ -48,7 +48,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        Task<bool> ExistsAsync<TEntity>(FormattableString conditions = null, int? commandTimeout = null, CancellationToken cancellationToken = default);
+        Task<bool> ExistsAsync<TEntity>(string conditions = null, object parameters = null, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets whether an entity in the <typeparamref name="TEntity"/> table matches the <paramref name="conditions"/>.
@@ -100,8 +100,9 @@ namespace PeregrineDb
         /// </code>
         /// </example>
         Task<TEntity> FindFirstAsync<TEntity>(
-            FormattableString conditions,
             string orderBy,
+            string conditions = null,
+            object parameters = null,
             int? commandTimeout = null,
             CancellationToken cancellationToken = default);
 
@@ -117,8 +118,8 @@ namespace PeregrineDb
         /// </code>
         /// </example>
         Task<TEntity> FindFirstAsync<TEntity>(
-            object conditions,
             string orderBy,
+            object conditions,
             int? commandTimeout = null,
             CancellationToken cancellationToken = default);
 
@@ -134,8 +135,9 @@ namespace PeregrineDb
         /// </code>
         /// </example>
         Task<TEntity> GetFirstAsync<TEntity>(
-            FormattableString conditions,
             string orderBy,
+            string conditions = null,
+            object parameters = null,
             int? commandTimeout = null,
             CancellationToken cancellationToken = default)
             where TEntity : class;
@@ -151,7 +153,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        Task<TEntity> GetFirstAsync<TEntity>(object conditions, string orderBy, int? commandTimeout = null, CancellationToken cancellationToken = default)
+        Task<TEntity> GetFirstAsync<TEntity>(string orderBy, object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default)
             where TEntity : class;
 
         /// <summary>
@@ -165,7 +167,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        Task<TEntity> FindSingleAsync<TEntity>(FormattableString conditions, int? commandTimeout = null, CancellationToken cancellationToken = default);
+        Task<TEntity> FindSingleAsync<TEntity>(string conditions, object parameters, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets the only matching entity from the <typeparamref name="TEntity"/> table which matches the <paramref name="conditions"/>,
@@ -191,7 +193,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        Task<TEntity> GetSingleAsync<TEntity>(FormattableString conditions, int? commandTimeout = null, CancellationToken cancellationToken = default)
+        Task<TEntity> GetSingleAsync<TEntity>(string conditions, object parameters, int? commandTimeout = null, CancellationToken cancellationToken = default)
             where TEntity : class;
 
         /// <summary>
@@ -218,10 +220,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        Task<IReadOnlyList<TEntity>> GetRangeAsync<TEntity>(
-            FormattableString conditions,
-            int? commandTimeout = null,
-            CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<TEntity>> GetRangeAsync<TEntity>(string conditions, object parameters = null, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets a collection of entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
@@ -236,18 +235,6 @@ namespace PeregrineDb
         Task<IReadOnlyList<TEntity>> GetRangeAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Gets the first <parmref name="count"/> entities from the <typeparamref name="TEntity"/> table.
-        /// </summary>
-        /// <example>
-        /// <code>
-        /// <![CDATA[
-        /// var dogs = databaseConnection.GetTop<DogEntity>(5, "id");
-        /// ]]>
-        /// </code>
-        /// </example>
-        Task<IReadOnlyList<TEntity>> GetTopAsync<TEntity>(int count, string orderBy, int? commandTimeout = null, CancellationToken cancellationToken = default);
-
-        /// <summary>
         /// Gets the first <parmref name="count"/> entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
         /// </summary>
         /// <example>
@@ -258,7 +245,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        Task<IReadOnlyList<TEntity>> GetTopAsync<TEntity>(int count, FormattableString conditions, string orderBy, int? commandTimeout = null, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<TEntity>> GetTopAsync<TEntity>(int count, string orderBy, string conditions = null, object parameters = null, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets the first <parmref name="count"/> entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
@@ -270,7 +257,7 @@ namespace PeregrineDb
         /// ]]>
         /// </code>
         /// </example>
-        Task<IReadOnlyList<TEntity>> GetTopAsync<TEntity>(int count, object conditions, string orderBy, int? commandTimeout = null, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<TEntity>> GetTopAsync<TEntity>(int count, string orderBy, object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets a collection of entities from the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.
@@ -285,8 +272,9 @@ namespace PeregrineDb
         /// </example>
         Task<PagedList<TEntity>> GetPageAsync<TEntity>(
             IPageBuilder pageBuilder,
-            FormattableString conditions,
             string orderBy,
+            string conditions = null,
+            object parameters = null,
             int? commandTimeout = null,
             CancellationToken cancellationToken = default);
 
@@ -304,8 +292,8 @@ namespace PeregrineDb
         /// </example>
         Task<PagedList<TEntity>> GetPageAsync<TEntity>(
             IPageBuilder pageBuilder,
-            object conditions,
             string orderBy,
+            object conditions,
             int? commandTimeout = null,
             CancellationToken cancellationToken = default);
 
@@ -486,7 +474,7 @@ namespace PeregrineDb
         /// </code>
         /// </example>
         /// <returns>The number of deleted entities.</returns>
-        Task<CommandResult> DeleteRangeAsync<TEntity>(FormattableString conditions, int? commandTimeout = null, CancellationToken cancellationToken = default);
+        Task<CommandResult> DeleteRangeAsync<TEntity>(string conditions = null, object parameters = null, int? commandTimeout = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// <para>Deletes all the entities in the <typeparamref name="TEntity"/> table which match the <paramref name="conditions"/>.</para>

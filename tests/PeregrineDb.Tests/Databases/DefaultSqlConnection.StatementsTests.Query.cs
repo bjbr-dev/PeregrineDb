@@ -61,7 +61,7 @@ namespace PeregrineDb.Tests.Databases
                         Action act = () => database.Query<NoPublicConstructor>("select 1 as A");
 
                         // Assert
-                        act.ShouldThrow<InvalidOperationException>()
+                        act.Should().Throw<InvalidOperationException>()
                            .WithMessage("PeregrineDb.Tests.SharedTypes.NoPublicConstructor must have a public parameterless constructor");
                     }
                 }
@@ -75,7 +75,7 @@ namespace PeregrineDb.Tests.Databases
                         Action act = () => database.Query<NoParameterlessConstructor>("select 1 as A");
 
                         // Assert
-                        act.ShouldThrow<InvalidOperationException>()
+                        act.Should().Throw<InvalidOperationException>()
                            .WithMessage("PeregrineDb.Tests.SharedTypes.NoParameterlessConstructor must have a public parameterless constructor");
                     }
                 }
@@ -161,7 +161,7 @@ namespace PeregrineDb.Tests.Databases
                         Action act = () => database.Query<int>("waitfor delay \'00:01:00\'; select 42;", 1);
 
                         // Assert
-                        act.ShouldThrow<SqlException>().And.Message.Should().Contain("Timeout expired");
+                        act.Should().Throw<SqlException>().And.Message.Should().Contain("Timeout expired");
                     }
                 }
 
@@ -238,10 +238,7 @@ namespace PeregrineDb.Tests.Databases
                         var dog = database.Query<Dog>("select '' as Extra, 1 as Age, 'Rover' as Name, Id = @value", new { value = id });
 
                         // Assert
-                        dog.ShouldAllBeEquivalentTo(new[]
-                            {
-                                new Dog { Id = id, Age = 1, Name = "Rover" }
-                            });
+                        dog.Should().BeEquivalentTo(new Dog { Id = id, Age = 1, Name = "Rover" });
                     }
                 }
             }
@@ -260,7 +257,7 @@ namespace PeregrineDb.Tests.Databases
                         {
                             CultureInfo.CurrentCulture = new CultureInfo("tr-TR");
 
-                            database.Query<int>("select @pid", new { PId = 1 }).ShouldAllBeEquivalentTo(new[] { 1 });
+                            database.Query<int>("select @pid", new { PId = 1 }).Should().BeEquivalentTo(new[] { 1 });
                         }
                         finally
                         {
@@ -282,7 +279,7 @@ namespace PeregrineDb.Tests.Databases
                         Action act = () => database.Query<dynamic>("Select @A, @B", parameters);
 
                         // Assert
-                        act.ShouldThrow<InvalidOperationException>().WithMessage("An enumerable sequence of parameters (arrays, lists, etc) is not allowed in this context");
+                        act.Should().Throw<InvalidOperationException>().WithMessage("An enumerable sequence of parameters (arrays, lists, etc) is not allowed in this context");
                     }
                 }
 
@@ -309,11 +306,11 @@ namespace PeregrineDb.Tests.Databases
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
                         database.Query<string>("select \'a\' a union select \'b\'")
-                                .ShouldAllBeEquivalentTo(new[] { "a", "b" }, o => o.WithStrictOrdering());
+                                .Should().BeEquivalentTo(new[] { "a", "b" }, o => o.WithStrictOrdering());
 
                         database.Query<GenericEntity<string>>("select \'a\' Value union select \'b\'")
                                 .Select(e => e.Value)
-                                .ShouldAllBeEquivalentTo(new[] { "a", "b" }, o => o.WithStrictOrdering());
+                                .Should().BeEquivalentTo(new[] { "a", "b" }, o => o.WithStrictOrdering());
                     }
                 }
 
@@ -323,11 +320,11 @@ namespace PeregrineDb.Tests.Databases
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
                         database.Query<string>("select CAST (null as nvarchar(MAX))")
-                                .ShouldAllBeEquivalentTo(new[] { (string)null }, o => o.WithStrictOrdering());
+                                .Should().BeEquivalentTo(new[] { (string)null }, o => o.WithStrictOrdering());
 
                         database.Query<GenericEntity<string>>("select CAST (null as nvarchar(MAX))")
                                 .Select(e => e.Value)
-                                .ShouldAllBeEquivalentTo(new[] { (string)null }, o => o.WithStrictOrdering());
+                                .Should().BeEquivalentTo(new[] { (string)null }, o => o.WithStrictOrdering());
                     }
                 }
 
@@ -337,11 +334,11 @@ namespace PeregrineDb.Tests.Databases
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
                         database.Query<string>("select \'\'")
-                                .ShouldAllBeEquivalentTo(new[] { string.Empty }, o => o.WithStrictOrdering());
+                                .Should().BeEquivalentTo(new[] { string.Empty }, o => o.WithStrictOrdering());
 
                         database.Query<GenericEntity<string>>("select \'\' Value")
                                 .Select(e => e.Value)
-                                .ShouldAllBeEquivalentTo(new[] { string.Empty }, o => o.WithStrictOrdering());
+                                .Should().BeEquivalentTo(new[] { string.Empty }, o => o.WithStrictOrdering());
                     }
                 }
 
@@ -350,7 +347,7 @@ namespace PeregrineDb.Tests.Databases
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
                     {
-                        database.Query<string>("select @Value", new { value = "a" }).ShouldAllBeEquivalentTo(new[] { "a" });
+                        database.Query<string>("select @Value", new { value = "a" }).Should().BeEquivalentTo(new[] { "a" });
                     }
                 }
 
@@ -359,7 +356,7 @@ namespace PeregrineDb.Tests.Databases
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
                     {
-                        database.Query<string>("select @Value", new { value = (string)null }).ShouldAllBeEquivalentTo(new[] { (string)null });
+                        database.Query<string>("select @Value", new { value = (string)null }).Should().BeEquivalentTo(new[] { (string)null });
                     }
                 }
 
@@ -370,7 +367,7 @@ namespace PeregrineDb.Tests.Databases
                     {
                         var values = new[] { "a", "b", "c" }.ToList();
                         database.Query<string>("select * from (select 'a' as x union all select 'b' union all select 'c') as T where x = ANY (@values)", new { values })
-                                .ShouldAllBeEquivalentTo(values, o => o.WithStrictOrdering());
+                                .Should().BeEquivalentTo(values, o => o.WithStrictOrdering());
 
                         var emptyList = new string[0].ToList();
                         database.Query<string>("select * from (select 'a' as x union all select 'b' union all select 'c') as T where x = ANY (@values)", new { values = emptyList })
@@ -384,7 +381,7 @@ namespace PeregrineDb.Tests.Databases
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
                         var str = new string('X', 20000);
-                        database.Query<string>("select @value", new { value = str }).ShouldAllBeEquivalentTo(new[] { str });
+                        database.Query<string>("select @value", new { value = str }).Should().BeEquivalentTo(new[] { str });
                     }
                 }
 
@@ -458,13 +455,13 @@ namespace PeregrineDb.Tests.Databases
                     {
                         const char value = '〠';
 
-                        database.Query<char>("select @value", new { value }).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<char?>("select @value", new { value = (char?)value }).ShouldAllBeEquivalentTo(new[] { (char?)value });
-                        database.Query<char?>("select @value", new { value = (char?)null }).ShouldAllBeEquivalentTo(new[] { (char?)null });
+                        database.Query<char>("select @value", new { value }).Should().BeEquivalentTo(new[] { value });
+                        database.Query<char?>("select @value", new { value = (char?)value }).Should().BeEquivalentTo(new[] { (char?)value });
+                        database.Query<char?>("select @value", new { value = (char?)null }).Should().BeEquivalentTo(new[] { (char?)null });
 
-                        database.Query<GenericEntity<char>>("select @value AS Value", new { value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<GenericEntity<char?>>("select @value AS Value", new { value = (char?)value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (char?)value });
-                        database.Query<GenericEntity<char?>>("select @value AS Value", new { value = (char?)null }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (char?)null });
+                        database.Query<GenericEntity<char>>("select @value AS Value", new { value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { value });
+                        database.Query<GenericEntity<char?>>("select @value AS Value", new { value = (char?)value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (char?)value });
+                        database.Query<GenericEntity<char?>>("select @value AS Value", new { value = (char?)null }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (char?)null });
                     }
                 }
 
@@ -473,11 +470,11 @@ namespace PeregrineDb.Tests.Databases
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        database.Query<char>("select \'f\'").ShouldAllBeEquivalentTo(new[] { 'f' });
-                        database.Query<GenericEntity<char>>("select \'f\' as Value").Select(c => c.Value).ShouldAllBeEquivalentTo(new[] { 'f' });
+                        database.Query<char>("select \'f\'").Should().BeEquivalentTo(new[] { 'f' });
+                        database.Query<GenericEntity<char>>("select \'f\' as Value").Select(c => c.Value).Should().BeEquivalentTo(new[] { 'f' });
 
-                        database.Query<char?>("select \'f\'").ShouldAllBeEquivalentTo(new[] { 'f' });
-                        database.Query<GenericEntity<char?>>("select \'f\' as Value").Select(c => c.Value).ShouldAllBeEquivalentTo(new[] { 'f' });
+                        database.Query<char?>("select \'f\'").Should().BeEquivalentTo(new[] { 'f' });
+                        database.Query<GenericEntity<char?>>("select \'f\' as Value").Select(c => c.Value).Should().BeEquivalentTo(new[] { 'f' });
                     }
                 }
 
@@ -487,7 +484,7 @@ namespace PeregrineDb.Tests.Databases
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
                         Action act = () => database.Query<char>("select \'foo\'");
-                        act.ShouldThrow<ArgumentException>().WithMessage("A single-character was expected\r\n\r\nParameter name: value");
+                        act.Should().Throw<ArgumentException>().WithMessage("A single-character was expected\r\n\r\nParameter name: value");
                     }
                 }
             }
@@ -502,13 +499,13 @@ namespace PeregrineDb.Tests.Databases
                     {
                         var value = (short)42;
 
-                        database.Query<short>("select @value", new { value }).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<short?>("select @value", new { value = (short?)value }).ShouldAllBeEquivalentTo(new[] { (short?)value });
-                        database.Query<short?>("select @value", new { value = (short?)null }).ShouldAllBeEquivalentTo(new[] { (short?)null });
+                        database.Query<short>("select @value", new { value }).Should().BeEquivalentTo(new[] { value });
+                        database.Query<short?>("select @value", new { value = (short?)value }).Should().BeEquivalentTo(new[] { (short?)value });
+                        database.Query<short?>("select @value", new { value = (short?)null }).Should().BeEquivalentTo(new[] { (short?)null });
 
-                        database.Query<GenericEntity<short>>("select @value AS Value", new { value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<GenericEntity<short?>>("select @value AS Value", new { value = (short?)value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (short?)value });
-                        database.Query<GenericEntity<short?>>("select @value AS Value", new { value = (short?)null }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (short?)null });
+                        database.Query<GenericEntity<short>>("select @value AS Value", new { value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { value });
+                        database.Query<GenericEntity<short?>>("select @value AS Value", new { value = (short?)value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (short?)value });
+                        database.Query<GenericEntity<short?>>("select @value AS Value", new { value = (short?)null }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (short?)null });
                     }
                 }
 
@@ -519,13 +516,13 @@ namespace PeregrineDb.Tests.Databases
                     {
                         var value = 42;
 
-                        database.Query<int>("select @value", new { value }).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<int?>("select @value", new { value = (int?)value }).ShouldAllBeEquivalentTo(new[] { (long?)value });
-                        database.Query<int?>("select @value", new { value = (int?)null }).ShouldAllBeEquivalentTo(new[] { (long?)null });
+                        database.Query<int>("select @value", new { value }).Should().BeEquivalentTo(new[] { value });
+                        database.Query<int?>("select @value", new { value = (int?)value }).Should().BeEquivalentTo(new[] { (long?)value });
+                        database.Query<int?>("select @value", new { value = (int?)null }).Should().BeEquivalentTo(new[] { (long?)null });
 
-                        database.Query<GenericEntity<int>>("select @value AS Value", new { value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<GenericEntity<int?>>("select @value AS Value", new { value = (int?)value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (int?)value });
-                        database.Query<GenericEntity<int?>>("select @value AS Value", new { value = (int?)null }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (int?)null });
+                        database.Query<GenericEntity<int>>("select @value AS Value", new { value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { value });
+                        database.Query<GenericEntity<int?>>("select @value AS Value", new { value = (int?)value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (int?)value });
+                        database.Query<GenericEntity<int?>>("select @value AS Value", new { value = (int?)null }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (int?)null });
                     }
                 }
 
@@ -535,7 +532,7 @@ namespace PeregrineDb.Tests.Databases
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
                         database.Query<int>("select 1 union all select 2 union all select 3")
-                                .ShouldAllBeEquivalentTo(new[] { 1, 2, 3 }, o => o.WithStrictOrdering());
+                                .Should().BeEquivalentTo(new[] { 1, 2, 3 }, o => o.WithStrictOrdering());
                     }
                 }
 
@@ -546,13 +543,13 @@ namespace PeregrineDb.Tests.Databases
                     {
                         var value = 42L;
 
-                        database.Query<long>("select @value", new { value }).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<long?>("select @value", new { value = (long?)value }).ShouldAllBeEquivalentTo(new[] { (long?)value });
-                        database.Query<long?>("select @value", new { value = (long?)null }).ShouldAllBeEquivalentTo(new[] { (long?)null });
+                        database.Query<long>("select @value", new { value }).Should().BeEquivalentTo(new[] { value });
+                        database.Query<long?>("select @value", new { value = (long?)value }).Should().BeEquivalentTo(new[] { (long?)value });
+                        database.Query<long?>("select @value", new { value = (long?)null }).Should().BeEquivalentTo(new[] { (long?)null });
 
-                        database.Query<GenericEntity<long>>("select @value AS Value", new { value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<GenericEntity<long?>>("select @value AS Value", new { value = (long?)value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (long?)value });
-                        database.Query<GenericEntity<long?>>("select @value AS Value", new { value = (long?)null }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (long?)null });
+                        database.Query<GenericEntity<long>>("select @value AS Value", new { value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { value });
+                        database.Query<GenericEntity<long?>>("select @value AS Value", new { value = (long?)value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (long?)value });
+                        database.Query<GenericEntity<long?>>("select @value AS Value", new { value = (long?)null }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (long?)null });
                     }
                 }
 
@@ -561,8 +558,8 @@ namespace PeregrineDb.Tests.Databases
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        database.Query<int>("select cast(42 as bigint) as Value").ShouldAllBeEquivalentTo(new[] { 42 });
-                        database.Query<GenericEntity<int>>("select cast(42 as bigint) as Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { 42 });
+                        database.Query<int>("select cast(42 as bigint) as Value").Should().BeEquivalentTo(new[] { 42 });
+                        database.Query<GenericEntity<int>>("select cast(42 as bigint) as Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { 42 });
                     }
                 }
 
@@ -572,10 +569,10 @@ namespace PeregrineDb.Tests.Databases
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
                         Action act = () => database.Query<int>("select @value", new { value = (long)int.MaxValue + 2 });
-                        act.ShouldThrow<OverflowException>().WithMessage("Value was either too large or too small for an Int32.");
+                        act.Should().Throw<OverflowException>().WithMessage("Value was either too large or too small for an Int32.");
 
                         act = () => database.Query<GenericEntity<int>>("select cast(@value as bigint) as Value", new { value = (long)int.MaxValue + 2 });
-                        act.ShouldThrow<Exception>().WithMessage("Error parsing column 0 (Value=2147483649 - Int64)");
+                        act.Should().Throw<Exception>().WithMessage("Error parsing column 0 (Value=2147483649 - Int64)");
                     }
                 }
 
@@ -586,7 +583,7 @@ namespace PeregrineDb.Tests.Databases
                     {
                         var values = new[] { 1, 2, 3 }.AsEnumerable();
                         database.Query<int>("select * from (select 1 as Id union all select 2 union all select 3) as X where Id = ANY (@values)", new { values })
-                                .ShouldAllBeEquivalentTo(new[] { 1, 2, 3 }, o => o.WithStrictOrdering());
+                                .Should().BeEquivalentTo(new[] { 1, 2, 3 }, o => o.WithStrictOrdering());
                     }
                 }
 
@@ -612,13 +609,13 @@ namespace PeregrineDb.Tests.Databases
                     {
                         var value = 0.1d;
 
-                        database.Query<double>("select @value", new { value }).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<double?>("select @value", new { value = (double?)value }).ShouldAllBeEquivalentTo(new[] { (double?)value });
-                        database.Query<double?>("select @value", new { value = (double?)null }).ShouldAllBeEquivalentTo(new[] { (double?)null });
+                        database.Query<double>("select @value", new { value }).Should().BeEquivalentTo(new[] { value });
+                        database.Query<double?>("select @value", new { value = (double?)value }).Should().BeEquivalentTo(new[] { (double?)value });
+                        database.Query<double?>("select @value", new { value = (double?)null }).Should().BeEquivalentTo(new[] { (double?)null });
 
-                        database.Query<GenericEntity<double>>("select @value AS Value", new { value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<GenericEntity<double?>>("select @value AS Value", new { value = (double?)value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (double?)value });
-                        database.Query<GenericEntity<double?>>("select @value AS Value", new { value = (double?)null }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (double?)null });
+                        database.Query<GenericEntity<double>>("select @value AS Value", new { value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { value });
+                        database.Query<GenericEntity<double?>>("select @value AS Value", new { value = (double?)value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (double?)value });
+                        database.Query<GenericEntity<double?>>("select @value AS Value", new { value = (double?)null }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (double?)null });
                     }
                 }
             }
@@ -633,13 +630,13 @@ namespace PeregrineDb.Tests.Databases
                     {
                         var value = 11.884M;
 
-                        database.Query<decimal>("select @value", new { value }).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<decimal?>("select @value", new { value = (decimal?)value }).ShouldAllBeEquivalentTo(new[] { (decimal?)value });
-                        database.Query<decimal?>("select @value", new { value = (decimal?)null }).ShouldAllBeEquivalentTo(new[] { (decimal?)null });
+                        database.Query<decimal>("select @value", new { value }).Should().BeEquivalentTo(new[] { value });
+                        database.Query<decimal?>("select @value", new { value = (decimal?)value }).Should().BeEquivalentTo(new[] { (decimal?)value });
+                        database.Query<decimal?>("select @value", new { value = (decimal?)null }).Should().BeEquivalentTo(new[] { (decimal?)null });
 
-                        database.Query<GenericEntity<decimal>>("select @value AS Value", new { value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<GenericEntity<decimal?>>("select @value AS Value", new { value = (decimal?)value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (decimal?)value });
-                        database.Query<GenericEntity<decimal?>>("select @value AS Value", new { value = (decimal?)null }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (decimal?)null });
+                        database.Query<GenericEntity<decimal>>("select @value AS Value", new { value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { value });
+                        database.Query<GenericEntity<decimal?>>("select @value AS Value", new { value = (decimal?)value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (decimal?)value });
+                        database.Query<GenericEntity<decimal?>>("select @value AS Value", new { value = (decimal?)null }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (decimal?)null });
                     }
                 }
 
@@ -648,9 +645,9 @@ namespace PeregrineDb.Tests.Databases
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        database.Query<decimal>("select cast(1 as float)").ShouldAllBeEquivalentTo(new[] { 1.0M });
+                        database.Query<decimal>("select cast(1 as float)").Should().BeEquivalentTo(new[] { 1.0M });
                         database.Query<GenericEntity<decimal>>("select cast(1 as float) as Value").Select(e => e.Value)
-                                .ShouldAllBeEquivalentTo(new[] { 1.0M });
+                                .Should().BeEquivalentTo(new[] { 1.0M });
                     }
                 }
 
@@ -662,9 +659,9 @@ namespace PeregrineDb.Tests.Databases
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        database.Query<decimal?>("select cast(null as float)").ShouldAllBeEquivalentTo(new[] { (decimal?)null });
+                        database.Query<decimal?>("select cast(null as float)").Should().BeEquivalentTo(new[] { (decimal?)null });
                         database.Query<GenericEntity<decimal>>("select cast(null as float) as Value").Select(e => e.Value)
-                                .ShouldAllBeEquivalentTo(new[] { 0.0M });
+                                .Should().BeEquivalentTo(new[] { 0.0M });
                     }
                 }
             }
@@ -677,17 +674,17 @@ namespace PeregrineDb.Tests.Databases
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        database.Query<bool>("select @value", new { value = true }).ShouldAllBeEquivalentTo(new[] { true });
-                        database.Query<bool>("select @value", new { value = false }).ShouldAllBeEquivalentTo(new[] { false });
-                        database.Query<bool?>("select @value", new { value = (bool?)true }).ShouldAllBeEquivalentTo(new[] { (bool?)true });
-                        database.Query<bool?>("select @value", new { value = (bool?)false }).ShouldAllBeEquivalentTo(new[] { (bool?)false });
-                        database.Query<bool?>("select @value", new { value = (bool?)null }).ShouldAllBeEquivalentTo(new[] { (bool?)null });
+                        database.Query<bool>("select @value", new { value = true }).Should().BeEquivalentTo(new[] { true });
+                        database.Query<bool>("select @value", new { value = false }).Should().BeEquivalentTo(new[] { false });
+                        database.Query<bool?>("select @value", new { value = (bool?)true }).Should().BeEquivalentTo(new[] { (bool?)true });
+                        database.Query<bool?>("select @value", new { value = (bool?)false }).Should().BeEquivalentTo(new[] { (bool?)false });
+                        database.Query<bool?>("select @value", new { value = (bool?)null }).Should().BeEquivalentTo(new[] { (bool?)null });
 
-                        database.Query<GenericEntity<bool>>("select @value AS Value", new { value = true }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { true });
-                        database.Query<GenericEntity<bool>>("select @value AS Value", new { value = false }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { false });
-                        database.Query<GenericEntity<bool?>>("select @value AS Value", new { value = (bool?)true }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (bool?)true });
-                        database.Query<GenericEntity<bool?>>("select @value AS Value", new { value = (bool?)false }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (bool?)false });
-                        database.Query<GenericEntity<bool?>>("select @value AS Value", new { value = (bool?)null }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (bool?)null });
+                        database.Query<GenericEntity<bool>>("select @value AS Value", new { value = true }).Select(e => e.Value).Should().BeEquivalentTo(new[] { true });
+                        database.Query<GenericEntity<bool>>("select @value AS Value", new { value = false }).Select(e => e.Value).Should().BeEquivalentTo(new[] { false });
+                        database.Query<GenericEntity<bool?>>("select @value AS Value", new { value = (bool?)true }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (bool?)true });
+                        database.Query<GenericEntity<bool?>>("select @value AS Value", new { value = (bool?)false }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (bool?)false });
+                        database.Query<GenericEntity<bool?>>("select @value AS Value", new { value = (bool?)null }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (bool?)null });
                     }
                 }
 
@@ -696,19 +693,19 @@ namespace PeregrineDb.Tests.Databases
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        database.Query<bool>("select CAST(1 as BIT)").ShouldAllBeEquivalentTo(new[] { true });
-                        database.Query<bool>("select CAST(0 as BIT)").ShouldAllBeEquivalentTo(new[] { false });
+                        database.Query<bool>("select CAST(1 as BIT)").Should().BeEquivalentTo(new[] { true });
+                        database.Query<bool>("select CAST(0 as BIT)").Should().BeEquivalentTo(new[] { false });
 
-                        database.Query<bool?>("select CAST(1 as BIT)").ShouldAllBeEquivalentTo(new[] { true });
-                        database.Query<bool?>("select CAST(0 as BIT)").ShouldAllBeEquivalentTo(new[] { false });
-                        database.Query<bool?>("select CAST(NULL as BIT)").ShouldAllBeEquivalentTo(new[] { (bool?)null });
+                        database.Query<bool?>("select CAST(1 as BIT)").Should().BeEquivalentTo(new[] { true });
+                        database.Query<bool?>("select CAST(0 as BIT)").Should().BeEquivalentTo(new[] { false });
+                        database.Query<bool?>("select CAST(NULL as BIT)").Should().BeEquivalentTo(new[] { (bool?)null });
 
-                        database.Query<GenericEntity<bool>>("select CAST(1 as BIT) AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { true });
-                        database.Query<GenericEntity<bool>>("select CAST(0 as BIT) AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { false });
+                        database.Query<GenericEntity<bool>>("select CAST(1 as BIT) AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { true });
+                        database.Query<GenericEntity<bool>>("select CAST(0 as BIT) AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { false });
 
-                        database.Query<GenericEntity<bool?>>("select CAST(1 as BIT) AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { true });
-                        database.Query<GenericEntity<bool?>>("select CAST(0 as BIT) AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { false });
-                        database.Query<GenericEntity<bool?>>("select CAST(NULL as BIT) AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (bool?)null });
+                        database.Query<GenericEntity<bool?>>("select CAST(1 as BIT) AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { true });
+                        database.Query<GenericEntity<bool?>>("select CAST(0 as BIT) AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { false });
+                        database.Query<GenericEntity<bool?>>("select CAST(NULL as BIT) AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { (bool?)null });
                     }
                 }
 
@@ -717,19 +714,19 @@ namespace PeregrineDb.Tests.Databases
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        database.Query<bool>("select CAST(1 as tinyint)").ShouldAllBeEquivalentTo(new[] { true });
-                        database.Query<bool>("select CAST(0 as tinyint)").ShouldAllBeEquivalentTo(new[] { false });
+                        database.Query<bool>("select CAST(1 as tinyint)").Should().BeEquivalentTo(new[] { true });
+                        database.Query<bool>("select CAST(0 as tinyint)").Should().BeEquivalentTo(new[] { false });
 
-                        database.Query<bool?>("select CAST(1 as tinyint)").ShouldAllBeEquivalentTo(new[] { true });
-                        database.Query<bool?>("select CAST(0 as tinyint)").ShouldAllBeEquivalentTo(new[] { false });
-                        database.Query<bool?>("select CAST(NULL as tinyint)").ShouldAllBeEquivalentTo(new[] { (bool?)null });
+                        database.Query<bool?>("select CAST(1 as tinyint)").Should().BeEquivalentTo(new[] { true });
+                        database.Query<bool?>("select CAST(0 as tinyint)").Should().BeEquivalentTo(new[] { false });
+                        database.Query<bool?>("select CAST(NULL as tinyint)").Should().BeEquivalentTo(new[] { (bool?)null });
 
-                        database.Query<GenericEntity<bool>>("select CAST(1 as tinyint) AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { true });
-                        database.Query<GenericEntity<bool>>("select CAST(0 as tinyint) AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { false });
+                        database.Query<GenericEntity<bool>>("select CAST(1 as tinyint) AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { true });
+                        database.Query<GenericEntity<bool>>("select CAST(0 as tinyint) AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { false });
 
-                        database.Query<GenericEntity<bool?>>("select CAST(1 as tinyint) AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { true });
-                        database.Query<GenericEntity<bool?>>("select CAST(0 as tinyint) AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { false });
-                        database.Query<GenericEntity<bool?>>("select CAST(NULL as tinyint) AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (bool?)null });
+                        database.Query<GenericEntity<bool?>>("select CAST(1 as tinyint) AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { true });
+                        database.Query<GenericEntity<bool?>>("select CAST(0 as tinyint) AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { false });
+                        database.Query<GenericEntity<bool?>>("select CAST(NULL as tinyint) AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { (bool?)null });
                     }
                 }
 
@@ -738,19 +735,19 @@ namespace PeregrineDb.Tests.Databases
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.PostgreSql))
                     {
-                        database.Query<bool>("select TRUE").ShouldAllBeEquivalentTo(new[] { true });
-                        database.Query<bool>("select FALSE").ShouldAllBeEquivalentTo(new[] { false });
+                        database.Query<bool>("select TRUE").Should().BeEquivalentTo(new[] { true });
+                        database.Query<bool>("select FALSE").Should().BeEquivalentTo(new[] { false });
 
-                        database.Query<bool?>("select TRUE").ShouldAllBeEquivalentTo(new[] { true });
-                        database.Query<bool?>("select FALSE").ShouldAllBeEquivalentTo(new[] { false });
-                        database.Query<bool?>("select NULL::boolean").ShouldAllBeEquivalentTo(new[] { (bool?)null });
+                        database.Query<bool?>("select TRUE").Should().BeEquivalentTo(new[] { true });
+                        database.Query<bool?>("select FALSE").Should().BeEquivalentTo(new[] { false });
+                        database.Query<bool?>("select NULL::boolean").Should().BeEquivalentTo(new[] { (bool?)null });
 
-                        database.Query<GenericEntity<bool>>("select TRUE AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { true });
-                        database.Query<GenericEntity<bool>>("select FALSE AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { false });
+                        database.Query<GenericEntity<bool>>("select TRUE AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { true });
+                        database.Query<GenericEntity<bool>>("select FALSE AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { false });
 
-                        database.Query<GenericEntity<bool?>>("select TRUE AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { true });
-                        database.Query<GenericEntity<bool?>>("select FALSE AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { false });
-                        database.Query<GenericEntity<bool?>>("select NULL::boolean AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (bool?)null });
+                        database.Query<GenericEntity<bool?>>("select TRUE AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { true });
+                        database.Query<GenericEntity<bool?>>("select FALSE AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { false });
+                        database.Query<GenericEntity<bool?>>("select NULL::boolean AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { (bool?)null });
                     }
                 }
             }
@@ -765,13 +762,13 @@ namespace PeregrineDb.Tests.Databases
                     {
                         var value = Guid.NewGuid();
 
-                        database.Query<Guid>("select @value", new { value }).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<Guid?>("select @value", new { value = (Guid?)value }).ShouldAllBeEquivalentTo(new[] { (Guid?)value });
-                        database.Query<Guid?>("select @value", new { value = (Guid?)null }).ShouldAllBeEquivalentTo(new[] { (Guid?)null });
+                        database.Query<Guid>("select @value", new { value }).Should().BeEquivalentTo(new[] { value });
+                        database.Query<Guid?>("select @value", new { value = (Guid?)value }).Should().BeEquivalentTo(new[] { (Guid?)value });
+                        database.Query<Guid?>("select @value", new { value = (Guid?)null }).Should().BeEquivalentTo(new[] { (Guid?)null });
 
-                        database.Query<GenericEntity<Guid>>("select @value AS Value", new { value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<GenericEntity<Guid?>>("select @value AS Value", new { value = (Guid?)value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (Guid?)value });
-                        database.Query<GenericEntity<Guid?>>("select @value AS Value", new { value = (Guid?)null }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (Guid?)null });
+                        database.Query<GenericEntity<Guid>>("select @value AS Value", new { value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { value });
+                        database.Query<GenericEntity<Guid?>>("select @value AS Value", new { value = (Guid?)value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (Guid?)value });
+                        database.Query<GenericEntity<Guid?>>("select @value AS Value", new { value = (Guid?)null }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (Guid?)null });
                     }
                 }
 
@@ -784,7 +781,7 @@ namespace PeregrineDb.Tests.Databases
                         Action act = () => database.Query<GenericEntity<string>>("select @value as Value", new { value = Guid.Parse("cf0ef7ac-b6fe-4e24-aeda-a2b45bb5654e") });
 
                         // Assert
-                        act.ShouldThrow<Exception>().WithMessage("Error parsing column 0 (Value=cf0ef7ac-b6fe-4e24-aeda-a2b45bb5654e - Object)");
+                        act.Should().Throw<Exception>().WithMessage("Error parsing column 0 (Value=cf0ef7ac-b6fe-4e24-aeda-a2b45bb5654e - Object)");
                     }
                 }
             }
@@ -799,13 +796,13 @@ namespace PeregrineDb.Tests.Databases
                     {
                         var value = Int32Enum.A;
 
-                        database.Query<Int32Enum>("select @value", new { value }).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<Int32Enum?>("select @value", new { value = (Int32Enum?)value }).ShouldAllBeEquivalentTo(new[] { (Int32Enum?)value });
-                        database.Query<Int32Enum?>("select @value", new { value = (Int32Enum?)null }).ShouldAllBeEquivalentTo(new[] { (Int32Enum?)null });
+                        database.Query<Int32Enum>("select @value", new { value }).Should().BeEquivalentTo(new[] { value });
+                        database.Query<Int32Enum?>("select @value", new { value = (Int32Enum?)value }).Should().BeEquivalentTo(new[] { (Int32Enum?)value });
+                        database.Query<Int32Enum?>("select @value", new { value = (Int32Enum?)null }).Should().BeEquivalentTo(new[] { (Int32Enum?)null });
 
-                        database.Query<GenericEntity<Int32Enum>>("select @value AS Value", new { value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<GenericEntity<Int32Enum?>>("select @value AS Value", new { value = (Int32Enum?)value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (Int32Enum?)value });
-                        database.Query<GenericEntity<Int32Enum?>>("select @value AS Value", new { value = (Int32Enum?)null }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (Int32Enum?)null });
+                        database.Query<GenericEntity<Int32Enum>>("select @value AS Value", new { value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { value });
+                        database.Query<GenericEntity<Int32Enum?>>("select @value AS Value", new { value = (Int32Enum?)value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (Int32Enum?)value });
+                        database.Query<GenericEntity<Int32Enum?>>("select @value AS Value", new { value = (Int32Enum?)null }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (Int32Enum?)null });
                     }
                 }
 
@@ -814,8 +811,8 @@ namespace PeregrineDb.Tests.Databases
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        database.Query<Int32Enum?>("select null").ShouldAllBeEquivalentTo(new[] { (Int32Enum?)null });
-                        database.Query<GenericEntity<Int32Enum?>>("select null AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (Int32Enum?)null });
+                        database.Query<Int32Enum?>("select null").Should().BeEquivalentTo(new[] { (Int32Enum?)null });
+                        database.Query<GenericEntity<Int32Enum?>>("select null AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { (Int32Enum?)null });
                     }
                 }
 
@@ -824,13 +821,13 @@ namespace PeregrineDb.Tests.Databases
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        database.Query<Int16Enum>("select cast(42 as smallint)").ShouldAllBeEquivalentTo(new[] { (Int16Enum)42 });
-                        database.Query<Int16Enum?>("select cast(42 as smallint)").ShouldAllBeEquivalentTo(new[] { (Int16Enum?)42 });
-                        database.Query<Int16Enum?>("select cast(null as smallint)").ShouldAllBeEquivalentTo(new[] { (Int16Enum?)null });
+                        database.Query<Int16Enum>("select cast(42 as smallint)").Should().BeEquivalentTo(new[] { (Int16Enum)42 });
+                        database.Query<Int16Enum?>("select cast(42 as smallint)").Should().BeEquivalentTo(new[] { (Int16Enum?)42 });
+                        database.Query<Int16Enum?>("select cast(null as smallint)").Should().BeEquivalentTo(new[] { (Int16Enum?)null });
 
-                        database.Query<GenericEntity<Int16Enum>>("select cast(42 as smallint) AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (Int16Enum)42 });
-                        database.Query<GenericEntity<Int16Enum?>>("select cast(42 as smallint) AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (Int16Enum?)42 });
-                        database.Query<GenericEntity<Int16Enum?>>("select cast(null as smallint) AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (Int16Enum?)null });
+                        database.Query<GenericEntity<Int16Enum>>("select cast(42 as smallint) AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { (Int16Enum)42 });
+                        database.Query<GenericEntity<Int16Enum?>>("select cast(42 as smallint) AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { (Int16Enum?)42 });
+                        database.Query<GenericEntity<Int16Enum?>>("select cast(null as smallint) AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { (Int16Enum?)null });
                     }
                 }
 
@@ -839,13 +836,13 @@ namespace PeregrineDb.Tests.Databases
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        database.Query<Int32Enum>("select cast(42 as int)").ShouldAllBeEquivalentTo(new[] { (Int32Enum)42 });
-                        database.Query<Int32Enum?>("select cast(42 as int)").ShouldAllBeEquivalentTo(new[] { (Int32Enum?)42 });
-                        database.Query<Int32Enum?>("select cast(null as int)").ShouldAllBeEquivalentTo(new[] { (Int32Enum?)null });
+                        database.Query<Int32Enum>("select cast(42 as int)").Should().BeEquivalentTo(new[] { (Int32Enum)42 });
+                        database.Query<Int32Enum?>("select cast(42 as int)").Should().BeEquivalentTo(new[] { (Int32Enum?)42 });
+                        database.Query<Int32Enum?>("select cast(null as int)").Should().BeEquivalentTo(new[] { (Int32Enum?)null });
 
-                        database.Query<GenericEntity<Int32Enum>>("select cast(42 as int) AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (Int32Enum)42 });
-                        database.Query<GenericEntity<Int32Enum?>>("select cast(42 as int) AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (Int32Enum?)42 });
-                        database.Query<GenericEntity<Int32Enum?>>("select cast(null as int) AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (Int32Enum?)null });
+                        database.Query<GenericEntity<Int32Enum>>("select cast(42 as int) AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { (Int32Enum)42 });
+                        database.Query<GenericEntity<Int32Enum?>>("select cast(42 as int) AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { (Int32Enum?)42 });
+                        database.Query<GenericEntity<Int32Enum?>>("select cast(null as int) AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { (Int32Enum?)null });
                     }
                 }
 
@@ -854,11 +851,11 @@ namespace PeregrineDb.Tests.Databases
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        // database.Query<AnEnum>("select 'B'").ShouldAllBeEquivalentTo(new[] { AnEnum.B });
-                        database.Query<GenericEntity<Int32Enum>>("select \'B\' AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { Int32Enum.B });
-                        database.Query<GenericEntity<Int32Enum>>("select \'b\' AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { Int32Enum.B });
-                        database.Query<GenericEntity<Int32Enum?>>("select \'B\' AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (Int32Enum?)Int32Enum.B });
-                        database.Query<GenericEntity<Int32Enum?>>("select \'b\' AS Value").Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (Int32Enum?)Int32Enum.B });
+                        // database.Query<AnEnum>("select 'B'").Should().BeEquivalentTo(new[] { AnEnum.B });
+                        database.Query<GenericEntity<Int32Enum>>("select \'B\' AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { Int32Enum.B });
+                        database.Query<GenericEntity<Int32Enum>>("select \'b\' AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { Int32Enum.B });
+                        database.Query<GenericEntity<Int32Enum?>>("select \'B\' AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { (Int32Enum?)Int32Enum.B });
+                        database.Query<GenericEntity<Int32Enum?>>("select \'b\' AS Value").Select(e => e.Value).Should().BeEquivalentTo(new[] { (Int32Enum?)Int32Enum.B });
                     }
                 }
             }
@@ -873,13 +870,13 @@ namespace PeregrineDb.Tests.Databases
                     {
                         var value = new DateTime(2000, 1, 1);
 
-                        database.Query<DateTime>("select @value", new { value }).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<DateTime?>("select @value", new { value = (DateTime?)value }).ShouldAllBeEquivalentTo(new[] { (DateTime?)value });
-                        database.Query<DateTime?>("select @value", new { value = (DateTime?)null }).ShouldAllBeEquivalentTo(new[] { (DateTime?)null });
+                        database.Query<DateTime>("select @value", new { value }).Should().BeEquivalentTo(new[] { value });
+                        database.Query<DateTime?>("select @value", new { value = (DateTime?)value }).Should().BeEquivalentTo(new[] { (DateTime?)value });
+                        database.Query<DateTime?>("select @value", new { value = (DateTime?)null }).Should().BeEquivalentTo(new[] { (DateTime?)null });
 
-                        database.Query<GenericEntity<DateTime>>("select @value AS Value", new { value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<GenericEntity<DateTime?>>("select @value AS Value", new { value = (DateTime?)value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (DateTime?)value });
-                        database.Query<GenericEntity<DateTime?>>("select @value AS Value", new { value = (DateTime?)null }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (DateTime?)null });
+                        database.Query<GenericEntity<DateTime>>("select @value AS Value", new { value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { value });
+                        database.Query<GenericEntity<DateTime?>>("select @value AS Value", new { value = (DateTime?)value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (DateTime?)value });
+                        database.Query<GenericEntity<DateTime?>>("select @value AS Value", new { value = (DateTime?)null }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (DateTime?)null });
                     }
                 }
 
@@ -893,13 +890,13 @@ namespace PeregrineDb.Tests.Databases
                     {
                         var value = TimeSpan.FromMinutes(42);
 
-                        database.Query<TimeSpan>("select @value", new { value }).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<TimeSpan?>("select @value", new { value = (TimeSpan?)value }).ShouldAllBeEquivalentTo(new[] { (TimeSpan?)value });
-                        database.Query<TimeSpan?>("select @value", new { value = (TimeSpan?)null }).ShouldAllBeEquivalentTo(new[] { (TimeSpan?)null });
+                        database.Query<TimeSpan>("select @value", new { value }).Should().BeEquivalentTo(new[] { value });
+                        database.Query<TimeSpan?>("select @value", new { value = (TimeSpan?)value }).Should().BeEquivalentTo(new[] { (TimeSpan?)value });
+                        database.Query<TimeSpan?>("select @value", new { value = (TimeSpan?)null }).Should().BeEquivalentTo(new[] { (TimeSpan?)null });
 
-                        database.Query<GenericEntity<TimeSpan>>("select @value AS Value", new { value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<GenericEntity<TimeSpan?>>("select @value AS Value", new { value = (TimeSpan?)value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (TimeSpan?)value });
-                        database.Query<GenericEntity<TimeSpan?>>("select @value AS Value", new { value = (TimeSpan?)null }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (TimeSpan?)null });
+                        database.Query<GenericEntity<TimeSpan>>("select @value AS Value", new { value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { value });
+                        database.Query<GenericEntity<TimeSpan?>>("select @value AS Value", new { value = (TimeSpan?)value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (TimeSpan?)value });
+                        database.Query<GenericEntity<TimeSpan?>>("select @value AS Value", new { value = (TimeSpan?)null }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (TimeSpan?)null });
                     }
                 }
 
@@ -937,11 +934,11 @@ namespace PeregrineDb.Tests.Databases
                     {
                         var value = new byte[] { 1 };
 
-                        database.Query<byte[]>("select @value", new { value }).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<byte[]>("select @value", new { value = (byte[])null }).ShouldAllBeEquivalentTo(new[] { (byte[])null });
+                        database.Query<byte[]>("select @value", new { value }).Should().BeEquivalentTo(new[] { value });
+                        database.Query<byte[]>("select @value", new { value = (byte[])null }).Should().BeEquivalentTo(new[] { (byte[])null });
 
-                        database.Query<GenericEntity<byte[]>>("select @value AS Value", new { value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { value });
-                        database.Query<GenericEntity<byte[]>>("select @value AS Value", new { value = (byte[])null }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (byte[])null });
+                        database.Query<GenericEntity<byte[]>>("select @value AS Value", new { value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { value });
+                        database.Query<GenericEntity<byte[]>>("select @value AS Value", new { value = (byte[])null }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (byte[])null });
                     }
                 }
             }
@@ -957,7 +954,7 @@ namespace PeregrineDb.Tests.Databases
                         Action act = () =>
                             database.Query<int>("select count(1) where 1 = @Foo", new { Foo = new UnhandledType(UnhandledTypeOptions.Default) });
 
-                        act.ShouldThrow<NotSupportedException>()
+                        act.Should().Throw<NotSupportedException>()
                            .WithMessage("The member Foo of type PeregrineDb.Tests.SharedTypes.UnhandledType cannot be used as a parameter value");
                     }
                 }
@@ -967,7 +964,7 @@ namespace PeregrineDb.Tests.Databases
                 {
                     using (var database = BlankDatabaseFactory.MakeDatabase(Dialect.SqlServer2012))
                     {
-                        database.Query<int>("select @Bar", new { Foo = new UnhandledType(UnhandledTypeOptions.Default), Bar = 23 }).ShouldAllBeEquivalentTo(new[] { 23 });
+                        database.Query<int>("select @Bar", new { Foo = new UnhandledType(UnhandledTypeOptions.Default), Bar = 23 }).Should().BeEquivalentTo(new[] { 23 });
                     }
                 }
 
@@ -981,24 +978,24 @@ namespace PeregrineDb.Tests.Databases
 
                     ////    var value = new LocalDate { Year = 2014, Month = 7, Day = 25 };
 
-                    ////    database.Query<LocalDate>("SELECT @value", new { value }).ShouldAllBeEquivalentTo(value);
-                    ////    database.Query<LocalDate?>("SELECT @value", new { value = (LocalDate?)value }).ShouldAllBeEquivalentTo(value);
-                    ////    //// TODO: database.Query<LocalDate?>("SELECT @value", new { value = (LocalDate?)null }).ShouldAllBeEquivalentTo((LocalDate?)null);
+                    ////    database.Query<LocalDate>("SELECT @value", new { value }).Should().BeEquivalentTo(value);
+                    ////    database.Query<LocalDate?>("SELECT @value", new { value = (LocalDate?)value }).Should().BeEquivalentTo(value);
+                    ////    //// TODO: database.Query<LocalDate?>("SELECT @value", new { value = (LocalDate?)null }).Should().BeEquivalentTo((LocalDate?)null);
 
-                    ////    database.Query<GenericEntity<LocalDate>>("SELECT @value AS Value", new { value }).Select(e => e.Value).ShouldAllBeEquivalentTo(value);
-                    ////    database.Query<GenericEntity<LocalDate?>>("SELECT @value AS Value", new { value = (LocalDate?)value }).Select(e => e.Value).ShouldAllBeEquivalentTo(value);
-                    ////    database.Query<GenericEntity<LocalDate?>>("SELECT @value AS Value", new { value = (LocalDate?)null }).Select(e => e.Value).ShouldAllBeEquivalentTo((LocalDate?)null);
+                    ////    database.Query<GenericEntity<LocalDate>>("SELECT @value AS Value", new { value }).Select(e => e.Value).Should().BeEquivalentTo(value);
+                    ////    database.Query<GenericEntity<LocalDate?>>("SELECT @value AS Value", new { value = (LocalDate?)value }).Select(e => e.Value).Should().BeEquivalentTo(value);
+                    ////    database.Query<GenericEntity<LocalDate?>>("SELECT @value AS Value", new { value = (LocalDate?)null }).Select(e => e.Value).Should().BeEquivalentTo((LocalDate?)null);
 
                     ////    TypeProvider.ResetTypeHandlers();
                     ////    TypeProvider.AddTypeHandler(typeof(LocalDate?), LocalDateConverter.Default);
 
-                    ////    database.Query<LocalDate>("SELECT @value", new { value }).ShouldAllBeEquivalentTo(value);
-                    ////    database.Query<LocalDate?>("SELECT @value", new { value = (LocalDate?)value }).ShouldAllBeEquivalentTo(value);
-                    ////    //// TOODO: database.Query<LocalDate?>("SELECT @value", new { value = (LocalDate?)null }).ShouldAllBeEquivalentTo((LocalDate?)null);
+                    ////    database.Query<LocalDate>("SELECT @value", new { value }).Should().BeEquivalentTo(value);
+                    ////    database.Query<LocalDate?>("SELECT @value", new { value = (LocalDate?)value }).Should().BeEquivalentTo(value);
+                    ////    //// TOODO: database.Query<LocalDate?>("SELECT @value", new { value = (LocalDate?)null }).Should().BeEquivalentTo((LocalDate?)null);
 
-                    ////    database.Query<GenericEntity<LocalDate>>("SELECT @value AS Value", new { value }).Select(e => e.Value).ShouldAllBeEquivalentTo(value);
-                    ////    database.Query<GenericEntity<LocalDate?>>("SELECT @value AS Value", new { value = (LocalDate?)value }).Select(e => e.Value).ShouldAllBeEquivalentTo(value);
-                    ////    database.Query<GenericEntity<LocalDate?>>("SELECT @value AS Value", new { value = (LocalDate?)null }).Select(e => e.Value).ShouldAllBeEquivalentTo((LocalDate?)null);
+                    ////    database.Query<GenericEntity<LocalDate>>("SELECT @value AS Value", new { value }).Select(e => e.Value).Should().BeEquivalentTo(value);
+                    ////    database.Query<GenericEntity<LocalDate?>>("SELECT @value AS Value", new { value = (LocalDate?)value }).Select(e => e.Value).Should().BeEquivalentTo(value);
+                    ////    database.Query<GenericEntity<LocalDate?>>("SELECT @value AS Value", new { value = (LocalDate?)null }).Select(e => e.Value).Should().BeEquivalentTo((LocalDate?)null);
                     ////}
                 }
 
@@ -1025,11 +1022,11 @@ namespace PeregrineDb.Tests.Databases
                     ////    // Act / Assert
                     ////    var value = (Citext)"Foo";
 
-                    ////    database.Query<Citext>("select @value", new { value }).ShouldAllBeEquivalentTo(new[] { value });
-                    ////    database.Query<Citext>("select @value", new { value = (Citext)null }).ShouldAllBeEquivalentTo(new[] { (Citext)null });
+                    ////    database.Query<Citext>("select @value", new { value }).Should().BeEquivalentTo(new[] { value });
+                    ////    database.Query<Citext>("select @value", new { value = (Citext)null }).Should().BeEquivalentTo(new[] { (Citext)null });
 
-                    ////    database.Query<GenericEntity<Citext>>("select @value AS Value", new { value }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { value });
-                    ////    database.Query<GenericEntity<Citext>>("select @value AS Value", new { value = (Citext)null }).Select(e => e.Value).ShouldAllBeEquivalentTo(new[] { (Citext)null });
+                    ////    database.Query<GenericEntity<Citext>>("select @value AS Value", new { value }).Select(e => e.Value).Should().BeEquivalentTo(new[] { value });
+                    ////    database.Query<GenericEntity<Citext>>("select @value AS Value", new { value = (Citext)null }).Select(e => e.Value).Should().BeEquivalentTo(new[] { (Citext)null });
                     ////}
                 }
 
@@ -1044,7 +1041,7 @@ namespace PeregrineDb.Tests.Databases
                     ////        TypeProvider.AddTypeHandler(StringListConverter.Default);
 
                     ////        database.Query<GenericEntity<List<string>>>("SELECT \'Sam,Kyro\' AS Value").Select(e => e.Value)
-                    ////                .ShouldAllBeEquivalentTo(new[] { new List<string> { "Sam", "Kyro" } }, o => o.WithStrictOrdering());
+                    ////                .Should().BeEquivalentTo(new[] { new List<string> { "Sam", "Kyro" } }, o => o.WithStrictOrdering());
                     ////    }
                     ////    finally
                     ////    {
@@ -1063,7 +1060,7 @@ namespace PeregrineDb.Tests.Databases
 
                     ////    try
                     ////    {
-                    ////        database.Query<string>("SELECT @value", new { value = new List<string> { "Sam", "Kyro" } }).ShouldAllBeEquivalentTo(new[] { "Sam,Kyro" });
+                    ////        database.Query<string>("SELECT @value", new { value = new List<string> { "Sam", "Kyro" } }).Should().BeEquivalentTo(new[] { "Sam,Kyro" });
                     ////    }
                     ////    finally
                     ////    {
@@ -1250,7 +1247,7 @@ namespace PeregrineDb.Tests.Databases
 
                         var dynamicParams = new DynamicParameters(queryParams);
                         var result = database.Query<int>(@"SELECT id FROM unnest (@myIds) as id", dynamicParams);
-                        result.ShouldAllBeEquivalentTo(new[] { 5, 6 });
+                        result.Should().BeEquivalentTo(new[] { 5, 6 });
                     }
                 }
 

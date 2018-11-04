@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Utils
+namespace PeregrineDb.Tests.Utils
 {
     using System;
     using System.Data;

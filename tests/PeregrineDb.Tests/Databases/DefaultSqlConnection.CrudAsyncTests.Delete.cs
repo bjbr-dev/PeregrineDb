@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
@@ -138,10 +138,10 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Act
-                    Func<Task> act = async () => await database.DeleteRangeAsync<Dog>(new SqlString(conditions));
+                    Func<Task> act = async () => await database.DeleteRangeAsync<Dog>(conditions);
 
                     // Assert
-                    act.ShouldThrow<ArgumentException>();
+                    act.Should().Throw<ArgumentException>();
                 }
             }
 
@@ -154,10 +154,10 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Act
-                    Func<Task> act = async () => await database.DeleteRangeAsync<Dog>(new SqlString(conditions));
+                    Func<Task> act = async () => await database.DeleteRangeAsync<Dog>(conditions);
 
                     // Assert
-                    act.ShouldNotThrow();
+                    act.Should().NotThrow();
                 }
             }
 
@@ -175,7 +175,7 @@
                     database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var result = await database.DeleteRangeAsync<Dog>($"WHERE Age = {10}");
+                    var result = await database.DeleteRangeAsync<Dog>("WHERE Age = @Age", new { Age = 10 });
 
                     // Assert
                     result.NumRowsAffected.Should().Be(3);
@@ -197,7 +197,7 @@
                     Func<Task> act = async () => await database.DeleteRangeAsync<Dog>((object)null);
 
                     // Assert
-                    act.ShouldThrow<ArgumentNullException>();
+                    act.Should().Throw<ArgumentNullException>();
                 }
             }
 
@@ -212,7 +212,7 @@
                     Func<Task> act = async () => await database.DeleteRangeAsync<Dog>(new { });
 
                     // Assert
-                    act.ShouldThrow<ArgumentException>();
+                    act.Should().Throw<ArgumentException>();
                 }
             }
 

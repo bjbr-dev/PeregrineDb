@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
@@ -182,12 +182,10 @@
                     database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var entity = database.GetFirst<Dog>(
-                        $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
-                        "Name DESC");
+                    var entity = database.GetFirst<Dog>("Name DESC", "WHERE Name LIKE CONCAT(@Name, '%') and Age = @Age", new { Name = "Some Name", Age = 10 });
 
                     // Assert
-                    entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
+                    entity.Should().BeEquivalentTo(new Dog { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
                 }
             }
 
@@ -199,10 +197,10 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Act
-                    Action act = () => database.GetFirst<Dog>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}", "Name DESC");
+                    Action act = () => database.GetFirst<Dog>("Name DESC", "WHERE Name LIKE CONCAT(@Name, '%') and Age = @Age", new { Name = "Some Name", Age = 10 });
 
                     // Assert
-                    act.ShouldThrow<InvalidOperationException>();
+                    act.Should().Throw<InvalidOperationException>();
                 }
             }
         }
@@ -223,10 +221,10 @@
                     database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var entity = database.GetFirst<Dog>(new { Age = 10 }, "Name DESC");
+                    var entity = database.GetFirst<Dog>("Name DESC", new { Age = 10 });
 
                     // Assert
-                    entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
+                    entity.Should().BeEquivalentTo(new Dog { Name = "Some Name 3", Age = 10 }, o => o.Excluding(e => e.Id));
                 }
             }
 
@@ -238,10 +236,10 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Act
-                    Action act = () => database.GetFirst<Dog>(new { Age = 10 }, "Name DESC");
+                    Action act = () => database.GetFirst<Dog>("Name DESC", new { Age = 10 });
 
                     // Assert
-                    act.ShouldThrow<InvalidOperationException>();
+                    act.Should().Throw<InvalidOperationException>();
                 }
             }
         }
@@ -260,10 +258,10 @@
                     database.Insert(new Dog { Name = "Some Name 2", Age = 11 });
 
                     // Act
-                    var entity = database.GetSingle<Dog>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
+                    var entity = database.GetSingle<Dog>("WHERE Name LIKE CONCAT(@Name, '%') and Age = @Age", new { Name = "Some Name", Age = 10 });
 
                     // Assert
-                    entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
+                    entity.Should().BeEquivalentTo(new Dog { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
                 }
             }
 
@@ -275,10 +273,10 @@
                 using (var database = BlankDatabaseFactory.MakeDatabase(dialect))
                 {
                     // Act
-                    Action act = () => database.GetSingle<Dog>($"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}");
+                    Action act = () => database.GetSingle<Dog>("WHERE Name LIKE CONCAT(@Name, '%') and Age = @Age", new { Name = "Some Name", Age = 10 });
 
                     // Assert
-                    act.ShouldThrow<InvalidOperationException>();
+                    act.Should().Throw<InvalidOperationException>();
                 }
             }
 
@@ -297,7 +295,7 @@
                     Action act = () => database.GetSingle<Dog>($"WHERE Age = {10}");
 
                     // Assert
-                    act.ShouldThrow<InvalidOperationException>();
+                    act.Should().Throw<InvalidOperationException>();
                 }
             }
         }
@@ -319,7 +317,7 @@
                     var entity = database.GetSingle<Dog>(new { Age = 10 });
 
                     // Assert
-                    entity.ShouldBeEquivalentTo(new Dog { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
+                    entity.Should().BeEquivalentTo(new Dog { Name = "Some Name 1", Age = 10 }, o => o.Excluding(e => e.Id));
                 }
             }
 
@@ -334,7 +332,7 @@
                     Action act = () => database.GetSingle<Dog>(new { Age = 10 });
 
                     // Assert
-                    act.ShouldThrow<InvalidOperationException>();
+                    act.Should().Throw<InvalidOperationException>();
                 }
             }
 
@@ -353,7 +351,7 @@
                     Action act = () => database.GetSingle<Dog>(new { Age = 10 });
 
                     // Assert
-                    act.ShouldThrow<InvalidOperationException>();
+                    act.Should().Throw<InvalidOperationException>();
                 }
             }
         }

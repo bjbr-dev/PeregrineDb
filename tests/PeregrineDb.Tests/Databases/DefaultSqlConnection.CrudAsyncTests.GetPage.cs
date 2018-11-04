@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
@@ -47,8 +47,9 @@
                     // Act
                     var entities = await database.GetPageAsync<Dog>(
                         new PageIndexPageBuilder(1, 10),
-                        $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
-                        "Age");
+                        "Age",
+                        "WHERE Name LIKE CONCAT(@Name, '%') and Age = @Age",
+                        new { Name = "Some Name", Age = 10 });
 
                     // Assert
                     entities.Items.Count().Should().Be(3);
@@ -70,8 +71,9 @@
                     // Act
                     var entities = (await database.GetPageAsync<Dog>(
                         new PageIndexPageBuilder(1, 2),
-                        $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
-                        "Age DESC")).Items;
+                        "Age DESC",
+                        "WHERE Name LIKE CONCAT(@Name, '%') and Age = @Age",
+                        new { Name = "Some Name", Age = 10 })).Items;
 
                     // Assert
                     entities.Count().Should().Be(2);
@@ -96,8 +98,9 @@
                     // Act
                     var entities = (await database.GetPageAsync<Dog>(
                         new PageIndexPageBuilder(2, 2),
-                        $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
-                        "Age DESC")).Items;
+                        "Age DESC",
+                        "WHERE Name LIKE CONCAT(@Name, '%') and Age = @Age",
+                        new { Name = "Some Name", Age = 10 })).Items;
 
                     // Assert
                     entities.Count().Should().Be(1);
@@ -121,8 +124,9 @@
                     // Act
                     var entities = (await database.GetPageAsync<Dog>(
                         new PageIndexPageBuilder(3, 2),
-                        $"WHERE Name LIKE CONCAT({"Some Name"}, '%') and Age = {10}",
-                        "Age DESC")).Items;
+                        "Age DESC",
+                        "WHERE Name LIKE CONCAT(@Name, '%') and Age = @Age",
+                        new { Name = "Some Name", Age = 10 })).Items;
 
                     // Assert
                     entities.Should().BeEmpty();
@@ -142,7 +146,7 @@
                     database.Insert(new Dog { Name = "Some Name 4", Age = 11 });
 
                     // Act
-                    var page = await database.GetPageAsync<Dog>(new PageIndexPageBuilder(2, 2), null, "Age DESC");
+                    var page = await database.GetPageAsync<Dog>(new PageIndexPageBuilder(2, 2), "Age DESC");
                     var entities = page.Items;
 
                     // Assert
@@ -162,7 +166,7 @@
                 {
                     // Act
                     var pageBuilder = new PageIndexPageBuilder(1, 10);
-                    var entities = await database.GetPageAsync<Dog>(pageBuilder, new { Age = 10 }, "Age");
+                    var entities = await database.GetPageAsync<Dog>(pageBuilder, "Age", new { Age = 10 });
 
                     // Assert
                     entities.Items.Should().BeEmpty();
@@ -184,7 +188,7 @@
 
                     // Act
                     var pageBuilder = new PageIndexPageBuilder(1, 10);
-                    var entities = await database.GetPageAsync<Dog>(pageBuilder, new { Age = 10 }, "Age");
+                    var entities = await database.GetPageAsync<Dog>(pageBuilder, "Age", new { Age = 10 });
 
                     // Assert
                     entities.Items.Count().Should().Be(3);
@@ -206,7 +210,7 @@
 
                     // Act
                     var pageBuilder = new PageIndexPageBuilder(1, 2);
-                    var page = await database.GetPageAsync<Dog>(pageBuilder, new { Age = 10 }, "Age DESC");
+                    var page = await database.GetPageAsync<Dog>(pageBuilder, "Age DESC", new { Age = 10 });
                     var entities = page.Items;
 
                     // Assert
@@ -230,7 +234,7 @@
 
                     // Act
                     var pageBuilder = new PageIndexPageBuilder(2, 2);
-                    var page = await database.GetPageAsync<Dog>(pageBuilder, new { Age = 10 }, "Age DESC");
+                    var page = await database.GetPageAsync<Dog>(pageBuilder, "Age DESC", new { Age = 10 });
                     var entities = page.Items;
 
                     // Assert
@@ -254,7 +258,7 @@
 
                     // Act
                     var pageBuilder = new PageIndexPageBuilder(3, 2);
-                    var page = await database.GetPageAsync<Dog>(pageBuilder, new { Age = 10 }, "Age DESC");
+                    var page = await database.GetPageAsync<Dog>(pageBuilder, "Age DESC", new { Age = 10 });
                     var entities = page.Items;
 
                     // Assert

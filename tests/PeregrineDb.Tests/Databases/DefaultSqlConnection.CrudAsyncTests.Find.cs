@@ -1,4 +1,4 @@
-﻿namespace PeregrineDb.Tests.Databases
+namespace PeregrineDb.Tests.Databases
 {
     using System;
     using System.Collections.Generic;
@@ -33,7 +33,7 @@
                     Func<Task> act = async () => await database.FindAsync<NoKey>("Some Name");
 
                     // Assert
-                    act.ShouldThrow<InvalidPrimaryKeyException>();
+                    act.Should().Throw<InvalidPrimaryKeyException>();
                 }
             }
 
@@ -244,7 +244,7 @@
                     entity.NullableDateTimeProperty.Should().Be(new DateTime(2016, 12, 31));
                     entity.DateTimeOffsetProperty.Should().Be(new DateTimeOffset(new DateTime(2016, 12, 31), new TimeSpan(0, 1, 0, 0)));
                     entity.NullableDateTimeOffsetProperty.Should().Be(new DateTimeOffset(new DateTime(2016, 12, 31), new TimeSpan(0, 1, 0, 0)));
-                    entity.ByteArrayProperty.ShouldAllBeEquivalentTo(new byte[] { 1, 2, 3 }, o => o.WithStrictOrdering());
+                    entity.ByteArrayProperty.Should().BeEquivalentTo(new byte[] { 1, 2, 3 }, o => o.WithStrictOrdering());
                 }
             }
 
