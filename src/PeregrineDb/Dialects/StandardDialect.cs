@@ -5,7 +5,6 @@
 namespace PeregrineDb.Dialects
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Text;
@@ -19,63 +18,33 @@ namespace PeregrineDb.Dialects
     public abstract class StandardDialect
         : IDialect, IEquatable<StandardDialect>
     {
-        private readonly TableSchemaFactory tableSchemaFactory;
-
-        protected StandardDialect(TableSchemaFactory tableSchemaFactory)
-        {
-            this.tableSchemaFactory = tableSchemaFactory;
-        }
-
         /// <inheritdoc />
-        public SqlCommand MakeCountCommand<TEntity>(string conditions, object parameters)
+        public SqlCommand MakeCountCommand(string conditions, object parameters, TableSchema tableSchema)
         {
-            var schema = this.GetTableSchema(typeof(TEntity));
-
             var sql = new SqlCommandBuilder("SELECT COUNT(*)");
-            sql.AppendClause("FROM ").Append(schema.Name);
+            sql.AppendClause("FROM ").Append(tableSchema.Name);
             sql.AppendClause(conditions);
             return sql.ToCommand(parameters);
         }
 
         /// <inheritdoc />
-        public SqlCommand MakeCountCommand<TEntity>(object conditions)
-        {
-            Ensure.NotNull(conditions, nameof(conditions));
-
-            var entityType = typeof(TEntity);
-            var tableSchema = this.GetTableSchema(entityType);
-            var conditionsSchema = this.GetConditionsSchema(entityType, tableSchema, conditions.GetType());
-
-            var sql = new SqlCommandBuilder("SELECT COUNT(*)");
-            sql.AppendClause("FROM ").Append(tableSchema.Name);
-            sql.AppendClause(this.MakeWhereClause(conditionsSchema, conditions));
-            return sql.ToCommand(conditions);
-        }
-
-        /// <inheritdoc />
-        public SqlCommand MakeFindCommand<TEntity>(object id)
+        public SqlCommand MakeFindCommand(object id, TableSchema tableSchema)
         {
             Ensure.NotNull(id, nameof(id));
-            var schema = this.GetTableSchema(typeof(TEntity));
-            var primaryKeys = schema.GetPrimaryKeys();
+            var primaryKeys = tableSchema.GetPrimaryKeys();
 
-            var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(schema.Columns);
-            sql.AppendClause("FROM ").Append(schema.Name);
+            var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
+            sql.AppendClause("FROM ").Append(tableSchema.Name);
             sql.AppendWherePrimaryKeysClause(primaryKeys);
-            return sql.ToPrimaryKeySql(schema, id);
+            return sql.ToPrimaryKeySql(tableSchema, id);
         }
 
         /// <inheritdoc />
         public abstract SqlCommand MakeGetFirstNCommand(int take, string conditions, object parameters, string orderBy, TableSchema tableSchema);
 
         /// <inheritdoc />
-        public abstract SqlCommand MakeGetFirstNCommand<TEntity>(int take, object conditions, string orderBy);
-
-        /// <inheritdoc />
-        public SqlCommand MakeGetRangeCommand<TEntity>(string conditions, object parameters)
+        public SqlCommand MakeGetRangeCommand(string conditions, object parameters, TableSchema tableSchema)
         {
-            var tableSchema = this.GetTableSchema(typeof(TEntity));
-
             var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
             sql.AppendClause(conditions);
@@ -83,32 +52,11 @@ namespace PeregrineDb.Dialects
         }
 
         /// <inheritdoc />
-        public SqlCommand MakeGetRangeCommand<TEntity>(object conditions)
+        public abstract SqlCommand MakeGetPageCommand(Page page, string conditions, object parameters, string orderBy, TableSchema tableSchema);
+
+        /// <inheritdoc />
+        public SqlCommand MakeInsertCommand(object entity, TableSchema tableSchema)
         {
-            Ensure.NotNull(conditions, nameof(conditions));
-
-            var entityType = typeof(TEntity);
-            var tableSchema = this.GetTableSchema(typeof(TEntity));
-            var conditionsSchema = this.GetConditionsSchema(entityType, tableSchema, conditions.GetType());
-
-            var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
-            sql.AppendClause("FROM ").Append(tableSchema.Name);
-            sql.AppendClause(this.MakeWhereClause(conditionsSchema, conditions));
-            return sql.ToCommand(conditions);
-        }
-
-        /// <inheritdoc />
-        public abstract SqlCommand MakeGetPageCommand<TEntity>(Page page, string conditions, object parameters, string orderBy);
-
-        /// <inheritdoc />
-        public abstract SqlCommand MakeGetPageCommand<TEntity>(Page page, object conditions, string orderBy);
-
-        /// <inheritdoc />
-        public SqlCommand MakeInsertCommand(object entity)
-        {
-            Ensure.NotNull(entity, nameof(entity));
-
-            var tableSchema = this.GetTableSchema(entity.GetType());
             bool Include(ColumnSchema p) => p.Usage.IncludeInInsertStatements;
             var columns = tableSchema.Columns;
 
@@ -118,13 +66,11 @@ namespace PeregrineDb.Dialects
         }
 
         /// <inheritdoc />
-        public abstract SqlCommand MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(object entity, TableSchema tableSchema);
+        public abstract SqlCommand MakeInsertReturningPrimaryKeyCommand(object entity, TableSchema tableSchema);
 
         /// <inheritdoc />
-        public SqlMultipleCommand<TEntity> MakeInsertRangeCommand<TEntity>(IEnumerable<TEntity> entities)
+        public SqlMultipleCommand<TEntity> MakeInsertRangeCommand<TEntity>(IEnumerable<TEntity> entities, TableSchema tableSchema)
         {
-            var tableSchema = this.GetTableSchema(typeof(TEntity));
-
             bool Include(ColumnSchema p) => p.Usage.IncludeInInsertStatements;
             var columns = tableSchema.Columns;
 
@@ -134,12 +80,9 @@ namespace PeregrineDb.Dialects
         }
 
         /// <inheritdoc />
-        public SqlCommand MakeUpdateCommand<TEntity>(TEntity entity)
-            where TEntity : class
+        public SqlCommand MakeUpdateCommand(object entity, TableSchema tableSchema)
         {
             Ensure.NotNull(entity, nameof(entity));
-
-            var tableSchema = this.GetTableSchema(typeof(TEntity));
 
             bool Include(ColumnSchema p) => p.Usage.IncludeInUpdateStatements;
 
@@ -149,11 +92,9 @@ namespace PeregrineDb.Dialects
             return sql.ToCommand(entity);
         }
 
-        public SqlMultipleCommand<TEntity> MakeUpdateRangeCommand<TEntity>(IEnumerable<TEntity> entities)
+        public SqlMultipleCommand<TEntity> MakeUpdateRangeCommand<TEntity>(IEnumerable<TEntity> entities, TableSchema tableSchema)
             where TEntity : class
         {
-            var tableSchema = this.GetTableSchema(typeof(TEntity));
-
             bool Include(ColumnSchema p) => p.Usage.IncludeInUpdateStatements;
 
             var sql = new SqlCommandBuilder("UPDATE ").Append(tableSchema.Name);
@@ -163,12 +104,9 @@ namespace PeregrineDb.Dialects
         }
 
         /// <inheritdoc />
-        public SqlCommand MakeDeleteCommand<TEntity>(TEntity entity)
-            where TEntity : class
+        public SqlCommand MakeDeleteCommand(object entity, TableSchema tableSchema)
         {
             Ensure.NotNull(entity, nameof(entity));
-
-            var tableSchema = this.GetTableSchema(typeof(TEntity));
 
             var sql = new SqlCommandBuilder("DELETE FROM ").Append(tableSchema.Name);
             sql.AppendWherePrimaryKeysClause(tableSchema.GetPrimaryKeys());
@@ -176,20 +114,18 @@ namespace PeregrineDb.Dialects
         }
 
         /// <inheritdoc />
-        public SqlCommand MakeDeleteByPrimaryKeyCommand<TEntity>(object id)
+        public SqlCommand MakeDeleteByPrimaryKeyCommand(object id, TableSchema tableSchema)
         {
-            var schema = this.GetTableSchema(typeof(TEntity));
-
-            var sql = new SqlCommandBuilder("DELETE FROM ").Append(schema.Name);
-            var primaryKeys = schema.GetPrimaryKeys();
+            var sql = new SqlCommandBuilder("DELETE FROM ").Append(tableSchema.Name);
+            var primaryKeys = tableSchema.GetPrimaryKeys();
             sql.AppendWherePrimaryKeysClause(primaryKeys);
-            return sql.ToPrimaryKeySql(schema, id);
+            return sql.ToPrimaryKeySql(tableSchema, id);
         }
 
         /// <summary>
         /// Generates a SQL Delete statement which chooses which row to delete by the <paramref name="conditions"/>.
         /// </summary>
-        public SqlCommand MakeDeleteRangeCommand<TEntity>(string conditions, object parameters)
+        public SqlCommand MakeDeleteRangeCommand(string conditions, object parameters, TableSchema tableSchema)
         {
             if (conditions == null || conditions.IndexOf("WHERE ", StringComparison.OrdinalIgnoreCase) < 0)
             {
@@ -197,41 +133,17 @@ namespace PeregrineDb.Dialects
                     "DeleteRange<TEntity> requires a WHERE clause, use DeleteAll<TEntity> to delete everything.");
             }
 
-            var tableSchema = this.GetTableSchema(typeof(TEntity));
-
             var sql = new SqlCommandBuilder("DELETE FROM ").Append(tableSchema.Name);
             sql.AppendClause(conditions);
             return sql.ToCommand(parameters);
         }
 
-        public SqlCommand MakeDeleteAllCommand<TEntity>()
+        public SqlCommand MakeDeleteAllCommand(TableSchema tableSchema)
         {
-            var tableSchema = this.GetTableSchema(typeof(TEntity));
-
             return new SqlCommand("DELETE FROM " + tableSchema.Name);
         }
 
-        /// <summary>
-        /// Generates a SQL Delete statement which chooses which row to delete by the <paramref name="conditions"/>.
-        /// </summary>
-        public SqlCommand MakeDeleteRangeCommand<TEntity>(object conditions)
-        {
-            Ensure.NotNull(conditions, nameof(conditions));
-
-            var entityType = typeof(TEntity);
-            var tableSchema = this.GetTableSchema(entityType);
-            var conditionsSchema = this.GetConditionsSchema(entityType, tableSchema, conditions.GetType());
-            if (conditionsSchema.IsEmpty)
-            {
-                throw new ArgumentException("DeleteRange<TEntity> requires at least one condition, use DeleteAll<TEntity> to delete everything.");
-            }
-
-            var sql = new SqlCommandBuilder("DELETE FROM ").Append(tableSchema.Name);
-            sql.AppendClause(this.MakeWhereClause(conditionsSchema, conditions));
-            return sql.ToCommand(conditions);
-        }
-
-        protected string MakeWhereClause(ImmutableArray<ConditionColumnSchema> conditionsSchema, object conditions)
+        public string MakeWhereClause(ImmutableArray<ConditionColumnSchema> conditionsSchema, object conditions)
         {
             if (conditionsSchema.IsEmpty)
             {
@@ -264,10 +176,10 @@ namespace PeregrineDb.Dialects
         }
 
         /// <inheritdoc />
-        public abstract SqlCommand MakeCreateTempTableCommand<TEntity>();
+        public abstract SqlCommand MakeCreateTempTableCommand(TableSchema tableSchema);
 
         /// <inheritdoc />
-        public abstract SqlCommand MakeDropTempTableCommand<TEntity>();
+        public abstract SqlCommand MakeDropTempTableCommand(TableSchema tableSchema);
 
         public override bool Equals(object obj)
         {
@@ -292,19 +204,6 @@ namespace PeregrineDb.Dialects
         public override int GetHashCode()
         {
             return this.GetType().Name.GetHashCode();
-        }
-
-        protected TableSchema GetTableSchema(Type entityType)
-        {
-            return this.tableSchemaFactory.GetTableSchema(entityType);
-        }
-
-        protected ImmutableArray<ConditionColumnSchema> GetConditionsSchema(
-            Type entityType,
-            TableSchema tableSchema,
-            Type conditionsType)
-        {
-            return this.tableSchemaFactory.GetConditionsSchema(entityType, tableSchema, conditionsType);
         }
     }
 }

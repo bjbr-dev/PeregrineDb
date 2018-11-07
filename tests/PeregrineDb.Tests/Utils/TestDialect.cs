@@ -1,8 +1,6 @@
 namespace PeregrineDb.Tests.Utils
 {
     using System;
-    using System.Collections.Generic;
-    using System.Data;
     using Pagination;
     using PeregrineDb.Dialects;
     using PeregrineDb.Schema;
@@ -14,23 +12,11 @@ namespace PeregrineDb.Tests.Utils
     public class TestDialect
         : StandardDialect
     {
-        public static TestDialect Instance { get; } = new TestDialect(new TableSchemaFactory(new TestSqlNameEscaper(),
-            new AtttributeTableNameConvention(new TestSqlNameEscaper()), new AttributeColumnNameConvention(new TestSqlNameEscaper()), new Dictionary<Type, DbType>()));
-
-        public TestDialect(TableSchemaFactory tableSchemaFactory)
-            : base(tableSchemaFactory)
-        {
-        }
+        public static TestDialect Instance { get; } = new TestDialect();
 
         /// <inheritdoc />
-        public override SqlCommand MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(object entity, TableSchema tableSchema)
+        public override SqlCommand MakeInsertReturningPrimaryKeyCommand(object entity, TableSchema tableSchema)
         {
-            if (!tableSchema.CanGeneratePrimaryKey(typeof(TPrimaryKey)))
-            {
-                throw new InvalidPrimaryKeyException(
-                    "Insert<TPrimaryKey>() can only be used for Int32 and Int64 primary keys. Use Insert() for other types of primary keys.");
-            }
-
             Func<ColumnSchema, bool> include = p => p.Usage.IncludeInInsertStatements;
             var columns = tableSchema.Columns;
 
@@ -56,35 +42,13 @@ namespace PeregrineDb.Tests.Utils
             return new SqlCommand(sql.ToString());
         }
 
-        public override SqlCommand MakeGetFirstNCommand<TEntity>(int take, object conditions, string orderBy)
-        {
-            Ensure.NotNull(conditions, nameof(conditions));
-
-            var entityType = typeof(TEntity);
-            var tableSchema = this.GetTableSchema(entityType);
-            var conditionsSchema = this.GetConditionsSchema(entityType, tableSchema, conditions.GetType());
-
-            var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
-            sql.AppendClause("FROM ").Append(tableSchema.Name);
-            sql.AppendClause(this.MakeWhereClause(conditionsSchema, conditions));
-            if (!string.IsNullOrWhiteSpace(orderBy))
-            {
-                sql.AppendClause("ORDER BY ").Append(orderBy);
-            }
-
-            sql.AppendLine().AppendFormat("TAKE {0}", take);
-            return new SqlCommand(sql.ToString());
-        }
-
         /// <inheritdoc />
-        public override SqlCommand MakeGetPageCommand<TEntity>(Page page, string conditions, object parameters, string orderBy)
+        public override SqlCommand MakeGetPageCommand(Page page, string conditions, object parameters, string orderBy, TableSchema tableSchema)
         {
             if (string.IsNullOrWhiteSpace(orderBy))
             {
                 throw new ArgumentException("orderBy cannot be empty");
             }
-
-            var tableSchema = this.GetTableSchema(typeof(TEntity));
 
             var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
@@ -94,35 +58,13 @@ namespace PeregrineDb.Tests.Utils
             return sql.ToCommand(parameters);
         }
 
-        /// <inheritdoc />
-        public override SqlCommand MakeGetPageCommand<TEntity>(Page page, object conditions, string orderBy)
+        public override SqlCommand MakeCreateTempTableCommand(TableSchema tableSchema)
         {
-            if (string.IsNullOrWhiteSpace(orderBy))
-            {
-                throw new ArgumentException("orderBy cannot be empty");
-            }
-
-            var entityType = typeof(TEntity);
-            var tableSchema = this.GetTableSchema(entityType);
-            var conditionsSchema = this.GetConditionsSchema(entityType, tableSchema, conditions.GetType());
-
-            var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
-            sql.AppendClause("FROM ").Append(tableSchema.Name);
-            sql.AppendClause(this.MakeWhereClause(conditionsSchema, conditions));
-            sql.AppendClause("ORDER BY ").Append(orderBy);
-            sql.AppendLine().AppendFormat("SKIP {0} TAKE {1}", page.FirstItemIndex, page.PageSize);
-            return sql.ToCommand(conditions);
-        }
-
-        public override SqlCommand MakeCreateTempTableCommand<TEntity>()
-        {
-            var tableSchema = this.GetTableSchema(typeof(TEntity));
             return new SqlCommand("CREATE TEMP TABLE " + tableSchema.Name);
         }
 
-        public override SqlCommand MakeDropTempTableCommand<TEntity>()
+        public override SqlCommand MakeDropTempTableCommand(TableSchema tableSchema)
         {
-            var tableSchema = this.GetTableSchema(typeof(TEntity));
             return new SqlCommand("DROP TABLE " + tableSchema.Name);
         }
     }

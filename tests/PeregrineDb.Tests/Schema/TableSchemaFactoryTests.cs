@@ -1,11 +1,9 @@
 namespace PeregrineDb.Tests.Schema
 {
     using System;
-    using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
-    using System.Data;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using FluentAssertions;

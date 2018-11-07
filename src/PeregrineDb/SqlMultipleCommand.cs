@@ -16,11 +16,5 @@ namespace PeregrineDb
         public string CommandText { get; }
 
         public IEnumerable<T> Parameters { get; }
-
-        public void Deconstruct(out string sql, out IEnumerable<T> parameters)
-        {
-            sql = this.CommandText;
-            parameters = this.Parameters;
-        }
     }
 }

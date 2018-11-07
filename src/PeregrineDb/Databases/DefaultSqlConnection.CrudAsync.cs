@@ -18,13 +18,13 @@ namespace PeregrineDb.Databases
     {
         public Task<int> CountAsync<TEntity>(string conditions, object parameters, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeCountCommand<TEntity>(conditions, parameters);
+            var command = this.commandFactory.MakeCountCommand<TEntity>(conditions, parameters);
             return this.ExecuteScalarAsync<int>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<int> CountAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeCountCommand<TEntity>(conditions);
+            var command = this.commandFactory.MakeCountCommand<TEntity>(conditions);
             return this.ExecuteScalarAsync<int>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
@@ -42,7 +42,7 @@ namespace PeregrineDb.Databases
 
         public Task<TEntity> FindAsync<TEntity>(object id, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeFindCommand<TEntity>(id);
+            var command = this.commandFactory.MakeFindCommand<TEntity>(id);
             return this.QueryFirstOrDefaultAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
@@ -55,39 +55,39 @@ namespace PeregrineDb.Databases
 
         public Task<TEntity> FindFirstAsync<TEntity>(string orderBy, string conditions, object parameters, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeGetFirstNCommand(1, conditions, parameters, orderBy, this.GetTableSchema(typeof(TEntity)));
+            var command = this.commandFactory.MakeGetFirstNCommand<TEntity>(1, conditions, parameters, orderBy);
             return this.QueryFirstOrDefaultAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<TEntity> FindFirstAsync<TEntity>(string orderBy, object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeGetFirstNCommand<TEntity>(1, conditions, orderBy);
+            var command = this.commandFactory.MakeGetFirstNCommand<TEntity>(1, conditions, orderBy);
             return this.QueryFirstOrDefaultAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<TEntity> GetFirstAsync<TEntity>(string orderBy, string conditions, object parameters, int? commandTimeout = null, CancellationToken cancellationToken = default)
             where TEntity : class
         {
-            var command = this.Dialect.MakeGetFirstNCommand(1, conditions, parameters, orderBy, this.GetTableSchema(typeof(TEntity)));
+            var command = this.commandFactory.MakeGetFirstNCommand<TEntity>(1, conditions, parameters, orderBy);
             return this.QueryFirstAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<TEntity> GetFirstAsync<TEntity>(string orderBy, object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default)
             where TEntity : class
         {
-            var command = this.Dialect.MakeGetFirstNCommand<TEntity>(1, conditions, orderBy);
+            var command = this.commandFactory.MakeGetFirstNCommand<TEntity>(1, conditions, orderBy);
             return this.QueryFirstAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<TEntity> FindSingleAsync<TEntity>(string conditions, object parameters, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeGetFirstNCommand(2, conditions, parameters, null, this.GetTableSchema(typeof(TEntity)));
+            var command = this.commandFactory.MakeGetFirstNCommand<TEntity>(2, conditions, parameters, null);
             return this.QuerySingleOrDefaultAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<TEntity> FindSingleAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeGetFirstNCommand<TEntity>(2, conditions, null);
+            var command = this.commandFactory.MakeGetFirstNCommand<TEntity>(2, conditions, null);
             return this.QuerySingleOrDefaultAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
@@ -107,25 +107,29 @@ namespace PeregrineDb.Databases
 
         public Task<IReadOnlyList<TEntity>> GetRangeAsync<TEntity>(string conditions, object parameters, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeGetRangeCommand<TEntity>(conditions, parameters);
+            var command = this.commandFactory.MakeGetRangeCommand<TEntity>(conditions, parameters);
             return this.QueryAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<IReadOnlyList<TEntity>> GetRangeAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeGetRangeCommand<TEntity>(conditions);
+            var command = this.commandFactory.MakeGetRangeCommand<TEntity>(conditions);
             return this.QueryAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<IReadOnlyList<TEntity>> GetTopAsync<TEntity>(int count, string orderBy, string conditions, object parameters, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeGetFirstNCommand(count, conditions, parameters, orderBy, this.GetTableSchema(typeof(TEntity)));
+            Ensure.NotNullOrWhiteSpace(orderBy, nameof(orderBy));
+
+            var command = this.commandFactory.MakeGetFirstNCommand<TEntity>(count, conditions, parameters, orderBy);
             return this.QueryAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<IReadOnlyList<TEntity>> GetTopAsync<TEntity>(int count, string orderBy, object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeGetFirstNCommand<TEntity>(count, conditions, orderBy);
+            Ensure.NotNullOrWhiteSpace(orderBy, nameof(orderBy));
+
+            var command = this.commandFactory.MakeGetFirstNCommand<TEntity>(count, conditions, orderBy);
             return this.QueryAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
@@ -138,7 +142,7 @@ namespace PeregrineDb.Databases
                 return PagedList<TEntity>.Empty(totalNumberOfItems, page);
             }
 
-            var itemsCommand = this.Dialect.MakeGetPageCommand<TEntity>(page, conditions, parameters, orderBy);
+            var itemsCommand = this.commandFactory.MakeGetPageCommand<TEntity>(page, conditions, parameters, orderBy);
             var items = await this.QueryAsync<TEntity>(itemsCommand.CommandText, itemsCommand.Parameters, CommandType.Text, commandTimeout, cancellationToken).ConfigureAwait(false);
             return PagedList<TEntity>.Create(totalNumberOfItems, page, items);
         }
@@ -152,21 +156,20 @@ namespace PeregrineDb.Databases
                 return PagedList<TEntity>.Empty(totalNumberOfItems, page);
             }
 
-            var itemsCommand = this.Dialect.MakeGetPageCommand<TEntity>(page, conditions, orderBy);
+            var itemsCommand = this.commandFactory.MakeGetPageCommand<TEntity>(page, conditions, orderBy);
             var items = await this.QueryAsync<TEntity>(itemsCommand.CommandText, itemsCommand.Parameters, CommandType.Text, commandTimeout, cancellationToken).ConfigureAwait(false);
             return PagedList<TEntity>.Create(totalNumberOfItems, page, items);
         }
 
         public Task<IReadOnlyList<TEntity>> GetAllAsync<TEntity>(int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeGetRangeCommand<TEntity>(null, null);
+            var command = this.commandFactory.MakeGetRangeCommand<TEntity>(null, null);
             return this.QueryAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public async Task InsertAsync(object entity, int? commandTimeout = null, bool? verifyAffectedRowCount = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeInsertCommand(entity);
-
+            var command = this.commandFactory.MakeInsertCommand(entity);
             var result = await this.ExecuteAsync(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken).ConfigureAwait(false);
             if (this.Config.ShouldVerifyAffectedRowCount(verifyAffectedRowCount))
             {
@@ -178,14 +181,14 @@ namespace PeregrineDb.Databases
         {
             Ensure.NotNull(entity, nameof(entity));
 
-            var command = this.Dialect.MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(entity, this.GetTableSchema(entity.GetType()));
+            var command = this.commandFactory.MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(entity);
             return this.ExecuteScalarAsync<TPrimaryKey>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<CommandResult> InsertRangeAsync<TEntity>(IEnumerable<TEntity> entities, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var (sql, parameters) = this.Dialect.MakeInsertRangeCommand(entities);
-            return this.ExecuteMultipleAsync(sql, parameters, CommandType.Text, commandTimeout, cancellationToken);
+            var command = this.commandFactory.MakeInsertRangeCommand(entities);
+            return this.ExecuteMultipleAsync(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration", Justification = "Doesn't actually enumerate twice")]
@@ -194,11 +197,9 @@ namespace PeregrineDb.Databases
             Ensure.NotNull(setPrimaryKey, nameof(setPrimaryKey));
             Ensure.NotNull(entities, nameof(entities));
 
-            var schema = this.GetTableSchema(typeof(TEntity));
-
             foreach (var entity in entities)
             {
-                var command = this.Dialect.MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(entity, schema);
+                var command = this.commandFactory.MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(entity);
                 var id = await this.ExecuteScalarAsync<TPrimaryKey>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken).ConfigureAwait(false);
                 setPrimaryKey(entity, id);
             }
@@ -207,7 +208,7 @@ namespace PeregrineDb.Databases
         public async Task UpdateAsync<TEntity>(TEntity entity, int? commandTimeout = null, bool? verifyAffectedRowCount = null, CancellationToken cancellationToken = default)
             where TEntity : class
         {
-            var command = this.Dialect.MakeUpdateCommand(entity);
+            var command = this.commandFactory.MakeUpdateCommand(entity);
             var result = await this.ExecuteAsync(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken)
                                    .ConfigureAwait(false);
 
@@ -220,14 +221,14 @@ namespace PeregrineDb.Databases
         public Task<CommandResult> UpdateRangeAsync<TEntity>(IEnumerable<TEntity> entities, int? commandTimeout = null, CancellationToken cancellationToken = default)
             where TEntity : class
         {
-            var (sql, parameters) = this.Dialect.MakeUpdateRangeCommand(entities);
-            return this.ExecuteMultipleAsync(sql, parameters, CommandType.Text, commandTimeout, cancellationToken);
+            var command = this.commandFactory.MakeUpdateRangeCommand(entities);
+            return this.ExecuteMultipleAsync(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public async Task DeleteAsync<TEntity>(TEntity entity, int? commandTimeout = null, bool? verifyAffectedRowCount = null, CancellationToken cancellationToken = default)
             where TEntity : class
         {
-            var command = this.Dialect.MakeDeleteCommand(entity);
+            var command = this.commandFactory.MakeDeleteCommand(entity);
             var result = await this.ExecuteAsync(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken)
                                    .ConfigureAwait(false);
 
@@ -239,7 +240,7 @@ namespace PeregrineDb.Databases
 
         public async Task DeleteAsync<TEntity>(object id, int? commandTimeout = null, bool? verifyAffectedRowCount = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeDeleteByPrimaryKeyCommand<TEntity>(id);
+            var command = this.commandFactory.MakeDeleteByPrimaryKeyCommand<TEntity>(id);
             var result = await this.ExecuteAsync(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken)
                                    .ConfigureAwait(false);
 
@@ -251,19 +252,19 @@ namespace PeregrineDb.Databases
 
         public Task<CommandResult> DeleteRangeAsync<TEntity>(string conditions, object parameters, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeDeleteRangeCommand<TEntity>(conditions, parameters);
+            var command = this.commandFactory.MakeDeleteRangeCommand<TEntity>(conditions, parameters);
             return this.ExecuteAsync(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<CommandResult> DeleteRangeAsync<TEntity>(object conditions, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeDeleteRangeCommand<TEntity>(conditions);
+            var command = this.commandFactory.MakeDeleteRangeCommand<TEntity>(conditions);
             return this.ExecuteAsync(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
         public Task<CommandResult> DeleteAllAsync<TEntity>(int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeDeleteAllCommand<TEntity>();
+            var command = this.commandFactory.MakeDeleteAllCommand<TEntity>();
             return this.ExecuteAsync(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
     }

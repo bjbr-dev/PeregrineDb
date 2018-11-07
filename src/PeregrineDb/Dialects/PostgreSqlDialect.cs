@@ -10,7 +10,6 @@ namespace PeregrineDb.Dialects
     using Pagination;
     using PeregrineDb.Schema;
     using PeregrineDb.Schema.Relations;
-    using PeregrineDb.Utils;
 
     /// <summary>
     /// Implementation of <see cref="IDialect"/> for the PostgreSQL DBMS.
@@ -48,20 +47,9 @@ namespace PeregrineDb.Dialects
             ColumnTypes = types.ToImmutableArray();
         }
 
-        public PostgreSqlDialect(TableSchemaFactory tableSchemaFactory)
-            : base(tableSchemaFactory)
-        {
-        }
-
         /// <inheritdoc />
-        public override SqlCommand MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(object entity, TableSchema tableSchema)
+        public override SqlCommand MakeInsertReturningPrimaryKeyCommand(object entity, TableSchema tableSchema)
         {
-            if (!tableSchema.CanGeneratePrimaryKey(typeof(TPrimaryKey)))
-            {
-                throw new InvalidPrimaryKeyException(
-                    "Insert<TPrimaryKey>() can only be used for Int32 and Int64 primary keys. Use Insert() for other types of primary keys.");
-            }
-
             Func<ColumnSchema, bool> include = p => p.Usage.IncludeInInsertStatements;
             var columns = tableSchema.Columns;
 
@@ -85,35 +73,13 @@ namespace PeregrineDb.Dialects
             return sql.ToCommand(parameters);
         }
 
-        public override SqlCommand MakeGetFirstNCommand<TEntity>(int take, object conditions, string orderBy)
-        {
-            Ensure.NotNull(conditions, nameof(conditions));
-
-            var entityType = typeof(TEntity);
-            var tableSchema = this.GetTableSchema(entityType);
-            var conditionsSchema = this.GetConditionsSchema(entityType, tableSchema, conditions.GetType());
-
-            var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
-            sql.AppendClause("FROM ").Append(tableSchema.Name);
-            sql.AppendClause(this.MakeWhereClause(conditionsSchema, conditions));
-            if (!string.IsNullOrWhiteSpace(orderBy))
-            {
-                sql.AppendClause("ORDER BY ").Append(orderBy);
-            }
-
-            sql.AppendLine().Append("LIMIT ").Append(take);
-            return sql.ToCommand(conditions);
-        }
-
         /// <inheritdoc />
-        public override SqlCommand MakeGetPageCommand<TEntity>(Page page, string conditions, object parameters, string orderBy)
+        public override SqlCommand MakeGetPageCommand(Page page, string conditions, object parameters, string orderBy, TableSchema tableSchema)
         {
             if (string.IsNullOrWhiteSpace(orderBy))
             {
                 throw new ArgumentException("orderBy cannot be empty");
             }
-
-            var tableSchema = this.GetTableSchema(typeof(TEntity));
 
             var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
@@ -124,29 +90,8 @@ namespace PeregrineDb.Dialects
         }
 
         /// <inheritdoc />
-        public override SqlCommand MakeGetPageCommand<TEntity>(Page page, object conditions, string orderBy)
+        public override SqlCommand MakeCreateTempTableCommand(TableSchema tableSchema)
         {
-            if (string.IsNullOrWhiteSpace(orderBy))
-            {
-                throw new ArgumentException("orderBy cannot be empty");
-            }
-
-            var entityType = typeof(TEntity);
-            var tableSchema = this.GetTableSchema(entityType);
-            var conditionsSchema = this.GetConditionsSchema(entityType, tableSchema, conditions.GetType());
-
-            var sql = new SqlCommandBuilder("SELECT ").AppendSelectPropertiesClause(tableSchema.Columns);
-            sql.AppendClause("FROM ").Append(tableSchema.Name);
-            sql.AppendClause(this.MakeWhereClause(conditionsSchema, conditions));
-            sql.AppendClause("ORDER BY ").Append(orderBy);
-            sql.AppendLine().AppendFormat("LIMIT {1} OFFSET {0}", page.FirstItemIndex, page.PageSize);
-            return sql.ToCommand(conditions);
-        }
-
-        /// <inheritdoc />
-        public override SqlCommand MakeCreateTempTableCommand<TEntity>()
-        {
-            var tableSchema = this.GetTableSchema(typeof(TEntity));
             if (tableSchema.Columns.IsEmpty)
             {
                 throw new ArgumentException("Temporary tables must have columns");
@@ -176,9 +121,8 @@ namespace PeregrineDb.Dialects
         }
 
         /// <inheritdoc />
-        public override SqlCommand MakeDropTempTableCommand<TEntity>()
+        public override SqlCommand MakeDropTempTableCommand(TableSchema tableSchema)
         {
-            var tableSchema = this.GetTableSchema(typeof(TEntity));
             return new SqlCommand("DROP TABLE " + tableSchema.Name);
         }
 

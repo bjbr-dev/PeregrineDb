@@ -2,6 +2,7 @@ namespace PeregrineDb.Tests.Dialects
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.Immutable;
     using System.Data;
     using System.Diagnostics.CodeAnalysis;
     using FluentAssertions;
@@ -32,14 +33,21 @@ namespace PeregrineDb.Tests.Dialects
             return this.config.SchemaFactory.GetTableSchema(type);
         }
 
-        public class MakeCountStatementFromSql
+        private ImmutableArray<ConditionColumnSchema> GetConditionsSchema<T>(object conditions)
+        {
+            var entityType = typeof(T);
+            var tableSchema = this.GetTableSchema(entityType);
+            return this.config.SchemaFactory.GetConditionsSchema(entityType, tableSchema, conditions.GetType());
+        }
+
+        public class MakeCountStatement
             : SqlServer2012DialectTests
         {
             [Fact]
             public void Selects_from_given_table()
             {
                 // Act
-                var command = this.Sut.MakeCountCommand<Dog>(null, null);
+                var command = this.Sut.MakeCountCommand(null, null, this.GetTableSchema<Dog>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -53,42 +61,13 @@ FROM [Dogs]");
             public void Adds_conditions()
             {
                 // Act
-                var command = this.Sut.MakeCountCommand<Dog>("WHERE Foo IS NOT NULL", null);
+                var command = this.Sut.MakeCountCommand("WHERE Foo IS NOT NULL", null, this.GetTableSchema<Dog>());
 
                 // Assert
                 var expected = new SqlCommand(@"
 SELECT COUNT(*)
 FROM [Dogs]
 WHERE Foo IS NOT NULL");
-
-                command.Should().Be(expected);
-            }
-        }
-        public class MakeCountStatementFromParameters
-            : SqlServer2012DialectTests
-        {
-            [Fact]
-            public void Errors_when_conditions_is_null()
-            {
-                // Act
-                Action act = () => this.Sut.MakeCountCommand<Dog>(null);
-
-                // Assert
-                act.Should().Throw<ArgumentNullException>();
-            }
-
-            [Fact]
-            public void Adds_conditions()
-            {
-                // Act
-                var command = this.Sut.MakeCountCommand<Dog>(new { Name = (string)null });
-
-                // Assert
-                var expected = new SqlCommand(@"
-SELECT COUNT(*)
-FROM [Dogs]
-WHERE [Name] IS NULL",
-                    new { Name = (string)null });
 
                 command.Should().Be(expected);
             }
@@ -101,7 +80,7 @@ WHERE [Name] IS NULL",
             public void Errors_when_id_is_null()
             {
                 // Act
-                Action act = () => this.Sut.MakeFindCommand<Dog>(null);
+                Action act = () => this.Sut.MakeFindCommand(null, this.GetTableSchema<Dog>());
 
                 // Assert
                 act.Should().Throw<ArgumentNullException>();
@@ -111,7 +90,7 @@ WHERE [Name] IS NULL",
             public void Selects_from_given_table()
             {
                 // Act
-                var command = this.Sut.MakeFindCommand<Dog>(5);
+                var command = this.Sut.MakeFindCommand(5, this.GetTableSchema<Dog>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -130,7 +109,7 @@ WHERE [Id] = @Id",
             public void Uses_non_default_primary_key_name()
             {
                 // Act
-                var command = this.Sut.MakeFindCommand<KeyExplicit>(5);
+                var command = this.Sut.MakeFindCommand(5, this.GetTableSchema<KeyExplicit>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -149,7 +128,7 @@ WHERE [Key] = @Key",
             public void Uses_each_key_in_composite_key()
             {
                 // Act
-                var command = this.Sut.MakeFindCommand<CompositeKeys>(new { key1 = 2, key2 = 3 });
+                var command = this.Sut.MakeFindCommand(new { key1 = 2, key2 = 3 }, this.GetTableSchema<CompositeKeys>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -165,7 +144,7 @@ WHERE [Key1] = @Key1 AND [Key2] = @Key2",
             public void Adds_alias_when_primary_key_is_aliased()
             {
                 // Act
-                var command = this.Sut.MakeFindCommand<KeyAlias>(5);
+                var command = this.Sut.MakeFindCommand(5, this.GetTableSchema<KeyAlias>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -184,7 +163,7 @@ WHERE [Key] = @Id",
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Act
-                var command = this.Sut.MakeFindCommand<PropertyAlias>(5);
+                var command = this.Sut.MakeFindCommand(5, this.GetTableSchema<PropertyAlias>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -200,14 +179,14 @@ WHERE [Id] = @Id",
             }
         }
 
-        public class MakeGetRangeStatementFromSql
+        public class MakeGetRangeStatement
             : SqlServer2012DialectTests
         {
             [Fact]
             public void Selects_from_given_table()
             {
                 // Act
-                var command = this.Sut.MakeGetRangeCommand<Dog>(null, null);
+                var command = this.Sut.MakeGetRangeCommand(null, null, this.GetTableSchema<Dog>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -221,7 +200,7 @@ FROM [Dogs]");
             public void Adds_conditions_clause()
             {
                 // Act
-                var command = this.Sut.MakeGetRangeCommand<Dog>("WHERE Age > @Age", new { Age = 10 });
+                var command = this.Sut.MakeGetRangeCommand("WHERE Age > @Age", new { Age = 10 }, this.GetTableSchema<Dog>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -237,7 +216,7 @@ WHERE Age > @Age",
             public void Uses_explicit_primary_key_name()
             {
                 // Act
-                var command = this.Sut.MakeGetRangeCommand<KeyExplicit>(null, null);
+                var command = this.Sut.MakeGetRangeCommand(null, null, this.GetTableSchema<KeyExplicit>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -251,7 +230,7 @@ FROM [KeyExplicit]");
             public void Adds_alias_when_primary_key_is_aliased()
             {
                 // Act
-                var command = this.Sut.MakeGetRangeCommand<KeyAlias>(null, null);
+                var command = this.Sut.MakeGetRangeCommand(null, null, this.GetTableSchema<KeyAlias>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -265,7 +244,7 @@ FROM [KeyAlias]");
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Act
-                var command = this.Sut.MakeGetRangeCommand<PropertyAlias>(null, null);
+                var command = this.Sut.MakeGetRangeCommand(null, null, this.GetTableSchema<PropertyAlias>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -276,75 +255,7 @@ FROM [PropertyAlias]");
             }
         }
 
-        public class MakeGetRangeStatementFromParameters
-            : SqlServer2012DialectTests
-        {
-            [Fact]
-            public void Selects_from_given_table()
-            {
-                // Act
-                var command = this.Sut.MakeGetRangeCommand<Dog>(new { Name = "Fido" });
-
-                // Assert
-                var expected = new SqlCommand(@"
-SELECT [Id], [Name], [Age]
-FROM [Dogs]
-WHERE [Name] = @Name",
-                    new { Name = "Fido" });
-
-                command.Should().Be(expected);
-            }
-
-            [Fact]
-            public void Uses_explicit_primary_key_name()
-            {
-                // Act
-                var command = this.Sut.MakeGetRangeCommand<KeyExplicit>(new { Name = "Fido" });
-
-                // Assert
-                var expected = new SqlCommand(@"
-SELECT [Key], [Name]
-FROM [KeyExplicit]
-WHERE [Name] = @Name",
-                    new { Name = "Fido" });
-
-                command.Should().Be(expected);
-            }
-
-            [Fact]
-            public void Adds_alias_when_primary_key_is_aliased()
-            {
-                // Act
-                var command = this.Sut.MakeGetRangeCommand<KeyAlias>(new { Name = "Fido" });
-
-                // Assert
-                var expected = new SqlCommand(@"
-SELECT [Key] AS [Id], [Name]
-FROM [KeyAlias]
-WHERE [Name] = @Name",
-                    new { Name = "Fido" });
-
-                command.Should().Be(expected);
-            }
-
-            [Fact]
-            public void Adds_alias_when_column_name_is_aliased()
-            {
-                // Act
-                var command = this.Sut.MakeGetRangeCommand<PropertyAlias>(new { Age = 5 });
-
-                // Assert
-                var expected = new SqlCommand(@"
-SELECT [Id], [YearsOld] AS [Age]
-FROM [PropertyAlias]
-WHERE [YearsOld] = @Age",
-                    new { Age = 5 });
-
-                command.Should().Be(expected);
-            }
-        }
-
-        public class MakeGetFirstNCommandFromSql
+        public class MakeGetFirstNCommand
             : SqlServer2012DialectTests
         {
             [Fact]
@@ -401,63 +312,6 @@ WHERE Name LIKE @p0",
             }
         }
 
-        public class MakeGetFirstNCommandFromParameters
-            : SqlServer2012DialectTests
-        {
-            [Fact]
-            public void Selects_from_given_table()
-            {
-                // Act
-                var command = this.Sut.MakeGetFirstNCommand<Dog>(1, new { Name = "Fido" }, "Name");
-
-                // Assert
-                var expected = new SqlCommand(@"
-SELECT TOP 1 [Id], [Name], [Age]
-FROM [Dogs]
-WHERE [Name] = @Name
-ORDER BY Name",
-                    new { Name = "Fido" });
-
-                command.Should().Be(expected);
-            }
-
-            [Fact]
-            public void Adds_alias_when_column_name_is_aliased()
-            {
-                // Act
-                var command = this.Sut.MakeGetFirstNCommand<PropertyAlias>(1, new { Age = 5 }, "Name");
-
-                // Assert
-                var expected = new SqlCommand(@"
-SELECT TOP 1 [Id], [YearsOld] AS [Age]
-FROM [PropertyAlias]
-WHERE [YearsOld] = @Age
-ORDER BY Name",
-                    new { Age = 5 });
-
-                command.Should().Be(expected);
-            }
-
-            [Theory]
-            [InlineData(null)]
-            [InlineData("")]
-            [InlineData(" ")]
-            public void Does_not_order_when_no_orderby_given(string orderBy)
-            {
-                // Act
-                var command = this.Sut.MakeGetFirstNCommand<Dog>(1, new { Name = "Fido" }, orderBy);
-
-                // Assert
-                var expected = new SqlCommand(@"
-SELECT TOP 1 [Id], [Name], [Age]
-FROM [Dogs]
-WHERE [Name] = @Name",
-                    new { Name = "Fido" });
-
-                command.Should().Be(expected);
-            }
-        }
-
         public class MakeGetPageStatement
             : SqlServer2012DialectTests
         {
@@ -468,15 +322,14 @@ WHERE [Name] = @Name",
             public void Throws_exception_when_order_by_is_empty(string orderBy)
             {
                 // Act / Assert
-                Assert.Throws<ArgumentException>(
-                    () => this.Sut.MakeGetPageCommand<Dog>(new Page(1, 10, true, 0, 9), null, null, orderBy));
+                Assert.Throws<ArgumentException>(() => this.Sut.MakeGetPageCommand(new Page(1, 10, true, 0, 9), null, null, orderBy, this.GetTableSchema<Dog>()));
             }
 
             [Fact]
             public void Selects_from_given_table()
             {
                 // Act
-                var command = this.Sut.MakeGetPageCommand<Dog>(new Page(1, 10, true, 0, 9), null, null, "Name");
+                var command = this.Sut.MakeGetPageCommand(new Page(1, 10, true, 0, 9), null, null, "Name", this.GetTableSchema<Dog>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -492,7 +345,7 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY");
             public void Adds_conditions_clause()
             {
                 // Act
-                var command = this.Sut.MakeGetPageCommand<Dog>(new Page(1, 10, true, 0, 9), "WHERE Name LIKE @Name", new { Name = "Foo%" }, "Name");
+                var command = this.Sut.MakeGetPageCommand(new Page(1, 10, true, 0, 9), "WHERE Name LIKE @Name", new { Name = "Foo%" }, "Name", this.GetTableSchema<Dog>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -510,7 +363,7 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY",
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Act
-                var command = this.Sut.MakeGetPageCommand<PropertyAlias>(new Page(1, 10, true, 0, 9), null, null, "Name");
+                var command = this.Sut.MakeGetPageCommand(new Page(1, 10, true, 0, 9), null, null, "Name", this.GetTableSchema<PropertyAlias>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -526,7 +379,7 @@ OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY");
             public void Selects_second_page()
             {
                 // Act
-                var command = this.Sut.MakeGetPageCommand<Dog>(new Page(2, 10, true, 10, 19), null, null, "Name");
+                var command = this.Sut.MakeGetPageCommand(new Page(2, 10, true, 10, 19), null, null, "Name", this.GetTableSchema<Dog>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -542,7 +395,7 @@ OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY");
             public void Selects_appropriate_number_of_rows()
             {
                 // Act
-                var command = this.Sut.MakeGetPageCommand<Dog>(new Page(2, 5, true, 5, 9), null, null, "Name");
+                var command = this.Sut.MakeGetPageCommand(new Page(2, 5, true, 5, 9), null, null, "Name", this.GetTableSchema<Dog>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -562,7 +415,8 @@ OFFSET 5 ROWS FETCH NEXT 5 ROWS ONLY");
             public void Inserts_into_given_table()
             {
                 // Act
-                var command = this.Sut.MakeInsertCommand(new Dog { Name = "Foo", Age = 10 });
+                object entity = new Dog { Name = "Foo", Age = 10 };
+                var command = this.Sut.MakeInsertCommand(entity, this.GetTableSchema(entity.GetType()));
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -577,7 +431,8 @@ VALUES (@Name, @Age);",
             public void Adds_primary_key_if_its_not_generated_by_database()
             {
                 // Act
-                var command = this.Sut.MakeInsertCommand(new KeyNotGenerated { Id = 6, Name = "Foo" });
+                object entity = new KeyNotGenerated { Id = 6, Name = "Foo" };
+                var command = this.Sut.MakeInsertCommand(entity, this.GetTableSchema<KeyNotGenerated>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -592,7 +447,8 @@ VALUES (@Id, @Name);",
             public void Does_not_include_computed_columns()
             {
                 // Act
-                var command = this.Sut.MakeInsertCommand(new PropertyComputed { Name = "Foo" });
+                object entity = new PropertyComputed { Name = "Foo" };
+                var command = this.Sut.MakeInsertCommand(entity, this.GetTableSchema<PropertyComputed>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -607,7 +463,8 @@ VALUES (@Name);",
             public void Does_not_include_generated_columns()
             {
                 // Act
-                var command = this.Sut.MakeInsertCommand(new PropertyGenerated { Name = "Foo" });
+                object entity = new PropertyGenerated { Name = "Foo" };
+                var command = this.Sut.MakeInsertCommand(entity, this.GetTableSchema<PropertyGenerated>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -626,7 +483,7 @@ VALUES (@Name);",
             public void Inserts_into_given_table()
             {
                 // Act
-                var command = this.Sut.MakeInsertReturningPrimaryKeyCommand<int>(new Dog { Name = "Foo", Age = 10 }, this.GetTableSchema<Dog>());
+                var command = this.Sut.MakeInsertReturningPrimaryKeyCommand(new Dog { Name = "Foo", Age = 10 }, this.GetTableSchema<Dog>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -642,7 +499,7 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]",
             public void Adds_primary_key_if_its_not_generated_by_database()
             {
                 // Act
-                var command = this.Sut.MakeInsertReturningPrimaryKeyCommand<int>(new KeyNotGenerated { Id = 10, Name = "Foo" }, this.GetTableSchema<KeyNotGenerated>());
+                var command = this.Sut.MakeInsertReturningPrimaryKeyCommand(new KeyNotGenerated { Id = 10, Name = "Foo" }, this.GetTableSchema<KeyNotGenerated>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -658,7 +515,7 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]",
             public void Does_not_include_computed_columns()
             {
                 // Act
-                var command = this.Sut.MakeInsertReturningPrimaryKeyCommand<int>(new PropertyComputed { Name = "Foo" }, this.GetTableSchema<PropertyComputed>());
+                var command = this.Sut.MakeInsertReturningPrimaryKeyCommand(new PropertyComputed { Name = "Foo" }, this.GetTableSchema<PropertyComputed>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -674,7 +531,7 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]",
             public void Does_not_include_generated_columns()
             {
                 // Act
-                var command = this.Sut.MakeInsertReturningPrimaryKeyCommand<int>(new PropertyGenerated { Name = "Foo" }, this.GetTableSchema<PropertyGenerated>());
+                var command = this.Sut.MakeInsertReturningPrimaryKeyCommand(new PropertyGenerated { Name = "Foo" }, this.GetTableSchema<PropertyGenerated>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -694,7 +551,7 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS [id]",
             public void Updates_given_table()
             {
                 // Act
-                var command = this.Sut.MakeUpdateCommand(new Dog { Id = 5, Name = "Foo", Age = 10 });
+                var command = this.Sut.MakeUpdateCommand(new Dog { Id = 5, Name = "Foo", Age = 10 }, this.GetTableSchema<Dog>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -710,7 +567,7 @@ WHERE [Id] = @Id",
             public void Uses_each_key_in_composite_key()
             {
                 // Act
-                var command = this.Sut.MakeUpdateCommand(new CompositeKeys { Key1 = 7, Key2 = 8, Name = "Foo" });
+                var command = this.Sut.MakeUpdateCommand(new CompositeKeys { Key1 = 7, Key2 = 8, Name = "Foo" }, this.GetTableSchema<CompositeKeys>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -726,7 +583,7 @@ WHERE [Key1] = @Key1 AND [Key2] = @Key2",
             public void Does_not_update_primary_key_even_if_its_not_auto_generated()
             {
                 // Act
-                var command = this.Sut.MakeUpdateCommand(new KeyNotGenerated { Id = 7, Name = "Foo" });
+                var command = this.Sut.MakeUpdateCommand(new KeyNotGenerated { Id = 7, Name = "Foo" }, this.GetTableSchema<KeyNotGenerated>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -742,7 +599,7 @@ WHERE [Id] = @Id",
             public void Uses_aliased_property_names()
             {
                 // Act
-                var command = this.Sut.MakeUpdateCommand(new PropertyAlias { Id = 5, Age = 10 });
+                var command = this.Sut.MakeUpdateCommand(new PropertyAlias { Id = 5, Age = 10 }, this.GetTableSchema<PropertyAlias>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -758,7 +615,7 @@ WHERE [Id] = @Id",
             public void Uses_aliased_key_name()
             {
                 // Act
-                var command = this.Sut.MakeUpdateCommand(new KeyAlias { Name = "Foo", Id = 10 });
+                var command = this.Sut.MakeUpdateCommand(new KeyAlias { Name = "Foo", Id = 10 }, this.GetTableSchema<KeyAlias>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -774,7 +631,7 @@ WHERE [Key] = @Id",
             public void Uses_explicit_key_name()
             {
                 // Act
-                var command = this.Sut.MakeUpdateCommand(new KeyExplicit { Name = "Foo", Key = 10 });
+                var command = this.Sut.MakeUpdateCommand(new KeyExplicit { Name = "Foo", Key = 10 }, this.GetTableSchema<KeyExplicit>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -794,7 +651,7 @@ WHERE [Key] = @Key",
             public void Does_not_include_computed_columns()
             {
                 // Act
-                var command = this.Sut.MakeUpdateCommand(new PropertyComputed { Name = "Foo", Id = 10 });
+                var command = this.Sut.MakeUpdateCommand(new PropertyComputed { Name = "Foo", Id = 10 }, this.GetTableSchema<PropertyComputed>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -810,7 +667,7 @@ WHERE [Id] = @Id",
             public void Includes_generated_columns()
             {
                 // Act
-                var command = this.Sut.MakeUpdateCommand(new PropertyGenerated { Id = 5, Name = "Foo", Created = new DateTime(2018, 4, 1) });
+                var command = this.Sut.MakeUpdateCommand(new PropertyGenerated { Id = 5, Name = "Foo", Created = new DateTime(2018, 4, 1) }, this.GetTableSchema<PropertyGenerated>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -830,7 +687,7 @@ WHERE [Id] = @Id",
             public void Deletes_from_given_table()
             {
                 // Act
-                var command = this.Sut.MakeDeleteByPrimaryKeyCommand<Dog>(5);
+                var command = this.Sut.MakeDeleteByPrimaryKeyCommand(5, this.GetTableSchema<Dog>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -848,7 +705,7 @@ WHERE [Id] = @Id",
             public void Uses_each_key_in_composite_key()
             {
                 // Act
-                var command = this.Sut.MakeDeleteByPrimaryKeyCommand<CompositeKeys>(new { Key1 = 1, Key2 = 2 });
+                var command = this.Sut.MakeDeleteByPrimaryKeyCommand(new { Key1 = 1, Key2 = 2 }, this.GetTableSchema<CompositeKeys>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -863,7 +720,7 @@ WHERE [Key1] = @Key1 AND [Key2] = @Key2",
             public void Uses_primary_key_even_if_its_not_auto_generated()
             {
                 // Act
-                var command = this.Sut.MakeDeleteByPrimaryKeyCommand<KeyNotGenerated>(5);
+                var command = this.Sut.MakeDeleteByPrimaryKeyCommand(5, this.GetTableSchema<KeyNotGenerated>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -881,7 +738,7 @@ WHERE [Id] = @Id",
             public void Uses_aliased_key_name()
             {
                 // Act
-                var command = this.Sut.MakeDeleteByPrimaryKeyCommand<KeyAlias>(5);
+                var command = this.Sut.MakeDeleteByPrimaryKeyCommand(5, this.GetTableSchema<KeyAlias>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -899,7 +756,7 @@ WHERE [Key] = @Id",
             public void Uses_explicit_key_name()
             {
                 // Act
-                var command = this.Sut.MakeDeleteByPrimaryKeyCommand<KeyExplicit>(5);
+                var command = this.Sut.MakeDeleteByPrimaryKeyCommand(5, this.GetTableSchema<KeyExplicit>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -921,7 +778,7 @@ WHERE [Key] = @Key",
             public void Deletes_from_given_table()
             {
                 // Act
-                var command = this.Sut.MakeDeleteRangeCommand<Dog>("WHERE [Age] > @Age", new { Age = 10 });
+                var command = this.Sut.MakeDeleteRangeCommand("WHERE [Age] > @Age", new { Age = 10 }, this.GetTableSchema<Dog>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -957,14 +814,102 @@ WHERE [Age] > @Age",
                     .Returns((Type type) => "table");
 
                 // Act
-                Assert.Throws<ArgumentException>(() => this.Sut.MakeCreateTempTableCommand<Dog>());
+                Assert.Throws<ArgumentException>(() => this.Sut.MakeCreateTempTableCommand(this.GetTableSchema<Dog>()));
             }
 
             [Fact]
             public void Throws_exception_if_there_are_no_columns()
             {
                 // Act
-                Assert.Throws<ArgumentException>(() => this.Sut.MakeCreateTempTableCommand<NoColumns>());
+                Assert.Throws<ArgumentException>(() => this.Sut.MakeCreateTempTableCommand(this.GetTableSchema<NoColumns>()));
+            }
+        }
+
+        public class MakeWhereClause
+            : SqlServer2012DialectTests
+        {
+            [Fact]
+            public void Returns_empty_string_when_conditions_is_empty()
+            {
+                // Arrange
+                var conditions = new { };
+                var conditionsSchema = this.GetConditionsSchema<Dog>(conditions);
+
+                // Act
+                var clause = this.Sut.MakeWhereClause(conditionsSchema, conditions);
+
+                // Assert
+                clause.Should().BeEmpty();
+            }
+
+            [Fact]
+            public void Selects_from_given_table()
+            {
+                // Arrange
+                var conditions = new { Name = "Fido" };
+                var conditionsSchema = this.GetConditionsSchema<Dog>(conditions);
+
+                // Act
+                var clause = this.Sut.MakeWhereClause(conditionsSchema, conditions);
+
+                // Assert
+                clause.Should().Be("WHERE [Name] = @Name");
+            }
+
+            [Fact]
+            public void Adds_alias_when_column_name_is_aliased()
+            {
+                // Arrange
+                var conditions = new { Age = 15 };
+                var conditionsSchema = this.GetConditionsSchema<PropertyAlias>(conditions);
+
+                // Act
+                var clause = this.Sut.MakeWhereClause(conditionsSchema, conditions);
+
+                // Assert
+                clause.Should().Be("WHERE [YearsOld] = @Age");
+            }
+
+            [Fact]
+            public void Checks_multiple_properties()
+            {
+                // Arrange
+                var conditions = new { Name = "Fido", Age = 15 };
+                var conditionsSchema = this.GetConditionsSchema<Dog>(conditions);
+
+                // Act
+                var clause = this.Sut.MakeWhereClause(conditionsSchema, conditions);
+
+                // Assert
+                clause.Should().Be("WHERE [Name] = @Name AND [Age] = @Age");
+            }
+
+            [Fact]
+            public void Checks_for_null_properly()
+            {
+                // Arrange
+                var conditions = new { Name = (string)null };
+                var conditionsSchema = this.GetConditionsSchema<Dog>(conditions);
+
+                // Act
+                var clause = this.Sut.MakeWhereClause(conditionsSchema, conditions);
+
+                // Assert
+                clause.Should().Be("WHERE [Name] IS NULL");
+            }
+
+            [Fact]
+            public void Checks_for_null_properly_with_multiple_properties()
+            {
+                // Arrange
+                var conditions = new { Name = (string)null, age = (int?)null };
+                var conditionsSchema = this.GetConditionsSchema<Dog>(conditions);
+
+                // Act
+                var clause = this.Sut.MakeWhereClause(conditionsSchema, conditions);
+
+                // Assert
+                clause.Should().Be("WHERE [Name] IS NULL AND [Age] IS NULL");
             }
         }
     }

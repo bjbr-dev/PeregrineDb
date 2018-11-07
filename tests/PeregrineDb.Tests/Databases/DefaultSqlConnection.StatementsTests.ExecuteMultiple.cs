@@ -28,8 +28,8 @@ namespace PeregrineDb.Tests.Databases
                         // Act
                         using (var unitOfWork = database.StartUnitOfWork())
                         {
-                            var command = dialect.MakeInsertCommand(new Dog { Name = "Foo", Age = 4 });
-                            unitOfWork.Execute(command.CommandText, command.Parameters);
+                            var command = database.CommandFactory().MakeInsertRangeCommand(new[] { new Dog { Name = "Foo", Age = 4 } });
+                            unitOfWork.ExecuteMultiple(command.CommandText, command.Parameters);
 
                             unitOfWork.SaveChanges();
                         }
@@ -48,7 +48,7 @@ namespace PeregrineDb.Tests.Databases
                         // Act
                         using (var unitOfWork = database.StartUnitOfWork())
                         {
-                            var command = dialect.MakeInsertCommand(new Dog { Name = "Foo", Age = 4 });
+                            var command = database.CommandFactory().MakeInsertRangeCommand(new[] { new Dog { Name = "Foo", Age = 4 } });
                             unitOfWork.Execute(command.CommandText, command.Parameters);
                         }
 
@@ -68,7 +68,7 @@ namespace PeregrineDb.Tests.Databases
                         {
                             using (var unitOfWork = database.StartUnitOfWork())
                             {
-                                var command = dialect.MakeInsertCommand(new Dog { Name = "Foo", Age = 4 });
+                                var command = database.CommandFactory().MakeInsertRangeCommand(new[] { new Dog { Name = "Foo", Age = 4 } });
                                 unitOfWork.Execute(command.CommandText, command.Parameters);
 
                                 throw new Exception();
