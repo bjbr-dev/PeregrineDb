@@ -33,7 +33,7 @@ namespace PeregrineDb.Dialects
         /// <summary>
         /// Generates a SQL statement to select the first N records which match the <paramref name="conditions"/>.
         /// </summary>
-        SqlCommand MakeGetFirstNCommand<TEntity>(int take, string conditions, object parameters, string orderBy);
+        SqlCommand MakeGetFirstNCommand(int take, string conditions, object parameters, string orderBy, TableSchema tableSchema);
 
         /// <summary>
         /// Generates a SQL statement to select the first N records which match the <paramref name="conditions"/>.

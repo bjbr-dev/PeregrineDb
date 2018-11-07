@@ -66,7 +66,7 @@ namespace PeregrineDb.Dialects
         }
 
         /// <inheritdoc />
-        public abstract SqlCommand MakeGetFirstNCommand<TEntity>(int take, string conditions, object parameters, string orderBy);
+        public abstract SqlCommand MakeGetFirstNCommand(int take, string conditions, object parameters, string orderBy, TableSchema tableSchema);
 
         /// <inheritdoc />
         public abstract SqlCommand MakeGetFirstNCommand<TEntity>(int take, object conditions, string orderBy);

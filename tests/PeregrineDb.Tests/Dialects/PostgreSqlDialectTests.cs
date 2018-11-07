@@ -22,7 +22,12 @@ namespace PeregrineDb.Tests.Dialects
 
         private TableSchema GetTableSchema<T>()
         {
-            return this.config.SchemaFactory.GetTableSchema(typeof(T));
+            return this.GetTableSchema(typeof(T));
+        }
+
+        private TableSchema GetTableSchema(Type type)
+        {
+            return this.config.SchemaFactory.GetTableSchema(type);
         }
 
         public class MakeCountStatementFromSql
@@ -344,7 +349,7 @@ WHERE YearsOld = @Age",
             public void Adds_conditions_clause()
             {
                 // Act
-                var command = this.Sut.MakeGetFirstNCommand<Dog>(1, "WHERE Name LIKE @Name", new { Name = "Foo%" }, "Name");
+                var command = this.Sut.MakeGetFirstNCommand(1, "WHERE Name LIKE @Name", new { Name = "Foo%" }, "Name", this.GetTableSchema<Dog>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -362,7 +367,7 @@ LIMIT 1",
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Act
-                var command = this.Sut.MakeGetFirstNCommand<PropertyAlias>(1, "WHERE Name LIKE @Name", new { Name = "Foo%" }, "Name");
+                var command = this.Sut.MakeGetFirstNCommand(1, "WHERE Name LIKE @Name", new { Name = "Foo%" }, "Name", this.GetTableSchema<PropertyAlias>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -383,7 +388,7 @@ LIMIT 1",
             public void Does_not_order_when_no_orderby_given(string orderBy)
             {
                 // Act
-                var command = this.Sut.MakeGetFirstNCommand<Dog>(1, "WHERE Name LIKE @Name", new { Name = "Foo%" }, orderBy);
+                var command = this.Sut.MakeGetFirstNCommand(1, "WHERE Name LIKE @Name", new { Name = "Foo%" }, orderBy, this.GetTableSchema<Dog>());
 
                 // Assert
                 var expected = new SqlCommand(@"

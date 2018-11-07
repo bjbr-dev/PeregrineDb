@@ -55,7 +55,7 @@ namespace PeregrineDb.Databases
 
         public Task<TEntity> FindFirstAsync<TEntity>(string orderBy, string conditions, object parameters, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeGetFirstNCommand<TEntity>(1, conditions, parameters, orderBy);
+            var command = this.Dialect.MakeGetFirstNCommand(1, conditions, parameters, orderBy, this.GetTableSchema(typeof(TEntity)));
             return this.QueryFirstOrDefaultAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
@@ -68,7 +68,7 @@ namespace PeregrineDb.Databases
         public Task<TEntity> GetFirstAsync<TEntity>(string orderBy, string conditions, object parameters, int? commandTimeout = null, CancellationToken cancellationToken = default)
             where TEntity : class
         {
-            var command = this.Dialect.MakeGetFirstNCommand<TEntity>(1, conditions, parameters, orderBy);
+            var command = this.Dialect.MakeGetFirstNCommand(1, conditions, parameters, orderBy, this.GetTableSchema(typeof(TEntity)));
             return this.QueryFirstAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
@@ -81,7 +81,7 @@ namespace PeregrineDb.Databases
 
         public Task<TEntity> FindSingleAsync<TEntity>(string conditions, object parameters, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeGetFirstNCommand<TEntity>(2, conditions, parameters, null);
+            var command = this.Dialect.MakeGetFirstNCommand(2, conditions, parameters, null, this.GetTableSchema(typeof(TEntity)));
             return this.QuerySingleOrDefaultAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 
@@ -119,7 +119,7 @@ namespace PeregrineDb.Databases
 
         public Task<IReadOnlyList<TEntity>> GetTopAsync<TEntity>(int count, string orderBy, string conditions, object parameters, int? commandTimeout = null, CancellationToken cancellationToken = default)
         {
-            var command = this.Dialect.MakeGetFirstNCommand<TEntity>(count, conditions, parameters, orderBy);
+            var command = this.Dialect.MakeGetFirstNCommand(count, conditions, parameters, orderBy, this.GetTableSchema(typeof(TEntity)));
             return this.QueryAsync<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout, cancellationToken);
         }
 

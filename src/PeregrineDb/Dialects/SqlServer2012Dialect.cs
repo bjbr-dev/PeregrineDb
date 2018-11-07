@@ -71,11 +71,8 @@ namespace PeregrineDb.Dialects
             return sql.ToCommand(entity);
         }
 
-        public override SqlCommand MakeGetFirstNCommand<TEntity>(int take, string conditions, object parameters, string orderBy)
+        public override SqlCommand MakeGetFirstNCommand(int take, string conditions, object parameters, string orderBy, TableSchema tableSchema)
         {
-            var entityType = typeof(TEntity);
-            var tableSchema = this.GetTableSchema(entityType);
-
             var sql = new SqlCommandBuilder("SELECT TOP ").Append(take).Append(" ").AppendSelectPropertiesClause(tableSchema.Columns);
             sql.AppendClause("FROM ").Append(tableSchema.Name);
             sql.AppendClause(conditions);

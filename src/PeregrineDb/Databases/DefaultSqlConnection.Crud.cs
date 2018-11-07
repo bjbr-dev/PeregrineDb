@@ -50,7 +50,7 @@ namespace PeregrineDb.Databases
 
         public TEntity FindFirst<TEntity>(string orderBy, string conditions, object parameters, int? commandTimeout = null)
         {
-            var command = this.Dialect.MakeGetFirstNCommand<TEntity>(1, conditions, parameters, orderBy);
+            var command = this.Dialect.MakeGetFirstNCommand(1, conditions, parameters, orderBy, this.GetTableSchema(typeof(TEntity)));
             return this.QueryFirstOrDefault<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
         }
 
@@ -76,7 +76,7 @@ namespace PeregrineDb.Databases
 
         public TEntity FindSingle<TEntity>(string conditions, object parameters, int? commandTimeout = null)
         {
-            var command = this.Dialect.MakeGetFirstNCommand<TEntity>(2, conditions, parameters, null);
+            var command = this.Dialect.MakeGetFirstNCommand(2, conditions, parameters, null, this.GetTableSchema(typeof(TEntity)));
             return this.QuerySingleOrDefault<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
         }
 
@@ -89,7 +89,7 @@ namespace PeregrineDb.Databases
         public TEntity GetSingle<TEntity>(string conditions, object parameters, int? commandTimeout = null)
             where TEntity : class
         {
-            var command = this.Dialect.MakeGetFirstNCommand<TEntity>(2, conditions, parameters, null);
+            var command = this.Dialect.MakeGetFirstNCommand(2, conditions, parameters, null, this.GetTableSchema(typeof(TEntity)));
             return this.QuerySingle<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
         }
 
@@ -115,8 +115,8 @@ namespace PeregrineDb.Databases
         public IReadOnlyList<TEntity> GetTop<TEntity>(int count, string orderBy, string conditions, object parameters, int? commandTimeout = null)
         {
             Ensure.NotNullOrWhiteSpace(orderBy, nameof(orderBy));
-
-            var command = this.Dialect.MakeGetFirstNCommand<TEntity>(count, conditions, parameters, orderBy);
+            
+            var command = this.Dialect.MakeGetFirstNCommand(count, conditions, parameters, orderBy, this.GetTableSchema(typeof(TEntity)));
             return this.Query<TEntity>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
         }
 
