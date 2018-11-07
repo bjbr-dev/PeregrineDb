@@ -176,7 +176,9 @@ namespace PeregrineDb.Databases
 
         public TPrimaryKey Insert<TPrimaryKey>(object entity, int? commandTimeout = null)
         {
-            var command = this.Dialect.MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(entity);
+            Ensure.NotNull(entity, nameof(entity));
+
+            var command = this.Dialect.MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(entity, this.GetTableSchema(entity.GetType()));
             return this.ExecuteScalar<TPrimaryKey>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
         }
 
@@ -192,9 +194,11 @@ namespace PeregrineDb.Databases
             Ensure.NotNull(setPrimaryKey, nameof(setPrimaryKey));
             Ensure.NotNull(entities, nameof(entities));
 
+            var schema = this.GetTableSchema(typeof(TEntity));
+
             foreach (var entity in entities)
             {
-                var command = this.Dialect.MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(entity);
+                var command = this.Dialect.MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(entity, schema);
                 var id = this.ExecuteScalar<TPrimaryKey>(command.CommandText, command.Parameters, CommandType.Text, commandTimeout);
                 setPrimaryKey(entity, id);
             }

@@ -6,6 +6,7 @@ namespace PeregrineDb.Dialects
 {
     using System.Collections.Generic;
     using Pagination;
+    using PeregrineDb.Schema;
 
     /// <summary>
     /// Defines the SQL to generate when targeting specific vendor implementations.
@@ -67,7 +68,7 @@ namespace PeregrineDb.Dialects
         /// <summary>
         /// Generates a SQL statement to insert a row and return the generated identity.
         /// </summary>
-        SqlCommand MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(object entity);
+        SqlCommand MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(object entity, TableSchema tableSchema);
 
         SqlMultipleCommand<TEntity> MakeInsertRangeCommand<TEntity>(IEnumerable<TEntity> entities);
 

@@ -7,6 +7,8 @@ namespace PeregrineDb.Tests.Dialects
     using FluentAssertions;
     using Pagination;
     using PeregrineDb;
+    using PeregrineDb.Dialects;
+    using PeregrineDb.Schema;
     using PeregrineDb.Tests.ExampleEntities;
     using PeregrineDb.Tests.Utils;
     using Xunit;
@@ -16,6 +18,13 @@ namespace PeregrineDb.Tests.Dialects
     {
         private PeregrineConfig config = PeregrineConfig.Postgres;
 
+        private IDialect Sut => this.config.Dialect;
+
+        private TableSchema GetTableSchema<T>()
+        {
+            return this.config.SchemaFactory.GetTableSchema(typeof(T));
+        }
+
         public class MakeCountStatementFromSql
             : PostgreSqlDialectTests
         {
@@ -23,7 +32,7 @@ namespace PeregrineDb.Tests.Dialects
             public void Selects_from_given_table()
             {
                 // Act
-                var command = this.config.Dialect.MakeCountCommand<Dog>(null, null);
+                var command = this.Sut.MakeCountCommand<Dog>(null, null);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -37,7 +46,7 @@ FROM dog");
             public void Adds_conditions()
             {
                 // Act
-                var command = this.config.Dialect.MakeCountCommand<Dog>("WHERE Foo IS NOT NULL", null);
+                var command = this.Sut.MakeCountCommand<Dog>("WHERE Foo IS NOT NULL", null);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -55,7 +64,7 @@ WHERE Foo IS NOT NULL");
             public void Errors_when_conditions_is_null()
             {
                 // Act
-                Action act = () => this.config.Dialect.MakeCountCommand<Dog>((object)null);
+                Action act = () => this.Sut.MakeCountCommand<Dog>(null);
 
                 // Assert
                 act.Should().Throw<ArgumentNullException>();
@@ -65,7 +74,7 @@ WHERE Foo IS NOT NULL");
             public void Adds_conditions()
             {
                 // Act
-                var command = this.config.Dialect.MakeCountCommand<Dog>(new { Name = (string)null });
+                var command = this.Sut.MakeCountCommand<Dog>(new { Name = (string)null });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -85,7 +94,7 @@ WHERE name IS NULL",
             public void Errors_when_id_is_null()
             {
                 // Act
-                Action act = () => this.config.Dialect.MakeFindCommand<Dog>(null);
+                Action act = () => this.Sut.MakeFindCommand<Dog>(null);
 
                 // Assert
                 act.Should().Throw<ArgumentNullException>();
@@ -95,7 +104,7 @@ WHERE name IS NULL",
             public void Selects_from_given_table()
             {
                 // Act
-                var command = this.config.Dialect.MakeFindCommand<Dog>(5);
+                var command = this.Sut.MakeFindCommand<Dog>(5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -114,7 +123,7 @@ WHERE id = @Id",
             public void Uses_non_default_primary_key_name()
             {
                 // Act
-                var command = this.config.Dialect.MakeFindCommand<KeyExplicit>(5);
+                var command = this.Sut.MakeFindCommand<KeyExplicit>(5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -133,7 +142,7 @@ WHERE key = @Key",
             public void Uses_each_key_in_composite_key()
             {
                 // Act
-                var command = this.config.Dialect.MakeFindCommand<CompositeKeys>(new { key1 = 2, key2 = 3 });
+                var command = this.Sut.MakeFindCommand<CompositeKeys>(new { key1 = 2, key2 = 3 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -149,7 +158,7 @@ WHERE key1 = @Key1 AND key2 = @Key2",
             public void Adds_alias_when_primary_key_is_aliased()
             {
                 // Act
-                var command = this.config.Dialect.MakeFindCommand<KeyAlias>(5);
+                var command = this.Sut.MakeFindCommand<KeyAlias>(5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -168,7 +177,7 @@ WHERE Key = @Id",
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Act
-                var command = this.config.Dialect.MakeFindCommand<PropertyAlias>(5);
+                var command = this.Sut.MakeFindCommand<PropertyAlias>(5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -191,7 +200,7 @@ WHERE id = @Id",
             public void Selects_from_given_table()
             {
                 // Act
-                var command = this.config.Dialect.MakeGetRangeCommand<Dog>(null, null);
+                var command = this.Sut.MakeGetRangeCommand<Dog>(null, null);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -205,7 +214,7 @@ FROM dog");
             public void Adds_conditions_clause()
             {
                 // Act
-                var command = this.config.Dialect.MakeGetRangeCommand<Dog>("WHERE Age > @Age", new { Age = 10 });
+                var command = this.Sut.MakeGetRangeCommand<Dog>("WHERE Age > @Age", new { Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -221,7 +230,7 @@ WHERE Age > @Age",
             public void Uses_explicit_primary_key_name()
             {
                 // Act
-                var command = this.config.Dialect.MakeGetRangeCommand<KeyExplicit>(null, null);
+                var command = this.Sut.MakeGetRangeCommand<KeyExplicit>(null, null);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -235,7 +244,7 @@ FROM KeyExplicit");
             public void Adds_alias_when_primary_key_is_aliased()
             {
                 // Act
-                var command = this.config.Dialect.MakeGetRangeCommand<KeyAlias>(null, null);
+                var command = this.Sut.MakeGetRangeCommand<KeyAlias>(null, null);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -249,7 +258,7 @@ FROM KeyAlias");
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Act
-                var command = this.config.Dialect.MakeGetRangeCommand<PropertyAlias>(null, null);
+                var command = this.Sut.MakeGetRangeCommand<PropertyAlias>(null, null);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -267,7 +276,7 @@ FROM PropertyAlias");
             public void Selects_from_given_table()
             {
                 // Act
-                var command = this.config.Dialect.MakeGetRangeCommand<Dog>(new { Name = "Fido" });
+                var command = this.Sut.MakeGetRangeCommand<Dog>(new { Name = "Fido" });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -283,7 +292,7 @@ WHERE name = @Name",
             public void Uses_explicit_primary_key_name()
             {
                 // Act
-                var command = this.config.Dialect.MakeGetRangeCommand<KeyExplicit>(new { Name = "Fido" });
+                var command = this.Sut.MakeGetRangeCommand<KeyExplicit>(new { Name = "Fido" });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -299,7 +308,7 @@ WHERE name = @Name",
             public void Adds_alias_when_primary_key_is_aliased()
             {
                 // Act
-                var command = this.config.Dialect.MakeGetRangeCommand<KeyAlias>(new { Name = "Fido" });
+                var command = this.Sut.MakeGetRangeCommand<KeyAlias>(new { Name = "Fido" });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -315,7 +324,7 @@ WHERE name = @Name",
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Act
-                var command = this.config.Dialect.MakeGetRangeCommand<PropertyAlias>(new { Age = 5 });
+                var command = this.Sut.MakeGetRangeCommand<PropertyAlias>(new { Age = 5 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -335,7 +344,7 @@ WHERE YearsOld = @Age",
             public void Adds_conditions_clause()
             {
                 // Act
-                var command = this.config.Dialect.MakeGetFirstNCommand<Dog>(1, "WHERE Name LIKE @Name", new { Name = "Foo%" }, "Name");
+                var command = this.Sut.MakeGetFirstNCommand<Dog>(1, "WHERE Name LIKE @Name", new { Name = "Foo%" }, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -353,7 +362,7 @@ LIMIT 1",
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Act
-                var command = this.config.Dialect.MakeGetFirstNCommand<PropertyAlias>(1, "WHERE Name LIKE @Name", new { Name = "Foo%" }, "Name");
+                var command = this.Sut.MakeGetFirstNCommand<PropertyAlias>(1, "WHERE Name LIKE @Name", new { Name = "Foo%" }, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -374,7 +383,7 @@ LIMIT 1",
             public void Does_not_order_when_no_orderby_given(string orderBy)
             {
                 // Act
-                var command = this.config.Dialect.MakeGetFirstNCommand<Dog>(1, "WHERE Name LIKE @Name", new { Name = "Foo%" }, orderBy);
+                var command = this.Sut.MakeGetFirstNCommand<Dog>(1, "WHERE Name LIKE @Name", new { Name = "Foo%" }, orderBy);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -395,7 +404,7 @@ LIMIT 1",
             public void Selects_from_given_table()
             {
                 // Act
-                var command = this.config.Dialect.MakeGetFirstNCommand<Dog>(1, new { Name = "Fido" }, "Name");
+                var command = this.Sut.MakeGetFirstNCommand<Dog>(1, new { Name = "Fido" }, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -413,7 +422,7 @@ LIMIT 1",
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Act
-                var command = this.config.Dialect.MakeGetFirstNCommand<PropertyAlias>(1, new { Age = 5 }, "Name");
+                var command = this.Sut.MakeGetFirstNCommand<PropertyAlias>(1, new { Age = 5 }, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -434,7 +443,7 @@ LIMIT 1",
             public void Does_not_order_when_no_orderby_given(string orderBy)
             {
                 // Act
-                var command = this.config.Dialect.MakeGetFirstNCommand<Dog>(1, new { Name = "Fido" }, orderBy);
+                var command = this.Sut.MakeGetFirstNCommand<Dog>(1, new { Name = "Fido" }, orderBy);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -459,14 +468,14 @@ LIMIT 1",
             {
                 // Act / Assert
                 Assert.Throws<ArgumentException>(
-                    () => this.config.Dialect.MakeGetPageCommand<Dog>(new Page(1, 10, true, 0, 9), null, orderBy));
+                    () => this.Sut.MakeGetPageCommand<Dog>(new Page(1, 10, true, 0, 9), null, orderBy));
             }
 
             [Fact]
             public void Selects_from_given_table()
             {
                 // Act
-                var command = this.config.Dialect.MakeGetPageCommand<Dog>(new Page(1, 10, true, 0, 9), null, null, "Name");
+                var command = this.Sut.MakeGetPageCommand<Dog>(new Page(1, 10, true, 0, 9), null, null, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -482,7 +491,7 @@ LIMIT 10 OFFSET 0");
             public void Adds_conditions_clause()
             {
                 // Act
-                var command = this.config.Dialect.MakeGetPageCommand<Dog>(new Page(1, 10, true, 0, 9), "WHERE Name LIKE @Name", new { Name = "Foo%" }, "Name");
+                var command = this.Sut.MakeGetPageCommand<Dog>(new Page(1, 10, true, 0, 9), "WHERE Name LIKE @Name", new { Name = "Foo%" }, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -500,7 +509,7 @@ LIMIT 10 OFFSET 0",
             public void Adds_alias_when_column_name_is_aliased()
             {
                 // Act
-                var command = this.config.Dialect.MakeGetPageCommand<PropertyAlias>(new Page(1, 10, true, 0, 9), null, null, "Name");
+                var command = this.Sut.MakeGetPageCommand<PropertyAlias>(new Page(1, 10, true, 0, 9), null, null, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -516,7 +525,7 @@ LIMIT 10 OFFSET 0");
             public void Selects_second_page()
             {
                 // Act
-                var command = this.config.Dialect.MakeGetPageCommand<Dog>(new Page(2, 10, true, 10, 19), null, null, "Name");
+                var command = this.Sut.MakeGetPageCommand<Dog>(new Page(2, 10, true, 10, 19), null, null, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -532,7 +541,7 @@ LIMIT 10 OFFSET 10");
             public void Selects_appropriate_number_of_rows()
             {
                 // Act
-                var command = this.config.Dialect.MakeGetPageCommand<Dog>(new Page(2, 5, true, 5, 9), null, null, "Name");
+                var command = this.Sut.MakeGetPageCommand<Dog>(new Page(2, 5, true, 5, 9), null, null, "Name");
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -552,7 +561,7 @@ LIMIT 5 OFFSET 5");
             public void Inserts_into_given_table()
             {
                 // Act
-                var command = this.config.Dialect.MakeInsertCommand(new Dog { Name = "Foo", Age = 10 });
+                var command = this.Sut.MakeInsertCommand(new Dog { Name = "Foo", Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -567,7 +576,7 @@ VALUES (@Name, @Age);",
             public void Adds_primary_key_if_its_not_generated_by_database()
             {
                 // Act
-                var command = this.config.Dialect.MakeInsertCommand(new KeyNotGenerated { Id = 6, Name = "Foo" });
+                var command = this.Sut.MakeInsertCommand(new KeyNotGenerated { Id = 6, Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -582,7 +591,7 @@ VALUES (@Id, @Name);",
             public void Does_not_include_computed_columns()
             {
                 // Act
-                var command = this.config.Dialect.MakeInsertCommand(new PropertyComputed { Name = "Foo" });
+                var command = this.Sut.MakeInsertCommand(new PropertyComputed { Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -597,7 +606,7 @@ VALUES (@Name);",
             public void Does_not_include_generated_columns()
             {
                 // Act
-                var command = this.config.Dialect.MakeInsertCommand(new PropertyGenerated { Name = "Foo" });
+                var command = this.Sut.MakeInsertCommand(new PropertyGenerated { Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -616,7 +625,7 @@ VALUES (@Name);",
             public void Inserts_into_given_table()
             {
                 // Act
-                var command = this.config.Dialect.MakeInsertReturningPrimaryKeyCommand<int>(new Dog { Name = "Foo", Age = 10 });
+                var command = this.Sut.MakeInsertReturningPrimaryKeyCommand<int>(new Dog { Name = "Foo", Age = 10 }, this.GetTableSchema<Dog>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -632,7 +641,7 @@ RETURNING id",
             public void Adds_primary_key_if_its_not_generated_by_database()
             {
                 // Act
-                var command = this.config.Dialect.MakeInsertReturningPrimaryKeyCommand<int>(new KeyNotGenerated { Id = 10, Name = "Foo" });
+                var command = this.Sut.MakeInsertReturningPrimaryKeyCommand<int>(new KeyNotGenerated { Id = 10, Name = "Foo" }, this.GetTableSchema<KeyNotGenerated>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -648,7 +657,7 @@ RETURNING id",
             public void Does_not_include_computed_columns()
             {
                 // Act
-                var command = this.config.Dialect.MakeInsertReturningPrimaryKeyCommand<int>(new PropertyComputed { Name = "Foo" });
+                var command = this.Sut.MakeInsertReturningPrimaryKeyCommand<int>(new PropertyComputed { Name = "Foo" }, this.GetTableSchema<PropertyComputed>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -664,7 +673,7 @@ RETURNING id",
             public void Does_not_include_generated_columns()
             {
                 // Act
-                var command = this.config.Dialect.MakeInsertReturningPrimaryKeyCommand<int>(new PropertyGenerated { Name = "Foo" });
+                var command = this.Sut.MakeInsertReturningPrimaryKeyCommand<int>(new PropertyGenerated { Name = "Foo" }, this.GetTableSchema<PropertyGenerated>());
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -684,7 +693,7 @@ RETURNING id",
             public void Updates_given_table()
             {
                 // Act
-                var command = this.config.Dialect.MakeUpdateCommand(new Dog { Id = 5, Name = "Foo", Age = 10 });
+                var command = this.Sut.MakeUpdateCommand(new Dog { Id = 5, Name = "Foo", Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -700,7 +709,7 @@ WHERE id = @Id",
             public void Uses_each_key_in_composite_key()
             {
                 // Act
-                var command = this.config.Dialect.MakeUpdateCommand(new CompositeKeys { Key1 = 7, Key2 = 8, Name = "Foo" });
+                var command = this.Sut.MakeUpdateCommand(new CompositeKeys { Key1 = 7, Key2 = 8, Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -716,7 +725,7 @@ WHERE key1 = @Key1 AND key2 = @Key2",
             public void Does_not_update_primary_key_even_if_its_not_auto_generated()
             {
                 // Act
-                var command = this.config.Dialect.MakeUpdateCommand(new KeyNotGenerated { Id = 7, Name = "Foo" });
+                var command = this.Sut.MakeUpdateCommand(new KeyNotGenerated { Id = 7, Name = "Foo" });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -732,7 +741,7 @@ WHERE id = @Id",
             public void Uses_aliased_property_names()
             {
                 // Act
-                var command = this.config.Dialect.MakeUpdateCommand(new PropertyAlias { Id = 5, Age = 10 });
+                var command = this.Sut.MakeUpdateCommand(new PropertyAlias { Id = 5, Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -748,7 +757,7 @@ WHERE id = @Id",
             public void Uses_aliased_key_name()
             {
                 // Act
-                var command = this.config.Dialect.MakeUpdateCommand(new KeyAlias { Name = "Foo", Id = 10 });
+                var command = this.Sut.MakeUpdateCommand(new KeyAlias { Name = "Foo", Id = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -764,7 +773,7 @@ WHERE Key = @Id",
             public void Uses_explicit_key_name()
             {
                 // Act
-                var command = this.config.Dialect.MakeUpdateCommand(new KeyExplicit { Name = "Foo", Key = 10 });
+                var command = this.Sut.MakeUpdateCommand(new KeyExplicit { Name = "Foo", Key = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -780,7 +789,7 @@ WHERE key = @Key",
             public void Does_not_include_computed_columns()
             {
                 // Act
-                var command = this.config.Dialect.MakeUpdateCommand(new PropertyComputed { Name = "Foo", Id = 10 });
+                var command = this.Sut.MakeUpdateCommand(new PropertyComputed { Name = "Foo", Id = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -796,7 +805,7 @@ WHERE id = @Id",
             public void Includes_generated_columns()
             {
                 // Act
-                var command = this.config.Dialect.MakeUpdateCommand(new PropertyGenerated { Id = 5, Name = "Foo", Created = new DateTime(2018, 4, 1) });
+                var command = this.Sut.MakeUpdateCommand(new PropertyGenerated { Id = 5, Name = "Foo", Created = new DateTime(2018, 4, 1) });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -816,7 +825,7 @@ WHERE id = @Id",
             public void Deletes_from_given_table()
             {
                 // Act
-                var command = this.config.Dialect.MakeDeleteByPrimaryKeyCommand<Dog>(5);
+                var command = this.Sut.MakeDeleteByPrimaryKeyCommand<Dog>(5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -834,7 +843,7 @@ WHERE id = @Id",
             public void Uses_each_key_in_composite_key()
             {
                 // Act
-                var command = this.config.Dialect.MakeDeleteByPrimaryKeyCommand<CompositeKeys>(new { Key1 = 1, Key2 = 2 });
+                var command = this.Sut.MakeDeleteByPrimaryKeyCommand<CompositeKeys>(new { Key1 = 1, Key2 = 2 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -849,7 +858,7 @@ WHERE key1 = @Key1 AND key2 = @Key2",
             public void Uses_primary_key_even_if_its_not_auto_generated()
             {
                 // Act
-                var command = this.config.Dialect.MakeDeleteByPrimaryKeyCommand<KeyNotGenerated>(5);
+                var command = this.Sut.MakeDeleteByPrimaryKeyCommand<KeyNotGenerated>(5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -867,7 +876,7 @@ WHERE id = @Id",
             public void Uses_aliased_key_name()
             {
                 // Act
-                var command = this.config.Dialect.MakeDeleteByPrimaryKeyCommand<KeyAlias>(5);
+                var command = this.Sut.MakeDeleteByPrimaryKeyCommand<KeyAlias>(5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -885,7 +894,7 @@ WHERE Key = @Id",
             public void Uses_explicit_key_name()
             {
                 // Act
-                var command = this.config.Dialect.MakeDeleteByPrimaryKeyCommand<KeyExplicit>(5);
+                var command = this.Sut.MakeDeleteByPrimaryKeyCommand<KeyExplicit>(5);
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -907,7 +916,7 @@ WHERE key = @Key",
             public void Deletes_from_given_table()
             {
                 // Act
-                var command = this.config.Dialect.MakeDeleteRangeCommand<Dog>("WHERE [Age] > @Age", new { Age = 10 });
+                var command = this.Sut.MakeDeleteRangeCommand<Dog>("WHERE [Age] > @Age", new { Age = 10 });
 
                 // Assert
                 var expected = new SqlCommand(@"
@@ -931,14 +940,14 @@ WHERE [Age] > @Age",
             public void Throws_exception_if_there_are_no_columns()
             {
                 // Act
-                Assert.Throws<ArgumentException>(() => this.config.Dialect.MakeCreateTempTableCommand<NoColumns>());
+                Assert.Throws<ArgumentException>(() => this.Sut.MakeCreateTempTableCommand<NoColumns>());
             }
 
             [Fact]
             public void Creates_table_with_all_possible_types()
             {
                 // Act
-                var command = this.config.Dialect.MakeCreateTempTableCommand<TempAllPossibleTypes>();
+                var command = this.Sut.MakeCreateTempTableCommand<TempAllPossibleTypes>();
 
                 // Assert
                 var expected = new SqlCommand(@"CREATE TEMP TABLE TempAllPossibleTypes
@@ -985,7 +994,7 @@ WHERE [Age] > @Age",
             public void Drops_temporary_tables()
             {
                 // Act
-                var command = this.config.Dialect.MakeDropTempTableCommand<Dog>();
+                var command = this.Sut.MakeDropTempTableCommand<Dog>();
 
                 // Assert
                 var expected = new SqlCommand(@"DROP TABLE dog");

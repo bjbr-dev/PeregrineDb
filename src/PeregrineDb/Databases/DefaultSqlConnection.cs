@@ -5,8 +5,10 @@
 namespace PeregrineDb.Databases
 {
     using System;
+    using System.Collections.Immutable;
     using System.Data;
     using PeregrineDb.Dialects;
+    using PeregrineDb.Schema;
 
     public abstract partial class DefaultSqlConnection
         : ISqlConnection
@@ -71,6 +73,19 @@ namespace PeregrineDb.Databases
             {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
+        }
+
+        protected TableSchema GetTableSchema(Type entityType)
+        {
+            return this.Config.SchemaFactory.GetTableSchema(entityType);
+        }
+
+        protected ImmutableArray<ConditionColumnSchema> GetConditionsSchema(
+            Type entityType,
+            TableSchema tableSchema,
+            Type conditionsType)
+        {
+            return this.Config.SchemaFactory.GetConditionsSchema(entityType, tableSchema, conditionsType);
         }
     }
 }

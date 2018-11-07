@@ -118,7 +118,7 @@ namespace PeregrineDb.Dialects
         }
 
         /// <inheritdoc />
-        public abstract SqlCommand MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(object entity);
+        public abstract SqlCommand MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(object entity, TableSchema tableSchema);
 
         /// <inheritdoc />
         public SqlMultipleCommand<TEntity> MakeInsertRangeCommand<TEntity>(IEnumerable<TEntity> entities)

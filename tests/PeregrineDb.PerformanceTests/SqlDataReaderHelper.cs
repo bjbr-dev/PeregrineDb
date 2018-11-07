@@ -1,4 +1,4 @@
-﻿// <copyright file="SqlDataReaderHelper.cs" company="Berkeleybross">
+// <copyright file="SqlDataReaderHelper.cs" company="Berkeleybross">
 // Copyright (c) Berkeleybross. All rights reserved.
 // </copyright>
 
@@ -11,21 +11,24 @@ namespace PeregrineDb.PerformanceTests
     {
         public static string GetNullableString(this SqlDataReader reader, int index)
         {
-            object tmp = reader.GetValue(index);
+            var tmp = reader.GetValue(index);
             if (tmp != DBNull.Value)
             {
                 return (string)tmp;
             }
+
             return null;
         }
 
-        public static T? GetNullableValue<T>(this SqlDataReader reader, int index) where T : struct
+        public static T? GetNullableValue<T>(this SqlDataReader reader, int index)
+            where T : struct
         {
-            object tmp = reader.GetValue(index);
+            var tmp = reader.GetValue(index);
             if (tmp != DBNull.Value)
             {
                 return (T)tmp;
             }
+
             return null;
         }
     }

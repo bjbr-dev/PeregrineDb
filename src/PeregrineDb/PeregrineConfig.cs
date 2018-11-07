@@ -78,7 +78,11 @@ namespace PeregrineDb
             this.VerifyAffectedRowCount = verifyAffectedRowCount;
             this.SqlTypeMappings = sqlTypeMappings ?? throw new ArgumentNullException(nameof(sqlTypeMappings));
             this.sqlNameEscaper = sqlNameEscaper ?? throw new ArgumentNullException(nameof(sqlNameEscaper));
+
+            this.SchemaFactory = new TableSchemaFactory(this.sqlNameEscaper, this.TableNameConvention, this.ColumnNameConvention, this.SqlTypeMappings);
         }
+
+        public TableSchemaFactory SchemaFactory { get; }
 
         public static PeregrineConfig SqlServer2012
         {

@@ -54,12 +54,8 @@ namespace PeregrineDb.Dialects
         }
 
         /// <inheritdoc />
-        public override SqlCommand MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(object entity)
+        public override SqlCommand MakeInsertReturningPrimaryKeyCommand<TPrimaryKey>(object entity, TableSchema tableSchema)
         {
-            Ensure.NotNull(entity, nameof(entity));
-
-            var tableSchema = this.GetTableSchema(entity.GetType());
-
             if (!tableSchema.CanGeneratePrimaryKey(typeof(TPrimaryKey)))
             {
                 throw new InvalidPrimaryKeyException(
