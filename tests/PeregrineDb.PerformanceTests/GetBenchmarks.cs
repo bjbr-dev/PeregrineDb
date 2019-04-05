@@ -21,7 +21,7 @@ namespace PeregrineDb.PerformanceTests
     public abstract class GetBenchmarks
     {
         protected SqlConnection Connection;
-        public static string ConnectionString { get; } = ConfigurationManager.ConnectionStrings["Main"].ConnectionString;
+        public static string ConnectionString { get; } = "Data Source=.;Initial Catalog=tempdb;Integrated Security=True";
         protected int i;
 
         protected void BaseSetup()

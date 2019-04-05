@@ -1,17 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AssemblyName>PeregrineDb.PerformanceTests</AssemblyName>
-    <Title>PeregrineDb.PerformanceTests</Title>
-    <Description>PeregrineDb Performance Suite</Description>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <TargetFrameworks>net472</TargetFrameworks>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <LangVersion>7.2</LangVersion>
     <IsPackable>false</IsPackable>
     <OutputType>Exe</OutputType>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+    <NoWarn>1701;1702;1705; CS1591; SA1600; SA1611; SA1614; SA1615; SA1618; SA1623</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
