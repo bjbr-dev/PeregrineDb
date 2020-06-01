@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <PackageReference Include="berkeleybross.Pagination" Version="1.0.25" />
-    <PackageReference Include="FluentAssertions" Version="5.4.2" />
+    <PackageReference Include="FluentAssertions" Version="5.10.3" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
     <PackageReference Include="Moq" Version="4.10.0" />
     <PackageReference Include="Npgsql" Version="4.0.3" />
