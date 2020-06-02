@@ -26,7 +26,7 @@
     <PackageReference Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
     <PackageReference Include="PetaPoco.Core.Compiled" Version="5.1.306" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.0-beta008" PrivateAssets="all" />
-    <PackageReference Include="System.Data.SQLite" Version="1.0.109.2" />
+    <PackageReference Include="System.Data.SQLite" Version="1.0.113.1" />
     <PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
     <ProjectReference Include="..\..\src\PeregrineDb\PeregrineDb.csproj" />
     <Reference Include="System.Configuration" />
